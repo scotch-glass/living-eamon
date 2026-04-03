@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createPlayer, loadPlayer } from "../../../lib/supabase";
+
+export async function POST(request: NextRequest) {
+  try {
+    const { playerName } = await request.json();
+
+    if (!playerName || !playerName.trim()) {
+      return NextResponse.json({ error: "Name required" }, { status: 400 });
+    }
+
+    const player = await createPlayer(playerName.trim());
+
+    if (!player) {
+      return NextResponse.json({ error: "Could not create player" }, { status: 500 });
+    }
+
+    return NextResponse.json({ playerId: player.id, playerName: player.character_name });
+  } catch (error) {
+    console.error("Player creation error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const playerId = searchParams.get("id");
+
+    if (!playerId) {
+      return NextResponse.json({ error: "Player ID required" }, { status: 400 });
+    }
+
+    const player = await loadPlayer(playerId);
+
+    if (!player) {
+      return NextResponse.json({ error: "Player not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ player });
+  } catch (error) {
+    console.error("Player load error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}

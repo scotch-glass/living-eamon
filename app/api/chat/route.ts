@@ -259,6 +259,39 @@ export async function POST(request: NextRequest) {
               (savedPlayer as { known_deities?: string[] }).known_deities ?? [],
           },
         };
+
+        // Client holds the live session; DB load can lag behind async savePlayer. Merge so BUY/inventory persists turn-to-turn.
+        if (
+          worldState &&
+          typeof worldState === "object" &&
+          worldState.player &&
+          worldState.player.id === savedPlayer.id
+        ) {
+          const ws = worldState as WorldState;
+          state = {
+            ...state,
+            rooms: ws.rooms ?? state.rooms,
+            npcs: ws.npcs ?? state.npcs,
+            activeEvents: ws.activeEvents ?? state.activeEvents,
+            chronicleLog: ws.chronicleLog ?? state.chronicleLog,
+            worldTurn: typeof ws.worldTurn === "number" ? ws.worldTurn : state.worldTurn,
+            player: {
+              ...state.player,
+              ...ws.player,
+              id: savedPlayer.id,
+              name: savedPlayer.character_name,
+            },
+          };
+        }
+
+        // Dev: old test characters may still have low gold in DB; bump once without wiping legitimate mid-game purses in prod (adjust threshold if needed).
+        if (state.player.gold < 1000) {
+          state = {
+            ...state,
+            player: { ...state.player, gold: 10000 },
+          };
+          savePlayer(worldStateToPlayerRecord(state)).catch(console.error);
+        }
       } else {
         state = worldState ?? createInitialWorldState(playerName ?? "Adventurer");
       }

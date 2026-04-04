@@ -24,7 +24,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 5, 2026*
+*Last updated: April 6, 2026*
 
 ## 1. Project Overview
 
@@ -327,6 +327,13 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-06 — BUY persistence, EQUIP SHIELD / EQUIP buckler, dev gold bump
+
+- **BUG 1 (BUY not updating inventory/shield/armor):** Engine `runSamPurchase` now builds a single **`nextPlayer`** snapshot after `updatePlayerGold` (buckler → `shield`, leather/chain → `armor`, weapons → new/merged **`inventory`** array). Root cause of “lost” purchases was **`/api/chat` reloading state from Supabase only** and ignoring the client’s **`worldState`**, so the next command ran on stale DB before async `savePlayer` finished. **Fix:** after a successful `loadPlayer`, if the request body’s **`worldState.player.id`** matches the saved player, **merge** rooms/npcs/events/chronicle/worldTurn and **player** from the client over the DB-built state (keep canonical `id` / `name` from DB).
+- **BUG 2 (EQUIP SHIELD after buy):** **`matchShieldFromPhrase`** now also matches the **equipped** `player.shield` (e.g. buckler from Sam’s shop). **`runEquipShield`** short-circuits if already bearing that shield.
+- **BUG 3 (EQUIP BUCKLER → weapon path):** After `EQUIP SHIELD …`, **`EQUIP <phrase>`** checks **`isShieldSlotItem(asKey)`** (underscore-normalized) and routes to **`runEquipShield`** before **`runWieldWeapon`**.
+- **BUG 4 (starting gold 50):** `createInitialWorldState` already uses **`gold: 10000`**; old rows kept **`50`** in Supabase. **Fix:** after merge, if **`player.gold < 1000`**, set **`gold` to `10000`** and **`savePlayer`** once (dev/stale-test bump; does not lower gold for rich characters).
 
 ### 2026-04-05 — Static Sam shop + main_hall JSON Jane (testing)
 

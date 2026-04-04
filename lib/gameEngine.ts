@@ -642,7 +642,26 @@ function matchShieldFromPhrase(phraseLower: string, player: PlayerState): string
       if (!best || len > best.len) best = { id: entry.itemId, len };
     }
   }
-  return best?.id ?? null;
+  if (best) return best.id;
+
+  const equipped = player.shield;
+  if (equipped && isShieldSlotItem(equipped)) {
+    const it = ITEMS[equipped];
+    if (it) {
+      const nl = it.name.toLowerCase();
+      const key = equipped.toLowerCase();
+      if (
+        key === phraseLower ||
+        key.includes(phraseLower) ||
+        phraseLower.includes(key) ||
+        nl.includes(phraseLower) ||
+        phraseLower.includes(nl)
+      ) {
+        return equipped;
+      }
+    }
+  }
+  return null;
 }
 
 function runWieldWeapon(state: WorldState, phraseLower: string): EngineResult {
@@ -718,6 +737,15 @@ function runEquipShield(state: WorldState, phraseLower: string): EngineResult {
     };
   }
   const item = ITEMS[itemId]!;
+  if (p.shield === itemId) {
+    return {
+      responseType: "static",
+      staticResponse: `Thou art already bearing the ${item.name}.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
   return {
     responseType: "static",
     staticResponse: `Thou bearest the ${item.name}.`,
@@ -1294,21 +1322,6 @@ function isSamBodyArmorKey(key: string): boolean {
   return key === "leather_armor" || key === "chain_mail";
 }
 
-function addOrMergeInventory(state: WorldState, itemId: string): WorldState {
-  const inv = state.player.inventory;
-  const idx = inv.findIndex(e => e.itemId === itemId);
-  if (idx < 0) {
-    return { ...state, player: { ...state.player, inventory: [...inv, { itemId, quantity: 1 }] } };
-  }
-  return {
-    ...state,
-    player: {
-      ...state.player,
-      inventory: inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e)),
-    },
-  };
-}
-
 function runSamPurchase(state: WorldState, query: string): EngineResult {
   const row = findSamShopRow(query);
   if (!row) {
@@ -1342,16 +1355,26 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
     };
   }
 
-  let newState = updatePlayerGold(state, -row.price);
-  const remaining = newState.player.gold;
+  const afterGold = updatePlayerGold(state, -row.price);
+  const pg = afterGold.player;
+  const remaining = pg.gold;
 
+  let nextPlayer: PlayerState;
   if (row.key === "buckler") {
-    newState = { ...newState, player: { ...newState.player, shield: row.key } };
+    nextPlayer = { ...pg, shield: row.key };
   } else if (isSamBodyArmorKey(row.key)) {
-    newState = { ...newState, player: { ...newState.player, armor: row.key } };
+    nextPlayer = { ...pg, armor: row.key };
   } else {
-    newState = addOrMergeInventory(newState, row.key);
+    const inv = pg.inventory;
+    const idx = inv.findIndex(e => e.itemId === row.key);
+    const nextInv =
+      idx < 0
+        ? [...inv, { itemId: row.key, quantity: 1 }]
+        : inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e));
+    nextPlayer = { ...pg, inventory: nextInv };
   }
+
+  const newState: WorldState = { ...afterGold, player: nextPlayer };
 
   const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType WIELD [item] to equip a weapon, or EQUIP SHIELD [item] for a shield.`;
 
@@ -1718,7 +1741,12 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       const phrase = afterEquip.slice(7).trim().toLowerCase();
       return runEquipShield(newState, phrase);
     }
-    return runWieldWeapon(newState, afterEquip.toLowerCase());
+    const equipPhrase = afterEquip.toLowerCase();
+    const asKey = equipPhrase.replace(/\s+/g, "_");
+    if (isShieldSlotItem(asKey)) {
+      return runEquipShield(newState, equipPhrase);
+    }
+    return runWieldWeapon(newState, equipPhrase);
   }
 
   if (first === "SHIELD") {

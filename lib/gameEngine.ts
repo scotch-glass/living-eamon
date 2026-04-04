@@ -347,7 +347,19 @@ export function getCommandAutocompleteSuggestions(
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
-  if (/^equip\s+/i.test(trimmed) && !/^equip\s+shield/i.test(trimmed)) {
+  if (/^equip\s+armor\s*/i.test(trimmed)) {
+    return state.player.inventory
+      .filter(e => e.quantity > 0 && isBodyArmorSlotItem(e.itemId))
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({
+        label: it.name,
+        insertText: `EQUIP ARMOR ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^equip\s+/i.test(trimmed) && !/^equip\s+shield/i.test(trimmed) && !/^equip\s+armor/i.test(trimmed)) {
     return invWeaponSuggestions("EQUIP").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
@@ -537,6 +549,7 @@ INTERACTION
   DROP [item]        DROP SWORD
   WIELD [weapon]     WIELD LONG SWORD  (from inventory)
   EQUIP SHIELD [item]  EQUIP SHIELD BUCKLER  |  SHIELD BUCKLER
+  EQUIP ARMOR [item] EQUIP ARMOR LEATHER  (body armor from inventory)
   REMOVE SHIELD      Lower thy shield
 
 COMBAT
@@ -642,26 +655,28 @@ function matchShieldFromPhrase(phraseLower: string, player: PlayerState): string
       if (!best || len > best.len) best = { id: entry.itemId, len };
     }
   }
-  if (best) return best.id;
+  return best?.id ?? null;
+}
 
-  const equipped = player.shield;
-  if (equipped && isShieldSlotItem(equipped)) {
-    const it = ITEMS[equipped];
-    if (it) {
-      const nl = it.name.toLowerCase();
-      const key = equipped.toLowerCase();
-      if (
-        key === phraseLower ||
-        key.includes(phraseLower) ||
-        phraseLower.includes(key) ||
-        nl.includes(phraseLower) ||
-        phraseLower.includes(nl)
-      ) {
-        return equipped;
-      }
+/** Body armor slot (not buckler). */
+function isBodyArmorSlotItem(itemId: string): boolean {
+  return itemId === "leather_armor" || itemId === "chain_mail";
+}
+
+function matchArmorFromPhrase(phraseLower: string, player: PlayerState): string | null {
+  let best: { id: string; len: number } | null = null;
+  for (const entry of player.inventory) {
+    if (entry.quantity <= 0) continue;
+    if (!isBodyArmorSlotItem(entry.itemId)) continue;
+    const it = ITEMS[entry.itemId];
+    if (!it) continue;
+    const nl = it.name.toLowerCase();
+    if (nl.includes(phraseLower) || phraseLower.includes(nl)) {
+      const len = nl.length;
+      if (!best || len > best.len) best = { id: entry.itemId, len };
     }
   }
-  return null;
+  return best?.id ?? null;
 }
 
 function runWieldWeapon(state: WorldState, phraseLower: string): EngineResult {
@@ -751,6 +766,46 @@ function runEquipShield(state: WorldState, phraseLower: string): EngineResult {
     staticResponse: `Thou bearest the ${item.name}.`,
     dynamicContext: null,
     newState: { ...state, player: { ...p, shield: itemId } },
+    stateChanged: true,
+  };
+}
+
+function runEquipArmor(state: WorldState, phraseLower: string): EngineResult {
+  const p = state.player;
+  if (!phraseLower.trim()) {
+    return {
+      responseType: "static",
+      staticResponse: "Equip which armor?",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const itemId = matchArmorFromPhrase(phraseLower, p);
+  if (!itemId) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou dost not carry that armor.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const item = ITEMS[itemId]!;
+  if (p.armor === itemId) {
+    return {
+      responseType: "static",
+      staticResponse: `${item.name} is already equipped.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  return {
+    responseType: "static",
+    staticResponse: `${item.name} equipped.`,
+    dynamicContext: null,
+    newState: { ...state, player: { ...p, armor: itemId } },
     stateChanged: true,
   };
 }
@@ -1176,9 +1231,16 @@ function buildInventoryDescription(player: PlayerState): string {
   }
   const lines = player.inventory.map(entry => {
     const item = ITEMS[entry.itemId];
-    return `- ${item?.name ?? entry.itemId}${entry.quantity > 1 ? ` (x${entry.quantity})` : ""}`;
+    const name = item?.name ?? entry.itemId;
+    const qty = ` (x${entry.quantity})`;
+    const tags: string[] = [];
+    if (entry.itemId === player.weapon) tags.push("(wielded)");
+    if (entry.itemId === player.shield) tags.push("(shield equipped)");
+    if (entry.itemId === player.armor) tags.push("(armor equipped)");
+    const tagStr = tags.length > 0 ? ` ${tags.join(" ")}` : "";
+    return `- ${name}${qty}${tagStr}`;
   });
-  return `Thou dost carry:\n${lines.join("\n")}\n\nGold on hand: ${player.gold}\nBanked gold: ${player.bankedGold}`;
+  return `Thou dost carry:\n${lines.join("\n")}\n\nGold on hand: ${player.gold} gp\nBanked gold: ${player.bankedGold} gp`;
 }
 
 function buildStatDescription(player: PlayerState): string {
@@ -1318,10 +1380,6 @@ function findSamShopRow(raw: string): SamShopRow | null {
   return best?.row ?? null;
 }
 
-function isSamBodyArmorKey(key: string): boolean {
-  return key === "leather_armor" || key === "chain_mail";
-}
-
 function runSamPurchase(state: WorldState, query: string): EngineResult {
   const row = findSamShopRow(query);
   if (!row) {
@@ -1344,39 +1402,21 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
     };
   }
 
-  if (row.key === "buckler" && p.weapon && isTwoHanded(p.weapon)) {
-    return {
-      responseType: "static",
-      staticResponse:
-        "Your weapon requires both hands. Sheathe it before equipping a shield.",
-      dynamicContext: null,
-      newState: state,
-      stateChanged: false,
-    };
-  }
-
   const afterGold = updatePlayerGold(state, -row.price);
   const pg = afterGold.player;
   const remaining = pg.gold;
 
-  let nextPlayer: PlayerState;
-  if (row.key === "buckler") {
-    nextPlayer = { ...pg, shield: row.key };
-  } else if (isSamBodyArmorKey(row.key)) {
-    nextPlayer = { ...pg, armor: row.key };
-  } else {
-    const inv = pg.inventory;
-    const idx = inv.findIndex(e => e.itemId === row.key);
-    const nextInv =
-      idx < 0
-        ? [...inv, { itemId: row.key, quantity: 1 }]
-        : inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e));
-    nextPlayer = { ...pg, inventory: nextInv };
-  }
+  const inv = pg.inventory;
+  const idx = inv.findIndex(e => e.itemId === row.key);
+  const nextInv =
+    idx < 0
+      ? [...inv, { itemId: row.key, quantity: 1 }]
+      : inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e));
+  const nextPlayer: PlayerState = { ...pg, inventory: nextInv };
 
   const newState: WorldState = { ...afterGold, player: nextPlayer };
 
-  const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType WIELD [item] to equip a weapon, or EQUIP SHIELD [item] for a shield.`;
+  const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType WIELD [item] to equip a weapon, EQUIP SHIELD [item] for a shield, or EQUIP ARMOR [item] for body armor.`;
 
   return {
     responseType: "static",
@@ -1737,14 +1777,22 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
 
   if (first === "EQUIP") {
     const afterEquip = trimmed.slice(5).trim();
-    if (afterEquip.toLowerCase().startsWith("shield ")) {
+    const afterLower = afterEquip.toLowerCase();
+    if (afterLower.startsWith("shield ")) {
       const phrase = afterEquip.slice(7).trim().toLowerCase();
       return runEquipShield(newState, phrase);
+    }
+    if (afterLower.startsWith("armor ")) {
+      const phrase = afterEquip.slice(6).trim().toLowerCase();
+      return runEquipArmor(newState, phrase);
     }
     const equipPhrase = afterEquip.toLowerCase();
     const asKey = equipPhrase.replace(/\s+/g, "_");
     if (isShieldSlotItem(asKey)) {
       return runEquipShield(newState, equipPhrase);
+    }
+    if (isBodyArmorSlotItem(asKey)) {
+      return runEquipArmor(newState, equipPhrase);
     }
     return runWieldWeapon(newState, equipPhrase);
   }

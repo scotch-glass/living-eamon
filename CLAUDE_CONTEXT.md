@@ -24,7 +24,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 6, 2026*
+*Last updated: April 7, 2026*
 
 ## 1. Project Overview
 
@@ -81,7 +81,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 
 ## 5. Game Architecture
 
-**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, `WIELD`/`EQUIP`/`SHIELD`, vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
+**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, `WIELD`, `EQUIP`/`EQUIP SHIELD`/`EQUIP ARMOR`/`SHIELD`, vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
 
 **Tier 2 — State-modified static:** Room `RoomState` (`normal` \| `burnt` \| `flooded` \| `dark` \| `ransacked`) with `stateModifiers` copy in `gameData.ts`; NPC `disposition` / memory / agenda in `WorldState.npcs`. Applied by engine + `gameState` helpers; still no AI for pure state ticks.
 
@@ -213,7 +213,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | chain_mail | Chain Mail | 60 |
 | buckler | Buckler | 30 |
 
-- **Static commands (Main Hall only):** `SHOP`, `SAM`, `LIST`, or `BUY` with no argument → formatted listing; `BUY <item>` → gold check, purchase. Weapons go to **inventory** (not auto-wield); `leather_armor` / `chain_mail` set **armor**; `buckler` sets **shield** (blocked if equipped weapon is two-handed).
+- **Static commands (Main Hall only):** `SHOP`, `SAM`, `LIST`, or `BUY` with no argument → formatted listing; `BUY <item>` → gold check, **everything stacks in `player.inventory` only** (no auto-equip). Player uses **`WIELD`**, **`EQUIP SHIELD`** / **`SHIELD`**, or **`EQUIP ARMOR`** to set equipped slots.
 - Elsewhere: `SHOP`/`SAM`/`LIST` → static hint to go to Main Hall; `BUY` → still **Jane**.
 
 ### Pip (armory attendant) — Guild Armory (`armory_attendant`)
@@ -221,16 +221,21 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - Personality (summary): Young apprentice; wants to adventure; chatty about posted adventures.
 - Inventory: `short_sword` (15g), `leather_armor` (20g), `buckler` (30g per `ITEMS`), `torch` (2g), `rope` (5g), `rations` (3g)
 
-## 9. Weapon System
+## 9. Weapon & Equip System
 
 - **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed).
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
 - **Combat:** `resolveCombatRound` in `gameEngine.ts` uses `rollWeaponDamage(player.weapon) +` strength bonus (not `ITEMS[].stats.damage` dice).
-- **Equip guards (static messages):** Before setting `player.weapon`, if new weapon is two-handed and `player.shield` is set → *"You cannot wield a two-handed weapon while carrying a shield. Unequip your shield first."* Before setting shield, if current weapon is two-handed → *"Your weapon requires both hands. Sheathe it before equipping a shield."*
-- **Commands:** `WIELD`, `EQUIP` (weapon), `EQUIP SHIELD …`, `SHIELD …`, `REMOVE SHIELD` / `UNEQUIP SHIELD`.
-- **Shield slot items:** Engine helper `isShieldSlotItem` — currently only `"buckler"` (off-hand; separate from body `armor`).
-- **UI:** Sidebar shows *"— both hands occupied —"* for shield when equipped weapon is two-handed (`app/page.tsx` + `isTwoHanded`).
+- **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase.
+- **Equip flow (all require the item in inventory):**
+  - **`WIELD`** — match weapon in inventory → set `player.weapon` (two-handed vs shield guard unchanged).
+  - **`EQUIP SHIELD`** / **`SHIELD`** / bare **`EQUIP buckler`** — match shield-slot item in inventory → set `player.shield`; item **stays** in inventory.
+  - **`EQUIP ARMOR …`** / bare **`EQUIP leather_armor`** / **`chain_mail`** — match `leather_armor` or `chain_mail` in inventory → set `player.armor`; item **stays** in inventory.
+- **`INVENTORY` / `I`:** Each line shows `(xN)` plus **`(wielded)`**, **`(shield equipped)`**, **`(armor equipped)`** when that row’s `itemId` matches the active slot.
+- **`STATS`:** Still shows equipped **Weapon / Armor / Shield** from `player.weapon` / `player.armor` / `player.shield` (resolved names via `ITEMS`).
+- **Shield slot items:** `isShieldSlotItem` — currently **`buckler`** only. **Body armor slot:** `leather_armor`, `chain_mail` (`isBodyArmorSlotItem`).
+- **UI:** Sidebar shows *"— both hands occupied —"* when a two-handed weapon is equipped (`app/page.tsx` + `isTwoHanded`).
 
 ## 10. Art System
 
@@ -327,6 +332,15 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-07 — Equip system: buy → inventory only, explicit equip, INVENTORY tags
+
+- **`BUY` (Sam):** All purchases (weapons, buckler, leather, chain) **only** increment **`player.inventory`** — no auto **`shield`** / **`armor`** / **`weapon`**. Removed purchase-time two-handed vs buckler block (shield is not applied on buy).
+- **`EQUIP SHIELD` / `SHIELD`:** Resolves shield **from inventory only** (removed “match equipped shield” shortcut). Equipping sets **`player.shield`** and **does not remove** the stack from inventory.
+- **`EQUIP ARMOR`:** New static path for **`leather_armor`** / **`chain_mail`** from inventory → **`player.armor`**; messages *"Thou dost not carry that armor."* / *"{Name} equipped."*; bare **`EQUIP <key>`** routes body armor like buckler routes to shield.
+- **`WIELD`:** Already required inventory; unchanged behavior aside from global buy flow.
+- **`INVENTORY`:** Lines show **`(xN)`** plus **`(wielded)`**, **`(shield equipped)`**, **`(armor equipped)`**; gold lines suffixed with **`gp`**.
+- **Autocomplete:** **`EQUIP ARMOR …`** suggestions for body armor in pack.
 
 ### 2026-04-06 — BUY persistence, EQUIP SHIELD / EQUIP buckler, dev gold bump
 

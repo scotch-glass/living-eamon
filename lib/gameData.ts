@@ -124,7 +124,7 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
   main_hall: {
     id: "main_hall",
     name: "The Main Hall",
-    description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. In a shadowy corner, Sam Slicker spreads his wares across black velvet. Notice boards paper the eastern wall — three Guild postings hang there now, each one an open contract waiting for a fool brave enough to take it. Head east to read them.`,
+    description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. In a shadowy corner, Sam Slicker spreads his wares across black velvet. Notice boards paper the eastern wall — three Guild postings hang there now, each one an open contract waiting for a fool brave enough to take it. Head east to read them. Near the south wall sit two barrels. A hand-lettered sign on the first reads: CLOTHES FOR THE POOR. A brass plate on the second reads: USED GOWNS ONLY — DO NOT PUT FOOD IN HERE.`,
     exits: {
       north: "armory",
       east: "notice_board",
@@ -152,6 +152,8 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     items: ["notice_board_key"],
     examinableObjects: [
       { id: "notice_board", label: "Notice board" },
+      { id: "charity_barrel", label: "Barrel 1 — Clothes for the Poor" },
+      { id: "gown_barrel", label: "Barrel 2 — Used Gowns Only" },
       { id: "sams_display", label: "Sam's display" },
       { id: "great_fireplace", label: "The great fireplace" },
     ],
@@ -425,6 +427,29 @@ export const ROOM_ROBE_HUMILIATION: string[] = [
   "You are dressed. Technically.",
 ];
 
+export const BARREL_EXAMINE_DESCRIPTIONS: string[] = [
+  "The first barrel — CLOTHES FOR THE POOR — holds a jumble of donated clothing. Nothing fashionable. Everything functional. The second barrel — USED GOWNS ONLY — contains a quantity of gray backless church gowns in various states of recent use. You recognise the style.\n\n*You might: TAKE SHIRT, TAKE PANTS, TAKE SHOES, TAKE BELT*",
+  "Two barrels near the south wall. The charity barrel holds donated clothes — shirts, trousers, shoes, belts — all of them honest about their age. The gown barrel beside it is a repository of gray backless church robes. You have worn one of those. You know exactly what it is.\n\n*You might: TAKE SHIRT, TAKE PANTS, TAKE SHOES, TAKE BELT*",
+  "CLOTHES FOR THE POOR, says the first barrel, in letters written by someone who cared. It holds an assortment of donated clothing — nothing that would impress anyone, everything that would cover someone. The second barrel, brass-signed USED GOWNS ONLY — DO NOT PUT FOOD IN HERE, is full of gray church gowns.\n\n*You might: TAKE SHIRT, TAKE PANTS, TAKE SHOES, TAKE BELT*",
+  "The charity barrel is about half full of donated clothing — folded with varying degrees of optimism. The gown barrel beside it has no such optimism. It holds gray backless robes. A lot of them. The Church of Perpetual Life does a steady business.\n\n*You might: TAKE SHIRT, TAKE PANTS, TAKE SHOES, TAKE BELT*",
+];
+
+export const ROBE_CEREMONY_NARRATIVES: string[] = [
+  "You pull the clothes from the barrel and, with the particular efficiency of someone who has nothing left to lose, dress yourself under the robe in full view of the Main Hall. Nobody watches. This is the polite fiction everyone maintains.\n\nWhen you reach up to remove the robe it tears — it was always going to tear, it's that kind of garment — and comes away in two nearly equal pieces. You drop them into the gown barrel. The brass sign reads: USED GOWNS ONLY — DO NOT PUT FOOD IN HERE. You feel, if not better, at least covered.",
+  "The clothes smell of other people's hard times, which makes them appropriate. You dress under the robe with practiced urgency. Nobody in the Main Hall pays attention. They've all seen this before. When you finally remove the gown it offers one last indignity — a long tearing sound in the exact frequency of maximum embarrassment — and falls apart. Into the barrel it goes. You are dressed. This is an improvement.",
+  "You sort through the donated clothes quickly. Beggars and choosers, etc. Under the cover of the robe you dress with the concentrated focus of someone defusing something. When the robe comes off it tears cleanly along a seam that was clearly already planning to fail. You fold the pieces with unnecessary dignity and place them in the gown barrel. The Main Hall continues around you, indifferent. Good.",
+  "The charity barrel produces adequate clothing. You dress under the robe with your back to the wall, which helps with the draft situation. When you pull the robe over your head it gives up the structural argument immediately — a soft tearing sound, two pieces, done. You drop it in the USED GOWNS barrel. You are a person wearing clothes now. This matters more than it should.",
+  "You take what you need from the barrel. Under the cover of the gray robe you dress, which is something of a philosophical act — putting on clothes under clothing, becoming decent in layers. The robe, when you finally remove it, tears with the quiet resignation of something that always knew it was temporary. It goes in the gown barrel. You stand in the Main Hall wearing real clothes for the first time since you died. It's a start.",
+];
+
+export const BARREL_NPC_HINTS: string[] = [
+  "They glance at the two barrels near the south wall. The message is clear.",
+  "Their eyes flick toward the charity barrel by the south wall, then back to you.",
+  "A slight nod toward the barrels near the south wall. You know what they mean.",
+  "They say nothing about the robe, which is kind. But they look at the charity barrel pointedly.",
+  "Without comment, they tilt their head toward the barrels near the south wall.",
+];
+
 // ============================================================
 // ITEMS
 // ============================================================
@@ -662,6 +687,109 @@ export const ITEMS: Record<string, Item> = {
     name: "Gray Robe",
     description:
       "A thin gray robe with no back. Standard issue for the recently reborn. The draft it provides is considerable. The dignity it provides is not.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  moth_eaten_woolen_shirt: {
+    id: "moth_eaten_woolen_shirt",
+    name: "Moth-Eaten Woolen Shirt",
+    description:
+      "A grey woolen shirt with several moth holes that let in more air than is comfortable. It smells of cedar and long storage.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  threadbare_linen_shirt: {
+    id: "threadbare_linen_shirt",
+    name: "Threadbare Linen Shirt",
+    description: "A linen shirt worn so thin in places you can read through it. Still, it covers.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  stained_canvas_tunic: {
+    id: "stained_canvas_tunic",
+    name: "Stained Canvas Tunic",
+    description:
+      "A heavy canvas tunic with stains of uncertain origin and a drawstring that has been retied so many times the knot is now structural.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  homespun_pants: {
+    id: "homespun_pants",
+    name: "Homespun Pants",
+    description: "Rough homespun trousers, undyed, slightly too short. Functional.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  patched_wool_breeches: {
+    id: "patched_wool_breeches",
+    name: "Patched Wool Breeches",
+    description: "Wool breeches with patches on the patches. Someone put real effort into keeping these alive.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  rough_canvas_trousers: {
+    id: "rough_canvas_trousers",
+    name: "Rough Canvas Trousers",
+    description: "Canvas trousers stiff enough to stand up on their own. They will soften eventually. Probably.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  cloth_shoes: {
+    id: "cloth_shoes",
+    name: "Cloth Shoes",
+    description:
+      "Soft-soled cloth shoes, the kind worn by people who are mostly indoors. Outdoors they are optimistic.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  worn_leather_sandals: {
+    id: "worn_leather_sandals",
+    name: "Worn Leather Sandals",
+    description:
+      "Leather sandals that have walked a long way and show it. The straps have been mended with twine.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  mismatched_boots: {
+    id: "mismatched_boots",
+    name: "Mismatched Boots",
+    description:
+      "Two boots. They are both boots. That is where the agreement ends — different heights, different leather, different opinions about your left foot.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  worn_leather_belt: {
+    id: "worn_leather_belt",
+    name: "Worn Leather Belt",
+    description: "A leather belt creased in three places from years of use. It works.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  fraying_rope_belt: {
+    id: "fraying_rope_belt",
+    name: "Fraying Rope Belt",
+    description:
+      "A length of rope repurposed as a belt. The fraying ends have been knotted to slow the entropy.",
+    type: "clothing",
+    value: 0,
+    isCarryable: true,
+  },
+  cracked_hide_strap: {
+    id: "cracked_hide_strap",
+    name: "Cracked Hide Strap",
+    description:
+      "A wide strap of hide, cracked from drying out too many times. Still holds trousers up, which is the job.",
     type: "clothing",
     value: 0,
     isCarryable: true,

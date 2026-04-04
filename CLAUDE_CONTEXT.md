@@ -104,10 +104,10 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (**`main_hall`** east-wall copy points to Guild postings; **`notice_board`** full **GUILD POSTINGS — OPEN** text + per-adventure **examinableObjects**), `NPCS`, `ITEMS`, `ADVENTURES`, `SAM_INVENTORY`, … |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (**`main_hall`** east-wall copy + **charity / gown barrels** + south-wall barrel copy; **`notice_board`** full **GUILD POSTINGS — OPEN** text + per-adventure **examinableObjects**), `NPCS`, `ITEMS` (incl. **charity-barrel clothing** variants), barrel / robe ceremony narrative pools, `ADVENTURES`, `SAM_INVENTORY`, … |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, weapon sentinel **`unarmed`** (not an ITEMS id), armor/shield **null**, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, **`READ`** (notice board → static listing; else Jane), **`ENTER`** (name / id / **≥4-char** word match; miss → “go east” hint), notice-board autocomplete for **`READ`** and bare **`ENTER`**, `buildSituationBlock`, combat, **BEG**, Hokas pity, Sam shop, `extractDirection`, … |
+| `lib/gameEngine.ts` | `processInput`, **`READ`** (notice board → static listing; else Jane), **`ENTER`** (name / id / **≥4-char** word match; miss → “go east” hint), notice-board autocomplete for **`READ`** and bare **`ENTER`**, **Main Hall barrel** examine / **TAKE** clothing + **robe ceremony**, `buildSituationBlock`, combat, **BEG**, Hokas pity, Sam shop, `extractDirection`, … |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
@@ -408,6 +408,8 @@ Do not commit secret values.
 - [x] BEG HOKAS (butcher knife, no limit)
 - [x] BEG SAM limit removed (gives rusty sword every time)
 - [x] Notice board + adventure entry: room copy, **`READ`**, **`ENTER`** word-match + fallback, autocomplete on **`notice_board`**
+- [x] Charity barrels: clothing dispensed, robe ceremony, NPC barrel hints
+- [x] Autocomplete full NPC name fix
 
 ## 15. Next Up
 
@@ -418,6 +420,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Charity barrels, robe ceremony, clothing, autocomplete NPC names
+
+- **Charity barrels in Main Hall:** Barrel 1 (Clothes for the Poor) gives random clothing variants (3 per category: shirts, pants, shoes, belts). Barrel 2 (Used Gowns Only) receives returned robes in narrative. Taking a shirt while wearing **`gray_robe`** triggers automatic robe ceremony — robe removed from inventory, 5 narrative variants fire. **`BARREL_EXAMINE_DESCRIPTIONS`** (4 variants), **`ROBE_CEREMONY_NARRATIVES`** (5 variants), **`BARREL_NPC_HINTS`** (5 variants) added to **`gameData.ts`**. **`BEG SAM`** and **`BEG HOKAS`** now append barrel hint. **SAY** / **TELL** Jane context gets robe-awareness injection. Barrel autocomplete added for **`main_hall`**. Autocomplete full NPC names fixed: **SAY** / **TELL** / **BEG** now use **`n.name`** not **`n.firstName`** in **`insertText`**.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Notice board, READ, ENTER adventure flow
 

@@ -24,6 +24,9 @@ import {
   REBIRTH_NARRATIVES,
   ROOM_ROBE_HUMILIATION,
   COURTYARD_ROBE_HUMILIATION,
+  BARREL_EXAMINE_DESCRIPTIONS,
+  ROBE_CEREMONY_NARRATIVES,
+  BARREL_NPC_HINTS,
   type NPCBodyType,
   type WoundTier,
   type SamShopRow,
@@ -574,7 +577,7 @@ export function getCommandAutocompleteSuggestions(
     return npcs
       .map(n => ({
         label: n.name,
-        insertText: `BEG ${n.firstName.toUpperCase()}`,
+        insertText: `BEG ${n.name.toUpperCase()}`,
         autoSubmit: true,
       }))
       .filter(
@@ -593,7 +596,7 @@ export function getCommandAutocompleteSuggestions(
     ];
     const fromNpcs = npcs.map(n => ({
       label: n.name,
-      insertText: `SAY ${n.firstName.toUpperCase()} `,
+      insertText: `SAY ${n.name.toUpperCase()} `,
       autoSubmit: false,
     }));
     return [...special, ...fromNpcs].filter(
@@ -610,7 +613,7 @@ export function getCommandAutocompleteSuggestions(
       return npcs
         .map(n => ({
           label: n.name,
-          insertText: `TELL ${n.firstName.toUpperCase()} `,
+          insertText: `TELL ${n.name.toUpperCase()} `,
           autoSubmit: false,
         }))
         .filter(
@@ -624,6 +627,36 @@ export function getCommandAutocompleteSuggestions(
   }
 
   if (state.player.currentRoom === "main_hall") {
+    if (/^(look|examine|ex)\s+(barrel|cloth|gown)/i.test(trimmed)) {
+      return [
+        {
+          label: "Barrel 1 — Clothes for the Poor",
+          insertText: "LOOK BARREL 1",
+          autoSubmit: true,
+        },
+        {
+          label: "Barrel 2 — Used Gowns Only",
+          insertText: "LOOK BARREL 2",
+          autoSubmit: true,
+        },
+      ];
+    }
+    if (
+      /^(take|get|grab)\s*/i.test(trimmed) &&
+      state.player.inventory.some(e => e.itemId === "gray_robe")
+    ) {
+      return [
+        {
+          label: "Take everything from the charity barrel",
+          insertText: "TAKE EVERYTHING",
+          autoSubmit: true,
+        },
+        { label: "Take shirt", insertText: "TAKE SHIRT", autoSubmit: true },
+        { label: "Take pants", insertText: "TAKE PANTS", autoSubmit: true },
+        { label: "Take shoes", insertText: "TAKE SHOES", autoSubmit: true },
+        { label: "Take belt", insertText: "TAKE BELT", autoSubmit: true },
+      ];
+    }
     if (/^(s|sh|sho|shop)$/i.test(trimmed)) {
       return [{ label: "SHOP (Sam's wares)", insertText: "SHOP", autoSubmit: true }];
     }
@@ -1426,6 +1459,66 @@ function pickTemplate(templates: string[]): string {
   return templates[Math.floor(Math.random() * templates.length)];
 }
 
+const SHIRT_VARIANTS = [
+  "moth_eaten_woolen_shirt",
+  "threadbare_linen_shirt",
+  "stained_canvas_tunic",
+] as const;
+
+const PANTS_VARIANTS = [
+  "homespun_pants",
+  "patched_wool_breeches",
+  "rough_canvas_trousers",
+] as const;
+
+const SHOES_VARIANTS = ["cloth_shoes", "worn_leather_sandals", "mismatched_boots"] as const;
+
+const BELT_VARIANTS = [
+  "worn_leather_belt",
+  "fraying_rope_belt",
+  "cracked_hide_strap",
+] as const;
+
+const ALL_CLOTHING_IDS: string[] = [
+  ...SHIRT_VARIANTS,
+  ...PANTS_VARIANTS,
+  ...SHOES_VARIANTS,
+  ...BELT_VARIANTS,
+];
+
+function isClothingItem(itemId: string): boolean {
+  return ALL_CLOTHING_IDS.includes(itemId);
+}
+
+function randomFrom<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]!;
+}
+
+function randomClothingSet(): {
+  shirt: string;
+  pants: string;
+  shoes: string;
+  belt: string;
+} {
+  return {
+    shirt: randomFrom(SHIRT_VARIANTS),
+    pants: randomFrom(PANTS_VARIANTS),
+    shoes: randomFrom(SHOES_VARIANTS),
+    belt: randomFrom(BELT_VARIANTS),
+  };
+}
+
+function mainHallBarrelExaminePhrase(s: string): boolean {
+  const l = s.toLowerCase();
+  return (
+    l.includes("barrel") ||
+    l.includes("clothes for") ||
+    l.includes("charity") ||
+    l.includes("gown") ||
+    l.includes("used gown")
+  );
+}
+
 function fillTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? key);
 }
@@ -2115,7 +2208,9 @@ export function processInput(
 Current room: ${currentRoom?.name ?? "unknown"}
 Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}
 All NPCs in the room hear this — they are the audience: ${audienceNames}
-React with in-character replies from any NPCs who would naturally respond, ambient room color, and consequences. Use Universal Common for NPC dialogue.`,
+${p.inventory.some(e => e.itemId === "gray_robe")
+  ? "The player is wearing a gray backless church robe and has nothing else. NPCs who notice should mention the charity barrel near the south wall naturally, without dwelling on it.\n\n"
+  : ""}React with in-character replies from any NPCs who would naturally respond, ambient room color, and consequences. Use Universal Common for NPC dialogue.`,
       newState,
       stateChanged: false,
     };
@@ -2171,7 +2266,9 @@ Disposition: ${npcState?.disposition ?? "neutral"}
 Memory: ${npcState?.memory.map(m => m.action).join(", ") || "none"}
 Agenda: ${npcState?.agenda?.description ?? "none"}
 Room: ${currentRoom.name} (${newState.rooms[p.currentRoom]?.currentState ?? "normal"})
-Respond primarily in character as ${npcData?.name}. Universal Common for dialogue.`,
+${p.inventory.some(e => e.itemId === "gray_robe")
+  ? "The player is wearing a gray backless church robe and has nothing else. NPCs who notice should mention the charity barrel near the south wall naturally, without dwelling on it.\n\n"
+  : ""}Respond primarily in character as ${npcData?.name}. Universal Common for dialogue.`,
       newState,
       stateChanged: false,
     };
@@ -2328,7 +2425,28 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     }
     if (rest.startsWith("at ")) {
       const targetPhrase = trimmed.slice(trimmed.toLowerCase().indexOf("at ") + 3).trim();
+      if (
+        p.currentRoom === "main_hall" &&
+        mainHallBarrelExaminePhrase(targetPhrase.toLowerCase())
+      ) {
+        return {
+          responseType: "static",
+          staticResponse: pickTemplate(BARREL_EXAMINE_DESCRIPTIONS),
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
       return buildExamineEngineResult(`look at ${targetPhrase}`, newState, currentRoom);
+    }
+    if (p.currentRoom === "main_hall" && mainHallBarrelExaminePhrase(rest)) {
+      return {
+        responseType: "static",
+        staticResponse: pickTemplate(BARREL_EXAMINE_DESCRIPTIONS),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
     }
     return buildExamineEngineResult(trimmed, newState, currentRoom);
   }
@@ -2347,6 +2465,15 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     const bl = body.toLowerCase();
     if (isNoticeExamineCommand(bl)) {
       return buildExamineEngineResult(`examine notice board`, newState, currentRoom, "notice_board");
+    }
+    if (p.currentRoom === "main_hall" && mainHallBarrelExaminePhrase(bl)) {
+      return {
+        responseType: "static",
+        staticResponse: pickTemplate(BARREL_EXAMINE_DESCRIPTIONS),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
     }
     return buildExamineEngineResult(`examine ${body}`, newState, currentRoom);
   }
@@ -2383,6 +2510,109 @@ Describe what they find to read, or tell them there is nothing to read here.`,
   }
 
   if (first === "GET" || first === "TAKE" || first === "GRAB") {
+    if (p.currentRoom === "main_hall") {
+      const lowerRest = trimmed.slice(first.length).trim().toLowerCase();
+
+      const wantsShirt =
+        lowerRest.includes("shirt") ||
+        lowerRest.includes("tunic") ||
+        lowerRest.includes("top") ||
+        lowerRest.includes("clothes") ||
+        lowerRest.includes("clothing") ||
+        lowerRest.includes("everything");
+      const wantsPants =
+        lowerRest.includes("pant") ||
+        lowerRest.includes("trouser") ||
+        lowerRest.includes("breech") ||
+        lowerRest.includes("clothes") ||
+        lowerRest.includes("clothing") ||
+        lowerRest.includes("everything");
+      const wantsShoes =
+        lowerRest.includes("shoe") ||
+        lowerRest.includes("boot") ||
+        lowerRest.includes("sandal") ||
+        lowerRest.includes("footwear") ||
+        lowerRest.includes("clothes") ||
+        lowerRest.includes("clothing") ||
+        lowerRest.includes("everything");
+      const wantsBelt =
+        lowerRest.includes("belt") ||
+        lowerRest.includes("strap") ||
+        lowerRest.includes("rope belt") ||
+        lowerRest.includes("clothes") ||
+        lowerRest.includes("clothing") ||
+        lowerRest.includes("everything");
+
+      const wantsAny = wantsShirt || wantsPants || wantsShoes || wantsBelt;
+
+      if (wantsAny) {
+        const set = randomClothingSet();
+        const gotItems: string[] = [];
+        let newInventory = [...p.inventory];
+
+        const addItem = (itemId: string) => {
+          if (!isClothingItem(itemId)) return;
+          const existing = newInventory.find(e => e.itemId === itemId);
+          if (existing) {
+            newInventory = newInventory.map(e =>
+              e.itemId === itemId ? { ...e, quantity: e.quantity + 1 } : e
+            );
+          } else {
+            newInventory = [...newInventory, { itemId, quantity: 1 }];
+          }
+          gotItems.push(ITEMS[itemId]?.name ?? itemId);
+        };
+
+        if (wantsShirt) addItem(set.shirt);
+        if (wantsPants) addItem(set.pants);
+        if (wantsShoes) addItem(set.shoes);
+        if (wantsBelt) addItem(set.belt);
+
+        let updatedState: WorldState = {
+          ...newState,
+          player: { ...newState.player, inventory: newInventory },
+        };
+
+        const hasRobe = newInventory.some(e => e.itemId === "gray_robe");
+        const tookShirt = wantsShirt;
+
+        if (hasRobe && tookShirt) {
+          const withoutRobe = newInventory.filter(e => e.itemId !== "gray_robe");
+          updatedState = {
+            ...updatedState,
+            player: {
+              ...updatedState.player,
+              inventory: withoutRobe,
+            },
+          };
+
+          const ceremonyText = pickTemplate(ROBE_CEREMONY_NARRATIVES);
+          const gotLine = `You take: ${gotItems.join(", ")}.`;
+
+          return {
+            responseType: "static",
+            staticResponse: gotLine + "\n\n" + ceremonyText,
+            dynamicContext: null,
+            newState: updatedState,
+            stateChanged: true,
+          };
+        }
+
+        const gotLine = `You take from the charity barrel: ${gotItems.join(", ")}.`;
+        const hint = newInventory.some(e => e.itemId === "gray_robe")
+          ? "\n\nThe robe will come off once you have a shirt."
+          : "";
+
+        return {
+          responseType: "static",
+          staticResponse: gotLine + hint,
+          dynamicContext: null,
+          newState: updatedState,
+          stateChanged: true,
+        };
+      }
+    }
+
     return runTakeItem(lower, newState, currentRoom);
   }
 
@@ -2539,7 +2769,9 @@ Describe what they find to read, or tell them there is nothing to read here.`,
           `He reaches under the counter and produces a short sword so rusty it looks like it was ` +
           `recovered from a riverbed. He sets it on the bar without ceremony.\n\n` +
           `"Don't thank me. Kill something with it and buy a real one."\n\n` +
-          `You have the Rusty Short Sword. It is equipped.`,
+          `You have the Rusty Short Sword. It is equipped.` +
+          "\n\n" +
+          pickTemplate(BARREL_NPC_HINTS),
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
@@ -2578,7 +2810,9 @@ Describe what they find to read, or tell them there is nothing to read here.`,
           `"I don't need it anymore," he says. "Don't tell me what you do` +
           ` with it. Don't bring it back." He goes back to polishing a` +
           ` glass that doesn't need polishing.\n\n` +
-          `You have the Butcher Knife. It is equipped.`,
+          `You have the Butcher Knife. It is equipped.` +
+          "\n\n" +
+          pickTemplate(BARREL_NPC_HINTS),
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,

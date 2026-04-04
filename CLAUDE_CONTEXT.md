@@ -28,7 +28,12 @@ Every time you start a new conversation about this project, do this:
    as the code changes."
 4. Never write a Cursor prompt that omits step 3. The file must stay
    current at all times.
-5. At the end of your rehydration confirmation message, print this
+5. After reading CLAUDE_CONTEXT.md, check §17 (Aldric
+   the Veteran). Any new feature being built must include
+   an Aldric topic update. Any feature in the "does not
+   know yet" list that is now being implemented must be
+   moved to the "knows" table with its topic description.
+6. At the end of your rehydration confirmation message, print this
    exact block so the user can copy and paste all file URLs into
    the chat in one shot. Then tell the user: "Paste all of these URLs
    into the chat now so I can read the current code before we begin."
@@ -62,7 +67,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026*
+*Last updated: April 5, 2026*
 
 
 ## 1. Project Overview
@@ -550,7 +555,7 @@ Do not commit secret values.
 
 ### 2026-04-13 — Rehydration file URL block, .cursorrules audit rule, full file list
 
-- **READ THIS FIRST:** Step 2 confirmation text updated; **step 5** adds **📋 PASTE THESE INTO CHAT** raw URL block (audited list of all project **.ts** / **.tsx** / **.mjs** / **app/globals.css** under repo root, excluding `node_modules` / `.next` / build).
+- **READ THIS FIRST:** Step 2 confirmation text updated; **step 6** adds **📋 PASTE THESE INTO CHAT** raw URL block (audited list of all project **.ts** / **.tsx** / **.mjs** / **app/globals.css** under repo root, excluding `node_modules` / `.next` / build). *(Renumbered when §17 / Aldric step 5 was added.)*
 - **`.cursorrules`:** **FILE URL LIST RULE** — new source files in those extensions must add a raw GitHub URL to that block; deleted files removed from the list.
 
 ### 2026-04-12 — Combat AC from real armor + shield; STATS Total AC
@@ -614,5 +619,75 @@ Do not commit secret values.
 - Added `.cursorrules` requiring Cursor to update this file on every codebase change and commit it with code.
 - Documented actual `gameData` merchants (Hokas, Sam, Pip) and inventories; noted `savePlayer` does not persist spells/deities; noted `main_hall_exit` room state gap; art output path vs empty `public/` in repo.
 - No application logic changed in this commit aside from documentation and Cursor rules.
+
+## 17. Aldric the Veteran — Living Context Engine
+
+Aldric the Veteran (`old_mercenary` NPC, Main Hall) is the
+game's primary in-world tutorial and lore delivery system.
+He is not just a character — he is a living index of
+everything the player can do, learn, and discover.
+
+**Every time a new mechanic, room, system, item category,
+command, or secret is added to Living Eamon, Aldric must
+be updated to know about it.**
+
+This is a standing rule. It applies to every Cursor prompt
+that changes gameplay. If a prompt adds a new feature,
+the same prompt must also update Aldric's topic responses
+in `lib/gameData.ts` to reflect that feature.
+
+### What Aldric knows (current)
+
+| Topic | What he covers |
+|-------|---------------|
+| Survival | Barrel, BEG, banking gold, death/respawn |
+| Combat | Hit chance, weapon types, armor, fumbles, crits, FLEE |
+| Training | Skills he teaches, costs, skill cap (700), decay |
+| Adventures | Beginner's Cave, Thieves Guild, Haunted Manor |
+| The World | The Guild, the Church, Hokas, Sam |
+| The Order | Whispered hint only — keep voice down |
+| Magic | Guild magic (safe) vs things not discussed in public |
+| Personal stories | Unlocked after buying him an ale (Jane, cached) |
+
+### What Aldric does NOT know yet (add when implemented)
+
+- Stamina system
+- Hunger and thirst
+- Weight and encumbrance
+- Runes and runegates
+- Security boxes and VIP room
+- Banking gnomes (when Brunt is replaced)
+- Clothing and thermal system
+- Weather effects on health
+- Occult magic details (he hints, never explains)
+- Prison adventure
+- Shards and multiplayer
+- Henchmen
+
+### How Aldric's topics work (technical)
+
+- `TALK Aldric` or `TELL Aldric` with no message →
+  static opening line + topic list (no Jane call)
+- `TELL Aldric [topic]` → static pool response
+  (no Jane call for standard topics)
+- Personal stories (ale required) → Jane generates
+  once, saved to world_objects cache permanently
+- Secret/lore topics → Jane generates once, cached,
+  gated behind player progress flags
+- Aldric's responses live in `ALDRIC_TOPIC_RESPONSES`
+  in `lib/gameData.ts`
+
+### Rule for future sessions
+
+When writing any Cursor prompt that adds a new feature:
+1. Add the feature code as normal
+2. Add a corresponding entry to `ALDRIC_TOPIC_RESPONSES`
+   in `lib/gameData.ts` so Aldric can explain it
+3. Add the topic to the table above in this section
+4. If the feature is not yet implemented, add it to the
+   "What Aldric does NOT know yet" list above
+
+This keeps Aldric current and prevents the tutorial
+system from drifting out of sync with the game.
 
 ---

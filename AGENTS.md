@@ -35,3 +35,4 @@ Without these, the app still starts and the landing page renders. The static gam
 - The ESLint config uses `eslint/config` imports (flat config) specific to ESLint v9+. The repo has pre-existing lint warnings (unused vars in `gameEngine.ts`) and errors (unescaped entities in `page.tsx`).
 - `.env*` files are gitignored. Use `.env.local` for local secrets.
 - No test framework is configured — there are no automated tests in this repo.
+- When secrets are injected as environment variables (e.g. via Cursor Secrets), you must write them to `.env.local` before starting the dev server. Next.js loads env vars from `.env.local` at startup; shell-level exports alone are not picked up by the Next.js runtime for `NEXT_PUBLIC_*` vars.

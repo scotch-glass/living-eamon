@@ -24,7 +24,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 8, 2026*
+*Last updated: April 9, 2026*
 
 ## 1. Project Overview
 
@@ -223,7 +223,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 ## 9. Weapon & Equip System
 
-- **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed).
+- **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed). **`halberd`** and **`bardiche`** use **`Mace Fighting`** (corrected from Swordsmanship).
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
 - **Combat:** `resolveCombatRound` in `gameEngine.ts` uses `rollWeaponDamage(player.weapon) +` strength bonus (not `ITEMS[].stats.damage` dice).
@@ -333,6 +333,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-09 — Fixed halberd and bardiche skill from Swordsmanship to Mace Fighting
+
+- **`WEAPON_DATA`** in `lib/uoData.ts`: **`halberd`** and **`bardiche`** `skill` set to **Mace Fighting** (was Swordsmanship).
 
 ### 2026-04-08 — Consolidate WIELD into EQUIP (single equip command)
 

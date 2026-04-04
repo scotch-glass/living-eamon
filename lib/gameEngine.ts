@@ -40,6 +40,7 @@ import {
   changeRoomState,
   changeNPCDisposition,
   applyFireballConsequences,
+  setNPCCombatHp,
 } from "./gameState";
 
 import { isTwoHanded, rollWeaponDamage, WEAPON_DATA, getDexReactionBonus } from "./uoData";
@@ -109,12 +110,25 @@ export function buildSituationBlock(state: WorldState): string {
   const exitLine =
     exitParts.length > 0 ? `🧭 ${exitParts.join(" · ")}` : "🧭 —";
 
-  const presentNpcs = room.npcs
+  const npcParts = room.npcs
     .map(id => state.npcs[id])
-    .filter((n): n is NPCStateEntry => Boolean(n?.isAlive && n.location === room.id))
-    .map(n => NPCS[n.npcId]?.name ?? n.npcId);
-
-  const npcLine = presentNpcs.length > 0 ? `👤 ${presentNpcs.join(" · ")}` : "👤 —";
+    .filter((n): n is NPCStateEntry =>
+      Boolean(n?.isAlive && n.location === room.id)
+    )
+    .map(n => {
+      const npcData = NPCS[n.npcId];
+      const name = npcData?.name ?? n.npcId;
+      if (n.combatHp !== null && npcData) {
+        const maxHp = npcData.stats?.hp ?? 1;
+        const pct = Math.max(0, n.combatHp) / maxHp;
+        const filled = Math.round(pct * 8);
+        const bar = "█".repeat(filled) + "░".repeat(8 - filled);
+        return `${name} [${bar} ${n.combatHp}/${maxHp}]`;
+      }
+      return name;
+    });
+  const npcLine =
+    npcParts.length > 0 ? `👤 ${npcParts.join(" · ")}` : "👤 —";
 
   const itemLabels = room.items
     .map(id => ITEMS[id]?.name ?? id)
@@ -2061,7 +2075,17 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
         stateChanged: false,
       };
     }
+    const leftRoom = p.currentRoom;
     newState = movePlayer(newState, destinationId);
+    for (const npcId of Object.keys(newState.npcs)) {
+      const npcState = newState.npcs[npcId];
+      if (
+        npcState?.combatHp !== null &&
+        npcState?.location === leftRoom
+      ) {
+        newState = setNPCCombatHp(newState, npcId, null);
+      }
+    }
     return {
       responseType: "static",
       staticResponse: buildRoomDescription(newState, destinationId),
@@ -2219,10 +2243,12 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         stateChanged: false,
       };
     }
+    const currentEnemyHp =
+      newState.npcs[target.id]?.combatHp ?? npcData.stats.hp;
     const combat = resolveCombatRound(
       newState,
       target.id,
-      npcData.stats.hp,
+      currentEnemyHp,
       {
         name: npcData.name,
         damage: npcData.stats.damage,
@@ -2230,24 +2256,29 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
       },
       npcData.bodyType
     );
-    let postState = combat.newState;
+    let finalState = combat.newState;
     if (combat.playerWon) {
-      postState = {
-        ...postState,
+      finalState = {
+        ...finalState,
         npcs: {
-          ...postState.npcs,
+          ...finalState.npcs,
           [target.id]: {
-            ...postState.npcs[target.id]!,
+            ...finalState.npcs[target.id]!,
             isAlive: false,
           },
         },
       };
+      finalState = setNPCCombatHp(finalState, target.id, null);
+    } else if (combat.combatOver) {
+      finalState = setNPCCombatHp(finalState, target.id, null);
+    } else {
+      finalState = setNPCCombatHp(finalState, target.id, combat.enemyHp);
     }
     return {
       responseType: "static",
       staticResponse: combat.narrative,
       dynamicContext: null,
-      newState: postState,
+      newState: finalState,
       stateChanged: true,
     };
   }
@@ -2374,7 +2405,17 @@ Use ENTER THE BEGINNER'S CAVE (or whichever) to begin.`,
         stateChanged: false,
       };
     }
+    const leftRoom = p.currentRoom;
     newState = movePlayer(newState, destinationId);
+    for (const npcId of Object.keys(newState.npcs)) {
+      const npcState = newState.npcs[npcId];
+      if (
+        npcState?.combatHp !== null &&
+        npcState?.location === leftRoom
+      ) {
+        newState = setNPCCombatHp(newState, npcId, null);
+      }
+    }
     return {
       responseType: "static",
       staticResponse: buildRoomDescription(newState, destinationId),

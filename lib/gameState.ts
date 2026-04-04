@@ -94,9 +94,9 @@ export interface NPCStateEntry {
   agenda: NPCAgenda | null;
   location: string;            // Current room id
   isAlive: boolean;
+  /** Current HP in an active fight. null = not in combat / full HP. */
+  combatHp: number | null;
   customGreeting: string | null; // Override default greeting based on state
-  /** Remaining HP in combat; if unset, next round uses NPC template max HP */
-  combatHp?: number;
 }
 
 // ============================================================
@@ -263,6 +263,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         agenda: null,
         location: "main_hall",
         isAlive: true,
+        combatHp: null,
         customGreeting: null,
       },
       sam_slicker: {
@@ -272,6 +273,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         agenda: null,
         location: "main_hall",
         isAlive: true,
+        combatHp: null,
         customGreeting: null,
       },
       old_mercenary: {
@@ -281,6 +283,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         agenda: null,
         location: "main_hall",
         isAlive: true,
+        combatHp: null,
         customGreeting: null,
       },
       brunt_the_banker: {
@@ -290,6 +293,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         agenda: null,
         location: "guild_vault",
         isAlive: true,
+        combatHp: null,
         customGreeting: null,
       },
       armory_attendant: {
@@ -299,6 +303,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         agenda: null,
         location: "armory",
         isAlive: true,
+        combatHp: null,
         customGreeting: null,
       },
       door_guard: {
@@ -308,6 +313,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         agenda: null,
         location: "main_hall_exit",
         isAlive: true,
+        combatHp: null,
         customGreeting: null,
       },
     },
@@ -539,6 +545,22 @@ export function addBounty(
       ...state.player,
       bounty: state.player.bounty + amount,
       isWanted: state.player.bounty + amount > 0,
+    },
+  };
+}
+
+export function setNPCCombatHp(
+  state: WorldState,
+  npcId: string,
+  hp: number | null
+): WorldState {
+  const existing = state.npcs[npcId];
+  if (!existing) return state;
+  return {
+    ...state,
+    npcs: {
+      ...state.npcs,
+      [npcId]: { ...existing, combatHp: hp },
     },
   };
 }

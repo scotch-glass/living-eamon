@@ -109,6 +109,50 @@ export interface PlayerInventoryItem {
   quantity: number;
 }
 
+export interface WeaponSkills {
+  swordsmanship: number;
+  mace_fighting: number;
+  fencing: number;
+  archery: number;
+  armor_expertise: number;
+  shield_expertise: number;
+  stealth: number;
+  lockpicking: number;
+  magery: number;
+}
+
+export const SKILL_CAP = 700;
+
+export const SKILL_NAMES: Record<keyof WeaponSkills, string> = {
+  swordsmanship: "Swordsmanship",
+  mace_fighting: "Mace Fighting",
+  fencing: "Fencing",
+  archery: "Archery",
+  armor_expertise: "Armor Expertise",
+  shield_expertise: "Shield Expertise",
+  stealth: "Stealth",
+  lockpicking: "Lockpicking",
+  magery: "Magery",
+};
+
+export const DEFAULT_WEAPON_SKILLS: WeaponSkills = {
+  swordsmanship: 0,
+  mace_fighting: 0,
+  fencing: 0,
+  archery: 0,
+  armor_expertise: 0,
+  shield_expertise: 0,
+  stealth: 0,
+  lockpicking: 0,
+  magery: 0,
+};
+
+export function normalizeWeaponSkills(
+  ws: Partial<WeaponSkills> | null | undefined
+): WeaponSkills {
+  return { ...DEFAULT_WEAPON_SKILLS, ...ws };
+}
+
 export interface PlayerState {
   id: string;
   name: string;
@@ -122,6 +166,9 @@ export interface PlayerState {
   dexterity: number;
   charisma: number;
   expertise: number;
+
+  /** Per-category skill values. Total capped at SKILL_CAP. */
+  weaponSkills: WeaponSkills;
 
   // Economy
   gold: number;                // Gold currently carried (lost on death)
@@ -365,6 +412,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       charisma: 10,
       expertise: 0,
 
+      weaponSkills: { ...DEFAULT_WEAPON_SKILLS },
+
       gold: 0,
       bankedGold: 0,
 
@@ -597,6 +646,57 @@ export function setNPCCombatHp(
       ...state.npcs,
       [npcId]: { ...existing, combatHp: hp },
     },
+  };
+}
+
+/**
+ * Increases a skill by delta, enforcing the 700-point
+ * total cap. When cap is hit, the least-recently-used
+ * skill (lowest value, excluding the skill being raised)
+ * degrades by 1 to make room (repeated until total ≤ cap).
+ * Returns { newState, degradedSkill } where degradedSkill
+ * is the last key that degraded, or null if no degradation.
+ */
+export function updateWeaponSkill(
+  state: WorldState,
+  skill: keyof WeaponSkills,
+  delta: number
+): { newState: WorldState; degradedSkill: keyof WeaponSkills | null } {
+  const current = normalizeWeaponSkills(state.player.weaponSkills);
+  const newValue = Math.max(0, (current[skill] ?? 0) + delta);
+  let updatedSkills: WeaponSkills = { ...current, [skill]: newValue };
+  let degradedSkill: keyof WeaponSkills | null = null;
+
+  for (;;) {
+    const newTotal = (Object.keys(updatedSkills) as (keyof WeaponSkills)[]).reduce(
+      (a, k) => a + (updatedSkills[k] ?? 0),
+      0
+    );
+    if (newTotal <= SKILL_CAP) break;
+
+    const candidates = (Object.entries(updatedSkills) as [keyof WeaponSkills, number][])
+      .filter(([k, v]) => k !== skill && (v ?? 0) > 0)
+      .sort(([, a], [, b]) => (a ?? 0) - (b ?? 0));
+
+    if (candidates.length === 0) break;
+
+    const [keyToDegrade] = candidates[0]!;
+    degradedSkill = keyToDegrade;
+    updatedSkills = {
+      ...updatedSkills,
+      [keyToDegrade]: Math.max(0, (updatedSkills[keyToDegrade] ?? 0) - 1),
+    };
+  }
+
+  return {
+    newState: {
+      ...state,
+      player: {
+        ...state.player,
+        weaponSkills: updatedSkills,
+      },
+    },
+    degradedSkill,
   };
 }
 

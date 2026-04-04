@@ -314,12 +314,13 @@ export const NPCS: Record<string, NPC> = {
 
   old_mercenary: {
     id: "old_mercenary",
-    name: "Aldric the Old",
-    description: "A weathered man with a grey beard and a prosthetic left hand carved from dark wood. He nurses the same ale he's been nursing for two hours.",
-    greeting: `The old man looks you over with one good eye. "Sit down if you like. Or don't. I'm not your mother." He takes a slow sip of ale. "You've got the look of someone about to do something foolish. I used to have that look."`,
-    personality: "Aldric is a retired adventurer with decades of hard-won wisdom. He speaks plainly, offers advice only when asked, and has a deep weariness that occasionally breaks into unexpected warmth. He knows the three available adventures well and will warn players about their dangers honestly.",
+    name: "Aldric the Veteran",
+    description:
+      "A weathered man with a grey beard and a prosthetic left hand carved from dark wood. He carries himself like someone who has survived things he refuses to discuss. His eyes miss nothing.",
+    greeting: `Aldric glances over as you enter. He takes in the whole situation in about two seconds.\n\n"Sit down," he says. Not unkindly. "There are things you should know before you get yourself killed."\n\nHe nods at the chair across from him. "Ask me anything. I've been here long enough."`,
+    personality: `Aldric the Veteran is a retired adventurer who genuinely wants new players to survive. He is warm but direct, never condescending. He is the Main Hall's living tutorial — he knows the rules, the secrets, the dangers, and the shortcuts. He notices the gray robe immediately and points toward the charity barrel without drama. He recommends buying him an ale for deeper conversation. He offers formal weapon training in the courtyard for gold. When both parties have ale he is more forthcoming. He speaks in plain Universal Common. He is the most reliably useful person in the Main Hall. He proactively offers his topic list whenever a player seems lost or new.`,
     isHostile: false,
-    stats: { hp: 35, armor: 3, damage: "1d8+1" },
+    stats: { hp: 60, armor: 3, damage: "1d8+2" },
   },
 
   brunt_the_banker: {
@@ -449,6 +450,59 @@ export const BARREL_NPC_HINTS: string[] = [
   "They say nothing about the robe, which is kind. But they look at the charity barrel pointedly.",
   "Without comment, they tilt their head toward the barrels near the south wall.",
 ];
+
+export const PLAYER_FUMBLE_DESCRIPTIONS: string[] = [
+  "You overcommit — the weapon slips wide, catches nothing but air, and nearly clocks your own knee. The enemy doesn't laugh. That would be unprofessional.",
+  "A clumsy recovery: you stumble on nothing in particular, blade low, dignity lower. No harm done except to your pride.",
+  "The swing goes wrong in a way that statistics reserve for beginners and veterans on bad days. You pull back before you hurt yourself. Barely.",
+  "Your foot finds a floorboard that wasn't there a moment ago. The attack dies stillborn; you look like you're inventing a new dance.",
+  "The weapon twists in your grip. For one heartbeat you're fighting your own equipment instead of the foe. Neither wins.",
+];
+
+export const ALDRIC_OPENING_LINES: string[] = [
+  `"I've seen it all," Aldric says. "Lived a thousand lives, died a thousand deaths — mostly in that order, which is the right way round. I enjoy hanging out here with Hokas. I tolerate Sam."\n\nHe leans back. "What can I answer for you?\n\n  TELL Aldric survival    — getting back on your feet\n  TELL Aldric combat      — how fighting actually works\n  TELL Aldric training    — what I can teach you\n  TELL Aldric skills      — the skill system and the cap\n  TELL Aldric adventures  — what's posted on the board\n  TELL Aldric world       — the Guild, the Church, the city\n  TELL Aldric magic       — the safe kind\n  TELL Aldric secrets     — (buy me an ale first)"`,
+  `Aldric sets down his tankard. "You look like you have questions. Good. Most people don't ask until it's too late."\n\nHe counts on his remaining fingers. "Here's what I know about:\n\n  TELL Aldric survival    — the basics for staying alive\n  TELL Aldric combat      — the mechanics, plain language\n  TELL Aldric training    — I train, for gold\n  TELL Aldric skills      — how skills grow and decay\n  TELL Aldric adventures  — what's worth doing and what isn't\n  TELL Aldric world       — context you'll need eventually\n  TELL Aldric magic       — Guild spells and their limits\n  TELL Aldric secrets     — that costs an ale"`,
+  `"Pull up a chair," Aldric says. "I've been waiting for someone worth talking to."\n\nHe eyes you steadily. "I know this world better than most. Ask me about:\n\n  TELL Aldric survival    — start here if you're new or reborn\n  TELL Aldric combat      — before you get into a fight\n  TELL Aldric training    — I work in the courtyard, for gold\n  TELL Aldric skills      — important rules your body follows\n  TELL Aldric adventures  — the three postings on the board\n  TELL Aldric world       — the Guild, the Church, and more\n  TELL Aldric magic       — what you can learn openly\n  TELL Aldric secrets     — ale required. Non-negotiable."`,
+];
+
+export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
+  survival: [
+    `"First things first," Aldric says. "If you're wearing that gray robe, go to the charity barrel by the south wall. Take the clothes. The robe tears off — that's normal, it's designed to — and goes in the gown barrel. Then you're dressed.\n\nSecond: if you have no weapon, say BEG SAM. Sam will give you a rusty short sword. Say BEG HOKAS and he'll give you a butcher knife. Either works for now.\n\nThird: bank your gold before you go anywhere dangerous. GO DOWN to the vault. Talk to Brunt. DEPOSIT every coin you're not willing to lose. What's in your pockets dies with you; what's in the vault doesn't."\n\nHe taps the table. "That's the short version."`,
+    `"Die once and you'll learn this the hard way," Aldric mutters. "Barrel for clothes. BEG for steel. Vault for gold. The Church brings you back — it does not bring back your purse."\n\nHe points toward the south wall without looking. "Charity barrel. Gown barrel. Not complicated. Staying broke and naked is optional."`,
+  ],
+  combat: [
+    `"Fighting here isn't theatre," Aldric says. "You ATTACK with what you're wielding. Initiative is rolled each round — weapon speed and your reflexes matter. If you connect, damage comes from the weapon, your strength, and a little battlefield sense we call expertise.\n\nArmor and shields eat raw damage before it touches your hide. Sometimes they eat all of it. Sometimes not enough.\n\nCritical hits happen — not often, but when they do you'll know. If it's going badly, FLEE picks a random exit and runs. Your enemy remembers how hurt it was; walking away doesn't heal them."\n\nHe shrugs. "Misses happen too. Occasionally you'll fumble like a recruit. It passes."`,
+    `"Hit chance scales with your weapon skill — the guild tracks it per discipline — and the foe's skill. Better skill, cleaner odds. Worse skill, more praying.\n\nUnarmed against something armed is a bad idea. The engine won't let you swing empty hands like a hero from a ballad — get a blade first."\n\nAldric knocks wood with his prosthetic. "FLEE is not shame. Dead is shame."`,
+  ],
+  training: [
+    `"Right here in the Main Hall," Aldric says, "where you can find me most days — bring gold and say TRAIN followed by the skill you want: SWORDSMANSHIP, MACE, FENCING, ARCHERY, ARMOR, SHIELD, and a few others if you're serious.\n\nTwenty-five gold buys a focused lesson. I push three points into the skill you name. If your total across all skills is riding the cap, the weakest skill you aren't training bleeds a point to make room — that's how the body keeps score."\n\nHe almost smiles. "Gold. TRAIN. Repeat until you're dangerous. When the weather's fine I spar in the courtyard — but the paid drills happen where I'm sitting."`,
+    `"Formal lessons cost 25 gold and buy real progress — three points in one sitting," Aldric says. "Command is TRAIN <skill> while I'm in the hall."\n\n"If you're broke, fight weaker things and land hits. Your weapon discipline ticks up a little each time you earn it. Slower than my lessons. Cheaper."`,
+  ],
+  skills: [
+    `"Nine tracks," Aldric says, ticking them on his fingers. "Swordsmanship, Mace Fighting, Fencing, Archery, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery — the guild logs all of it.\n\nTotal across everything caps at seven hundred. Push past that and something else has to give; usually your lowest skill drops a point so the new growth has somewhere to go. The cap is merciless but fair."\n\nHe meets your eyes. "STATS shows your sheet. TRAIN moves numbers on purpose. Fighting moves them slowly, on victory."`,
+    `"Think of seven hundred as the maximum attention your body can hold," Aldric says. "Overflow doesn't vanish — it shoves another skill down a notch. Watch your totals if you're juggling magery with steel."\n\n"Decay only happens at the cap, and only to make room. Nothing rots while you're under the ceiling."`,
+  ],
+  adventures: [
+    `"Three contracts on the east-wall board right now," Aldric says. "Beginner's Cave for people who still flinch at rats. Thieves Guild if you fancy knives in the dark — harder. Haunted Manor if you've said goodbye to everyone you love."\n\n"READ the board in that room. ENTER THE BEGINNER'S CAVE — or the others — when you're ready. Word match matters; spell it like the posting."\n\nHe leans in. "Start easy unless you enjoy being a cautionary tale."`,
+    `"The board lists names and difficulties," Aldric says. "Novice, moderate, deadly — believe the labels. ENTER pulls you into the adventure proper once the engine recognizes what you typed."\n\n"If you're fresh from the Church, do not skip straight to the Manor. I am not joking."`,
+  ],
+  world: [
+    `"You're in the Guild of Free Adventurers — Main Hall for company, Notice Board for work, Vault downstairs for money, Courtyard for air and weather," Aldric says. "Hokas runs the bar; buy food and drink from him. Sam sells steel on the velvet — sharp tongue, sharper prices."\n\n"The Church of Perpetual Life brings you back when you die. West from the hall's exit, through the courtyard. You'll learn that path whether you want to or not."\n\nHe pauses. "The city outside is a conversation for another day."`,
+    `"Guild first. Everything else second," Aldric says. "Brunt in the vault doesn't chat — he banks. Door guard doesn't gossip. Priests don't speak at all, which is its own kind of theology."\n\n"Treat Hokas well. He remembers."`,
+  ],
+  magic: [
+    `"Guild-sanctioned magic is CAST — BLAST, HEAL, LIGHT, SPEED once you know them," Aldric says. "That's the safe, documented kind. PRAY reaches gods whose names you earn in play; don't embarrass yourself with empty invocations."\n\n"What you must not shout about in here is INVOKE — occult, rare, and none of my business in public."\n\nHe spreads his hands. "Stay inside CAST until you know what you're doing."`,
+    `"Magery as a skill exists," Aldric says, "but the spells you can actually CAST are listed on your character. Don't assume every syllable you invent will work."\n\n"If it isn't guild curriculum, assume it will get you stared at — or worse."`,
+  ],
+  secrets: [
+    `"Secrets cost wetware and wheat," Aldric says mildly, raising his empty tankard. "Buy me an ale from Hokas, sit like you mean it, and ask again. Some answers are too long for a free sentence."\n\n*You might: BUY ALE from Hokas, then TELL Aldric secrets again.*`,
+    `"I'm not a library with a broken lock," Aldric says. "I'm a person who charges admission in barley and hops. Ale first. Then we talk about the things that don't go on the board."\n\n*You might: purchase an ale and return.*`,
+  ],
+  order: [
+    `Aldric's voice drops until you're leaning in. "The Order — lower case when you speak it aloud. They don't recruit from shouting."\n\n"If you need them, you'll be pointed. Until then, practice looking like you belong here and nowhere else."\n\nHe sits back, volume normal. "That's all you get without clearance."`,
+    `"Whispered business," Aldric breathes. "Not for the hall at full voice. If you don't know whether you should be asking, you shouldn't."\n\nHe taps his nose. "Patience. Proof. Then someone finds you."`,
+  ],
+};
 
 // ============================================================
 // ITEMS

@@ -9,7 +9,11 @@ import {
   buildCourtyardDescription,
 } from "../../../lib/gameEngine";
 import { getCourtyardWeather } from "../../../lib/weatherService";
-import { createInitialWorldState, WorldState } from "../../../lib/gameState";
+import {
+  createInitialWorldState,
+  WorldState,
+  normalizeWeaponSkills,
+} from "../../../lib/gameState";
 import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
 import {
   savePlayer,
@@ -216,6 +220,7 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     turnCount: state.player.turnCount,
     receivedSamStarterOutfit: state.player.receivedSamStarterOutfit,
     receivedHokasUnarmedGift: state.player.receivedHokasUnarmedGift,
+    weaponSkills: state.player.weaponSkills,
   };
 }
 
@@ -276,6 +281,10 @@ export async function POST(request: NextRequest) {
             receivedHokasUnarmedGift:
               (savedPlayer as { received_hokas_unarmed_gift?: boolean })
                 .received_hokas_unarmed_gift ?? false,
+            weaponSkills: normalizeWeaponSkills(
+              (savedPlayer as { weapon_skills?: Record<string, number> | null })
+                .weapon_skills ?? undefined
+            ),
           },
         };
 

@@ -1,5 +1,7 @@
 // Ultima Online–style weapon metadata (art ids, hands, skills, damage bands).
 
+import type { WeaponSkills } from "./gameState";
+
 // weaponSpeed: AD&D 2e initiative factor (1=fastest, 10=slowest)
 // Derived from T2A UO swing speed using inverted scale conversion:
 // AD&D factor = round(10 - ((UOspeed - 10) / 48) * 9)
@@ -102,4 +104,12 @@ export function rollWeaponDamage(weaponKey: string): number {
   if (!data) return Math.floor(Math.random() * 5) + 1;
   const [min, max] = data.damage.split("-").map(Number);
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function getWeaponSkillKey(weaponKey: string): keyof WeaponSkills {
+  const skill = WEAPON_DATA[weaponKey]?.skill ?? "Swordsmanship";
+  if (skill === "Mace Fighting") return "mace_fighting";
+  if (skill === "Fencing") return "fencing";
+  if (skill === "Archery") return "archery";
+  return "swordsmanship";
 }

@@ -51,6 +51,7 @@ export async function savePlayer(player: Record<string, unknown>) {
       turn_count: player.turnCount,
       received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
       received_hokas_unarmed_gift: Boolean(player.receivedHokasUnarmedGift),
+      weapon_skills: player.weaponSkills ?? {},
       last_seen: new Date().toISOString(),
     });
 

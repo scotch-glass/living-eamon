@@ -27,6 +27,9 @@ import {
   BARREL_EXAMINE_DESCRIPTIONS,
   ROBE_CEREMONY_NARRATIVES,
   BARREL_NPC_HINTS,
+  ALDRIC_OPENING_LINES,
+  ALDRIC_TOPIC_RESPONSES,
+  PLAYER_FUMBLE_DESCRIPTIONS,
   type NPCBodyType,
   type WoundTier,
   type SamShopRow,
@@ -50,11 +53,22 @@ import {
   applyFireballConsequences,
   setNPCCombatHp,
   applyPlayerDeath,
+  updateWeaponSkill,
+  SKILL_NAMES,
+  SKILL_CAP,
+  normalizeWeaponSkills,
+  type WeaponSkills,
 } from "./gameState";
 
 import type { TimeOfDay } from "./weatherService";
 
-import { isTwoHanded, rollWeaponDamage, WEAPON_DATA, getDexReactionBonus } from "./uoData";
+import {
+  isTwoHanded,
+  rollWeaponDamage,
+  WEAPON_DATA,
+  getDexReactionBonus,
+  getWeaponSkillKey,
+} from "./uoData";
 
 // ============================================================
 // TYPES
@@ -665,6 +679,36 @@ export function getCommandAutocompleteSuggestions(
     if (/^(sa|sam)$/i.test(trimmed)) {
       return [{ label: "SAM (shop list)", insertText: "SAM", autoSubmit: true }];
     }
+    if (/^train\s*/i.test(trimmed)) {
+      return [
+        {
+          label: "Train Swordsmanship (25 gp)",
+          insertText: "TRAIN SWORDSMANSHIP",
+          autoSubmit: true,
+        },
+        { label: "Train Mace", insertText: "TRAIN MACE", autoSubmit: true },
+        { label: "Train Fencing", insertText: "TRAIN FENCING", autoSubmit: true },
+        { label: "Train Archery", insertText: "TRAIN ARCHERY", autoSubmit: true },
+        { label: "Train Armor", insertText: "TRAIN ARMOR", autoSubmit: true },
+        { label: "Train Shield", insertText: "TRAIN SHIELD", autoSubmit: true },
+        { label: "Train Stealth", insertText: "TRAIN STEALTH", autoSubmit: true },
+        { label: "Train Lockpicking", insertText: "TRAIN LOCKPICKING", autoSubmit: true },
+        { label: "Train Magery", insertText: "TRAIN MAGERY", autoSubmit: true },
+      ];
+    }
+    if (/^tell\s+ald/i.test(trimmed) && restTokens.length <= 2) {
+      return [
+        { label: "Aldric — survival", insertText: "TELL Aldric survival", autoSubmit: true },
+        { label: "Aldric — combat", insertText: "TELL Aldric combat", autoSubmit: true },
+        { label: "Aldric — training", insertText: "TELL Aldric training", autoSubmit: true },
+        { label: "Aldric — skills", insertText: "TELL Aldric skills", autoSubmit: true },
+        { label: "Aldric — adventures", insertText: "TELL Aldric adventures", autoSubmit: true },
+        { label: "Aldric — world", insertText: "TELL Aldric world", autoSubmit: true },
+        { label: "Aldric — magic", insertText: "TELL Aldric magic", autoSubmit: true },
+        { label: "Aldric — secrets", insertText: "TELL Aldric secrets", autoSubmit: true },
+        { label: "Aldric — order", insertText: "TELL Aldric order", autoSubmit: true },
+      ];
+    }
   }
 
   // BUY
@@ -820,7 +864,9 @@ COMBAT
 
 SPEECH (MUD conventions)
   SAY [text]         SAY Hello everyone!  (speaks to whole room)
+  TALK [text]        Same as SAY (alias)
   TELL [name] [text] TELL HOKAS What news?  (speaks to one NPC)
+  TELL Aldric [topic]  Static tutorial: survival, combat, training, skills, adventures, world, magic, secrets, order
 
 MAGIC
   CAST [spell]       CAST BLAST, CAST HEAL, CAST LIGHT, CAST SPEED
@@ -837,6 +883,9 @@ ECONOMY
   SELL [item]        SELL DAGGER
   DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Vault)
   WITHDRAW [amount]  WITHDRAW 10
+
+TRAINING (Main Hall, Aldric the Veteran)
+  TRAIN [skill]      e.g. TRAIN SWORDSMANSHIP — 25 gold, +3 to that skill (700-point cap)
 
 ADVENTURES
   ENTER [adventure]  ENTER THE BEGINNER'S CAVE
@@ -1522,6 +1571,45 @@ function fillTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? key);
 }
 
+function matchAldricTopic(message: string): string | null {
+  const m = message.trim().toLowerCase().replace(/^the\s+/, "");
+  const keys = Object.keys(ALDRIC_TOPIC_RESPONSES).sort((a, b) => b.length - a.length);
+  for (const k of keys) {
+    if (m === k || m.startsWith(k + " ") || m.startsWith(k + ",")) return k;
+  }
+  if (m.startsWith("order")) return "order";
+  return null;
+}
+
+const TRAIN_COST_GOLD = 25;
+const TRAIN_SKILL_DELTA = 3;
+
+const TRAIN_PHRASE_TO_SKILL: { phrase: string; skill: keyof WeaponSkills }[] = [
+  { phrase: "swordsmanship", skill: "swordsmanship" },
+  { phrase: "sword", skill: "swordsmanship" },
+  { phrase: "mace fighting", skill: "mace_fighting" },
+  { phrase: "mace", skill: "mace_fighting" },
+  { phrase: "fencing", skill: "fencing" },
+  { phrase: "archery", skill: "archery" },
+  { phrase: "armor expertise", skill: "armor_expertise" },
+  { phrase: "armor", skill: "armor_expertise" },
+  { phrase: "shield expertise", skill: "shield_expertise" },
+  { phrase: "shield", skill: "shield_expertise" },
+  { phrase: "stealth", skill: "stealth" },
+  { phrase: "lockpicking", skill: "lockpicking" },
+  { phrase: "magery", skill: "magery" },
+];
+
+function resolveTrainTargetSkill(raw: string): keyof WeaponSkills | null {
+  const m = raw.trim().toLowerCase();
+  if (!m) return null;
+  const sorted = [...TRAIN_PHRASE_TO_SKILL].sort((a, b) => b.phrase.length - a.phrase.length);
+  for (const { phrase, skill } of sorted) {
+    if (m === phrase || m.startsWith(phrase + " ")) return skill;
+  }
+  return null;
+}
+
 export function resolveCombatRound(
   state: WorldState,
   enemyId: string,
@@ -1560,7 +1648,10 @@ export function resolveCombatRound(
 
   let narrative = `⚡ Initiative — You: ${playerInit} · ${enemyData.name}: ${enemyInit}\n${winnerLabel} acts first.\n\n`;
 
-  const playerSkill = Math.min(100, player.expertise * 2);
+  const ws = normalizeWeaponSkills(player.weaponSkills);
+  const weaponSkillKey = getWeaponSkillKey(player.weapon);
+  const weaponSkillVal = ws[weaponSkillKey] ?? 0;
+  const playerSkill = Math.min(100, weaponSkillVal / 7);
   const enemySkill = 30;
   const playerHitChance = (playerSkill + 50) / ((enemySkill + 50) * 2);
   const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
@@ -1597,10 +1688,14 @@ export function resolveCombatRound(
   function doPlayerAttack(): boolean {
     const roll = Math.random();
     if (roll >= playerHitChance) {
-      narrative += fillTemplate(pickTemplate(PLAYER_MISS_DESCRIPTIONS), {
-        weapon: weaponItem?.name ?? "weapon",
-        enemy: enemyData.name,
-      });
+      if (Math.random() < 0.08) {
+        narrative += pickTemplate(PLAYER_FUMBLE_DESCRIPTIONS);
+      } else {
+        narrative += fillTemplate(pickTemplate(PLAYER_MISS_DESCRIPTIONS), {
+          weapon: weaponItem?.name ?? "weapon",
+          enemy: enemyData.name,
+        });
+      }
       return false;
     }
 
@@ -1608,6 +1703,9 @@ export function resolveCombatRound(
     const baseDmg = calcPlayerDamage();
     const dmg = isCrit ? baseDmg * 2 : baseDmg;
     newEnemyHp -= dmg;
+
+    const skillUp = updateWeaponSkill(newState, weaponSkillKey, 1);
+    newState = skillUp.newState;
     const tier = getWoundTier(dmg, enemyStartHp, "playerOnEnemy");
     const category = getWeaponCategory(player.weapon);
     const pool = getPlayerHitEnemyPool(bodyType, category, tier);
@@ -1620,6 +1718,9 @@ export function resolveCombatRound(
       narrative += `__CRITICAL__ ${hitLine}`;
     } else {
       narrative += hitLine;
+    }
+    if (skillUp.degradedSkill) {
+      narrative += `\n\nYour ${SKILL_NAMES[skillUp.degradedSkill]} slips a point — the guild's ${SKILL_CAP}-point skill ceiling makes room for your ${SKILL_NAMES[weaponSkillKey]}.`;
     }
 
     if (newEnemyHp <= 0) {
@@ -1906,15 +2007,24 @@ function buildStatDescription(player: PlayerState): string {
   const totalAC = armorAC + shieldAC;
   const strPct = Math.round(Math.min(20, Math.max(0, ((player.strength - 10) / 40) * 100)));
   const tacPct = Math.round(Math.min(20, (player.expertise / 50) * 20));
-  const playerSkill = Math.min(100, player.expertise * 2);
+  const ws = normalizeWeaponSkills(player.weaponSkills);
+  const wSkillKey = getWeaponSkillKey(player.weapon);
+  const weaponSkillVal = ws[wSkillKey] ?? 0;
+  const playerSkill = Math.min(100, weaponSkillVal / 7);
   const hitVsAvg = Math.round(((playerSkill + 50) / ((30 + 50) * 2)) * 100);
   const wSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
   const dexBonus = getDexReactionBonus(player.dexterity);
+  const skillTotal = (Object.keys(ws) as (keyof WeaponSkills)[]).reduce((a, k) => a + ws[k], 0);
+  const skillBlock = (Object.keys(ws) as (keyof WeaponSkills)[])
+    .map(k => `  ${SKILL_NAMES[k]}: ${ws[k]}`)
+    .join("\n");
 
   return `— ${player.name} —
 HP: ${player.hp} / ${player.maxHp}
 Strength: ${player.strength} | Dexterity: ${player.dexterity} | Charisma: ${player.charisma}
 Expertise: ${player.expertise}
+Weapon skills (total ${skillTotal} / ${SKILL_CAP}; active weapon uses ${SKILL_NAMES[wSkillKey]} @ ${weaponSkillVal})
+${skillBlock}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
 Weapon: ${player.weapon === "unarmed"
     ? "Unarmed"
@@ -2151,8 +2261,16 @@ export function processInput(
   state: WorldState
 ): EngineResult {
   let newState = tickWorldState(state);
-  const player = newState.player;
-  if (!player.knownSpells?.length) {
+  if (!newState.player.weaponSkills) {
+    newState = {
+      ...newState,
+      player: {
+        ...newState.player,
+        weaponSkills: normalizeWeaponSkills(undefined),
+      },
+    };
+  }
+  if (!newState.player.knownSpells?.length) {
     newState = {
       ...newState,
       player: {
@@ -2176,9 +2294,9 @@ export function processInput(
       .map(n => NPCS[n.npcId]?.name ?? n.npcId)
       .join(", ") || "none";
 
-  // ── 1. PREFIX: SAY ─────────────────────────────────────
-  if (first === "SAY") {
-    const text = trimmed.slice(3).trim();
+  // ── 1. PREFIX: SAY / TALK (alias) ──────────────────────
+  if (first === "SAY" || first === "TALK") {
+    const text = trimmed.slice(first.length).trim();
     if (!text) {
       return {
         responseType: "static",
@@ -2237,7 +2355,49 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
     }
     const after = trimmed.slice(4).trim();
     const parsed = parseTellTarget(after, currentRoom, newState);
-    if (!parsed || !parsed.message) {
+    if (!parsed) {
+      return {
+        responseType: "static",
+        staticResponse: "Tell whom, and what? Example: TELL HOKAS What news?",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    if (parsed.npcId === "old_mercenary") {
+      const topicMsg = parsed.message.trim();
+      if (!topicMsg) {
+        return {
+          responseType: "static",
+          staticResponse: pickTemplate(ALDRIC_OPENING_LINES),
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      const topic = matchAldricTopic(topicMsg);
+      if (topic && ALDRIC_TOPIC_RESPONSES[topic]) {
+        return {
+          responseType: "static",
+          staticResponse: pickTemplate(ALDRIC_TOPIC_RESPONSES[topic]!),
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      return {
+        responseType: "static",
+        staticResponse:
+          `Aldric raises an eyebrow. "Try one of the words I actually listed."\n\n` +
+          `survival · combat · training · skills · adventures · world · magic · secrets · order`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    if (!parsed.message.trim()) {
       return {
         responseType: "static",
         staticResponse: "Tell whom, and what? Example: TELL HOKAS What news?",
@@ -2270,6 +2430,78 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
   : ""}Respond primarily in character as ${npcData?.name}. Universal Common for dialogue.`,
       newState,
       stateChanged: false,
+    };
+  }
+
+  // ── 1. PREFIX: TRAIN (Aldric, Main Hall) ────────────────
+  if (first === "TRAIN") {
+    const rest = trimmed.slice(5).trim();
+    if (p.currentRoom !== "main_hall") {
+      return {
+        responseType: "static",
+        staticResponse:
+          "Aldric only gives formal lessons where he keeps his usual table. Find him in the Main Hall.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const merc = newState.npcs["old_mercenary"];
+    if (!merc?.isAlive || merc.location !== "main_hall") {
+      return {
+        responseType: "static",
+        staticResponse: "Aldric isn't here to train you right now.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    if (!rest) {
+      return {
+        responseType: "static",
+        staticResponse:
+          `Aldric looks up. "Name a discipline — I'll drill you for ${TRAIN_COST_GOLD} gold and put ${TRAIN_SKILL_DELTA} points into it."\n\n` +
+          `Example: TRAIN SWORDSMANSHIP, TRAIN MACE, TRAIN FENCING, TRAIN ARCHERY, TRAIN ARMOR, TRAIN SHIELD, TRAIN STEALTH, TRAIN LOCKPICKING, TRAIN MAGERY.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const skillKey = resolveTrainTargetSkill(rest);
+    if (!skillKey) {
+      return {
+        responseType: "static",
+        staticResponse:
+          `Aldric shakes his head. "I don't teach that under that name. Try swordsmanship, mace, fencing, archery, armor, shield, stealth, lockpicking, or magery."`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    if (p.gold < TRAIN_COST_GOLD) {
+      return {
+        responseType: "static",
+        staticResponse: `"${TRAIN_COST_GOLD} gold," Aldric says flatly. "Lessons aren't charity. Come back funded."`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    let trained = updatePlayerGold(newState, -TRAIN_COST_GOLD);
+    const skillUp = updateWeaponSkill(trained, skillKey, TRAIN_SKILL_DELTA);
+    trained = skillUp.newState;
+    let msg =
+      `You pay ${TRAIN_COST_GOLD} gold. Aldric walks you through grips, footwork, and mistakes until muscles remember.\n\n` +
+      `${SKILL_NAMES[skillKey]} rises by ${TRAIN_SKILL_DELTA}.`;
+    if (skillUp.degradedSkill) {
+      msg += `\n\nYour ${SKILL_NAMES[skillUp.degradedSkill]} slips a point — total skill cannot exceed ${SKILL_CAP}.`;
+    }
+    return {
+      responseType: "static",
+      staticResponse: msg,
+      dynamicContext: null,
+      newState: trained,
+      stateChanged: true,
     };
   }
 

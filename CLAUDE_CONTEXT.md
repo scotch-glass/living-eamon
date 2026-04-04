@@ -53,7 +53,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 15, 2026*
+*Last updated: April 16, 2026*
 
 ## 1. Project Overview
 
@@ -256,21 +256,23 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 - **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed), **`weaponSpeed`** (AD&D 2e initiative factor **1–10**, **1 = fastest**). **`halberd`** and **`bardiche`** use **`Mace Fighting`** (corrected from Swordsmanship).
 - **`weaponSpeed` source:** Ultima Online **T2A** swing speeds (see [wiki.uosecondage.com/Weapons](https://wiki.uosecondage.com/Weapons)), converted to the AD&D scale with **`round(10 − ((UOspeed − 10) / 48) × 9)`** (higher UO speed ⇒ lower AD&D factor ⇒ acts earlier).
-- **`getDexReactionBonus(dex)`:** AD&D 2e PHB Table 2 reaction adjustment for initiative (exported from `uoData.ts`). **Initiative (when used):** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** — **lower total acts first**. Starting DEX **10** ⇒ bonus **0**.
+- **`getDexReactionBonus(dex)`:** AD&D 2e PHB Table 2 (exported from `uoData.ts`), used in initiative below.
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
-- **Combat (`resolveCombatRound`) — current engine:**
-  - **Player damage:** `rollWeaponDamage(weapon) + floor((STR − 10) / 2)`.
-  - **Player hit chance:** **75%** base **+** `(DEX − 10) × 2%`, capped **40%–95%**.
-  - **Enemy damage:** `rollDice(enemy.damage) − totalAC`, minimum **1**; **`totalAC`** = body armor **`ITEMS[player.armor]?.stats?.armorClass`** (or 0) **+** shield **`ITEMS[player.shield]?.stats?.armorClass`** (or 0).
-  - **Enemy hit chance:** **70%** base **−** `(DEX − 10) × 2%`, capped **15%–95%** (higher DEX ⇒ harder for the enemy to hit).
+- **Combat (`resolveCombatRound` in `gameEngine.ts`):**
+  - **INITIATIVE (AD&D 2e):** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** for the player; **lower total acts first**. **`weaponSpeed`** from **`WEAPON_DATA`** (T2A UO swing speeds on 1–10 scale). Enemy uses **`1d10 + clamp(armor + 3, 3…9)`** as a proxy weapon speed.
+  - **HIT CHANCE (T2A):** **`(attackerSkill + 50) / ((defenderSkill + 50) × 2)`**. **`playerSkill = min(100, expertise × 2)`**; **`enemySkill`** defaults to **30** (optional **`weaponSkill`** on enemy payload).
+  - **PLAYER DAMAGE (T2A-style):** **`rollWeaponDamage(weapon) × (1 + STR% + Tactics%)`**, subtract enemy **`armor`** (AR), **halve**, **minimum 1**. **STR%** capped **20%**, scales **`(STR − 10) / 40`**. **Tactics%** capped **20%**, **`(expertise / 50) × 0.2`**.
+  - **ENEMY DAMAGE:** **`rollDice(enemy.damage) − totalPlayerAC`**, **halve**, **minimum 1**. **`totalAC`** = equipped body armor **`armorClass`** + shield **`armorClass`** (from **`ITEMS`**).
+  - **EXPERTISE:** **+1** on a **combat win**; feeds **hit chance** and **tactics** bonus.
+  - **Return value** includes **`initiativeWinner`:** **`"player"`** | **`"enemy"`**.
 - **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase. Success hint: *"Type EQUIP [item] to equip any weapon, shield, or armor."*
 - **Primary command — `EQUIP [item]`** (and **`WIELD [item]`**, same handler): **`runEquipItemFromPhrase`** resolves in order — (1) shield-slot item in inventory → **`runEquipShield`**, (2) body armor in inventory → **`runEquipArmor`**, (3) else weapon → **`runWieldWeapon`**. Underscores in the phrase are normalized to spaces (e.g. `leather_armor`).
 - **Explicit forms:** **`EQUIP SHIELD …`**, **`EQUIP ARMOR …`**, and **`SHIELD …`** unchanged; equipping still **does not remove** stacks from inventory.
 - **Unequip:** **`REMOVE SHIELD`** / **`UNEQUIP SHIELD`**; **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; **`UNEQUIP [item]`** / **`REMOVE [item]`** (with a following phrase) clears **shield**, **armor**, or **weapon** when the phrase matches the **equipped** item by name. Weapon unequip sets **`player.weapon`** back to default **`short_sword`**.
 - **`WIELD`:** Alias only — same behavior as bare **`EQUIP [item]`**; HELP lists it second.
 - **`INVENTORY` / `I`:** Each line shows `(xN)`, then optional **`[dmg: min-max]`** (from **`WEAPON_DATA`** first, else **`ITEMS[].stats.damage`**) and **`[2H]`** for two-handed weapons, or **`[AC: n]`** for armor (buckler fixed at **`[AC: 1]`**), then **`(wielded)`** / **`(shield equipped)`** / **`(armor equipped)`** when that row’s `itemId` matches the active slot.
-- **`STATS`:** **Weapon**; **Armor** / **Shield** with **`[AC: n]`** per slot; **`Total AC | Hit: n% | Dodge: n%`** (from the same caps as combat); **`STR bonus to damage`** (same formula as combat). Primary stat line uses **Dexterity** (not agility).
+- **`STATS`:** **Weapon** with **`[spd: n]`**; **Armor** / **Shield** with **`[AC: n]`**; **Total AC**; separator; **Hit% vs avg enemy** (skill 30); **STR damage bonus %** and **Tactics bonus %**; **Initiative** formula line **`1d10 + weapon spd − DEX bonus`**. Primary stats use **Dexterity**.
 - **Shield slot items:** `isShieldSlotItem` — currently **`buckler`** only. **Body armor slot:** `leather_armor`, `chain_mail` (`isBodyArmorSlotItem`).
 - **Autocomplete:** After **`EQUIP `** (not `EQUIP SHIELD` / `EQUIP ARMOR`), suggestions include **all** equippable inventory rows (weapons + shield + body armor). **`WIELD `** uses the **same** item list with the **`WIELD`** prefix.
 - **UI:** Sidebar shows *"— both hands occupied —"* when a two-handed weapon is equipped (`app/page.tsx` + `isTwoHanded`).
@@ -376,10 +378,15 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-16 — Rebuilt combat: T2A hit/damage + AD&D initiative
+
+- **`resolveCombatRound`:** initiative (**1d10 + weaponSpeed − getDexReactionBonus**); T2A hit **`(skill+50)/((foeSkill+50)×2)`**; player damage from weapon roll × (1+STR%+Tactics%) − enemy AR, halved; enemy damage from dice − **totalAC**, halved; **+1 expertise** on win; returns **`initiativeWinner`**.
+- **`buildStatDescription`:** **[spd]**, AC block, **Hit% vs avg enemy**, STR/Tactics %, initiative summary.
+
 ### 2026-04-15 — T2A `weaponSpeed` + AD&D DEX reaction bonus in `uoData`
 
 - **`WEAPON_DATA`:** each weapon has **`weaponSpeed`** (1–10) from T2A UO swing speeds via **`round(10 − ((UOspeed − 10) / 48) × 9)`**; comments cite wiki.uosecondage.com/Weapons.
-- **`getDexReactionBonus(dex)`:** PHB Table 2; intended initiative **`1d10 + weaponSpeed − getDexReactionBonus(dex)`**, lower total first (not yet wired into `resolveCombatRound`).
+- **`getDexReactionBonus(dex)`:** PHB Table 2 for initiative (now used in **`resolveCombatRound`**).
 
 ### 2026-04-14 — Dexterity rename, combat DEX hit/dodge, STATS combat readout
 

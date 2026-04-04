@@ -32,7 +32,7 @@ import {
   applyFireballConsequences,
 } from "./gameState";
 
-import { isTwoHanded, rollWeaponDamage, WEAPON_DATA } from "./uoData";
+import { isTwoHanded, rollWeaponDamage, WEAPON_DATA, getDexReactionBonus } from "./uoData";
 
 // ============================================================
 // TYPES
@@ -1241,91 +1241,241 @@ export function resolveCombatRound(
   state: WorldState,
   enemyId: string,
   enemyHp: number,
-  enemyData: { name: string; damage: string; armor: number }
+  enemyData: {
+    name: string;
+    damage: string;
+    armor: number;
+    weaponSkill?: number;
+  }
 ): {
   narrative: string;
   newState: WorldState;
   enemyHp: number;
   combatOver: boolean;
   playerWon: boolean;
+  initiativeWinner: "player" | "enemy";
 } {
   const player = state.player;
-  const weaponData = ITEMS[player.weapon];
-  const strBonus = Math.floor((player.strength - 10) / 2);
+  const weaponItem = ITEMS[player.weapon];
+  const weaponData = WEAPON_DATA[player.weapon];
 
-  // DEX modifier: each point above/below 10 = +/-2% hit/dodge
-  const dexMod = (player.dexterity - 10) * 0.02;
+  // ── INITIATIVE (AD&D 2e) ───────────────────────────────
+  // Roll 1d10, add weapon speed factor, subtract DEX reaction bonus
+  // Lower total acts first
+  const playerWeaponSpeed = weaponData?.weaponSpeed ?? 5;
+  const dexBonus = getDexReactionBonus(player.dexterity);
+  const playerInitRoll =
+    Math.ceil(Math.random() * 10) + playerWeaponSpeed - dexBonus;
 
-  // Player hit chance: 75% base + DEX modifier (capped 40%-95%)
-  const playerHitChance = Math.min(0.95, Math.max(0.4, 0.75 + dexMod));
-  const playerHit = Math.random() < playerHitChance;
+  // Enemy initiative: 1d10 + proxy weapon speed based on enemy armor
+  // Heavier armored enemies assumed to carry heavier weapons
+  const enemyWeaponSpeed = Math.max(3, Math.min(9, enemyData.armor + 3));
+  const enemyInitRoll = Math.ceil(Math.random() * 10) + enemyWeaponSpeed;
 
-  // Enemy hit chance: 70% base - DEX modifier (higher DEX = harder to hit)
-  const enemyHitChance = Math.min(0.95, Math.max(0.15, 0.7 - dexMod));
-  const enemyHit = Math.random() < enemyHitChance;
+  const playerGoesFirst = playerInitRoll <= enemyInitRoll;
+  const initiativeWinner: "player" | "enemy" = playerGoesFirst ? "player" : "enemy";
 
+  // ── HIT CHANCE (T2A UO formula) ───────────────────────
+  // Hit% = (attackerSkill + 50) / ((defenderSkill + 50) * 2)
+  // Player skill mapped from expertise (0-50 → 0-100)
+  const playerSkill = Math.min(100, player.expertise * 2);
+  const enemySkill = enemyData.weaponSkill ?? 30;
+
+  const playerHitChance = (playerSkill + 50) / ((enemySkill + 50) * 2);
+  const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
+
+  // ── DAMAGE FORMULAS (T2A UO) ──────────────────────────
+  // Player: base roll * (1 + STR% + Tactics%) → subtract enemy AR → halve
+  // Enemy:  base roll → subtract player totalAC → halve
+  // Minimum damage after all reductions: 1
+
+  function calcPlayerDamage(): number {
+    const base = rollWeaponDamage(player.weapon);
+    const strPct = Math.min(0.2, Math.max(0, (player.strength - 10) / 40));
+    const tacPct = Math.min(0.2, (player.expertise / 50) * 0.2);
+    const boosted = base * (1 + strPct + tacPct);
+    const afterAR = Math.max(0, boosted - enemyData.armor);
+    return Math.max(1, Math.floor(afterAR / 2));
+  }
+
+  function calcEnemyDamage(): number {
+    const base = rollDice(enemyData.damage);
+    const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
+    const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
+    const totalAC = armorAC + shieldAC;
+    const afterAR = Math.max(0, base - totalAC);
+    return Math.max(1, Math.floor(afterAR / 2));
+  }
+
+  // ── COMBAT RESOLUTION ─────────────────────────────────
   let narrative = "";
   let newState = state;
   let newEnemyHp = enemyHp;
 
-  if (playerHit) {
-    const dmg = rollWeaponDamage(player.weapon) + strBonus;
-    newEnemyHp = enemyHp - dmg;
-    narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerHit), {
-      weapon: weaponData?.name ?? "weapon",
-      damage: String(dmg),
-      enemy: enemyData.name,
-    });
+  // Initiative announcement
+  narrative += playerGoesFirst
+    ? `⚡ You win initiative (${playerInitRoll} vs ${enemyInitRoll}) — you strike first.\n\n`
+    : `⚡ ${enemyData.name} wins initiative (${enemyInitRoll} vs ${playerInitRoll}) — they strike first.\n\n`;
+
+  function doPlayerAttack(): boolean {
+    if (Math.random() < playerHitChance) {
+      const dmg = calcPlayerDamage();
+      newEnemyHp -= dmg;
+      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerHit), {
+        weapon: weaponItem?.name ?? "weapon",
+        damage: String(dmg),
+        enemy: enemyData.name,
+      });
+      if (newEnemyHp <= 0) {
+        narrative +=
+          "\n\n" +
+          fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyDeath), {
+            enemy: enemyData.name,
+          });
+        return true;
+      }
+    } else {
+      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerMiss), {
+        weapon: weaponItem?.name ?? "weapon",
+        enemy: enemyData.name,
+      });
+    }
+    return false;
+  }
+
+  function doEnemyAttack(): boolean {
+    if (Math.random() < enemyHitChance) {
+      const dmg = calcEnemyDamage();
+      newState = updatePlayerHP(newState, -dmg);
+      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyHit), {
+        enemy: enemyData.name,
+        damage: String(dmg),
+      });
+      if (newState.player.hp <= 0) return true;
+    } else {
+      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyMiss), {
+        enemy: enemyData.name,
+      });
+    }
+    return false;
+  }
+
+  if (playerGoesFirst) {
+    if (doPlayerAttack()) {
+      newState = updateVirtue(newState, "Valor", 1);
+      newState = addToChronicle(
+        newState,
+        `${player.name} defeated ${enemyData.name}.`,
+        false
+      );
+      newState = {
+        ...newState,
+        player: {
+          ...newState.player,
+          expertise: newState.player.expertise + 1,
+        },
+      };
+      return {
+        narrative,
+        newState,
+        enemyHp: 0,
+        combatOver: true,
+        playerWon: true,
+        initiativeWinner,
+      };
+    }
+    narrative += "\n\n";
+    if (doEnemyAttack()) {
+      const lostGold = newState.player.gold;
+      newState = updatePlayerGold(newState, -lostGold);
+      newState = updatePlayerHP(newState, newState.player.maxHp);
+      newState = {
+        ...newState,
+        player: { ...newState.player, currentRoom: "main_hall" },
+      };
+      newState = addToChronicle(
+        newState,
+        `${player.name} was defeated by ${enemyData.name}.`,
+        true
+      );
+      narrative +=
+        "\n\n" +
+        fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
+          enemy: enemyData.name,
+        });
+      narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
+      return {
+        narrative,
+        newState,
+        enemyHp: newEnemyHp,
+        combatOver: true,
+        playerWon: false,
+        initiativeWinner,
+      };
+    }
   } else {
-    narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerMiss), {
-      weapon: weaponData?.name ?? "weapon",
-      enemy: enemyData.name,
-    });
+    if (doEnemyAttack()) {
+      const lostGold = newState.player.gold;
+      newState = updatePlayerGold(newState, -lostGold);
+      newState = updatePlayerHP(newState, newState.player.maxHp);
+      newState = {
+        ...newState,
+        player: { ...newState.player, currentRoom: "main_hall" },
+      };
+      newState = addToChronicle(
+        newState,
+        `${player.name} was defeated by ${enemyData.name}.`,
+        true
+      );
+      narrative +=
+        "\n\n" +
+        fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
+          enemy: enemyData.name,
+        });
+      narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
+      return {
+        narrative,
+        newState,
+        enemyHp: newEnemyHp,
+        combatOver: true,
+        playerWon: false,
+        initiativeWinner,
+      };
+    }
+    narrative += "\n\n";
+    if (doPlayerAttack()) {
+      newState = updateVirtue(newState, "Valor", 1);
+      newState = addToChronicle(
+        newState,
+        `${player.name} defeated ${enemyData.name}.`,
+        false
+      );
+      newState = {
+        ...newState,
+        player: {
+          ...newState.player,
+          expertise: newState.player.expertise + 1,
+        },
+      };
+      return {
+        narrative,
+        newState,
+        enemyHp: 0,
+        combatOver: true,
+        playerWon: true,
+        initiativeWinner,
+      };
+    }
   }
 
-  // Check enemy death
-  if (newEnemyHp <= 0) {
-    narrative += "\n\n" + fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyDeath), {
-      enemy: enemyData.name,
-    });
-    newState = updateVirtue(newState, "Valor", 1);
-    newState = addToChronicle(newState, `${player.name} defeated ${enemyData.name}.`, false);
-    return { narrative, newState, enemyHp: 0, combatOver: true, playerWon: true };
-  }
-
-  // Enemy attacks back (enemyHit computed above from DEX)
-  if (enemyHit) {
-    // Calculate total AC from equipped armor + shield
-    const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
-    const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
-    const totalAC = armorAC + shieldAC;
-    const enemyDmg = Math.max(1, rollDice(enemyData.damage) - totalAC);
-    newState = updatePlayerHP(newState, -enemyDmg);
-    narrative += "\n\n" + fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyHit), {
-      enemy: enemyData.name,
-      damage: String(enemyDmg),
-    });
-  } else {
-    narrative += "\n\n" + fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyMiss), {
-      enemy: enemyData.name,
-    });
-  }
-
-  // Check player death
-  if (newState.player.hp <= 0) {
-    const lostGold = newState.player.gold;
-    newState = updatePlayerGold(newState, -lostGold); // Lose carried gold
-    newState = updatePlayerHP(newState, newState.player.maxHp); // Respawn at full HP
-    narrative += "\n\n" + fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
-      enemy: enemyData.name,
-    });
-    narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
-    newState = { ...newState, player: { ...newState.player, currentRoom: "main_hall" } };
-    newState = addToChronicle(newState, `${player.name} was defeated by ${enemyData.name}.`, true);
-    return { narrative, newState, enemyHp: newEnemyHp, combatOver: true, playerWon: false };
-  }
-
-  return { narrative, newState, enemyHp: newEnemyHp, combatOver: false, playerWon: false };
+  return {
+    narrative,
+    newState,
+    enemyHp: newEnemyHp,
+    combatOver: false,
+    playerWon: false,
+    initiativeWinner,
+  };
 }
 
 // ============================================================
@@ -1411,23 +1561,27 @@ function buildStatDescription(player: PlayerState): string {
   const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
   const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
   const totalAC = armorAC + shieldAC;
-  const strBonus = Math.floor((player.strength - 10) / 2);
-  const dexMod = (player.dexterity - 10) * 0.02;
-  const hitChance = Math.round(Math.min(0.95, Math.max(0.4, 0.75 + dexMod)) * 100);
-  const dodgeChance = Math.round(
-    (1 - Math.min(0.95, Math.max(0.15, 0.7 - dexMod))) * 100
-  );
+  const strPct = Math.round(Math.min(20, Math.max(0, ((player.strength - 10) / 40) * 100)));
+  const tacPct = Math.round(Math.min(20, (player.expertise / 50) * 20));
+  const playerSkill = Math.min(100, player.expertise * 2);
+  const hitVsAvg = Math.round(((playerSkill + 50) / ((30 + 50) * 2)) * 100);
+  const wSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
+  const dexBonus = getDexReactionBonus(player.dexterity);
 
   return `— ${player.name} —
 HP: ${player.hp} / ${player.maxHp}
 Strength: ${player.strength} | Dexterity: ${player.dexterity} | Charisma: ${player.charisma}
 Expertise: ${player.expertise}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
-Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon}
+Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon} [spd: ${wSpeed}]
 Armor: ${player.armor ? `${ITEMS[player.armor]?.name ?? player.armor} [AC: ${armorAC}]` : "None"}
 Shield: ${player.shield ? `${ITEMS[player.shield]?.name ?? player.shield} [AC: ${shieldAC}]` : "None"}
-Total AC: ${totalAC} | Hit: ${hitChance}% | Dodge: ${dodgeChance}%
-STR bonus to damage: ${strBonus >= 0 ? "+" : ""}${strBonus}
+Total AC: ${totalAC}
+─────────────────────────
+Hit% vs avg enemy: ${hitVsAvg}%
+STR damage bonus: +${strPct}%
+Tactics bonus: +${tacPct}%
+Initiative: 1d10 + ${wSpeed} (weapon spd) - ${dexBonus} (DEX)
 Reputation: ${player.reputationLevel}${player.knownAs ? ` — known as "${player.knownAs}"` : ""}${player.bounty > 0 ? `\n⚠ Bounty on your head: ${player.bounty} gold` : ""}${virtueLines ? `\n\nVirtues:\n${virtueLines}` : ""}`;
 }
 

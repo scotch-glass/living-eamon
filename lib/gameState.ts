@@ -253,6 +253,24 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         turnsInState: 0,
         recovery: null,
       },
+      guild_courtyard: {
+        roomId: "guild_courtyard",
+        currentState: "normal",
+        previousState: "normal",
+        causedBy: null,
+        causeDescription: null,
+        turnsInState: 0,
+        recovery: null,
+      },
+      church_of_perpetual_life: {
+        roomId: "church_of_perpetual_life",
+        currentState: "normal",
+        previousState: "normal",
+        causedBy: null,
+        causeDescription: null,
+        turnsInState: 0,
+        recovery: null,
+      },
     },
 
     npcs: {
@@ -312,6 +330,16 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         memory: [],
         agenda: null,
         location: "main_hall_exit",
+        isAlive: true,
+        combatHp: null,
+        customGreeting: null,
+      },
+      priest_of_perpetual_life: {
+        npcId: "priest_of_perpetual_life",
+        disposition: "neutral",
+        memory: [],
+        agenda: null,
+        location: "church_of_perpetual_life",
         isAlive: true,
         combatHp: null,
         customGreeting: null,
@@ -563,6 +591,36 @@ export function setNPCCombatHp(
       [npcId]: { ...existing, combatHp: hp },
     },
   };
+}
+
+export function applyPlayerDeath(
+  state: WorldState,
+  enemyName: string
+): { newState: WorldState; lostGold: number } {
+  const lostGold = state.player.gold;
+
+  let newState: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      hp: state.player.maxHp,
+      gold: 0,
+      weapon: "short_sword",
+      armor: null,
+      shield: null,
+      inventory: [{ itemId: "gray_robe", quantity: 1 }],
+      currentRoom: "church_of_perpetual_life",
+      previousRoom: state.player.currentRoom,
+    },
+  };
+
+  newState = addToChronicle(
+    newState,
+    `${state.player.name} was slain by ${enemyName} and reborn in the Church of Perpetual Life.`,
+    true
+  );
+
+  return { newState, lostGold };
 }
 
 // ============================================================

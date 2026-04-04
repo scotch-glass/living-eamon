@@ -20,6 +20,10 @@ import {
   getEnemyMissPlayerPool,
   getPlayerHitEnemyPool,
   getWeaponCategory,
+  PRIEST_SILENCE_RESPONSES,
+  REBIRTH_NARRATIVES,
+  ROOM_ROBE_HUMILIATION,
+  COURTYARD_ROBE_HUMILIATION,
   type NPCBodyType,
   type WoundTier,
   type SamShopRow,
@@ -41,7 +45,10 @@ import {
   changeNPCDisposition,
   applyFireballConsequences,
   setNPCCombatHp,
+  applyPlayerDeath,
 } from "./gameState";
+
+import type { TimeOfDay } from "./weatherService";
 
 import { isTwoHanded, rollWeaponDamage, WEAPON_DATA, getDexReactionBonus } from "./uoData";
 
@@ -1430,25 +1437,36 @@ export function resolveCombatRound(
     return newState.player.hp <= 0;
   }
 
-  function applyPlayerDeath(): void {
-    const lostGold = newState.player.gold;
-    newState = updatePlayerGold(newState, -lostGold);
-    newState = updatePlayerHP(newState, newState.player.maxHp);
-    newState = {
-      ...newState,
-      player: { ...newState.player, currentRoom: "main_hall" },
-    };
-    newState = addToChronicle(
-      newState,
-      `${player.name} was defeated by ${enemyData.name}.`,
-      true
+  function completePlayerDeathReturn(): {
+    narrative: string;
+    newState: WorldState;
+    enemyHp: number;
+    combatOver: boolean;
+    playerWon: boolean;
+  } {
+    const deathLine = fillTemplate(
+      pickTemplate(COMBAT_TEMPLATES.playerDeath),
+      { enemy: enemyData.name }
     );
-    narrative +=
+    const rebirthLine = pickTemplate(REBIRTH_NARRATIVES);
+    const { newState: afterDeath, lostGold } = applyPlayerDeath(
+      newState,
+      enemyData.name
+    );
+    const fullNarrative =
+      narrative +
       "\n\n" +
-      fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
-        enemy: enemyData.name,
-      });
-    narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
+      deathLine +
+      "\n\n" +
+      rebirthLine +
+      `\n\nYou lost ${lostGold} gold and everything you carried.`;
+    return {
+      narrative: fullNarrative,
+      newState: afterDeath,
+      enemyHp: newEnemyHp,
+      combatOver: true,
+      playerWon: false,
+    };
   }
 
   function applyEnemyDeath(): void {
@@ -1480,25 +1498,11 @@ export function resolveCombatRound(
     }
     narrative += "\n\n";
     if (doEnemyAttack()) {
-      applyPlayerDeath();
-      return {
-        narrative,
-        newState,
-        enemyHp: newEnemyHp,
-        combatOver: true,
-        playerWon: false,
-      };
+      return completePlayerDeathReturn();
     }
   } else {
     if (doEnemyAttack()) {
-      applyPlayerDeath();
-      return {
-        narrative,
-        newState,
-        enemyHp: newEnemyHp,
-        combatOver: true,
-        playerWon: false,
-      };
+      return completePlayerDeathReturn();
     }
     narrative += "\n\n";
     if (doPlayerAttack()) {
@@ -1561,6 +1565,45 @@ function buildRoomDescription(state: WorldState, roomId: string): string {
     : "";
   const itemSuggestions = room.items.length > 0 ? "examine the room, " : "";
   description += `\n\n*You might: ${npcSuggestions}${itemSuggestions}head ${Object.keys(room.exits)[0]}, or do something unexpected.*`;
+
+  const player = state.player;
+  const hasRobe =
+    player.inventory?.some(e => e.itemId === "gray_robe") || false;
+  if (hasRobe) {
+    const pool =
+      roomId === "guild_courtyard"
+        ? COURTYARD_ROBE_HUMILIATION
+        : ROOM_ROBE_HUMILIATION;
+    description += "\n\n" + pickTemplate(pool);
+  }
+
+  return description;
+}
+
+/** Guild courtyard narrative: time-of-day base + live weather line (no async here). */
+export function buildCourtyardDescription(
+  state: WorldState,
+  weatherLine: string,
+  timeOfDay: TimeOfDay
+): string {
+  const bases: Record<string, string> = {
+    dawn: "The courtyard is caught in the grey hour before sunrise. The cobblestones are dark with dew. The Church of Perpetual Life rises to the west, its white walls the only bright thing in the half-light. The Main Hall entrance stands to the east, a line of warm amber light showing under its door.",
+    day: "The courtyard lies open between the Church of Perpetual Life and the Main Hall, cobblestones worn smooth by ten thousand crossings. The sky is above it all, indifferent.",
+    dusk: "The courtyard is filling with shadow. The western sky behind the Church of Perpetual Life has gone the color of a bruise. The Main Hall to the east glows amber, the sound of voices just audible through the walls.",
+    night: "The courtyard at night is lit only by the lantern above the Main Hall entrance and whatever light escapes the Church's high windows. The cobblestones are slick and dark. The silence from the Church extends all the way out here.",
+  };
+
+  let description = bases[timeOfDay] ?? bases.day;
+  description += "\n\n" + weatherLine;
+
+  description +=
+    "\n\nExits: west (Church of Perpetual Life), east (Main Hall Entrance).";
+
+  const hasRobe =
+    state.player.inventory?.some(e => e.itemId === "gray_robe") || false;
+  if (hasRobe) {
+    description += "\n\n" + pickTemplate(COURTYARD_ROBE_HUMILIATION);
+  }
 
   return description;
 }
@@ -1854,6 +1897,15 @@ export function processInput(
         stateChanged: false,
       };
     }
+    if (p.currentRoom === "church_of_perpetual_life") {
+      return {
+        responseType: "static",
+        staticResponse: pickTemplate(PRIEST_SILENCE_RESPONSES),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
     const quoted = text.replace(/^["']|["']$/g, "");
     const echo = `You say, "${quoted}"`;
     return {
@@ -1876,6 +1928,15 @@ React with in-character replies from any NPCs who would naturally respond, ambie
       return {
         responseType: "static",
         staticResponse: "There is no one to tell.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    if (p.currentRoom === "church_of_perpetual_life") {
+      return {
+        responseType: "static",
+        staticResponse: pickTemplate(PRIEST_SILENCE_RESPONSES),
         dynamicContext: null,
         newState,
         stateChanged: false,

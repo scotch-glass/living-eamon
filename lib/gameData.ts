@@ -51,7 +51,7 @@ export interface Item {
   id: string;
   name: string;
   description: string;
-  type: "weapon" | "armor" | "spell" | "consumable" | "treasure" | "key";
+  type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key";
   value: number;             // Gold value
   stats?: {
     damage?: string;         // e.g. "1d6+2"
@@ -190,13 +190,50 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     id: "main_hall_exit",
     name: "The Guild Entrance",
     description: `Heavy oak doors bound with iron lead out to the cobblestoned street beyond. Through the small window beside the door, you can see the city going about its business — merchants, beggars, city guards, and the occasional flash of a robe that suggests a wizard. The door is always unlocked. The Guild never closes.`,
-    exits: { north: "main_hall" },
+    exits: { north: "main_hall", west: "guild_courtyard" },
     stateModifiers: {},
     npcs: ["door_guard"],
     items: [],
     examinableObjects: [
       { id: "oak_doors", label: "The oak doors" },
       { id: "street_window", label: "The street window" },
+    ],
+  },
+
+  guild_courtyard: {
+    id: "guild_courtyard",
+    name: "The Guild Courtyard",
+    description:
+      "A cobblestoned courtyard open to the sky, caught between the Church of Perpetual Life to the west and the Main Hall entrance to the east.",
+    exits: {
+      east: "main_hall_exit",
+      west: "church_of_perpetual_life",
+    },
+    stateModifiers: {},
+    npcs: [],
+    items: [],
+    examinableObjects: [
+      { id: "cobblestones", label: "The cobblestones" },
+      { id: "church_door", label: "The church door" },
+      { id: "main_hall_entrance", label: "The Main Hall entrance" },
+    ],
+  },
+
+  church_of_perpetual_life: {
+    id: "church_of_perpetual_life",
+    name: "The Church of Perpetual Life",
+    description:
+      "Everything here is white. The walls are white. The floor is cold white stone, smooth and faintly warm from some source you cannot identify. The priests move through the silence in white robes, their pale faces carrying no expression you can read. There is no art. There are no windows. There is nothing to look at except the altar — a plain white stone block — and the rack of gray robes near the door, ready for the next arrival. The silence is complete. Even your footsteps seem reluctant to disturb it.",
+    exits: {
+      east: "guild_courtyard",
+    },
+    stateModifiers: {},
+    npcs: ["priest_of_perpetual_life"],
+    items: [],
+    examinableObjects: [
+      { id: "white_altar", label: "The altar" },
+      { id: "robe_rack", label: "The robe rack" },
+      { id: "stone_floor", label: "The stone floor" },
     ],
   },
 
@@ -291,7 +328,77 @@ export const NPCS: Record<string, NPC> = {
     isHostile: false,
     stats: { hp: 30, armor: 4, damage: "1d8" },
   },
+
+  priest_of_perpetual_life: {
+    id: "priest_of_perpetual_life",
+    name: "A Priest of Perpetual Life",
+    description:
+      "Pale, unhurried, dressed in white. Their eyes are open and aware but carry no warmth and no hostility. Simply present.",
+    greeting:
+      "The priest turns toward you and raises one finger slowly to their lips.",
+    personality:
+      "Completely silent. Never speaks. Never hostile. Never warm. Responds to all attempts at conversation with a varied silent gesture. Do not generate dialogue for this NPC under any circumstances.",
+    isHostile: false,
+    stats: { hp: 999, armor: 10, damage: "0" },
+  },
 };
+
+export const PRIEST_SILENCE_RESPONSES: string[] = [
+  "The priest raises a single finger to their lips. The silence continues.",
+  "The priest turns toward you with calm eyes and says nothing. The gesture is not unkind.",
+  "A slight tilt of the head. No words come. None will.",
+  "The priest folds their hands and waits. Whatever you were going to say, they have heard it before.",
+  "They look at you directly. The silence between you stretches and does not break.",
+  "The priest bows very slightly. It is not an answer. It is not a refusal. It simply is.",
+  "One hand rises, palm out, gentle as a held breath. You understand.",
+  "The priest's eyes close for a moment, then open again. Still white. Still silent.",
+  "They are aware of you. They are not troubled by you. They simply do not speak.",
+  "The priest places a hand briefly over their heart and looks at you. That is all.",
+];
+
+export const REBIRTH_NARRATIVES: string[] = [
+  "Dark. Then cold. Then the ceiling of the Church of Perpetual Life, which is white, and a priest who is watching you without expression. You are alive. You remember everything.",
+  "You come back the way you always do — slowly, then all at once. The floor is cold under you. A gray robe has been placed over your body. The last thing you remember is the fight. You lost.",
+  "The dying part was fast. The coming back part is not. You surface through the dark like something dredged from deep water, gasping, cold, alive. The priests don't react. They've seen this before.",
+  "First there is nothing. Then there is cold stone against your cheek. Then there is the smell of the robe — clean, institutional, faintly medicinal. You are in the Church. You are alive. You lost everything you were carrying.",
+  "You blink. White ceiling. White walls. A priest standing three feet away, watching you with no particular expression. You have been here before, or somewhere like it. Your hands are empty. Your pockets are empty. You are alive.",
+  "The return is never graceful. You wake on the floor of the Church of Perpetual Life with the taste of the fight still in your mouth and nothing in your hands. A gray robe. Cold feet. Full lungs. Start again.",
+  "Someone has placed a robe over you. The floor beneath it is cold. The priests move around you without urgency. You are not special here. You are simply the latest. You lost your gold. You lost your gear. You are alive, which is the part that matters.",
+  "You died. Now you haven't. The Church of Perpetual Life has seen to that, as it always does, efficiently and without ceremony. The robe they've given you has no back. You will notice this when you stand up.",
+  "There is a specific quality to the silence in the Church of Perpetual Life that you only notice when you wake up in it. Total. Complete. Not empty — full of something that doesn't make sound. You are back. You remember everything. You have nothing.",
+  "Cold floor. White ceiling. Gray robe. The arithmetic of resurrection, same as it ever was. The priest near the door doesn't look up. They knew you were coming before you did.",
+  "The dark gives you back. It always does. You surface in the Church, on the floor, alive and empty-handed, and a priest is already moving away — they placed the robe and didn't wait for thanks. Nobody thanks them. They don't want thanks.",
+  "You wake knowing exactly what happened and exactly what you've lost. The Church doesn't soften that. It just gives you the robe and the cold floor and the silence, and lets you find your own way to standing.",
+  "Everything you carried is gone. Everything you are remains. The Church of Perpetual Life is precise about this distinction. A gray robe. Cold stone. Full health. The rest is up to you.",
+  "The last thing before the dark was the fight going wrong. The first thing after is the ceiling of the Church, which you know because you've stared at it before, lying exactly like this, in exactly this robe, with exactly this much in your pockets. Nothing. Begin.",
+  "You breathe in. Cold. White. Silent. The robe they've put on you has no back, which you will discover shortly, and which will be the first of several humiliations the living world has waiting for you today.",
+];
+
+export const COURTYARD_ROBE_HUMILIATION: string[] = [
+  "The robe shifts in the wind and reminds you, with cold specificity, that it has no back.",
+  "A passerby glances at you and immediately finds something interesting to look at on the ground.",
+  "The draft through the back of the robe is immediate and democratic.",
+  "Two guild members cross the courtyard from the other direction and say nothing, which is worse than if they had said something.",
+  "The robe does what it was designed to do, which is cover the front of you. The back of you is on its own.",
+  "Someone across the courtyard sees you and changes direction without explanation.",
+  "The robe flaps. You are aware of what it reveals. Everyone near you is also aware, and is pretending not to be.",
+  "A child stares. Their parent turns them away. Nobody says anything.",
+  "The back of the robe is, technically, open to interpretation. The wind has an interpretation.",
+  "You have made this walk before. It does not get easier. The robe does not get more dignified.",
+];
+
+export const ROOM_ROBE_HUMILIATION: string[] = [
+  "The robe shifts, reminding you that it has no back.",
+  "A draft finds the gap in the robe that was always there.",
+  "Nobody looks at you directly. This is somehow worse.",
+  "The robe does its best. Its best is not very good.",
+  "You are aware, constantly, of the back of the robe.",
+  "The institutional smell of the robe precedes you.",
+  "Someone notices the robe and finds somewhere else to be.",
+  "The robe flaps once. You do not acknowledge it.",
+  "The back of the robe is not there. The draft is.",
+  "You are dressed. Technically.",
+];
 
 // ============================================================
 // ITEMS
@@ -503,6 +610,15 @@ export const ITEMS: Record<string, Item> = {
     type: "weapon",
     value: 35,
     stats: { damage: "4-14" },
+    isCarryable: true,
+  },
+  gray_robe: {
+    id: "gray_robe",
+    name: "Gray Robe",
+    description:
+      "A thin gray robe with no back. Standard issue for the recently reborn. The draft it provides is considerable. The dignity it provides is not.",
+    type: "clothing",
+    value: 0,
     isCarryable: true,
   },
   quarter_staff: {

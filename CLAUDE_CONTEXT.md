@@ -50,6 +50,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameState.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/supabase.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/uoData.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/weatherService.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next-env.d.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next.config.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/postcss.config.mjs
@@ -82,7 +83,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Language: TypeScript
 - Styling: Tailwind v4 (dependency); primary game UI uses inline styles in `app/page.tsx`
 - Database: Supabase (Postgres)
-- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic).
+- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic). **Guild Courtyard:** when `responseType === "static"` and the player is in **`guild_courtyard`**, **`route.ts`** calls **`getCourtyardWeather()`** (Open-Meteo, Warsaw) and replaces the body with **`buildCourtyardDescription`** (no LLM).
 - Image generation: xAI `https://api.x.ai/v1/images/generations`, model **`grok-imagine-image`** in `scripts/generate-all-art.mjs`
 - Deployment: Vercel
 - IDE: Cursor (e.g. MacBook Pro)
@@ -102,16 +103,17 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, type **`clothing`**), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
-| `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with 10% **`__CRITICAL__`** + double damage, **`FLEE`**), banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
+| `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, reset weapon/armor/shield, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
+| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with 10% **`__CRITICAL__`**, **`FLEE`**), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
+| `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: name gate, chat log, `CommandInput`, sidebar, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
-| `app/api/chat/route.ts` | POST: load/merge player, `processInput`; static normally instant; **`__CRITICAL__`** in static combat → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
+| `app/api/chat/route.ts` | POST: load/merge player, `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
@@ -190,10 +192,12 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | `main_hall` | The Main Hall | north→`armory`, east→`notice_board`, south→`main_hall_exit`, down→`guild_vault` | hokas_tokas, sam_slicker, old_mercenary | notice_board_key | `burnt`, `ransacked`, `dark` |
 | `armory` | The Guild Armory | south→`main_hall` | armory_attendant | short_sword, leather_armor, torch, rope | _(none)_ |
 | `notice_board` | The Notice Board | west→`main_hall` | _(none)_ | _(none)_ | _(none)_ |
-| `main_hall_exit` | The Guild Entrance | north→`main_hall` | door_guard | _(none)_ | _(none)_ |
+| `main_hall_exit` | The Guild Entrance | north→`main_hall`, west→`guild_courtyard` | door_guard | _(none)_ | _(none)_ |
+| `guild_courtyard` | The Guild Courtyard | east→`main_hall_exit`, west→`church_of_perpetual_life` | _(none)_ | _(none)_ | _(none)_ — live weather via **`route.ts`** + **`buildCourtyardDescription`** |
+| `church_of_perpetual_life` | The Church of Perpetual Life | east→`guild_courtyard` | priest_of_perpetual_life | _(none)_ | _(none)_ |
 | `guild_vault` | The Guild Vault | up→`main_hall` | brunt_the_banker | _(none)_ | _(none)_ |
 
-**`createInitialWorldState.rooms` keys:** `main_hall`, `armory`, `notice_board`, `guild_vault` only (not `main_hall_exit`). `door_guard` NPC state uses `location: "main_hall_exit"`.
+**`createInitialWorldState.rooms` keys:** `main_hall`, `armory`, `notice_board`, `guild_vault`, **`guild_courtyard`**, **`church_of_perpetual_life`** (not `main_hall_exit`). `door_guard` NPC state uses `location: "main_hall_exit"`.
 
 ### NPC catalog (`NPCS` in `gameData.ts`) — default disposition in fresh state
 
@@ -205,6 +209,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | brunt_the_banker | Brunt | neutral | guild_vault |
 | armory_attendant | Pip | neutral | armory |
 | door_guard | The Door Guard | neutral | main_hall_exit |
+| priest_of_perpetual_life | A Priest of Perpetual Life | neutral | church_of_perpetual_life |
 
 ## 8. Merchants
 
@@ -387,10 +392,13 @@ Do not commit secret values.
 - [x] Persistent enemy HP tracking across combat rounds (`NPCStateEntry.combatHp` + `setNPCCombatHp`)
 - [x] FLEE command (random exit, enemy HP preserved on flee)
 - [x] Critical hit system (10% crit, double damage, Jane rewrites the hit line)
+- [x] Church of Perpetual Life (respawn room, silent priests, rebirth narratives)
+- [x] Guild Courtyard (live Warsaw weather, CET time, 24 static descriptions)
+- [x] Death redesign: inventory wipe, gray robe, `applyPlayerDeath`
+- [x] Gray robe humiliation on every room transition while worn
 
 ## 15. Next Up
 
-- [ ] **Church of Perpetual Life** — new respawn room, NPC, gray robe item; player respawns there naked (gray robe only) instead of Main Hall; inventory wiped on death; banked gold preserved
 - [ ] Re-enable Jane streaming in `main_hall` before production
 - [ ] Persist `known_spells` / `known_deities` in savePlayer
 - [ ] Static structured shop for Pip (beginner gear)
@@ -398,6 +406,15 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Church of Perpetual Life, Guild Courtyard, death redesign, live weather
+
+- **Church of Perpetual Life + Guild Courtyard** in **`gameData`** (`MAIN_HALL_ROOMS`), initial **`rooms`/`npcs`** in **`gameState`**. **`main_hall_exit`** gains west→**`guild_courtyard`**. Item **`gray_robe`** (`type: "clothing"`). NPC **`priest_of_perpetual_life`** (silent). Pools: **`PRIEST_SILENCE_RESPONSES`** (10), **`REBIRTH_NARRATIVES`** (15), **`ROOM_ROBE_HUMILIATION`** / **`COURTYARD_ROBE_HUMILIATION`** (10 each).
+- **Death:** **`applyPlayerDeath`** — carried **gold → 0**, inventory → **gray robe only**, weapon default **short_sword**, armor/shield **null**, **HP** full, **`currentRoom` → `church_of_perpetual_life`**, chronicle line. **`resolveCombatRound`** appends **`COMBAT_TEMPLATES.playerDeath`**, rebirth line, gold/carry loss text.
+- **Priest:** **`SAY`** / **`TELL`** in church → static **`pickTemplate(PRIEST_SILENCE_RESPONSES)`**, no Jane.
+- **Robe humiliation:** **`buildRoomDescription`** appends a line whenever **`gray_robe`** is in inventory (**`ROOM_ROBE_HUMILIATION`** or courtyard pool in courtyard).
+- **Courtyard:** **`lib/weatherService.ts`** — **`getCourtyardWeather()`** (Open-Meteo Warsaw + CET/CEST **`TimeOfDay`**, 24 **`weatherLine`** strings). **`app/api/chat/route.ts`** intercepts static responses when **`currentRoom === "guild_courtyard"`** and replaces body with **`buildCourtyardDescription`** (no LLM). Fallback if API fails.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Critical hit system (`__CRITICAL__`, Jane rewrite)
 
@@ -426,7 +443,7 @@ Do not commit secret values.
 - **Bug E (armor absorption):** `rawEnemyDmg - totalAC` where `totalAC = armorAC + shieldAC` from `ITEMS[id].stats.armorClass`. No minimum-1 clamp — full block is possible. Partial and full absorb narration from `ARMOR_ABSORB_DESCRIPTIONS` / `ARMOR_FULL_ABSORB_DESCRIPTIONS`. No HP change and no wound line when fully blocked.
 - **Bug F (type consolidation):** New `lib/npcBodyType.ts` exports `NPCBodyType`. `gameData.ts` imports and re-exports it. `NPC.bodyType` unchanged. `combatNarrationPools.ts` imports `NPCBodyType` from `./npcBodyType`; `CombatBodyType` removed entirely.
 - **`resolveCombatRound` new signature:** `resolveCombatRound(state, enemyId, enemyHp, {name,damage,armor}, bodyType?)`
-- **Death/respawn logic unchanged** — Church of Perpetual Life deferred.
+- *(Superseded by 2026-04-04 Church session — death now uses **`applyPlayerDeath`** / Church.)*
 - `npx tsc --noEmit` — clean after all changes.
 
 *Recorded in docs 2026-04-12; implementation landed in commit `27a34e4`.*

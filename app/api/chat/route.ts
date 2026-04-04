@@ -2,7 +2,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
-import { processInput, buildSituationBlock, stripTrailingSituationBlocks } from "../../../lib/gameEngine";
+import {
+  processInput,
+  buildSituationBlock,
+  stripTrailingSituationBlocks,
+  buildCourtyardDescription,
+} from "../../../lib/gameEngine";
+import { getCourtyardWeather } from "../../../lib/weatherService";
 import { createInitialWorldState, WorldState } from "../../../lib/gameState";
 import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
 import {
@@ -441,7 +447,18 @@ export async function POST(request: NextRequest) {
     const engineResult = processInput(playerInput, state);
 
     // STATIC — no API call unless narrative contains __CRITICAL__ (Jane rewrites crit line)
-    if (engineResult.responseType === "static" && engineResult.staticResponse) {
+    if (engineResult.responseType === "static" && engineResult.staticResponse !== null) {
+      // Courtyard gets live weather injected
+      if (engineResult.newState.player.currentRoom === "guild_courtyard") {
+        const weather = await getCourtyardWeather();
+        const fullDesc = buildCourtyardDescription(
+          engineResult.newState,
+          weather.weatherLine,
+          weather.timeOfDay
+        );
+        return sendResponse(fullDesc, engineResult.newState);
+      }
+
       const staticText = engineResult.staticResponse;
 
       if (staticText.includes("__CRITICAL__")) {

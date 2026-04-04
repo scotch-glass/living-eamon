@@ -104,10 +104,10 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, plain + **ragged** clothing, **`rusty_shortsword`**, **`butcher_knife`**, **`castoff_short_sword`**), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (**`main_hall`** east-wall copy points to Guild postings; **`notice_board`** full **GUILD POSTINGS — OPEN** text + per-adventure **examinableObjects**), `NPCS`, `ITEMS`, `ADVENTURES`, `SAM_INVENTORY`, … |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, weapon sentinel **`unarmed`** (not an ITEMS id), armor/shield **null**, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG SAM` / `BEG HOKAS`** while unarmed), **Hokas unarmed pity** (**`TELL HOKAS`**, **`EXAMINE` / name-alone / look-at** mentioning Hokas), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, **`READ`** (notice board → static listing; else Jane), **`ENTER`** (name / id / **≥4-char** word match; miss → “go east” hint), notice-board autocomplete for **`READ`** and bare **`ENTER`**, `buildSituationBlock`, combat, **BEG**, Hokas pity, Sam shop, `extractDirection`, … |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
@@ -407,6 +407,7 @@ Do not commit secret values.
 - [x] Hokas unarmed pity (**`TELL HOKAS`** / examine Hokas): ragged clothes + **castoff short sword** (1–4), once per life arc
 - [x] BEG HOKAS (butcher knife, no limit)
 - [x] BEG SAM limit removed (gives rusty sword every time)
+- [x] Notice board + adventure entry: room copy, **`READ`**, **`ENTER`** word-match + fallback, autocomplete on **`notice_board`**
 
 ## 15. Next Up
 
@@ -417,6 +418,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Notice board, READ, ENTER adventure flow
+
+- **`notice_board`** description rewritten (**GUILD POSTINGS — OPEN** with three contracts + **ENTER** hints); **`examinableObjects`:** per-posting labels + treasure maps + wanted posters. **`main_hall`** east-wall sentence now points players **east** to read postings.
+- **`READ`:** in **`notice_board`** → static **`buildRoomDescription`**; elsewhere → Jane. **`HELP_TEXT`** INTERACTION line for **READ**.
+- **`ENTER`:** third match on significant words (**≥4** chars) from adventure **`name`**; no match → static message to visit notice board / list the three **ENTER** lines. Autocomplete: bare **`ENTER`** on **`notice_board`** offers all three adventures; **`READ`** prefix on **`notice_board`**.
+- *Note:* **`ADVENTURES`** in repo currently defines **`beginners_cave`** only; the board lists three contracts for narrative/UI parity until other adventures are added.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — BEG HOKAS butcher knife, BEG SAM unlimited, HELP
 

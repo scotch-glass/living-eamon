@@ -689,6 +689,44 @@ export function getCommandAutocompleteSuggestions(
       .filter(x => !partialLower || x.insertText.toLowerCase().includes(partialLower));
   }
 
+  // READ — notice board room
+  if (
+    /^(r|re|rea|read)$/i.test(trimmed) &&
+    state.player.currentRoom === "notice_board"
+  ) {
+    return [
+      {
+        label: "READ (notice board)",
+        insertText: "READ",
+        autoSubmit: true,
+      },
+    ];
+  }
+
+  // ENTER — full commands on notice board
+  if (
+    /^enter\s*$/i.test(trimmed) &&
+    state.player.currentRoom === "notice_board"
+  ) {
+    return [
+      {
+        label: "The Beginner's Cave (novice)",
+        insertText: "ENTER THE BEGINNER'S CAVE",
+        autoSubmit: true,
+      },
+      {
+        label: "The Thieves Guild (moderate)",
+        insertText: "ENTER THE THIEVES GUILD",
+        autoSubmit: true,
+      },
+      {
+        label: "The Haunted Manor (deadly)",
+        insertText: "ENTER THE HAUNTED MANOR",
+        autoSubmit: true,
+      },
+    ];
+  }
+
   // ENTER
   if (/^enter\s+/i.test(trimmed)) {
     return Object.values(ADVENTURES)
@@ -729,6 +767,7 @@ const HELP_TEXT = `MOVEMENT
 
 INTERACTION
   EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
+  READ               Read notices, signs, or posted contracts
   GET [item]         GET SWORD, GET TORCH
   DROP [item]        DROP SWORD
   EQUIP [item]       Weapon, shield, or armor from inventory (primary)
@@ -2255,6 +2294,27 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     };
   }
 
+  if (first === "READ") {
+    if (p.currentRoom === "notice_board") {
+      return {
+        responseType: "static",
+        staticResponse: buildRoomDescription(newState, "notice_board"),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `Player wants to READ something. Input: "${trimmed}".
+Room: ${currentRoom?.name ?? "unknown"}.
+Describe what they find to read, or tell them there is nothing to read here.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
   if (first === "LOOK") {
     const rest = trimmed.slice(4).trim().toLowerCase();
     if (!rest || rest === "around" || rest === "room") {
@@ -2719,9 +2779,15 @@ Negotiate sale; update gold/inventory if a deal completes.`,
   if (first === "ENTER") {
     const rest = lower.replace(/^enter\s+/, "").trim();
     for (const [advId, adv] of Object.entries(ADVENTURES)) {
+      const advWords = adv.name
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length >= 4);
+      const wordMatch = advWords.some(w => rest.includes(w));
       if (
         rest.includes(adv.name.toLowerCase()) ||
-        rest.includes(advId.replace(/_/g, " "))
+        rest.includes(advId.replace(/_/g, " ")) ||
+        wordMatch
       ) {
         return {
           responseType: "dynamic",
@@ -2743,15 +2809,12 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
     }
     return {
       responseType: "static",
-      staticResponse: `Three adventures are posted on the notice board:
-
-1. The Beginner's Cave — A goblin-infested cave north of the city. Novice difficulty. Guild pays bounty on goblin ears.
-
-2. The Thieves Guild — A social infiltration of the city's criminal underworld. Moderate difficulty. Requires wit over strength.
-
-3. The Haunted Manor — Something is wrong at the old Blackwood estate. Moderate to deadly. Not recommended for the faint of heart.
-
-Use ENTER THE BEGINNER'S CAVE (or whichever) to begin.`,
+      staticResponse:
+        `The Guild has three open contracts posted on the notice board.\n\n` +
+        `Head east to read them, or type one of these directly:\n\n` +
+        `  ENTER THE BEGINNER'S CAVE\n` +
+        `  ENTER THE THIEVES GUILD\n` +
+        `  ENTER THE HAUNTED MANOR`,
       dynamicContext: null,
       newState,
       stateChanged: false,

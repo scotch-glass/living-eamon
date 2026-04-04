@@ -124,7 +124,7 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
   main_hall: {
     id: "main_hall",
     name: "The Main Hall",
-    description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. In a shadowy corner, Sam Slicker spreads his wares across black velvet. Notice boards paper the eastern wall, bristling with job postings and treasure maps of dubious authenticity.`,
+    description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. In a shadowy corner, Sam Slicker spreads his wares across black velvet. Notice boards paper the eastern wall — three Guild postings hang there now, each one an open contract waiting for a fool brave enough to take it. Head east to read them.`,
     exits: {
       north: "armory",
       east: "notice_board",
@@ -175,14 +175,39 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
   notice_board: {
     id: "notice_board",
     name: "The Notice Board",
-    description: `A wall covered floor-to-ceiling in pinned notices, contracts, bounty postings, and hand-drawn maps. Most are legitimate — dungeon clearance requests, escort jobs, monster extermination contracts. A few are clearly traps written by people who've never been in a dungeon. The most prominent notices advertise three adventures currently available to Guild members.`,
+    description: `A wall covered floor-to-ceiling in pinned notices. Most are routine — bounty postings, escort contracts, wanted posters for people who are almost certainly dead. Three notices stand out, posted on official Guild parchment with the seal of the Free Adventurers:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GUILD POSTINGS — OPEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[1] THE BEGINNER'S CAVE
+    Goblin infestation, north of the city.
+    Bounty paid on goblin ears. Novice difficulty.
+    → Type: ENTER THE BEGINNER'S CAVE
+
+[2] THE THIEVES GUILD
+    Social infiltration of the criminal underworld.
+    Moderate difficulty. Wit over strength.
+    → Type: ENTER THE THIEVES GUILD
+
+[3] THE HAUNTED MANOR
+    Something is wrong at the Blackwood estate.
+    Moderate to deadly. Not for the faint of heart.
+    → Type: ENTER THE HAUNTED MANOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     exits: { west: "main_hall" },
     stateModifiers: {},
     npcs: [],
     items: [],
     examinableObjects: [
-      { id: "posted_notices", label: "Posted notices" },
+      { id: "beginners_cave_notice", label: "Beginner's Cave notice" },
+      { id: "thieves_guild_notice", label: "Thieves Guild notice" },
+      { id: "haunted_manor_notice", label: "Haunted Manor notice" },
       { id: "treasure_maps", label: "Dubious treasure maps" },
+      { id: "wanted_posters", label: "Wanted posters" },
     ],
   },
 

@@ -24,7 +24,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 7, 2026*
+*Last updated: April 8, 2026*
 
 ## 1. Project Overview
 
@@ -66,7 +66,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `postcss.config.mjs` | PostCSS (Tailwind) |
 | `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock`, combat, banking, WIELD/EQUIP/SHIELD, **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock`, combat, banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
 | `lib/uoData.ts` | `WEAPON_DATA`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
@@ -81,7 +81,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 
 ## 5. Game Architecture
 
-**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, `WIELD`, `EQUIP`/`EQUIP SHIELD`/`EQUIP ARMOR`/`SHIELD`, vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
+**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
 
 **Tier 2 — State-modified static:** Room `RoomState` (`normal` \| `burnt` \| `flooded` \| `dark` \| `ransacked`) with `stateModifiers` copy in `gameData.ts`; NPC `disposition` / memory / agenda in `WorldState.npcs`. Applied by engine + `gameState` helpers; still no AI for pure state ticks.
 
@@ -213,7 +213,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | chain_mail | Chain Mail | 60 |
 | buckler | Buckler | 30 |
 
-- **Static commands (Main Hall only):** `SHOP`, `SAM`, `LIST`, or `BUY` with no argument → formatted listing; `BUY <item>` → gold check, **everything stacks in `player.inventory` only** (no auto-equip). Player uses **`WIELD`**, **`EQUIP SHIELD`** / **`SHIELD`**, or **`EQUIP ARMOR`** to set equipped slots.
+- **Static commands (Main Hall only):** `SHOP`, `SAM`, `LIST`, or `BUY` with no argument → formatted listing; `BUY <item>` → gold check, **everything stacks in `player.inventory` only** (no auto-equip). Player uses **`EQUIP [item]`** (or **`WIELD`** as alias), plus **`EQUIP SHIELD`** / **`SHIELD`** / **`EQUIP ARMOR`** where explicit.
 - Elsewhere: `SHOP`/`SAM`/`LIST` → static hint to go to Main Hall; `BUY` → still **Jane**.
 
 ### Pip (armory attendant) — Guild Armory (`armory_attendant`)
@@ -227,14 +227,15 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
 - **Combat:** `resolveCombatRound` in `gameEngine.ts` uses `rollWeaponDamage(player.weapon) +` strength bonus (not `ITEMS[].stats.damage` dice).
-- **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase.
-- **Equip flow (all require the item in inventory):**
-  - **`WIELD`** — match weapon in inventory → set `player.weapon` (two-handed vs shield guard unchanged).
-  - **`EQUIP SHIELD`** / **`SHIELD`** / bare **`EQUIP buckler`** — match shield-slot item in inventory → set `player.shield`; item **stays** in inventory.
-  - **`EQUIP ARMOR …`** / bare **`EQUIP leather_armor`** / **`chain_mail`** — match `leather_armor` or `chain_mail` in inventory → set `player.armor`; item **stays** in inventory.
+- **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase. Success hint: *"Type EQUIP [item] to equip any weapon, shield, or armor."*
+- **Primary command — `EQUIP [item]`** (and **`WIELD [item]`**, same handler): **`runEquipItemFromPhrase`** resolves in order — (1) shield-slot item in inventory → **`runEquipShield`**, (2) body armor in inventory → **`runEquipArmor`**, (3) else weapon → **`runWieldWeapon`**. Underscores in the phrase are normalized to spaces (e.g. `leather_armor`).
+- **Explicit forms:** **`EQUIP SHIELD …`**, **`EQUIP ARMOR …`**, and **`SHIELD …`** unchanged; equipping still **does not remove** stacks from inventory.
+- **Unequip:** **`REMOVE SHIELD`** / **`UNEQUIP SHIELD`**; **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; **`UNEQUIP [item]`** / **`REMOVE [item]`** (with a following phrase) clears **shield**, **armor**, or **weapon** when the phrase matches the **equipped** item by name. Weapon unequip sets **`player.weapon`** back to default **`short_sword`**.
+- **`WIELD`:** Alias only — same behavior as bare **`EQUIP [item]`**; HELP lists it second.
 - **`INVENTORY` / `I`:** Each line shows `(xN)` plus **`(wielded)`**, **`(shield equipped)`**, **`(armor equipped)`** when that row’s `itemId` matches the active slot.
 - **`STATS`:** Still shows equipped **Weapon / Armor / Shield** from `player.weapon` / `player.armor` / `player.shield` (resolved names via `ITEMS`).
 - **Shield slot items:** `isShieldSlotItem` — currently **`buckler`** only. **Body armor slot:** `leather_armor`, `chain_mail` (`isBodyArmorSlotItem`).
+- **Autocomplete:** After **`EQUIP `** (not `EQUIP SHIELD` / `EQUIP ARMOR`), suggestions include **all** equippable inventory rows (weapons + shield + body armor). **`WIELD `** uses the **same** item list with the **`WIELD`** prefix.
 - **UI:** Sidebar shows *"— both hands occupied —"* when a two-handed weapon is equipped (`app/page.tsx` + `isTwoHanded`).
 
 ## 10. Art System
@@ -332,6 +333,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-08 — Consolidate WIELD into EQUIP (single equip command)
+
+- **`EQUIP [item]`** uses **`runEquipItemFromPhrase`**: try shield in pack → armor in pack → weapon (**`runWieldWeapon`**). **`EQUIP SHIELD`** / **`EQUIP ARMOR`** long forms unchanged.
+- **`WIELD [item]`** calls the **same** router (alias; no separate behavior).
+- **Player text:** BUY hint and HELP emphasize **`EQUIP`**; empty-weapon prompt is *"Equip what?"*
+- **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; generic **`REMOVE [item]`** / **`UNEQUIP [item]`** for equipped gear (weapon sheathes to **`short_sword`**).
+- **Autocomplete:** **`EQUIP `** suggests weapons + shields + body armor from inventory; **`WIELD `** mirrors those targets.
 
 ### 2026-04-07 — Equip system: buy → inventory only, explicit equip, INVENTORY tags
 

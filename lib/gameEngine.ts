@@ -321,9 +321,15 @@ export function getCommandAutocompleteSuggestions(
     return invItemsForVerb("SELL").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
-  const invWeaponSuggestions = (verbPrefix: string): AutocompleteItem[] =>
+  const invEquippableSuggestions = (verbPrefix: string): AutocompleteItem[] =>
     state.player.inventory
-      .filter(e => e.quantity > 0 && ITEMS[e.itemId]?.type === "weapon")
+      .filter(
+        e =>
+          e.quantity > 0 &&
+          (ITEMS[e.itemId]?.type === "weapon" ||
+            isShieldSlotItem(e.itemId) ||
+            isBodyArmorSlotItem(e.itemId))
+      )
       .map(e => ITEMS[e.itemId]!)
       .map(it => ({
         label: it.name,
@@ -332,7 +338,7 @@ export function getCommandAutocompleteSuggestions(
       }));
 
   if (/^wield\s+/i.test(trimmed)) {
-    return invWeaponSuggestions("WIELD").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+    return invEquippableSuggestions("WIELD").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
   if (/^equip\s+shield\s*/i.test(trimmed)) {
@@ -360,7 +366,7 @@ export function getCommandAutocompleteSuggestions(
   }
 
   if (/^equip\s+/i.test(trimmed) && !/^equip\s+shield/i.test(trimmed) && !/^equip\s+armor/i.test(trimmed)) {
-    return invWeaponSuggestions("EQUIP").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+    return invEquippableSuggestions("EQUIP").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
   if (/^shield\s+/i.test(trimmed)) {
@@ -377,12 +383,41 @@ export function getCommandAutocompleteSuggestions(
 
   if (
     /^remove\s*$/i.test(trimmed) ||
-    /^remove\s+s/i.test(trimmed) ||
+    /^remove\s+/i.test(trimmed) ||
     /^unequip\s*$/i.test(trimmed) ||
-    /^unequip\s+s/i.test(trimmed)
+    /^unequip\s+/i.test(trimmed)
   ) {
-    return [{ label: "REMOVE SHIELD", insertText: "REMOVE SHIELD", autoSubmit: true }].filter(
-      x => !partialLower || x.insertText.toLowerCase().includes(partialLower)
+    const suggestions: AutocompleteItem[] = [
+      { label: "REMOVE SHIELD", insertText: "REMOVE SHIELD", autoSubmit: true },
+      { label: "REMOVE ARMOR", insertText: "REMOVE ARMOR", autoSubmit: true },
+    ];
+    const pl = state.player;
+    if (pl.shield) {
+      const it = ITEMS[pl.shield]!;
+      suggestions.push({
+        label: `UNEQUIP ${it.name}`,
+        insertText: `UNEQUIP ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      });
+    }
+    if (pl.armor) {
+      const it = ITEMS[pl.armor]!;
+      suggestions.push({
+        label: `UNEQUIP ${it.name}`,
+        insertText: `UNEQUIP ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      });
+    }
+    if (pl.weapon) {
+      const it = ITEMS[pl.weapon]!;
+      suggestions.push({
+        label: `UNEQUIP ${it.name}`,
+        insertText: `UNEQUIP ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      });
+    }
+    return suggestions.filter(
+      x => !partialLower || x.insertText.toLowerCase().includes(partialLower) || x.label.toLowerCase().includes(partialLower)
     );
   }
 
@@ -547,10 +582,13 @@ INTERACTION
   EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
   GET [item]         GET SWORD, GET TORCH
   DROP [item]        DROP SWORD
-  WIELD [weapon]     WIELD LONG SWORD  (from inventory)
+  EQUIP [item]       Weapon, shield, or armor from inventory (primary)
+  WIELD [item]       Alias for EQUIP [item] (either works)
   EQUIP SHIELD [item]  EQUIP SHIELD BUCKLER  |  SHIELD BUCKLER
-  EQUIP ARMOR [item] EQUIP ARMOR LEATHER  (body armor from inventory)
+  EQUIP ARMOR [item]   Body armor from inventory
   REMOVE SHIELD      Lower thy shield
+  REMOVE ARMOR       Doff body armor
+  UNEQUIP [item]     Sheathe weapon or remove shield/armor by name
 
 COMBAT
   ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
@@ -684,7 +722,7 @@ function runWieldWeapon(state: WorldState, phraseLower: string): EngineResult {
   if (!phraseLower.trim()) {
     return {
       responseType: "static",
-      staticResponse: "Wield what?",
+      staticResponse: "Equip what?",
       dynamicContext: null,
       newState: state,
       stateChanged: false,
@@ -807,6 +845,102 @@ function runEquipArmor(state: WorldState, phraseLower: string): EngineResult {
     dynamicContext: null,
     newState: { ...state, player: { ...p, armor: itemId } },
     stateChanged: true,
+  };
+}
+
+/** Bare EQUIP [item] / WIELD [item]: shield in inventory first, then body armor, then weapon. */
+function runEquipItemFromPhrase(state: WorldState, phrase: string): EngineResult {
+  const phraseLower = phrase.trim().toLowerCase().replace(/_/g, " ");
+  if (!phraseLower) {
+    return {
+      responseType: "static",
+      staticResponse: "Equip what?",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  if (matchShieldFromPhrase(phraseLower, state.player)) {
+    return runEquipShield(state, phraseLower);
+  }
+  if (matchArmorFromPhrase(phraseLower, state.player)) {
+    return runEquipArmor(state, phraseLower);
+  }
+  return runWieldWeapon(state, phraseLower);
+}
+
+const DEFAULT_WIELDED_WEAPON = "short_sword";
+
+function runRemoveArmor(state: WorldState): EngineResult {
+  const p = state.player;
+  if (!p.armor) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou art not wearing armor.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  return {
+    responseType: "static",
+    staticResponse: "Thou doffest thy armor.",
+    dynamicContext: null,
+    newState: { ...state, player: { ...p, armor: null } },
+    stateChanged: true,
+  };
+}
+
+function phraseMatchesEquippedItem(phraseLower: string, itemId: string): boolean {
+  const it = ITEMS[itemId];
+  if (!it) return false;
+  const nl = it.name.toLowerCase();
+  return nl.includes(phraseLower) || phraseLower.includes(nl);
+}
+
+function runUnequipByPhrase(state: WorldState, phraseLower: string): EngineResult {
+  const norm = phraseLower.trim().toLowerCase().replace(/_/g, " ");
+  if (!norm) {
+    return {
+      responseType: "static",
+      staticResponse: "Unequip what?",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const p = state.player;
+  if (p.shield && phraseMatchesEquippedItem(norm, p.shield)) {
+    return runRemoveShield(state);
+  }
+  if (p.armor && phraseMatchesEquippedItem(norm, p.armor)) {
+    return runRemoveArmor(state);
+  }
+  if (p.weapon && phraseMatchesEquippedItem(norm, p.weapon)) {
+    if (p.weapon === DEFAULT_WIELDED_WEAPON) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou art already bearing thy humble blade.",
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const item = ITEMS[p.weapon]!;
+    return {
+      responseType: "static",
+      staticResponse: `Thou sheathest the ${item.name}.`,
+      dynamicContext: null,
+      newState: { ...state, player: { ...p, weapon: DEFAULT_WIELDED_WEAPON } },
+      stateChanged: true,
+    };
+  }
+  return {
+    responseType: "static",
+    staticResponse: "Thou hast not equipped that.",
+    dynamicContext: null,
+    newState: state,
+    stateChanged: false,
   };
 }
 
@@ -1416,7 +1550,7 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
 
   const newState: WorldState = { ...afterGold, player: nextPlayer };
 
-  const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType WIELD [item] to equip a weapon, EQUIP SHIELD [item] for a shield, or EQUIP ARMOR [item] for body armor.`;
+  const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType EQUIP [item] to equip any weapon, shield, or armor.`;
 
   return {
     responseType: "static",
@@ -1771,8 +1905,8 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
   }
 
   if (first === "WIELD") {
-    const phrase = trimmed.slice(5).trim().toLowerCase();
-    return runWieldWeapon(newState, phrase);
+    const phrase = trimmed.slice(5).trim();
+    return runEquipItemFromPhrase(newState, phrase);
   }
 
   if (first === "EQUIP") {
@@ -1786,15 +1920,7 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       const phrase = afterEquip.slice(6).trim().toLowerCase();
       return runEquipArmor(newState, phrase);
     }
-    const equipPhrase = afterEquip.toLowerCase();
-    const asKey = equipPhrase.replace(/\s+/g, "_");
-    if (isShieldSlotItem(asKey)) {
-      return runEquipShield(newState, equipPhrase);
-    }
-    if (isBodyArmorSlotItem(asKey)) {
-      return runEquipArmor(newState, equipPhrase);
-    }
-    return runWieldWeapon(newState, equipPhrase);
+    return runEquipItemFromPhrase(newState, afterEquip);
   }
 
   if (first === "SHIELD") {
@@ -1802,8 +1928,26 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     return runEquipShield(newState, phrase);
   }
 
-  if ((first === "REMOVE" || first === "UNEQUIP") && tokens[1]?.toLowerCase() === "shield") {
-    return runRemoveShield(newState);
+  if (first === "REMOVE" || first === "UNEQUIP") {
+    const t1 = tokens[1]?.toLowerCase();
+    if (t1 === "shield") {
+      return runRemoveShield(newState);
+    }
+    if (t1 === "armor") {
+      return runRemoveArmor(newState);
+    }
+    const phrase = tokens.slice(1).join(" ").trim();
+    if (!phrase) {
+      return {
+        responseType: "static",
+        staticResponse:
+          "Remove or unequip what? Try REMOVE SHIELD, REMOVE ARMOR, or UNEQUIP [item].",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    return runUnequipByPhrase(newState, phrase);
   }
 
   if (first === "ATTACK") {

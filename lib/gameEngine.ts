@@ -1367,12 +1367,25 @@ function buildInventoryDescription(player: PlayerState): string {
     const item = ITEMS[entry.itemId];
     const name = item?.name ?? entry.itemId;
     const qty = ` (x${entry.quantity})`;
-    const tags: string[] = [];
-    if (entry.itemId === player.weapon) tags.push("(wielded)");
-    if (entry.itemId === player.shield) tags.push("(shield equipped)");
-    if (entry.itemId === player.armor) tags.push("(armor equipped)");
-    const tagStr = tags.length > 0 ? ` ${tags.join(" ")}` : "";
-    return `- ${name}${qty}${tagStr}`;
+
+    const statBits: string[] = [];
+    if (item?.type === "weapon") {
+      const dmg = WEAPON_DATA[entry.itemId]?.damage ?? item.stats?.damage;
+      if (dmg) statBits.push(`[dmg: ${dmg}]`);
+      if (isTwoHanded(entry.itemId)) statBits.push("[2H]");
+    } else if (item?.type === "armor") {
+      const ac = entry.itemId === "buckler" ? 1 : item.stats?.armorClass;
+      if (ac !== undefined && ac !== null) statBits.push(`[AC: ${ac}]`);
+    }
+    const statStr = statBits.length > 0 ? ` ${statBits.join(" ")}` : "";
+
+    const equipTags: string[] = [];
+    if (entry.itemId === player.weapon) equipTags.push("(wielded)");
+    if (entry.itemId === player.shield) equipTags.push("(shield equipped)");
+    if (entry.itemId === player.armor) equipTags.push("(armor equipped)");
+    const tagStr = equipTags.length > 0 ? ` ${equipTags.join(" ")}` : "";
+
+    return `- ${name}${qty}${statStr}${tagStr}`;
   });
   return `Thou dost carry:\n${lines.join("\n")}\n\nGold on hand: ${player.gold} gp\nBanked gold: ${player.bankedGold} gp`;
 }
@@ -1473,7 +1486,9 @@ function buildSamShopListing(player: PlayerState): string {
     ...armor.map(row => {
       const name = row.displayName;
       const dotCount = Math.max(8, 28 - name.length);
-      return `${name} ${".".repeat(dotCount)} ${row.price} gp`;
+      const ac = ITEMS[row.key]?.stats?.armorClass;
+      const acSeg = ac !== undefined && ac !== null ? `  [AC: ${ac}]` : "";
+      return `${name} ${".".repeat(dotCount)} ${row.price} gp${acSeg}`;
     }),
     "",
     `Your gold: ${player.gold} gp`,

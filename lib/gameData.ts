@@ -27,6 +27,8 @@ export interface Room {
   isAdventureEntrance?: string; // Adventure id if this room leads to one
 }
 
+export type NPCBodyType = "humanoid" | "beast" | "amorphous" | "undead";
+
 export interface NPC {
   id: string;
   name: string;
@@ -34,6 +36,8 @@ export interface NPC {
   greeting: string;          // Static first greeting — no API needed
   personality: string;       // Injected into Jane when dynamic convo needed
   isHostile: boolean;
+  /** Combat narration; omit for humanoid (default) */
+  bodyType?: NPCBodyType;
   stats: { hp: number; armor: number; damage: string };
   merchant?: {
     inventory: string[];     // Item ids for sale
@@ -695,6 +699,18 @@ export {
   ARMOR_FULL_ABSORB_DESCRIPTIONS,
   PLAYER_MISS_DESCRIPTIONS,
   ENEMY_MISS_DESCRIPTIONS,
+  BEAST_HIT_PLAYER_DESCRIPTIONS,
+  BEAST_MISS_PLAYER_DESCRIPTIONS,
+  PLAYER_HIT_BEAST_DESCRIPTIONS,
+  AMORPHOUS_HIT_PLAYER_DESCRIPTIONS,
+  AMORPHOUS_MISS_PLAYER_DESCRIPTIONS,
+  PLAYER_HIT_AMORPHOUS_DESCRIPTIONS,
+  UNDEAD_HIT_PLAYER_DESCRIPTIONS,
+  UNDEAD_MISS_PLAYER_DESCRIPTIONS,
+  PLAYER_HIT_UNDEAD_DESCRIPTIONS,
+  getEnemyHitPlayerPool,
+  getEnemyMissPlayerPool,
+  getPlayerHitEnemyPool,
 } from "./combatNarrationPools";
 
 // ============================================================

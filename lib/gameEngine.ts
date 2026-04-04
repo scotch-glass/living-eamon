@@ -12,13 +12,14 @@ import {
   ADVENTURES,
   COMBAT_TEMPLATES,
   SAM_INVENTORY,
-  PLAYER_HIT_DESCRIPTIONS,
-  ENEMY_HIT_DESCRIPTIONS,
   ARMOR_ABSORB_DESCRIPTIONS,
   ARMOR_FULL_ABSORB_DESCRIPTIONS,
   PLAYER_MISS_DESCRIPTIONS,
-  ENEMY_MISS_DESCRIPTIONS,
+  getEnemyHitPlayerPool,
+  getEnemyMissPlayerPool,
+  getPlayerHitEnemyPool,
   getWeaponCategory,
+  type NPCBodyType,
   type WoundTier,
   type SamShopRow,
   Room,
@@ -1326,6 +1327,7 @@ export function resolveCombatRound(
     armor: number;
     maxHp: number;
     weaponSkill?: number;
+    bodyType?: NPCBodyType;
   }
 ): {
   narrative: string;
@@ -1438,7 +1440,7 @@ export function resolveCombatRound(
       newEnemyHp -= dmg;
       const tier = getWoundTier(dmg, enemyData.maxHp || 20);
       const cat = getWeaponCategory(player.weapon);
-      const pool = PLAYER_HIT_DESCRIPTIONS[cat][tier];
+      const pool = getPlayerHitEnemyPool(enemyData.bodyType, cat, tier);
       narrative += fillCombat(pickRandom(pool), {
         weapon: weaponItem?.name ?? "weapon",
         enemy: enemyData.name,
@@ -1462,9 +1464,10 @@ export function resolveCombatRound(
   function doEnemyAttack(): boolean {
     const roll = Math.random();
     if (roll >= enemyHitChance) {
-      narrative += fillCombat(pickRandom(ENEMY_MISS_DESCRIPTIONS), {
-        enemy: enemyData.name,
-      });
+      narrative += fillCombat(
+        pickRandom(getEnemyMissPlayerPool(enemyData.bodyType)),
+        { enemy: enemyData.name }
+      );
       return false;
     }
 
@@ -1491,7 +1494,7 @@ export function resolveCombatRound(
       narrative += ` (${damageToApply} damage gets through)`;
     } else {
       const tier = getWoundTier(damageToApply, player.maxHp || 20);
-      const pool = ENEMY_HIT_DESCRIPTIONS[tier];
+      const pool = getEnemyHitPlayerPool(enemyData.bodyType, tier);
       narrative += fillCombat(pickRandom(pool), {
         enemy: enemyData.name,
         damage: String(damageToApply),
@@ -2318,6 +2321,7 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       damage: npcData.stats.damage,
       armor: npcData.stats.armor,
       maxHp: npcData.stats.hp,
+      bodyType: npcData.bodyType,
     });
     let postState = combat.newState;
     if (combat.playerWon) {

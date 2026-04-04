@@ -265,7 +265,8 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
   - **HIT CHANCE (T2A):** **`(attackerSkill + 50) / ((defenderSkill + 50) × 2)`**; **`playerSkill = min(100, expertise × 2)`**; **`enemySkill`** default **30** (optional **`weaponSkill`** on enemy payload). **Player** can miss; **enemy** uses the same roll vs **`enemyHitChance`** (miss = dodge narration only — not “armor blocked the hit”).
   - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1**. **Crit:** roll **&lt; hitChance × 0.08** among hits ⇒ **×2** base weapon roll before STR/Tactics; narrative placeholder **`__CRITICAL__:weapon:enemy:dmg`** replaced in **`app/api/chat/route.ts`** by one **`completeJaneNonStream`** call (**max_tokens 80**), fallback string on failure.
   - **ENEMY DAMAGE:** **`rollDice(damage) − totalAC`** (body + shield from **`ITEMS[].stats.armorClass`**); if **afterAR ≤ 0**, **0** HP loss and **full armor absorb** narration; else **halve**, **min 1** applied. **Partial armor narration** when AC absorbed **≥ 50%** of raw pre-AC damage.
-  - **Cinematic pools** (re-exported from **`lib/gameData.ts`**, defined in **`lib/combatNarrationPools.ts`):** **96** player hit lines (**4** weapon categories × **3** wound tiers × **8**); **24** enemy hit (**3 × 8**); **12** player miss, **12** enemy miss; **armor absorb** / **full absorb** pools per armor key (**buckler**, **leather_armor**, **chain_mail**, **default**). **`getWeaponCategory`** maps equipped weapon id to **slash / pierce / blunt / ranged**.
+  - **Cinematic pools** (re-exported from **`lib/gameData.ts`**, defined in **`lib/combatNarrationPools.ts`):** **156** humanoid player-on-enemy hit lines (**4 × 3 × 13**); **39** humanoid enemy-on-player hit (**3 × 13**); **17** player miss, **17** enemy miss; **armor absorb** / **full absorb** pools per armor key (**buckler**, **leather_armor**, **chain_mail**, **default**). **`getWeaponCategory`** maps equipped weapon id to **slash / pierce / blunt / ranged**.
+  - **Creature body type (`NPC.bodyType` optional, default humanoid):** **`humanoid`** | **`beast`** | **`amorphous`** | **`undead`**. Separate narration pools per type (beast / amorphous / undead: enemy hit player, enemy miss player, player hit enemy). Helpers in **`combatNarrationPools.ts`**: **`getEnemyHitPlayerPool(bodyType, tier)`**, **`getEnemyMissPlayerPool(bodyType)`**, **`getPlayerHitEnemyPool(bodyType, category, tier)`**. **`resolveCombatRound`** / **`ATTACK`** pass **`npcData.bodyType`** into **`enemyData`**.
   - **Wound tiers** (vs reference HP): **glancing** **&lt; 12%**; **solid** **12–35%**; **devastating** **≥ 35%** (player hits vs **`enemyData.maxHp`**; enemy hits vs **`player.maxHp`**).
   - **`ATTACK`:** Fully **static** — calls **`resolveCombatRound`**; **`NPCStateEntry.combatHp`** tracks remaining foe HP between rounds; **+1 expertise** / chronicle / valor on win; foe **`isAlive: false`** on player victory.
   - **Return value:** **`initiativeWinner`**, **`hasCritical`**, **`criticalContext`** (for route / debugging).
@@ -368,6 +369,7 @@ Do not commit secret values.
 - [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
 - [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
 - [x] **Cinematic combat narration:** wound-tier pools, UO armor absorption narration, critical-hit Jane line, static **`ATTACK`** + **`combatHp`**
+- [x] **Body-type combat pools** + **+5 strings** per existing humanoid pool; **`NPCBodyType`** on **`NPC`**
 
 ## 15. Next Up
 
@@ -381,6 +383,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Body type narration + expanded pools
+
+- **+5 lines** appended to each humanoid **`PLAYER_HIT_DESCRIPTIONS`** tier (12 pools), **`ENEMY_HIT_DESCRIPTIONS`** tier (3), **`PLAYER_MISS_DESCRIPTIONS`**, **`ENEMY_MISS_DESCRIPTIONS`**.
+- **`NPC.bodyType?: NPCBodyType`** (**humanoid** default when omitted); beast / amorphous / undead pools + **`getEnemyHitPlayerPool`**, **`getEnemyMissPlayerPool`**, **`getPlayerHitEnemyPool`**; **`resolveCombatRound`** uses them from **`enemyData.bodyType`**.
 
 ### 2026-04-04 — Cinematic combat narration (UO absorption, crits, static ATTACK)
 

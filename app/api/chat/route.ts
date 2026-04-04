@@ -215,6 +215,7 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     isWanted: state.player.isWanted,
     turnCount: state.player.turnCount,
     receivedSamStarterOutfit: state.player.receivedSamStarterOutfit,
+    receivedHokasUnarmedGift: state.player.receivedHokasUnarmedGift,
   };
 }
 
@@ -272,6 +273,9 @@ export async function POST(request: NextRequest) {
             receivedSamStarterOutfit:
               (savedPlayer as { received_sam_starter_outfit?: boolean })
                 .received_sam_starter_outfit ?? false,
+            receivedHokasUnarmedGift:
+              (savedPlayer as { received_hokas_unarmed_gift?: boolean })
+                .received_hokas_unarmed_gift ?? false,
           },
         };
 
@@ -298,6 +302,9 @@ export async function POST(request: NextRequest) {
               receivedSamStarterOutfit:
                 ws.player.receivedSamStarterOutfit ??
                 state.player.receivedSamStarterOutfit,
+              receivedHokasUnarmedGift:
+                ws.player.receivedHokasUnarmedGift ??
+                state.player.receivedHokasUnarmedGift,
             },
           };
         }

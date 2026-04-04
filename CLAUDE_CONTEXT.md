@@ -103,10 +103,10 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, plain shirt/trousers/belt/shoes clothing, **`rusty_shortsword`** weapon), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, plain + **ragged** clothing, **`rusty_shortsword`**, **`castoff_short_sword`**), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, weapon sentinel **`unarmed`** (not an ITEMS id), armor/shield **null**, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG`**), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG`**), **Hokas unarmed pity** (**`TELL HOKAS`**, **`EXAMINE` / name-alone / look-at** mentioning Hokas), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
@@ -165,6 +165,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `knownSpells`: `string[]`
 - `knownDeities`: `string[]`
 - `receivedSamStarterOutfit`: `boolean` — set after Sam’s first-purchase outfit bundle; reset to **`false`** on **`applyPlayerDeath`**
+- `receivedHokasUnarmedGift`: `boolean` — set after Hokas’s one-time unarmed pity gift; reset to **`false`** on **`applyPlayerDeath`**
 
 **Default values for a new world** (`createInitialWorldState(playerName)`):
 
@@ -184,6 +185,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `turnCount`: `0`, `lastAction`: `null`
 - `knownSpells`: `["BLAST", "HEAL", "LIGHT", "SPEED"]`, `knownDeities`: `[]`
 - `receivedSamStarterOutfit`: `false`
+- `receivedHokasUnarmedGift`: `false`
 
 ## 7. World State
 
@@ -331,6 +333,7 @@ SQL migrations: **`supabase/migrations/`** (e.g. **`received_sam_starter_outfit`
 | `is_wanted` | boolean |
 | `turn_count` | number |
 | `received_sam_starter_outfit` | boolean (default false) — Sam’s first-purchase plain outfit already given |
+| `received_hokas_unarmed_gift` | boolean (default false) — Hokas pity bundle already given |
 | `last_seen` | timestamptz (ISO string from code) |
 
 **Also referenced on `players` (Jane limits):** `jane_calls_today`, `jane_calls_reset_at`, `tier` — see `checkAndDecrementJaneCalls`.
@@ -401,6 +404,7 @@ Do not commit secret values.
 - [x] Gray robe humiliation on every room transition while worn
 - [x] BEG command (BEG SAM gives rusty sword while unarmed)
 - [x] Unarmed state after death (weapon sentinel `unarmed`)
+- [x] Hokas unarmed pity (**`TELL HOKAS`** / examine Hokas): ragged clothes + **castoff short sword** (1–4), once per life arc
 
 ## 15. Next Up
 
@@ -411,6 +415,12 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Hokas pity for unarmed players
+
+- In **`main_hall`**, if **`player.weapon === "unarmed"`**, Hokas is present and alive, disposition is not **`furious`** / **`hostile`**, and **`receivedHokasUnarmedGift`** is false: **`TELL HOKAS …`**, **`EXAMINE`** / **`LOOK AT`** / **name-alone** targeting Hokas triggers a **static** scene (he avoids eye contact) and grants **ragged** shirt/trousers/belt/shoes plus **`castoff_short_sword`** (**`WEAPON_DATA`** damage **1–4**), **equipped**, flag set. Resets on **`applyPlayerDeath`**.
+- New **`ITEMS`** + migration **`received_hokas_unarmed_gift`** on **`players`**.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Destitute new player, Sam first-purchase outfit
 

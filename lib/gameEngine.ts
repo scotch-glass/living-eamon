@@ -217,6 +217,85 @@ function presentNPCsInRoom(room: Room, state: WorldState): {
     .filter((x): x is NonNullable<typeof x> => x !== null);
 }
 
+const HOKAS_UNARMED_GIFT_WEAPON = "castoff_short_sword";
+const HOKAS_UNARMED_GIFT_CLOTHES = [
+  "ragged_shirt",
+  "ragged_trousers",
+  "ragged_belt",
+  "ragged_shoes",
+] as const;
+
+function grantHokasUnarmedGiftInventory(inv: PlayerInventoryItem[]): PlayerInventoryItem[] {
+  let next = [...inv];
+  const addOne = (itemId: string) => {
+    const idx = next.findIndex(e => e.itemId === itemId);
+    if (idx < 0) next.push({ itemId, quantity: 1 });
+    else
+      next = next.map((e, i) =>
+        i === idx ? { ...e, quantity: e.quantity + 1 } : e
+      );
+  };
+  for (const id of HOKAS_UNARMED_GIFT_CLOTHES) addOne(id);
+  addOne(HOKAS_UNARMED_GIFT_WEAPON);
+  return next;
+}
+
+/** Hokas notices an unarmed adventurer and offers cast-off gear (once per life arc; resets on death). */
+function tryHokasUnarmedPity(
+  newState: WorldState,
+  currentRoom: Room | null,
+  p: PlayerState,
+  opts?: { echoPrefix?: string | null }
+): EngineResult | null {
+  if (p.currentRoom !== "main_hall" || !currentRoom) return null;
+  if (p.weapon !== "unarmed") return null;
+  if (p.receivedHokasUnarmedGift) return null;
+
+  const hokasHere = presentNPCsInRoom(currentRoom, newState).some(n => n.id === "hokas_tokas");
+  if (!hokasHere) return null;
+
+  const hokasState = newState.npcs["hokas_tokas"];
+  if (!hokasState?.isAlive) return null;
+  const disp = hokasState.disposition ?? "neutral";
+  if (disp === "furious" || disp === "hostile") return null;
+
+  const newInventory = grantHokasUnarmedGiftInventory(p.inventory);
+  const after: WorldState = {
+    ...newState,
+    player: {
+      ...p,
+      weapon: HOKAS_UNARMED_GIFT_WEAPON,
+      inventory: newInventory,
+      receivedHokasUnarmedGift: true,
+    },
+  };
+
+  const body =
+    `Hokas is wiping a mug when thou drawest near. He looks up — then looks away almost at once, fixing on the bottles, the counter, the fire, anywhere but thy face or thy empty hands. The silver bells in his beard give one soft chime, as if embarrassed for thee.\n\n` +
+    `"Aye," he says to the woodgrain. "We've all stood where thou standest. None of us care to name the hour."\n\n` +
+    `Still without meeting thine eyes, he reaches below the bar and sets out a folded pile — shirt, trousers, belt, and shoes, all ragged but whole. Beside it he lays a short sword: notched, loose in the grip, honest scrap metal.\n\n` +
+    `"'Tis not guild issue. Cast-offs from the back. Take them. Go dressed. Go armed. Come back when thou hast a story worth the telling."\n\n` +
+    `Thou hast the ragged garments and a Cast-Off Short Sword. The sword is equipped.`;
+
+  return {
+    responseType: "static",
+    staticResponse: body,
+    dynamicContext: null,
+    newState: after,
+    stateChanged: true,
+    echoPrefix: opts?.echoPrefix ?? null,
+  };
+}
+
+function examinePhraseMentionsHokas(originalInput: string): boolean {
+  const stripped = originalInput
+    .toLowerCase()
+    .replace(/look at|examine|inspect|touch|feel|study/g, "")
+    .trim();
+  if (!stripped) return false;
+  return stripped.includes("hokas") || stripped.includes("tokas");
+}
+
 /** Suggestions for CommandInput from live world state */
 export function getCommandAutocompleteSuggestions(
   state: WorldState | null,
@@ -1068,6 +1147,11 @@ function buildExamineEngineResult(
   currentRoom: Room | null,
   objectKeyHint?: string
 ): EngineResult {
+  if (currentRoom && examinePhraseMentionsHokas(originalInput)) {
+    const pit = tryHokasUnarmedPity(newState, currentRoom, newState.player);
+    if (pit) return pit;
+  }
+
   const hint =
     objectKeyHint ??
     originalInput
@@ -1113,6 +1197,10 @@ function tryResolveNameAloneExamine(
 
   for (const n of presentNPCsInRoom(room, newState)) {
     if (lower === n.firstName.toLowerCase() || lower === n.name.toLowerCase()) {
+      if (n.id === "hokas_tokas") {
+        const pit = tryHokasUnarmedPity(newState, room, newState.player);
+        if (pit) return pit;
+      }
       return buildExamineEngineResult(`examine ${n.name}`, newState, room, n.name.toLowerCase().replace(/\s+/g, "_"));
     }
   }
@@ -2018,6 +2106,10 @@ React with in-character replies from any NPCs who would naturally respond, ambie
     const npcState = newState.npcs[parsed.npcId];
     const quoted = parsed.message.replace(/^["']|["']$/g, "");
     const echo = `You tell ${parsed.firstName}, "${quoted}"`;
+    if (parsed.npcId === "hokas_tokas") {
+      const pit = tryHokasUnarmedPity(newState, currentRoom, p, { echoPrefix: echo });
+      if (pit) return pit;
+    }
     return {
       responseType: "dynamic",
       staticResponse: null,

@@ -50,6 +50,7 @@ export async function savePlayer(player: Record<string, unknown>) {
       is_wanted: player.isWanted,
       turn_count: player.turnCount,
       received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
+      received_hokas_unarmed_gift: Boolean(player.receivedHokasUnarmedGift),
       last_seen: new Date().toISOString(),
     });
 

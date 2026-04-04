@@ -173,6 +173,9 @@ export interface PlayerState {
 
   /** After first Sam shop purchase, Sam gives a plain outfit and removes the gray robe; reset on death. */
   receivedSamStarterOutfit: boolean;
+
+  /** Hokas's one-time pity gift (unarmed in Main Hall); reset on death. */
+  receivedHokasUnarmedGift: boolean;
 }
 
 // ============================================================
@@ -402,6 +405,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       knownDeities: [],
 
       receivedSamStarterOutfit: false,
+      receivedHokasUnarmedGift: false,
     },
 
     activeEvents: [],
@@ -613,6 +617,7 @@ export function applyPlayerDeath(
       shield: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
       receivedSamStarterOutfit: false,
+      receivedHokasUnarmedGift: false,
       currentRoom: "church_of_perpetual_life",
       previousRoom: state.player.currentRoom,
     },

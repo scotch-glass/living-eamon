@@ -77,7 +77,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 5, 2026*
+*Last updated: April 5, 2026 (Aldric divergences fixed)*
 
 
 ## 1. Project Overview
@@ -122,7 +122,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (**`main_hall`** east-wall copy + **charity / gown barrels** + south-wall barrel copy; **`notice_board`** full **GUILD POSTINGS — OPEN** text + per-adventure **examinableObjects**), `NPCS`, `ITEMS` (incl. **charity-barrel clothing** variants), barrel / robe ceremony narrative pools, `ADVENTURES`, `SAM_INVENTORY`, … |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, **`WeaponSkills`**, **`SKILL_CAP` 700**), `createInitialWorldState()`, **`updateWeaponSkill`** (cap + decay), **`applyPlayerDeath`**, **`setNPCCombatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, **`READ`**, **`ENTER`**, **Main Hall barrels** / **robe ceremony**, **Aldric** (**`TELL Aldric`**, **`TRAIN`**), **`TALK`** = **`SAY`**, weapon-skill combat + **fumbles**, `buildSituationBlock`, combat, **BEG**, Hokas pity, Sam shop, … |
+| `lib/gameEngine.ts` | `processInput`, **`READ`**, **`ENTER`**, **Main Hall barrels** / **robe ceremony**, **Aldric** (**`TELL Aldric`**, **`TALK Aldric`**, tiered **`TRAIN`**), **`TALK`** else = **`SAY`**, player hit **75% + skill** (max **95%**) + **fumbles**, `buildSituationBlock`, combat, **BEG**, Sam shop, … |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
@@ -427,8 +427,10 @@ Do not commit secret values.
 - [x] Autocomplete full NPC name fix
 - [x] Weapon skill system (nine tracks, **700** cap, **`updateWeaponSkill`** decay)
 - [x] Aldric static tutorial (**`ALDRIC_TOPIC_RESPONSES`**, **`TELL Aldric`**)
-- [x] **TRAIN** command (Main Hall, Aldric, 25 gp / +3)
-- [x] Combat fumbles, **TALK** = **SAY**, skill gain on hits
+- [x] **TRAIN** tiered costs (Main Hall, Aldric: **25 / 100 / 300 / 750** gp by skill band)
+- [x] Hit chance formula corrected (**75%** base + **0.5%** per weapon-skill point, max **95%**)
+- [x] **TALK Aldric** routes to static topic list (Main Hall; other **TALK** still **SAY**)
+- [x] Combat fumbles, **TALK** = **SAY** (except **TALK Aldric** shortcut), skill gain on hits
 - [x] **`weapon_skills`** DB persistence
 
 ## 15. Next Up
@@ -441,6 +443,13 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-05 — Aldric divergences fixed (hit %, TRAIN tiers, TALK Aldric)
+
+- Fixed three Aldric divergences: hit chance now **75%** base **+0.5%** per weapon-skill point capped at **95%** (was **`weaponSkill / 7`** in the T2A-style formula). **Enemy** hit chance unchanged (**`enemySkill` / `playerSkill`** scaling).
+- **TRAIN** now tiered: **25 / 100 / 300 / 750** gp for Basic / Journeyman / Advanced / Master by current skill (**0–19 / 20–49 / 50–99 / 100–199**); **200+** Aldric has nothing left to teach; bare **TRAIN** shows cost table + four weapon skill lines + total. Success line shows tier label and **`*italic summary*`**.
+- **TALK Aldric** (or **TALK TO Aldric**, **veteran**, **old mercenary**) in **Main Hall** with Aldric alive → **`ALDRIC_OPENING_LINES`** static (no Jane); other **TALK** still follows **SAY**.
+- `npx tsc --noEmit` — clean.
+
 ### 2026-04-05 — Prompt size rule added to READ THIS FIRST
 
 - Added **PROMPT SIZE RULE** to the rehydration instructions: prompts touching 4+ files or exceeding ~150 lines must be split into sequential committed parts.
@@ -449,10 +458,10 @@ Do not commit secret values.
 ### 2026-04-05 — Aldric the Veteran, weapon skills (700 cap), TRAIN, fumbles, TALK
 
 - **`PlayerState.weaponSkills`:** nine tracks (`gameState.ts`); **`SKILL_CAP` 700**; **`updateWeaponSkill`** degrades lowest other skill by 1 (repeated) when total would exceed cap. **`getWeaponSkillKey`** in **`uoData.ts`** maps equipped weapon → track.
-- **Combat:** hit chance vs average enemy uses **weapon skill ÷ 7** (capped 100) instead of expertise×2; **+1** to the relevant skill on each successful player hit; **~8%** of misses use **`PLAYER_FUMBLE_DESCRIPTIONS`** instead of a normal miss.
-- **Aldric** (`old_mercenary`): renamed/re-statted in **`gameData`**; **`ALDRIC_OPENING_LINES`**, **`ALDRIC_TOPIC_RESPONSES`** (survival, combat, training, skills, adventures, world, magic, secrets, order). **`TELL Aldric`** alone → opening; **`TELL Aldric &lt;topic&gt;`** → static pool (no Jane).
-- **`TRAIN &lt;skill&gt;`:** Main Hall + Aldric alive, **25 gp**, **+3** to named track; **`STATS`** lists all skills and total / cap.
-- **`TALK`** is an alias of **`SAY`**. Autocomplete: **`TRAIN`** and **`TELL Aldric …`** suggestions in Main Hall.
+- **Combat:** *(Superseded 2026-04-05 — see Session Log “divergences fixed”.)* Originally **weapon skill ÷ 7** for hit%; now **75% + 0.5%/pt** (max **95%**). **+1** skill on hit; **~8%** of misses **fumble**.
+- **Aldric** (`old_mercenary`): renamed/re-statted in **`gameData`**; **`ALDRIC_OPENING_LINES`**, **`ALDRIC_TOPIC_RESPONSES`**. **`TELL Aldric`** / topics static.
+- **`TRAIN`:** *(Superseded — now tiered **25/100/300/750** gp.)* Was flat **25 gp / +3**. **`STATS`** lists skills and total / cap.
+- **`TALK`:** alias of **`SAY`**; **TALK Aldric** in hall → opening list. Autocomplete: **`TRAIN`**, **`TELL Aldric …`**.
 - **Persistence:** **`weapon_skills`** JSON on **`players`** (`savePlayer`, load merge, migration **`20260405140000_players_weapon_skills.sql`**).
 - `npx tsc --noEmit` — clean.
 
@@ -671,9 +680,9 @@ in `lib/gameData.ts` to reflect that feature.
 | Topic | What he covers |
 |-------|---------------|
 | Survival | Barrel, BEG, banking gold, death/respawn |
-| Combat | Hit chance from weapon skill, weapon types, armor, fumbles, crits, FLEE |
+| Combat | Hit chance 75% + skill bonus (max 95%), weapon types, armor, fumbles, crits, FLEE |
 | Skills | Nine tracks, 700 cap, decay at cap, STATS, combat gains on hits |
-| Training | **TRAIN** in Main Hall, 25 gp, +3; Aldric present |
+| Training | **TRAIN** in Main Hall, tiered **25/100/300/750** gp; Aldric present |
 | Adventures | Beginner's Cave, Thieves Guild, Haunted Manor |
 | The World | The Guild, the Church, Hokas, Sam |
 | The Order | Whispered hint only — keep voice down |
@@ -699,7 +708,8 @@ in `lib/gameData.ts` to reflect that feature.
 
 - `TELL Aldric` with no topic text → **`pickTemplate(ALDRIC_OPENING_LINES)`**
   (static topic list; no Jane call)
-- `TALK` is only an alias for **`SAY`** (room speech), not for Aldric topics
+- `TALK Aldric` / `TALK TO Aldric` in **Main Hall** → same static opening as **`TELL Aldric`** (no Jane)
+- `TALK` otherwise is an alias for **`SAY`** (room speech)
 - `TELL Aldric [topic]` → **`pickTemplate(ALDRIC_TOPIC_RESPONSES[topic])`**
   (no Jane call for standard topics)
 - Personal stories (ale required) → Jane generates

@@ -682,7 +682,7 @@ export function getCommandAutocompleteSuggestions(
     if (/^train\s*/i.test(trimmed)) {
       return [
         {
-          label: "Train Swordsmanship (25 gp)",
+          label: "Train Swordsmanship (tiered gp)",
           insertText: "TRAIN SWORDSMANSHIP",
           autoSubmit: true,
         },
@@ -885,7 +885,7 @@ ECONOMY
   WITHDRAW [amount]  WITHDRAW 10
 
 TRAINING (Main Hall, Aldric the Veteran)
-  TRAIN [skill]      e.g. TRAIN SWORDSMANSHIP — 25 gold, +3 to that skill (700-point cap)
+  TRAIN [skill]      Tiered cost/gain by current skill (Basic→Master); see TRAIN with no args
 
 ADVENTURES
   ENTER [adventure]  ENTER THE BEGINNER'S CAVE
@@ -1581,8 +1581,12 @@ function matchAldricTopic(message: string): string | null {
   return null;
 }
 
-const TRAIN_COST_GOLD = 25;
-const TRAIN_SKILL_DELTA = 3;
+const TRAIN_TIERS = [
+  { cost: 25, gain: 5, maxSkill: 20, label: "Basic" },
+  { cost: 100, gain: 10, maxSkill: 50, label: "Journeyman" },
+  { cost: 300, gain: 15, maxSkill: 100, label: "Advanced" },
+  { cost: 750, gain: 20, maxSkill: 200, label: "Master" },
+] as const;
 
 const TRAIN_PHRASE_TO_SKILL: { phrase: string; skill: keyof WeaponSkills }[] = [
   { phrase: "swordsmanship", skill: "swordsmanship" },
@@ -1648,12 +1652,17 @@ export function resolveCombatRound(
 
   let narrative = `⚡ Initiative — You: ${playerInit} · ${enemyData.name}: ${enemyInit}\n${winnerLabel} acts first.\n\n`;
 
-  const ws = normalizeWeaponSkills(player.weaponSkills);
   const weaponSkillKey = getWeaponSkillKey(player.weapon);
+  const skillBonus = Math.min(
+    0.2,
+    (player.weaponSkills?.[weaponSkillKey] ?? 0) * 0.005
+  );
+  const playerHitChance = 0.75 + skillBonus;
+
+  const ws = normalizeWeaponSkills(player.weaponSkills);
   const weaponSkillVal = ws[weaponSkillKey] ?? 0;
   const playerSkill = Math.min(100, weaponSkillVal / 7);
   const enemySkill = 30;
-  const playerHitChance = (playerSkill + 50) / ((enemySkill + 50) * 2);
   const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
 
   function getWoundTier(
@@ -2010,8 +2019,8 @@ function buildStatDescription(player: PlayerState): string {
   const ws = normalizeWeaponSkills(player.weaponSkills);
   const wSkillKey = getWeaponSkillKey(player.weapon);
   const weaponSkillVal = ws[wSkillKey] ?? 0;
-  const playerSkill = Math.min(100, weaponSkillVal / 7);
-  const hitVsAvg = Math.round(((playerSkill + 50) / ((30 + 50) * 2)) * 100);
+  const hitVsEnemy = 0.75 + Math.min(0.2, weaponSkillVal * 0.005);
+  const hitVsAvg = Math.round(hitVsEnemy * 100);
   const wSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
   const dexBonus = getDexReactionBonus(player.dexterity);
   const skillTotal = (Object.keys(ws) as (keyof WeaponSkills)[]).reduce((a, k) => a + ws[k], 0);
@@ -2294,6 +2303,28 @@ export function processInput(
       .map(n => NPCS[n.npcId]?.name ?? n.npcId)
       .join(", ") || "none";
 
+  // ── 1. PREFIX: TALK → Aldric topic list (before SAY alias) ─
+  if (first === "TALK") {
+    const talkRest = trimmed.slice(4).trim().toLowerCase().replace(/^to\s+/, "");
+    const isAldric =
+      talkRest.startsWith("aldric") ||
+      talkRest.startsWith("veteran") ||
+      talkRest === "old mercenary";
+    if (
+      isAldric &&
+      p.currentRoom === "main_hall" &&
+      newState.npcs["old_mercenary"]?.isAlive
+    ) {
+      return {
+        responseType: "static",
+        staticResponse: pickTemplate(ALDRIC_OPENING_LINES),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+  }
+
   // ── 1. PREFIX: SAY / TALK (alias) ──────────────────────
   if (first === "SAY" || first === "TALK") {
     const text = trimmed.slice(first.length).trim();
@@ -2457,10 +2488,23 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
       };
     }
     if (!rest) {
+      const ws = normalizeWeaponSkills(p.weaponSkills);
+      const wsTotal = (Object.keys(ws) as (keyof WeaponSkills)[]).reduce((a, k) => a + ws[k], 0);
       return {
         responseType: "static",
         staticResponse:
-          `Aldric looks up. "Name a discipline — I'll drill you for ${TRAIN_COST_GOLD} gold and put ${TRAIN_SKILL_DELTA} points into it."\n\n` +
+          `Training costs depend on your current skill level:\n` +
+          `  0–19:    25 gp  (+5,  Basic)\n` +
+          `  20–49:  100 gp  (+10, Journeyman)\n` +
+          `  50–99:  300 gp  (+15, Advanced)\n` +
+          `  100–199: 750 gp  (+20, Master)\n` +
+          `  200+:   Nothing left to teach.\n\n` +
+          `Your current skills:\n` +
+          `  Swordsmanship:  ${ws.swordsmanship}\n` +
+          `  Mace Fighting:  ${ws.mace_fighting}\n` +
+          `  Fencing:        ${ws.fencing}\n` +
+          `  Archery:        ${ws.archery}\n\n` +
+          `Total: ${wsTotal} / ${SKILL_CAP}\n\n` +
           `Example: TRAIN SWORDSMANSHIP, TRAIN MACE, TRAIN FENCING, TRAIN ARCHERY, TRAIN ARMOR, TRAIN SHIELD, TRAIN STEALTH, TRAIN LOCKPICKING, TRAIN MAGERY.`,
         dynamicContext: null,
         newState,
@@ -2478,21 +2522,40 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
         stateChanged: false,
       };
     }
-    if (p.gold < TRAIN_COST_GOLD) {
+    const currentSkill = normalizeWeaponSkills(p.weaponSkills)[skillKey] ?? 0;
+    const tier = TRAIN_TIERS.find(t => currentSkill < t.maxSkill) ?? null;
+    if (!tier) {
       return {
         responseType: "static",
-        staticResponse: `"${TRAIN_COST_GOLD} gold," Aldric says flatly. "Lessons aren't charity. Come back funded."`,
+        staticResponse:
+          `Aldric shakes his head. "I've taught you everything ` +
+          `I know about ${SKILL_NAMES[skillKey]}. You ` +
+          `need to find someone better than me. They exist."`,
         dynamicContext: null,
         newState,
         stateChanged: false,
       };
     }
-    let trained = updatePlayerGold(newState, -TRAIN_COST_GOLD);
-    const skillUp = updateWeaponSkill(trained, skillKey, TRAIN_SKILL_DELTA);
+    if (p.gold < tier.cost) {
+      return {
+        responseType: "static",
+        staticResponse:
+          `Aldric looks at you levelly. "This tier costs ` +
+          `${tier.cost} gold. You have ${p.gold}. Come back ` +
+          `when you can afford it."`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    let trained = updatePlayerGold(newState, -tier.cost);
+    const skillUp = updateWeaponSkill(trained, skillKey, tier.gain);
     trained = skillUp.newState;
+    const finalSkill = normalizeWeaponSkills(trained.player.weaponSkills)[skillKey] ?? 0;
     let msg =
-      `You pay ${TRAIN_COST_GOLD} gold. Aldric walks you through grips, footwork, and mistakes until muscles remember.\n\n` +
-      `${SKILL_NAMES[skillKey]} rises by ${TRAIN_SKILL_DELTA}.`;
+      `You train with Aldric.\n\n` +
+      `*${SKILL_NAMES[skillKey]} +${tier.gain} (${tier.label} training). ` +
+      `Now: ${finalSkill}. Cost: ${tier.cost} gp.*`;
     if (skillUp.degradedSkill) {
       msg += `\n\nYour ${SKILL_NAMES[skillUp.degradedSkill]} slips a point — total skill cannot exceed ${SKILL_CAP}.`;
     }

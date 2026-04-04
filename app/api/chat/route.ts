@@ -106,6 +106,40 @@ async function streamWithFallback(
   });
 }
 
+/** Full Jane text in one call (no stream) — used for main_hall + dynamic testing path. */
+async function completeJaneNonStream(
+  messages: { role: "user" | "assistant"; content: string }[],
+  systemPrompt: string,
+  maxTokens: number = 1024
+): Promise<string> {
+  if (useGrok) {
+    try {
+      const completion = await grok.chat.completions.create({
+        model: "grok-3",
+        max_tokens: maxTokens,
+        stream: false,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+      });
+      const t = completion.choices[0]?.message?.content ?? "";
+      if (t) return t;
+    } catch (err) {
+      console.warn("Grok non-stream failed, falling back to Claude:", err);
+    }
+  }
+
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const msg = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages,
+  });
+  for (const block of msg.content) {
+    if (block.type === "text") return block.text;
+  }
+  return "";
+}
+
 function buildJaneContext(dynamicContext: string, state: WorldState): string {
   const player = state.player;
   const room = MAIN_HALL_ROOMS[player.currentRoom];
@@ -273,7 +307,9 @@ export async function POST(request: NextRequest) {
       context: string,
       newState: WorldState,
       history: { role: string; content: string }[],
-      echoPrefix?: string | null
+      echoPrefix?: string | null,
+      /** When true and room is main_hall: return JSON instead of SSE-style stream (testing). */
+      asBufferedJson?: boolean
     ) => {
       // Check Jane allocation
       if (resolvedPlayerId) {
@@ -288,6 +324,26 @@ export async function POST(request: NextRequest) {
       const conversationMessages = history.slice(0, -1).map(function(m: {role: string; content: string}) {
         return { role: m.role as "user" | "assistant", content: m.content };
       }).concat([{ role: "user" as const, content: context }]);
+
+      const useJson =
+        Boolean(asBufferedJson) &&
+        newState.player.currentRoom === "main_hall";
+
+      if (useJson) {
+        const body = await completeJaneNonStream(conversationMessages, JANE_SYSTEM_PROMPT, 1024);
+        const narrative = echoPrefix ? echoPrefix + "\n\n" + body : body;
+        const fullResponse = appendSituation(narrative, newState);
+        if (resolvedPlayerId) {
+          savePlayer(worldStateToPlayerRecord(newState)).catch(console.error);
+        }
+        return NextResponse.json({
+          response: fullResponse,
+          worldState: {
+            ...newState,
+            playerId: resolvedPlayerId,
+          },
+        });
+      }
 
       const llmStream = await streamWithFallback(conversationMessages, JANE_SYSTEM_PROMPT, 1024);
 
@@ -432,11 +488,16 @@ export async function POST(request: NextRequest) {
       engineResult.newState
     );
 
+    const bufferMainHallDynamic =
+      engineResult.responseType === "dynamic" &&
+      engineResult.newState.player.currentRoom === "main_hall";
+
     return await streamJane(
       janeContext,
       engineResult.newState,
       messages,
-      engineResult.echoPrefix ?? null
+      engineResult.echoPrefix ?? null,
+      bufferMainHallDynamic
     );
 
   } catch (error) {

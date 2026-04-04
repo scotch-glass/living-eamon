@@ -108,7 +108,22 @@ export default function Home() {
       }),
     });
 
-    if (!res.ok || !res.body) throw new Error("Stream failed");
+    if (!res.ok) throw new Error("Stream failed");
+
+    const contentType = res.headers.get("Content-Type") ?? "";
+    if (contentType.includes("application/json")) {
+      const data = (await res.json()) as {
+        response: string;
+        worldState: WorldState & { playerId?: string | null };
+      };
+      const ws = data.worldState;
+      setWorldState(ws);
+      if (ws.playerId) setPlayerId(ws.playerId);
+      setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      return;
+    }
+
+    if (!res.body) throw new Error("Stream failed");
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();

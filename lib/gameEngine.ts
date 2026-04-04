@@ -11,6 +11,8 @@ import {
   ITEMS,
   ADVENTURES,
   COMBAT_TEMPLATES,
+  SAM_INVENTORY,
+  type SamShopRow,
   Room,
   NPC,
 } from "./gameData";
@@ -30,7 +32,7 @@ import {
   applyFireballConsequences,
 } from "./gameState";
 
-import { isTwoHanded, rollWeaponDamage } from "./uoData";
+import { isTwoHanded, rollWeaponDamage, WEAPON_DATA } from "./uoData";
 
 // ============================================================
 // TYPES
@@ -425,6 +427,18 @@ export function getCommandAutocompleteSuggestions(
     return [];
   }
 
+  if (state.player.currentRoom === "main_hall") {
+    if (/^(s|sh|sho|shop)$/i.test(trimmed)) {
+      return [{ label: "SHOP (Sam's wares)", insertText: "SHOP", autoSubmit: true }];
+    }
+    if (/^(l|li|lis|list)$/i.test(trimmed)) {
+      return [{ label: "LIST (Sam's wares)", insertText: "LIST", autoSubmit: true }];
+    }
+    if (/^(sa|sam)$/i.test(trimmed)) {
+      return [{ label: "SAM (shop list)", insertText: "SAM", autoSubmit: true }];
+    }
+  }
+
   // BUY
   if (/^buy\s+/i.test(trimmed)) {
     return merchantStock().filter(x => filterPartial(x.insertText) || filterPartial(x.label));
@@ -542,7 +556,8 @@ INVENTORY & STATS
   STATS              Show your character sheet
 
 ECONOMY
-  BUY [item]         BUY SWORD  (must be near a merchant)
+  SHOP / LIST / SAM   Sam's price list (Main Hall only, static)
+  BUY [item]         In Main Hall: static Sam's shop; elsewhere merchant (Jane)
   SELL [item]        SELL DAGGER
   DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Vault)
   WITHDRAW [amount]  WITHDRAW 10
@@ -1182,6 +1197,184 @@ function buildNPCGreeting(state: WorldState, npcId: string): string {
 }
 
 // ============================================================
+// SAM SLICKER STATIC SHOP (main_hall only, Tier 1)
+// ============================================================
+
+const SAM_ARMOR_KEYS = new Set(["leather_armor", "chain_mail", "buckler"]);
+
+function partitionSamInventory(): {
+  oneHanded: SamShopRow[];
+  twoHanded: SamShopRow[];
+  armor: SamShopRow[];
+} {
+  const oneHanded: SamShopRow[] = [];
+  const twoHanded: SamShopRow[] = [];
+  const armor: SamShopRow[] = [];
+  for (const row of SAM_INVENTORY) {
+    if (SAM_ARMOR_KEYS.has(row.key)) {
+      armor.push(row);
+    } else {
+      const wd = WEAPON_DATA[row.key];
+      if (wd?.twoHanded) twoHanded.push(row);
+      else oneHanded.push(row);
+    }
+  }
+  return { oneHanded, twoHanded, armor };
+}
+
+function formatSamShopWeaponLine(row: SamShopRow): string {
+  const wd = WEAPON_DATA[row.key];
+  const name = row.displayName;
+  const dotCount = Math.max(8, 28 - name.length);
+  const left = `${name} ${".".repeat(dotCount)}`;
+  const mid = ` ${row.price} gp`;
+  const tail = wd ? `   [${wd.skill}, ${wd.damage}]` : "";
+  return `${left}${mid}${tail}`;
+}
+
+function buildSamShopListing(player: PlayerState): string {
+  const { oneHanded, twoHanded, armor } = partitionSamInventory();
+  const lines: string[] = [
+    "╔══════════════════════════════════════╗",
+    "║         SAM SLICKER'S WARES         ║",
+    "╚══════════════════════════════════════╝",
+    "",
+    "ONE-HANDED WEAPONS",
+    ...oneHanded.map(formatSamShopWeaponLine),
+    "",
+    "TWO-HANDED WEAPONS [2H]",
+    ...twoHanded.map(formatSamShopWeaponLine),
+    "",
+    "ARMOR & SHIELDS",
+    ...armor.map(row => {
+      const name = row.displayName;
+      const dotCount = Math.max(8, 28 - name.length);
+      return `${name} ${".".repeat(dotCount)} ${row.price} gp`;
+    }),
+    "",
+    `Your gold: ${player.gold} gp`,
+    "─────────────────────────────",
+    "To buy: BUY <item name>",
+  ];
+  return lines.join("\n");
+}
+
+function displayNameToUnderscore(displayName: string): string {
+  return displayName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "_");
+}
+
+function findSamShopRow(raw: string): SamShopRow | null {
+  const phrase = raw.trim();
+  if (!phrase) return null;
+  const qUnd = phrase.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "").replace(/\./g, "");
+  const qLow = phrase.toLowerCase().replace(/'/g, "");
+
+  for (const row of SAM_INVENTORY) {
+    if (row.key === qUnd) return row;
+    if (displayNameToUnderscore(row.displayName) === qUnd) return row;
+  }
+
+  let best: { row: SamShopRow; score: number } | null = null;
+  for (const row of SAM_INVENTORY) {
+    const k = row.key;
+    const d = row.displayName.toLowerCase();
+    let score = 0;
+    if (qUnd.length >= 2 && k.includes(qUnd)) score += 2000 + qUnd.length * 10;
+    if (qUnd.length >= 3 && k.length >= 3 && qUnd.includes(k)) score += 1500 + k.length * 5;
+    if (k.startsWith(qUnd)) score += 3000;
+    if (qUnd.startsWith(k) && k.length >= 4) score += 2800;
+    const words = qLow.split(/\s+/).filter(Boolean);
+    if (words.length > 0 && words.every(w => d.includes(w))) score += 1000 + words.join("").length;
+    if (score > 0 && (!best || score > best.score)) best = { row, score };
+  }
+  return best?.row ?? null;
+}
+
+function isSamBodyArmorKey(key: string): boolean {
+  return key === "leather_armor" || key === "chain_mail";
+}
+
+function addOrMergeInventory(state: WorldState, itemId: string): WorldState {
+  const inv = state.player.inventory;
+  const idx = inv.findIndex(e => e.itemId === itemId);
+  if (idx < 0) {
+    return { ...state, player: { ...state.player, inventory: [...inv, { itemId, quantity: 1 }] } };
+  }
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      inventory: inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e)),
+    },
+  };
+}
+
+function runSamPurchase(state: WorldState, query: string): EngineResult {
+  const row = findSamShopRow(query);
+  if (!row) {
+    return {
+      responseType: "static",
+      staticResponse: "Sam doesn't carry that. Type SHOP to see his wares.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const p = state.player;
+  if (row.price > p.gold) {
+    return {
+      responseType: "static",
+      staticResponse: `Thou hast insufficient gold. That'll cost ${row.price} gp and thou hast only ${p.gold} gp.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  if (row.key === "buckler" && p.weapon && isTwoHanded(p.weapon)) {
+    return {
+      responseType: "static",
+      staticResponse:
+        "Your weapon requires both hands. Sheathe it before equipping a shield.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  let newState = updatePlayerGold(state, -row.price);
+  const remaining = newState.player.gold;
+
+  if (row.key === "buckler") {
+    newState = { ...newState, player: { ...newState.player, shield: row.key } };
+  } else if (isSamBodyArmorKey(row.key)) {
+    newState = { ...newState, player: { ...newState.player, armor: row.key } };
+  } else {
+    newState = addOrMergeInventory(newState, row.key);
+  }
+
+  const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType WIELD [item] to equip a weapon, or EQUIP SHIELD [item] for a shield.`;
+
+  return {
+    responseType: "static",
+    staticResponse: msg,
+    dynamicContext: null,
+    newState,
+    stateChanged: true,
+  };
+}
+
+function samShopWrongRoomResult(state: WorldState): EngineResult {
+  return {
+    responseType: "static",
+    staticResponse: "Sam keeps his wares in the Main Hall. Go there to browse or buy.",
+    dynamicContext: null,
+    newState: state,
+    stateChanged: false,
+  };
+}
+
+// ============================================================
 // MAIN ENGINE — PROCESS PLAYER INPUT
 // ============================================================
 
@@ -1390,6 +1583,19 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     };
   }
 
+  if (first === "SHOP" || first === "SAM" || first === "LIST") {
+    if (p.currentRoom !== "main_hall") {
+      return samShopWrongRoomResult(newState);
+    }
+    return {
+      responseType: "static",
+      staticResponse: buildSamShopListing(p),
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
   if (first === "LOOK") {
     const rest = trimmed.slice(4).trim().toLowerCase();
     if (!rest || rest === "around" || rest === "room") {
@@ -1566,6 +1772,19 @@ Room: ${currentRoom?.name}. Resolve this attack round with vivid narration; appl
   }
 
   if (first === "BUY") {
+    const buyRest = trimmed.slice(3).trim();
+    if (p.currentRoom === "main_hall") {
+      if (!buyRest) {
+        return {
+          responseType: "static",
+          staticResponse: buildSamShopListing(p),
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      return runSamPurchase(newState, buyRest);
+    }
     return {
       responseType: "dynamic",
       staticResponse: null,

@@ -24,7 +24,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026*
+*Last updated: April 5, 2026*
 
 ## 1. Project Overview
 
@@ -44,7 +44,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Language: TypeScript
 - Styling: Tailwind v4 (dependency); primary game UI uses inline styles in `app/page.tsx`
 - Database: Supabase (Postgres)
-- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set
+- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`.
 - Image generation: xAI `https://api.x.ai/v1/images/generations`, model **`grok-imagine-image`** in `scripts/generate-all-art.mjs`
 - Deployment: Vercel
 - IDE: Cursor (e.g. MacBook Pro)
@@ -64,15 +64,15 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, command parser, autocomplete (`getCommandAutocompleteSuggestions`), `buildSituationBlock`, combat (`resolveCombatRound`), banking, WIELD/EQUIP/SHIELD, `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock`, combat, banking, WIELD/EQUIP/SHIELD, **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
 | `lib/uoData.ts` | `WEAPON_DATA`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
-| `app/page.tsx` | Client UI: name gate, chat log, `CommandInput`, sidebar (HP, stats, weapon, shield, virtues), streaming handler, `__STATE__` tail parsing |
-| `app/api/chat/route.ts` | POST: load/merge player, `processInput`, Jane stream (Grok or Claude), `savePlayer`, situation block append |
+| `app/page.tsx` | Client UI: name gate, chat log, `CommandInput`, sidebar, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
+| `app/api/chat/route.ts` | POST: load/merge player, `processInput`, Jane stream or **buffered JSON** in `main_hall`+dynamic, `completeJaneNonStream`, `savePlayer`, situation append |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
@@ -81,11 +81,11 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 
 ## 5. Game Architecture
 
-**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, `WIELD`/`EQUIP`/`SHIELD`, vault `DEPOSIT`/`WITHDRAW`, static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
+**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, `WIELD`/`EQUIP`/`SHIELD`, vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
 
 **Tier 2 — State-modified static:** Room `RoomState` (`normal` \| `burnt` \| `flooded` \| `dark` \| `ransacked`) with `stateModifiers` copy in `gameData.ts`; NPC `disposition` / memory / agenda in `WorldState.npcs`. Applied by engine + `gameState` helpers; still no AI for pure state ticks.
 
-**Tier 3 — Jane (dynamic):** Open-ended input, NPC conversation beyond first greeting, `BUY`/`SELL`, `ATTACK`, `CAST` (non-fireball), examinations, adventures — `responseType === "dynamic"` builds `dynamicContext` for Claude/Grok; response streamed to UI.
+**Tier 3 — Jane (dynamic):** Open-ended input, NPC conversation beyond first greeting, `BUY` **outside** `main_hall`, `SELL`, `ATTACK`, `CAST` (non-fireball), examinations, adventures — `responseType === "dynamic"` builds `dynamicContext` for Claude/Grok. **Delivery:** streamed `text/plain` except **main_hall + dynamic** → JSON body (see Known Issues).
 
 ## 6. Player State Shape
 
@@ -169,24 +169,57 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 ## 8. Merchants
 
-All prices are `ITEMS[itemId].value` in gold from `lib/gameData.ts`.
+**Sam (Main Hall):** prices and keys come from **`SAM_INVENTORY`** in `lib/gameData.ts` (static `SHOP` / `BUY`). **`NPCS.sam_slicker.merchant.inventory`** is `SAM_INVENTORY.map(r => r.key)` for autocomplete.
+
+**Hokas / Pip (non-Sam):** reference `ITEMS[itemId].value` for display; purchases still **Jane** unless a static Pip shop is added later.
 
 ### Hokas Tokas — Main Hall (`hokas_tokas`)
 
 - Personality (summary): Warm innkeeper; Universal Common; furious if hall burnt until repairs paid.
 - Inventory: `ale` (1g), `hearty_meal` (3g), `rumor_token` (5g)
 
-### Sam Slicker — Main Hall (`sam_slicker`)
+### Sam Slicker — Main Hall (`sam_slicker`) — static `SAM_INVENTORY`
 
-- Personality (summary): Oily weapons merchant; haggling; hints at shady goods.
-- Inventory: `short_sword` (15g), `long_sword` (30g), `dagger` (8g), `crossbow` (45g), `leather_armor` (20g), `chain_mail` (60g)
+| key | displayName | price (gp) |
+|-----|-------------|------------|
+| dagger | Dagger | 8 |
+| short_sword | Short Sword | 15 |
+| long_sword | Long Sword | 30 |
+| katana | Katana | 90 |
+| kryss | Kryss | 35 |
+| war_axe | War Axe | 70 |
+| mace | Mace | 45 |
+| scepter | Scepter | 50 |
+| scimitar | Scimitar | 55 |
+| cutlass | Cutlass | 50 |
+| skinning_knife | Skinning Knife | 10 |
+| halberd | Halberd | 100 |
+| battle_axe | Battle Axe | 95 |
+| war_hammer | War Hammer | 110 |
+| maul | Maul | 95 |
+| bardiche | Bardiche | 100 |
+| executioners_axe | Executioner's Axe | 120 |
+| large_battle_axe | Large Battle Axe | 115 |
+| spear | Spear | 75 |
+| war_fork | War Fork | 70 |
+| black_staff | Black Staff | 40 |
+| gnarled_staff | Gnarled Staff | 35 |
+| quarter_staff | Quarter Staff | 25 |
+| pitchfork | Pitchfork | 30 |
+| bow | Bow | 80 |
+| crossbow | Crossbow | 45 |
+| repeating_crossbow | Repeating Crossbow | 90 |
+| leather_armor | Leather Armor | 20 |
+| chain_mail | Chain Mail | 60 |
+| buckler | Buckler | 30 |
+
+- **Static commands (Main Hall only):** `SHOP`, `SAM`, `LIST`, or `BUY` with no argument → formatted listing; `BUY <item>` → gold check, purchase. Weapons go to **inventory** (not auto-wield); `leather_armor` / `chain_mail` set **armor**; `buckler` sets **shield** (blocked if equipped weapon is two-handed).
+- Elsewhere: `SHOP`/`SAM`/`LIST` → static hint to go to Main Hall; `BUY` → still **Jane**.
 
 ### Pip (armory attendant) — Guild Armory (`armory_attendant`)
 
 - Personality (summary): Young apprentice; wants to adventure; chatty about posted adventures.
-- Inventory: `short_sword` (15g), `leather_armor` (20g), `buckler` (12g), `torch` (2g), `rope` (5g), `rations` (3g)
-
-**Note:** `BUY`/`SELL` in the engine are still **dynamic (Jane)** — there is no deterministic static shop transaction loop yet.
+- Inventory: `short_sword` (15g), `leather_armor` (20g), `buckler` (30g per `ITEMS`), `torch` (2g), `rope` (5g), `rations` (3g)
 
 ## 9. Weapon System
 
@@ -257,11 +290,11 @@ Do not commit secret values.
 
 ## 13. Known Issues / Parked Items
 
+- **`main_hall` Jane streaming disabled for testing:** When `responseType === "dynamic"` and `player.currentRoom === "main_hall"`, `/api/chat` returns **`application/json`** `{ response, worldState }` instead of a streamed `text/plain` body. **Re-enable streaming for production** (remove or gate the `bufferMainHallDynamic` path in `app/api/chat/route.ts`) so Main Hall behaves like other rooms unless you intentionally keep this for debugging.
 - `known_spells` / `known_deities`: loaded from DB when present but **not** written in `worldStateToPlayerRecord` / `savePlayer` — persistence gap.
 - `main_hall_exit` room has no `RoomStateEntry` in `createInitialWorldState.rooms`.
-- `BUY`/`SELL`: Jane-driven; no deterministic gold/inventory swap in engine.
-- Static structured shops (`SAM_INVENTORY`, `PIP_INVENTORY`): not implemented.
-- Many `WEAPON_DATA` keys (e.g. `katana`, `war_axe`, `halberd`, `executioners_axe`, `large_battle_axe`, `war_fork`, `pitchfork`, `repeating_crossbow`, `skinning_knife`, `scimitar`, `cutlass`, `scepter`, `kryss`, staves, bow, etc.) have **no** matching `ITEMS` / merchant entries yet.
+- `SELL` and **non–main_hall** `BUY` remain **Jane-driven** (no static transaction loop).
+- Static structured shop for **Pip** (`PIP_INVENTORY`): not implemented.
 - Female/male paperdoll and compositing: parked.
 - `public/uo-art`: may be empty until scripts are run locally.
 
@@ -279,19 +312,29 @@ Do not commit secret values.
 - [x] Direction parsing: `extractDirection` uses whole tokens (fixes `STATS` / substring false positives)
 - [x] Batch art script targeting Grok image API (`grok-imagine-image`)
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
+- [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
+- [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
 
 ## 15. Next Up
 
+- [ ] **Re-enable Jane streaming in `main_hall`** (or gate behind env) before production — see Known Issues
 - [ ] Persist `known_spells` / `known_deities` in `savePlayer` + `worldStateToPlayerRecord`
-- [ ] Static structured shop for Sam (`SAM_INVENTORY` or equivalent)
 - [ ] Static structured shop for Pip (beginner gear)
-- [ ] Align `ITEMS` / merchants with all `WEAPON_DATA` keys intended for play
+- [ ] Align any remaining `WEAPON_DATA`-only keys with `ITEMS` if new shops add them
 - [ ] End-to-end test of two-handed blocking in UI
 - [ ] Supabase migration file in repo documenting `players` + `shield` column
 - [ ] Push/deploy verification after local tests
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-05 — Static Sam shop + main_hall JSON Jane (testing)
+
+- **`lib/gameData.ts`:** Added `SamShopRow`, **`SAM_INVENTORY`** (full weapon/armor/shield table); `sam_slicker.merchant.inventory` = `SAM_INVENTORY.map(r => r.key)`; added **`ITEMS`** entries for every Sam weapon key; `buckler` **value** set to **30** to match Sam price.
+- **`lib/gameEngine.ts`:** Tier-1 **`SHOP` / `SAM` / `LIST`** and **`BUY`** (with/without arg) in **`main_hall`** only; boxed listing with `WEAPON_DATA` skill/damage; **`BUY`** match/partial match, gold check, inventory vs armor vs buckler→shield; wrong room static hint; autocomplete for `SHOP`/`LIST`/`SAM` in Main Hall.
+- **`app/api/chat/route.ts`:** **`completeJaneNonStream`**; **`streamJane(..., asBufferedJson)`** — when engine returns **dynamic** and room is **`main_hall`**, respond with **`NextResponse.json({ response, worldState })`** (situation block included in `response`).
+- **`app/page.tsx`:** If response **`Content-Type`** includes **`application/json`**, **`res.json()`**, append assistant message in full (no typing animation), update state from **`worldState`**.
+- **CLAUDE_CONTEXT.md:** This update.
 
 ### 2026-04-04 — User instruction style note (top of CLAUDE_CONTEXT)
 

@@ -228,7 +228,7 @@ export const NPCS: Record<string, NPC> = {
     isHostile: false,
     stats: { hp: 15, armor: 1, damage: "1d4" },
     merchant: {
-      inventory: ["short_sword", "leather_armor", "torch", "rope", "rations"],
+      inventory: ["short_sword", "leather_armor", "buckler", "torch", "rope", "rations"],
       haggleModifier: -1,
     },
   },
@@ -301,6 +301,15 @@ export const ITEMS: Record<string, Item> = {
     type: "armor",
     value: 60,
     stats: { armorClass: 4 },
+    isCarryable: true,
+  },
+  buckler: {
+    id: "buckler",
+    name: "Buckler",
+    description: "A small steel buckler, light enough to parry and turn a blade without tiring the arm.",
+    type: "armor",
+    value: 12,
+    stats: { armorClass: 1 },
     isCarryable: true,
   },
   torch: {

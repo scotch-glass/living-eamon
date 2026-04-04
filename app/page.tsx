@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { WorldState, createInitialWorldState } from "../lib/gameState";
 import { ITEMS } from "../lib/gameData";
+import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
 import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 
@@ -296,6 +297,7 @@ export default function Home() {
   };
 
   const player = worldState?.player;
+  const weaponIsTwoHanded = player?.weapon ? isTwoHanded(player.weapon) : false;
   const topVirtues = player
     ? Object.entries(player.virtues)
         .filter(([, v]) => v !== 0)
@@ -372,6 +374,17 @@ export default function Home() {
           <div style={{ fontSize: 11, marginBottom: 12 }}>
             <div style={{ color: "#6b7280", marginBottom: 2 }}>WEAPON</div>
             <div style={{ color: "#d1d5db" }}>{ITEMS[player.weapon]?.name ?? player.weapon}</div>
+          </div>
+
+          <div style={{ fontSize: 11, marginBottom: 12 }}>
+            <div style={{ color: "#6b7280", marginBottom: 2 }}>SHIELD</div>
+            {weaponIsTwoHanded ? (
+              <div style={{ color: "#6b7280", fontStyle: "italic", fontSize: 10 }}>— both hands occupied —</div>
+            ) : (
+              <div style={{ color: "#d1d5db" }}>
+                {player.shield ? ITEMS[player.shield]?.name ?? player.shield : "none"}
+              </div>
+            )}
           </div>
 
           <div style={{ fontSize: 11, marginBottom: 12 }}>

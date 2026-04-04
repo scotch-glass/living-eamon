@@ -30,6 +30,8 @@ import {
   applyFireballConsequences,
 } from "./gameState";
 
+import { isTwoHanded, rollWeaponDamage } from "./uoData";
+
 // ============================================================
 // TYPES
 // ============================================================
@@ -317,6 +319,59 @@ export function getCommandAutocompleteSuggestions(
     return invItemsForVerb("SELL").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
+  const invWeaponSuggestions = (verbPrefix: string): AutocompleteItem[] =>
+    state.player.inventory
+      .filter(e => e.quantity > 0 && ITEMS[e.itemId]?.type === "weapon")
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({
+        label: it.name,
+        insertText: `${verbPrefix} ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      }));
+
+  if (/^wield\s+/i.test(trimmed)) {
+    return invWeaponSuggestions("WIELD").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^equip\s+shield\s*/i.test(trimmed)) {
+    return state.player.inventory
+      .filter(e => e.quantity > 0 && isShieldSlotItem(e.itemId))
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({
+        label: it.name,
+        insertText: `EQUIP SHIELD ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^equip\s+/i.test(trimmed) && !/^equip\s+shield/i.test(trimmed)) {
+    return invWeaponSuggestions("EQUIP").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^shield\s+/i.test(trimmed)) {
+    return state.player.inventory
+      .filter(e => e.quantity > 0 && isShieldSlotItem(e.itemId))
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({
+        label: it.name,
+        insertText: `SHIELD ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (
+    /^remove\s*$/i.test(trimmed) ||
+    /^remove\s+s/i.test(trimmed) ||
+    /^unequip\s*$/i.test(trimmed) ||
+    /^unequip\s+s/i.test(trimmed)
+  ) {
+    return [{ label: "REMOVE SHIELD", insertText: "REMOVE SHIELD", autoSubmit: true }].filter(
+      x => !partialLower || x.insertText.toLowerCase().includes(partialLower)
+    );
+  }
+
   // ATTACK
   if (/^attack\s+/i.test(trimmed)) {
     return npcs
@@ -466,6 +521,9 @@ INTERACTION
   EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
   GET [item]         GET SWORD, GET TORCH
   DROP [item]        DROP SWORD
+  WIELD [weapon]     WIELD LONG SWORD  (from inventory)
+  EQUIP SHIELD [item]  EQUIP SHIELD BUCKLER  |  SHIELD BUCKLER
+  REMOVE SHIELD      Lower thy shield
 
 COMBAT
   ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
@@ -536,6 +594,144 @@ function matchInventoryDrop(inputLower: string, player: PlayerState): string | n
   return best?.id ?? null;
 }
 
+/** Item ids that occupy the shield slot (off-hand), distinct from body armor. */
+function isShieldSlotItem(itemId: string): boolean {
+  return itemId === "buckler";
+}
+
+function matchWeaponFromPhrase(phraseLower: string, player: PlayerState): string | null {
+  let best: { id: string; len: number } | null = null;
+  for (const entry of player.inventory) {
+    if (entry.quantity <= 0) continue;
+    const it = ITEMS[entry.itemId];
+    if (!it || it.type !== "weapon") continue;
+    const nl = it.name.toLowerCase();
+    if (nl.includes(phraseLower) || phraseLower.includes(nl)) {
+      const len = nl.length;
+      if (!best || len > best.len) best = { id: entry.itemId, len };
+    }
+  }
+  return best?.id ?? null;
+}
+
+function matchShieldFromPhrase(phraseLower: string, player: PlayerState): string | null {
+  let best: { id: string; len: number } | null = null;
+  for (const entry of player.inventory) {
+    if (entry.quantity <= 0) continue;
+    if (!isShieldSlotItem(entry.itemId)) continue;
+    const it = ITEMS[entry.itemId];
+    if (!it) continue;
+    const nl = it.name.toLowerCase();
+    if (nl.includes(phraseLower) || phraseLower.includes(nl)) {
+      const len = nl.length;
+      if (!best || len > best.len) best = { id: entry.itemId, len };
+    }
+  }
+  return best?.id ?? null;
+}
+
+function runWieldWeapon(state: WorldState, phraseLower: string): EngineResult {
+  const p = state.player;
+  if (!phraseLower.trim()) {
+    return {
+      responseType: "static",
+      staticResponse: "Wield what?",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const itemId = matchWeaponFromPhrase(phraseLower, p);
+  if (!itemId) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou dost not carry that weapon.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  if (isTwoHanded(itemId) && p.shield) {
+    return {
+      responseType: "static",
+      staticResponse:
+        "You cannot wield a two-handed weapon while carrying a shield. Unequip your shield first.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const item = ITEMS[itemId]!;
+  return {
+    responseType: "static",
+    staticResponse: `Thou wieldest the ${item.name}.`,
+    dynamicContext: null,
+    newState: { ...state, player: { ...p, weapon: itemId } },
+    stateChanged: true,
+  };
+}
+
+function runEquipShield(state: WorldState, phraseLower: string): EngineResult {
+  const p = state.player;
+  if (!phraseLower.trim()) {
+    return {
+      responseType: "static",
+      staticResponse: "Equip which shield?",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  if (p.weapon && isTwoHanded(p.weapon)) {
+    return {
+      responseType: "static",
+      staticResponse:
+        "Your weapon requires both hands. Sheathe it before equipping a shield.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const itemId = matchShieldFromPhrase(phraseLower, p);
+  if (!itemId) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou dost not carry that shield.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const item = ITEMS[itemId]!;
+  return {
+    responseType: "static",
+    staticResponse: `Thou bearest the ${item.name}.`,
+    dynamicContext: null,
+    newState: { ...state, player: { ...p, shield: itemId } },
+    stateChanged: true,
+  };
+}
+
+function runRemoveShield(state: WorldState): EngineResult {
+  const p = state.player;
+  if (!p.shield) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou art not bearing a shield.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  return {
+    responseType: "static",
+    staticResponse: "Thou lowerest thy shield.",
+    dynamicContext: null,
+    newState: { ...state, player: { ...p, shield: null } },
+    stateChanged: true,
+  };
+}
+
 function isNoticeExamineCommand(lower: string): boolean {
   return lower === "notice" || lower === "notice board" || lower.startsWith("notice board ");
 }
@@ -553,10 +749,16 @@ const DIRECTION_MAP: Record<string, string> = {
   d: "down", down: "down",
 };
 
+/** Resolves a direction only from whole words/tokens — never substring (e.g. "stats" must not match "s" → south). */
 function extractDirection(input: string): string | null {
-  const lower = input.toLowerCase();
-  for (const [key, val] of Object.entries(DIRECTION_MAP)) {
-    if (lower.includes(key)) return val;
+  const words = input
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  for (const word of words) {
+    const dir = directionFromSingleToken(word);
+    if (dir) return dir;
   }
   return null;
 }
@@ -817,7 +1019,6 @@ export function resolveCombatRound(
 } {
   const player = state.player;
   const weaponData = ITEMS[player.weapon];
-  const damageDice = weaponData?.stats?.damage ?? "1d6";
   const strBonus = Math.floor((player.strength - 10) / 2);
 
   // Player attacks
@@ -827,7 +1028,7 @@ export function resolveCombatRound(
   let newEnemyHp = enemyHp;
 
   if (playerHit) {
-    const dmg = rollDice(damageDice) + strBonus;
+    const dmg = rollWeaponDamage(player.weapon) + strBonus;
     newEnemyHp = enemyHp - dmg;
     narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerHit), {
       weapon: weaponData?.name ?? "weapon",
@@ -950,6 +1151,7 @@ Expertise: ${player.expertise}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
 Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon}
 Armor: ${player.armor ? ITEMS[player.armor]?.name : "None"}
+Shield: ${player.shield ? ITEMS[player.shield]?.name ?? player.shield : "None"}
 Reputation: ${player.reputationLevel}${player.knownAs ? ` — known as "${player.knownAs}"` : ""}${player.bounty > 0 ? `\n⚠ Bounty on your head: ${player.bounty} gold` : ""}${virtueLines ? `\n\nVirtues:\n${virtueLines}` : ""}`;
 }
 
@@ -1297,6 +1499,29 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       newState: s,
       stateChanged: true,
     };
+  }
+
+  if (first === "WIELD") {
+    const phrase = trimmed.slice(5).trim().toLowerCase();
+    return runWieldWeapon(newState, phrase);
+  }
+
+  if (first === "EQUIP") {
+    const afterEquip = trimmed.slice(5).trim();
+    if (afterEquip.toLowerCase().startsWith("shield ")) {
+      const phrase = afterEquip.slice(7).trim().toLowerCase();
+      return runEquipShield(newState, phrase);
+    }
+    return runWieldWeapon(newState, afterEquip.toLowerCase());
+  }
+
+  if (first === "SHIELD") {
+    const phrase = trimmed.slice(6).trim().toLowerCase();
+    return runEquipShield(newState, phrase);
+  }
+
+  if ((first === "REMOVE" || first === "UNEQUIP") && tokens[1]?.toLowerCase() === "shield") {
+    return runRemoveShield(newState);
   }
 
   if (first === "ATTACK") {

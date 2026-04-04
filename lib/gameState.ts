@@ -128,6 +128,7 @@ export interface PlayerState {
   // Equipment
   weapon: string;              // Item id of equipped weapon
   armor: string | null;        // Item id of equipped armor
+  shield: string | null;       // Item id of equipped shield (off-hand)
   inventory: PlayerInventoryItem[];
 
   // Virtues (tracked silently by Jane)
@@ -322,11 +323,12 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       charisma: 10,
       expertise: 0,
 
-      gold: 50,
+      gold: 10000,
       bankedGold: 0,
 
       weapon: "short_sword",
       armor: null,
+      shield: null,
       inventory: [
         { itemId: "short_sword", quantity: 1 },
       ],

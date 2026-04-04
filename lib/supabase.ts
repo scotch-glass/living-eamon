@@ -37,6 +37,7 @@ export async function savePlayer(player: Record<string, unknown>) {
       banked_gold: player.bankedGold,
       weapon: player.weapon,
       armor: player.armor,
+      shield: player.shield,
       inventory: player.inventory,
       virtues: player.virtues,
       reputation_score: player.reputationScore,

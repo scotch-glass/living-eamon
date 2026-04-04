@@ -742,7 +742,10 @@ INTERACTION
 COMBAT
   ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
   FLEE               Escape through a random exit (enemy stays wounded)
-  BEG [name]         BEG SAM — Sam may take pity on the truly destitute
+  BEG [name]         When you have nothing, BEG helps.
+                     BEG SAM — Sam may spare a rusty blade.
+                     BEG HOKAS — Hokas may part with a knife.
+                     Use it to survive until you can do better.
 
 SPEECH (MUD conventions)
   SAY [text]         SAY Hello everyone!  (speaks to whole room)
@@ -2456,20 +2459,6 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       p.currentRoom === "main_hall" &&
       p.weapon === "unarmed"
     ) {
-      const alreadyHasRusty = p.inventory.some(
-        e => e.itemId === "rusty_shortsword"
-      );
-      if (alreadyHasRusty) {
-        return {
-          responseType: "static",
-          staticResponse:
-            `Sam glances at the rusty sword already in your hands. "I've given thee what I can spare, friend. The rest is up to thee."`,
-          dynamicContext: null,
-          newState,
-          stateChanged: false,
-        };
-      }
-
       const newInventory = [
         ...p.inventory,
         { itemId: "rusty_shortsword", quantity: 1 },
@@ -2491,6 +2480,45 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
           `recovered from a riverbed. He sets it on the bar without ceremony.\n\n` +
           `"Don't thank me. Kill something with it and buy a real one."\n\n` +
           `You have the Rusty Short Sword. It is equipped.`,
+        dynamicContext: null,
+        newState: afterGift,
+        stateChanged: true,
+      };
+    }
+
+    const isHokasTarget =
+      rest.includes("hokas") || rest.includes("tokas");
+
+    if (
+      isHokasTarget &&
+      p.currentRoom === "main_hall" &&
+      p.weapon === "unarmed"
+    ) {
+      const newInventory = [
+        ...p.inventory,
+        { itemId: "butcher_knife", quantity: 1 },
+      ];
+      const afterGift: WorldState = {
+        ...newState,
+        player: {
+          ...newState.player,
+          weapon: "butcher_knife",
+          inventory: newInventory,
+        },
+      };
+
+      return {
+        responseType: "static",
+        staticResponse:
+          `Hokas looks at you for a long moment — the robe, the empty hands,` +
+          ` the general situation.\n\n` +
+          `He disappears behind the bar and comes back with a large knife,` +
+          ` the kind used for breaking down a side of beef. He sets it on` +
+          ` the bar with a solid thunk.\n\n` +
+          `"I don't need it anymore," he says. "Don't tell me what you do` +
+          ` with it. Don't bring it back." He goes back to polishing a` +
+          ` glass that doesn't need polishing.\n\n` +
+          `You have the Butcher Knife. It is equipped.`,
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,

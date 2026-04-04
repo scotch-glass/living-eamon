@@ -424,6 +424,16 @@ export const ITEMS: Record<string, Item> = {
     stats: { damage: "1d4" },
     isCarryable: true,
   },
+  butcher_knife: {
+    id: "butcher_knife",
+    name: "Butcher Knife",
+    description:
+      "A heavy-bladed kitchen knife, well-used and not recently cleaned. It was made for cutting meat and it will do that regardless of what kind of meat is in front of it.",
+    type: "weapon",
+    value: 2,
+    stats: { damage: "2-14" },
+    isCarryable: true,
+  },
   long_sword: {
     id: "long_sword",
     name: "Long Sword",

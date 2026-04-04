@@ -64,6 +64,7 @@ Every time you start a new conversation about this project, do this:
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
 *Last updated: April 4, 2026*
 
+
 ## 1. Project Overview
 
 Living Eamon is an AI-powered recreation of the classic Apple II text-adventure system **Eamon**, intended for **LivingEamon.ai**. It features a persistent living world, the AI narrator **Jane**, virtue tracking, a consequence engine (room/NPC state, bounties, chronicle), and Ultima Online–inspired item/weapon metadata and batch icon generation.
@@ -103,10 +104,10 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, plain + **ragged** clothing, **`rusty_shortsword`**, **`castoff_short_sword`**), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, plain + **ragged** clothing, **`rusty_shortsword`**, **`butcher_knife`**, **`castoff_short_sword`**), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, weapon sentinel **`unarmed`** (not an ITEMS id), armor/shield **null**, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG`**), **Hokas unarmed pity** (**`TELL HOKAS`**, **`EXAMINE` / name-alone / look-at** mentioning Hokas), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG SAM` / `BEG HOKAS`** while unarmed), **Hokas unarmed pity** (**`TELL HOKAS`**, **`EXAMINE` / name-alone / look-at** mentioning Hokas), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
@@ -402,9 +403,10 @@ Do not commit secret values.
 - [x] Guild Courtyard (live Warsaw weather, CET time, 24 static descriptions)
 - [x] Death redesign: inventory wipe, gray robe, `applyPlayerDeath`
 - [x] Gray robe humiliation on every room transition while worn
-- [x] BEG command (BEG SAM gives rusty sword while unarmed)
 - [x] Unarmed state after death (weapon sentinel `unarmed`)
 - [x] Hokas unarmed pity (**`TELL HOKAS`** / examine Hokas): ragged clothes + **castoff short sword** (1–4), once per life arc
+- [x] BEG HOKAS (butcher knife, no limit)
+- [x] BEG SAM limit removed (gives rusty sword every time)
 
 ## 15. Next Up
 
@@ -415,6 +417,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — BEG HOKAS butcher knife, BEG SAM unlimited, HELP
+
+- Added **`butcher_knife`** to **`ITEMS`** (value 2, damage **2–14**) and **`WEAPON_DATA`** (**artId** **5111** / **0x13F7**, Swordsmanship, **weaponSpeed** 4).
+- **BEG HOKAS:** **`main_hall`** + **`unarmed`** → static scene, **`butcher_knife`** added and equipped, no limit.
+- **BEG SAM** one-time inventory check **removed** — Sam gives **`rusty_shortsword`** every time while unarmed.
+- **`HELP_TEXT`** **BEG** entry expanded (SAM + HOKAS + survival blurb).
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Hokas pity for unarmed players
 
@@ -437,7 +447,7 @@ Do not commit secret values.
 - Fixed death state: **`player.weapon = 'unarmed'`** after death (not **`short_sword`**). Inventory contains only **`gray_robe`**.
 - Added **`unarmed`** sentinel handling throughout the engine: **`ATTACK`** blocked with message; **`STATS`** / free-text Jane context show **Unarmed**; **`resolveCombatRound`** early guard; unequip autocomplete skips **`unarmed`**.
 - **`rusty_shortsword`** in **`ITEMS`** and **`WEAPON_DATA`** (`uoData.ts`).
-- **`BEG`** command: **`BEG SAM`** (or **slicker**) in **`main_hall`** while **`unarmed`** gives the rusty short sword and equips it once per session (inventory check). Other **`BEG`** targets or bare **`BEG`** go to Jane with robe/unarmed context.
+- **`BEG`** command: **`BEG SAM`** (or **slicker**) in **`main_hall`** while **`unarmed`** gives the rusty short sword and equips it (historically one-time via inventory check; **removed** in later session). Other **`BEG`** targets or bare **`BEG`** go to Jane with robe/unarmed context.
 - `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Church of Perpetual Life, Guild Courtyard, death redesign, live weather

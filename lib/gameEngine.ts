@@ -1341,16 +1341,23 @@ export function resolveCombatRound(
       return false;
     }
 
-    const dmg = calcPlayerDamage();
+    const isCrit = Math.random() < 0.1;
+    const baseDmg = calcPlayerDamage();
+    const dmg = isCrit ? baseDmg * 2 : baseDmg;
     newEnemyHp -= dmg;
     const tier = getWoundTier(dmg, enemyStartHp, "playerOnEnemy");
     const category = getWeaponCategory(player.weapon);
     const pool = getPlayerHitEnemyPool(bodyType, category, tier);
-    narrative += fillTemplate(pickTemplate(pool), {
+    const hitLine = fillTemplate(pickTemplate(pool), {
       weapon: weaponItem?.name ?? "weapon",
       enemy: enemyData.name,
       damage: String(dmg),
     });
+    if (isCrit) {
+      narrative += `__CRITICAL__ ${hitLine}`;
+    } else {
+      narrative += hitLine;
+    }
 
     if (newEnemyHp <= 0) {
       const deathPool = getEnemyDeathPool(bodyType);

@@ -440,50 +440,27 @@ export async function POST(request: NextRequest) {
     // Run through engine
     const engineResult = processInput(playerInput, state);
 
-    // STATIC — no API call (optional one-shot Jane for critical hit narration)
+    // STATIC — no API call unless narrative contains __CRITICAL__ (Jane rewrites crit line)
     if (engineResult.responseType === "static" && engineResult.staticResponse) {
-      let staticText = engineResult.staticResponse;
+      const staticText = engineResult.staticResponse;
 
-      if (staticText.includes("__CRITICAL__:")) {
-        const critMatch = staticText.match(/__CRITICAL__:([^\n]+)/);
-        if (critMatch) {
-          const inner = critMatch[1] ?? "";
-          const segs = inner.split(":");
-          if (segs.length >= 3) {
-            const damageStr = segs.pop()!;
-            const enemyName = segs.pop()!;
-            const weaponName = segs.join(":");
-            try {
-              const critNarration = await completeJaneNonStream(
-                [
-                  {
-                    role: "user",
-                    content:
-                      `Write one sentence of visceral combat narration for a ` +
-                      `critical hit. The player just struck ${enemyName} with ` +
-                      `a ${weaponName} for ${damageStr} damage — a devastating ` +
-                      `blow far beyond what was expected. No dialogue. Pure ` +
-                      `physical description. One sentence only. Do not mention ` +
-                      `damage numbers. Do not start with "The".`,
-                  },
-                ],
-                JANE_SYSTEM_PROMPT,
-                80
-              );
-              staticText = staticText.replace(
-                critMatch[0],
-                critNarration.trim() + ` (${damageStr} damage — CRITICAL HIT)`
-              );
-            } catch {
-              staticText = staticText.replace(
-                critMatch[0],
-                `A devastating blow — the ${weaponName} connects with ` +
-                  `terrifying force, a strike the ${enemyName} will not forget. ` +
-                  `(${damageStr} damage — CRITICAL HIT)`
-              );
-            }
-          }
-        }
+      if (staticText.includes("__CRITICAL__")) {
+        const critContext =
+          "CRITICAL HIT. The player has landed a devastating blow.\n" +
+          "The following combat narrative contains a __CRITICAL__ marker.\n" +
+          "Rewrite the marked hit line as a single vivid, visceral sentence — " +
+          "no longer than 20 words. Replace __CRITICAL__ and the line that " +
+          "follows it with your rewrite. Keep all other lines exactly as-is.\n\n" +
+          "NARRATIVE:\n" +
+          staticText;
+
+        return await streamJane(
+          critContext,
+          engineResult.newState,
+          messages,
+          null,
+          engineResult.newState.player.currentRoom === "main_hall"
+        );
       }
 
       return sendResponse(staticText, engineResult.newState);

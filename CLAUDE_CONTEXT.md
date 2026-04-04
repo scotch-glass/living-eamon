@@ -82,7 +82,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Language: TypeScript
 - Styling: Tailwind v4 (dependency); primary game UI uses inline styles in `app/page.tsx`
 - Database: Supabase (Postgres)
-- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`.
+- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic).
 - Image generation: xAI `https://api.x.ai/v1/images/generations`, model **`grok-imagine-image`** in `scripts/generate-all-art.mjs`
 - Deployment: Vercel
 - IDE: Cursor (e.g. MacBook Pro)
@@ -105,13 +105,13 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`**, **`FLEE`**), banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with 10% **`__CRITICAL__`** + double damage, **`FLEE`**), banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: name gate, chat log, `CommandInput`, sidebar, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
-| `app/api/chat/route.ts` | POST: load/merge player, `processInput`, Jane stream or **buffered JSON** in `main_hall`+dynamic, `completeJaneNonStream`, `savePlayer`, situation append |
+| `app/api/chat/route.ts` | POST: load/merge player, `processInput`; static normally instant; **`__CRITICAL__`** in static combat → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
@@ -120,7 +120,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 
 ## 5. Game Architecture
 
-**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs, **`FLEE`**), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
+**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs, **`FLEE`**), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM when `responseType === "static"` **unless** the payload contains **`__CRITICAL__`** (player crit — then **`route.ts`** invokes Jane once to rewrite the marked hit line).
 
 **Tier 2 — State-modified static:** Room `RoomState` (`normal` \| `burnt` \| `flooded` \| `dark` \| `ransacked`) with `stateModifiers` copy in `gameData.ts`; NPC `disposition` / memory / agenda in `WorldState.npcs`. Applied by engine + `gameState` helpers; still no AI for pure state ticks.
 
@@ -271,7 +271,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - **Combat (`resolveCombatRound` in `gameEngine.ts`):** Signature **`resolveCombatRound(state, enemyId, enemyHp, { name, damage, armor }, bodyType?)`** → **`{ narrative, newState, enemyHp, combatOver, playerWon }`**. **Player defeat:** **`fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath))`** — **48** lines. **Enemy defeat:** **`fillTemplate(pickTemplate(getEnemyDeathPool(bodyType)), { enemy, weapon })`** — body-type pools (**55** / **40** / **35** / **40** humanoid+).
   - **INITIATIVE (prepended):** **`⚡ Initiative — You: {p} · {enemy}: {e}`** then **`{winner} acts first.`** Player: **`floor(rand×10)+1 + WEAPON_DATA[weapon].weaponSpeed (default 5) − getDexReactionBonus(dex)`**. Enemy: **`floor(rand×10)+1 + 5`** (no DEX). **Tie → player first.** Order of **`doPlayerAttack` / `doEnemyAttack`** follows initiative.
   - **HIT CHANCE (T2A):** **`(skill+50)/((foeSkill+50)×2)`**; player skill from expertise; **enemy skill fixed 30**.
-  - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1** (unchanged).
+  - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1**. **Critical hit:** 10% on each successful player hit → final damage **×2**; narrative prefixes that hit line with **`__CRITICAL__ `** so **`route.ts`** sends the full combat text to Jane for a **≤20-word** replacement of the marked line only. Enemy attacks never crit.
   - **ENEMY DAMAGE:** **`raw = rollDice(damage)`**; **`enemyDmg = max(0, raw − armorAC − shieldAC)`** from **`ITEMS[].stats.armorClass`** — **no post-AC halving**, **no min-1 clamp** (full block possible). If **`totalAC > 0`** and **`raw > 0`**: narrate **`ARMOR_FULL_ABSORB_DESCRIPTIONS`** or **`ARMOR_ABSORB_DESCRIPTIONS`** using **`absorbKey = player.armor ?? player.shield ?? "default"`** (armor priority for key). If **`enemyDmg === 0`**, skip wound line and **do not** change player HP.
   - **Cinematic pools:** **`getPlayerHitEnemyPool`**, **`getEnemyHitPlayerPool`**, **`getEnemyMissPlayerPool`**, **`PLAYER_MISS_DESCRIPTIONS`** via **`fillTemplate` + `pickTemplate`**. **Wound tiers:** player on enemy vs **starting `enemyHp`** (this round): **≤15%** glancing, **≤40%** solid, else devastating; enemy on player vs **`player.maxHp`**: **≤10%** / **≤25%** / else.
   - **`NPCBodyType`:** defined in **`lib/npcBodyType.ts`**, re-exported from **`gameData.ts`**; **`combatNarrationPools.ts`** imports it (no duplicate **`CombatBodyType`**).
@@ -386,10 +386,10 @@ Do not commit secret values.
 - [x] NPCBodyType / CombatBodyType consolidated to single type in lib/npcBodyType.ts
 - [x] Persistent enemy HP tracking across combat rounds (`NPCStateEntry.combatHp` + `setNPCCombatHp`)
 - [x] FLEE command (random exit, enemy HP preserved on flee)
+- [x] Critical hit system (10% crit, double damage, Jane rewrites the hit line)
 
 ## 15. Next Up
 
-- [ ] **Critical hit system** — 10% crit roll → CRITICAL marker → Jane narrates the result
 - [ ] **Church of Perpetual Life** — new respawn room, NPC, gray robe item; player respawns there naked (gray robe only) instead of Main Hall; inventory wiped on death; banked gold preserved
 - [ ] Re-enable Jane streaming in `main_hall` before production
 - [ ] Persist `known_spells` / `known_deities` in savePlayer
@@ -398,6 +398,12 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Critical hit system (`__CRITICAL__`, Jane rewrite)
+
+- **10%** chance on each **successful player hit** in **`resolveCombatRound`**: damage **×2** vs **`calcPlayerDamage()`** output; **`__CRITICAL__ `** prepended before the templated hit line (plain marker, no extra styling).
+- **`app/api/chat/route.ts`:** If **`staticResponse`** contains **`__CRITICAL__`**, **`streamJane`** with instructions to replace marker + following line with one vivid sentence (**≤20 words**), preserve all other lines; **`main_hall`** still uses buffered JSON like dynamic Jane. Non-crit combat rounds stay fully static (no API).
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — FLEE command; movement no longer clears combatHp
 
@@ -441,9 +447,8 @@ Do not commit secret values.
 ### 2026-04-04 — Cinematic combat narration (UO absorption, crits, static ATTACK)
 
 - **`lib/combatNarrationPools.ts` + `gameData` re-exports:** weapon category sets, **`PLAYER_HIT_DESCRIPTIONS`**, **`ENEMY_HIT_DESCRIPTIONS`**, armor absorb / full-absorb pools, miss pools; **`getWeaponCategory`**, **`WoundTier`**.
-- **`resolveCombatRound`:** T2A hit chance; initiative with **`getDexReactionBonus`**; player damage with optional crit (**×2** weapon roll); enemy damage **raw − totalAC**, halve, min 1 when damage applies; armor-only narration for full / heavy partial absorption; returns **`hasCritical`** / **`criticalContext`**.
+- **`resolveCombatRound`:** T2A hit chance; initiative with **`getDexReactionBonus`**; player damage pipeline (UO-style); enemy damage **raw − totalAC** (later iterations dropped halving / min-1 on enemy side); armor absorb narration. *(Later: see Session Log — critical hit **`__CRITICAL__`** + Jane rewrite in **`route.ts`**.)*
 - **`ATTACK`:** Resolves one round statically; persists **`npcs[id].combatHp`**; non-hostile NPCs get a refusal line.
-- **`app/api/chat/route.ts`:** Static responses: replace **`__CRITICAL__:`** payload with one Jane sentence (**80** tokens max) + **`(N damage — CRITICAL HIT)`**.
 - **`CLAUDE_CONTEXT` §9** updated for absorption model and pool counts.
 
 ### 2026-04-16 — Rebuilt combat: T2A hit/damage + AD&D initiative

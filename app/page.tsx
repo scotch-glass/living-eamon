@@ -207,6 +207,16 @@ export default function Home() {
     inputRef.current?.focus();
   };
 
+  const isJaneDirectVoice = (line: string): boolean => {
+    const t = line.trim();
+    if (t.length === 0 || t.length >= 120) return false;
+    if (t.startsWith("*")) return false;
+    if (!/^[a-z]/.test(t)) return false;
+    const lower = t.toLowerCase();
+    if (lower.startsWith("you ") || lower.startsWith("your ")) return false;
+    return true;
+  };
+
   const formatMessage = (text: string, isLast: boolean) => {
     const cleanText = text.split("__STATE__")[0];
     const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
@@ -216,6 +226,30 @@ export default function Home() {
 
     const lines = narrative.split("\n");
     const body = lines.map((line, i) => {
+      if (isJaneDirectVoice(line)) {
+        const t = line.trim();
+        return (
+          <p
+            key={i}
+            style={{
+              marginBottom: 8,
+              marginTop: 4,
+              paddingLeft: 12,
+              borderLeft: "3px solid rgba(251, 191, 36, 0.4)",
+              fontStyle: "italic",
+              fontSize: 14,
+              lineHeight: 1.65,
+              color: "#fbbf24",
+            }}
+          >
+            <span style={{ opacity: 0.55, marginRight: 6, userSelect: "none" }}>—</span>
+            {t}
+            {isLast && i === lines.length - 1 && !situation && (
+              <span style={{ color: "#f59e0b", marginLeft: 2 }}>▌</span>
+            )}
+          </p>
+        );
+      }
       if (line.startsWith("*") && line.endsWith("*")) {
         return <p key={i} style={{ fontStyle: "italic", color: "rgba(251,191,36,0.7)", fontSize: 14, marginTop: 8 }}>{line.slice(1, -1)}</p>;
       }

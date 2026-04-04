@@ -124,7 +124,7 @@ functions identically).
 | Feeblemind | Rel Wis | Ginseng, Nightshade | Decreases target's intelligence |
 | Heal | In Mani | Garlic, Ginseng, Spider's Silk | Heals HP; faster but weaker than Greater Heal |
 | Magic Arrow | In Por Ylem | Sulfurous Ash | Fire damage projectile, 14–18 damage |
-| Night Sight | In Lor | Sulfurous Ash, Spider's Silk | Illuminates dark areas until dawn |
+| Night Sight | In Lor | Sulfurous Ash, Spider's Silk | Grants the caster the ability to see in complete darkness without a light source; lasts until dawn |
 | Reactive Armor | Flam Sanct | Garlic, Sulfurous Ash, Spider's Silk | Raises physical resistance; lowers elemental resistances |
 | Weaken | Des Mani | Garlic, Nightshade | Decreases target's strength |
 
@@ -235,6 +235,135 @@ functions identically).
 
 ---
 
+## 12. Planned Core Systems *(Phase 2 unless noted)*
+
+### Stamina System *(High Priority)*
+
+Stamina is a third vital stat alongside HP and mana (Expertise).
+It represents physical endurance and directly affects combat,
+movement, and survival.
+
+**Stamina sources:**
+- Food and water restore stamina
+- Rest (being stationary for several turns) slowly restores stamina
+- Certain spells and items affect stamina
+
+**Stamina effects:**
+- **Full stamina:** Natural HP healing over time at maximum rate;
+  poison effects end naturally and quickly; all actions available
+- **Low stamina:** FLEE command disabled ("Your legs will not
+  answer — you are too exhausted to run."); natural healing slows
+  significantly; poison progresses more aggressively
+- **Very low stamina:** Natural healing stops entirely; wounds
+  worsen over time without treatment; poison can become lethal
+- **Zero stamina:** Player cannot attack, cast, or flee; HP begins
+  to drain slowly
+
+**Stamina display:** Shown in the sidebar as a bar, similar to HP.
+
+---
+
+### Hunger & Thirst System *(Phase 2)*
+
+Hunger and thirst are tracked separately. Both reduce stamina
+over time when unmet. Extended hunger and thirst eventually
+reduce maximum HP.
+
+**Hunger:**
+- Builds over time (turn count)
+- Mild hunger: minor stamina drain
+- Moderate hunger: stamina cap reduced; natural healing slowed
+- Severe hunger: HP begins declining slowly
+- Starvation: HP drains steadily; death possible
+
+**Thirst:**
+- Builds faster than hunger
+- Mild thirst: minor stamina drain
+- Moderate thirst: concentration broken (spell cast chance reduced)
+- Severe thirst: same as severe hunger but faster progression
+- Dehydration: HP drains; death possible without water
+
+**Food and water sources:**
+- Hokas Tokas sells ale (restores thirst) and hearty meals
+  (restores hunger + some stamina)
+- Trail rations (from Pip or adventure loot) restore both slowly
+- Adventures should include food and water sources as meaningful
+  resources, not just flavor
+- Create Food (Occult Circle 1) satisfies mild hunger
+
+**Design intent:** The player should never die of hunger or thirst
+in the Main Hall — resources are available. Hunger and thirst
+become survival mechanics in dungeons and long adventures, where
+managing supplies is a meaningful choice.
+
+---
+
+### Weight & Encumbrance System *(High Priority — Phase 2)*
+
+Every item in the game has a weight value, following the original
+Eamon design philosophy. Players can only carry so much before
+they are encumbered. This is a high priority addition.
+
+**Weight rules:**
+- Every item has a weight in stones (classic UO unit) or Eamon
+  equivalent
+- Player carry capacity is determined by Strength:
+  `maxCarryWeight = Strength * 3.5` (adjustable)
+- Encumbrance levels:
+  - **Normal** (0–80% capacity): No penalty
+  - **Burdened** (80–95%): Movement slowed; stamina drains faster
+  - **Overloaded** (95–100%): Cannot move; cannot flee; stamina
+    drains rapidly
+  - **Cannot pick up** (at 100%): Engine refuses the action with
+    a message
+
+**Weight display:** Current carried weight / max shown in
+INVENTORY output and optionally in the sidebar.
+
+**Design intent:** Forces meaningful inventory decisions.
+Adventurers cannot carry every weapon they find. The vault and
+personal room become strategically important for storing gear
+between adventures. Encumbrance also makes the gray robe respawn
+more interesting — the player starts at zero weight and must
+decide what to carry back from the Main Hall.
+
+---
+
+### Runes & Runegates *(Phase 2)*
+
+Runes are items that can be marked at a specific location using
+the Occult spell Mark (Circle 6: `Kal Por Ylem`). A marked rune
+stores the location and can be used with:
+
+- **Recall** (Circle 4: `Kal Ort Por`) — instant solo transport
+  to the rune's location, consuming the rune's charge
+- **Gate Travel** (Circle 7: `Vas Rel Por`) — opens a two-way
+  moongate to the rune's location; lasts 30 seconds; anyone can
+  pass through
+
+**Rune properties:**
+- Blank runes are found as adventure loot or purchased from
+  certain merchants (not in the Main Hall)
+- A rune can be marked once; re-marking overwrites the location
+- Runes can be stored in Runebooks (a special item that holds
+  up to 16 runes and allows labeling each destination)
+- Runebooks are rare and valuable
+
+**Design intent:** Runes and runegates are the primary fast-travel
+system for experienced players. They reward exploration —
+a player who has marked runes in key adventure locations can
+navigate the world far more efficiently than one who has not.
+Since Mark requires Circle 6 Occult magic, fast travel is gated
+behind significant Occult progression, making it a meaningful
+milestone.
+
+**The Order and runes:** Possessing a runebook is not itself
+illegal, but the runes inside mark where the owner has been —
+and the Mark spell that created them is Circle 6 Occult.
+The Order considers runebooks strong evidence of Occult practice.
+
+---
+
 ## 19. Design Decisions Log
 
 ### April 2026
@@ -250,3 +379,24 @@ functions identically).
   5–8 documented for later phases. Guild spells (BLAST, HEAL,
   LIGHT, SPEED) use no reagents and are roughly half the power
   of Circle 1 Occult.
+- Stamina system planned: third vital stat; food/water restore
+  it; full stamina = max natural healing + fast poison recovery;
+  low stamina disables FLEE and slows healing; very low stops
+  healing entirely; zero drains HP.
+- Hunger and thirst planned as separate mechanics; both drain
+  stamina; severe cases drain HP; starvation/dehydration can
+  be lethal; food/water always available in Main Hall so death
+  only possible in prolonged adventures without supplies.
+- Weight and encumbrance planned as high priority Phase 2
+  feature; every item has weight; carry limit based on Strength;
+  four encumbrance levels (normal/burdened/overloaded/cannot
+  pick up); forces meaningful inventory decisions; vault and
+  personal room become strategically important.
+- Runes and runegates planned for Phase 2: Mark (Circle 6)
+  creates a rune; Recall (Circle 4) transports solo; Gate Travel
+  (Circle 7) opens a moongate; Runebooks hold 16 runes; fast
+  travel gated behind Occult progression; The Order treats
+  runebooks as evidence of Occult practice.
+- Night Sight (Circle 1 Occult) corrected: grants vision in
+  complete darkness without a light source, not merely
+  illumination.

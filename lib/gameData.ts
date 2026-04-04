@@ -6,6 +6,10 @@
 // when genuine intelligence or personalization is needed.
 // ============================================================
 
+import type { NPCBodyType } from "./npcBodyType";
+
+export type { NPCBodyType };
+
 export type RoomState = "normal" | "burnt" | "flooded" | "dark" | "ransacked";
 
 export interface RoomStateModifier {
@@ -26,8 +30,6 @@ export interface Room {
   examinableObjects?: { id: string; label: string }[];
   isAdventureEntrance?: string; // Adventure id if this room leads to one
 }
-
-export type NPCBodyType = "humanoid" | "beast" | "amorphous" | "undead";
 
 export interface NPC {
   id: string;

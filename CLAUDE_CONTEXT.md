@@ -38,6 +38,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/components/CommandInput.tsx
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/eslint.config.mjs
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/combatNarrationPools.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/npcBodyType.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameData.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameEngine.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameState.ts
@@ -54,7 +55,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 6, 2026*
+*Last updated: April 7, 2026*
 
 ## 1. Project Overview
 
@@ -260,16 +261,14 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - **`getDexReactionBonus(dex)`:** AD&D 2e PHB Table 2 (exported from `uoData.ts`), used in initiative below.
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
-- **Combat (`resolveCombatRound` in `gameEngine.ts`):** **Pure UO absorption** — armor **never** causes a miss; it **only** reduces damage (AR / AC subtract, then T2A halving). **Player defeat:** **`fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath))`** — **48** cinematic lines (`{enemy}`). **Enemy defeat:** **`getEnemyDeathPool(bodyType)`** + **`fillCombat(pickRandom(pool), { enemy, weapon })`** — **`HUMANOID_DEATH_DESCRIPTIONS`** (**55**), **`BEAST_DEATH_DESCRIPTIONS`** (**40**), **`AMORPHOUS_DEATH_DESCRIPTIONS`** (**35**), **`UNDEAD_DEATH_DESCRIPTIONS`** (**40**); default / omitted **`bodyType`** uses humanoid pool. Pools mix short/brutal, sensory detail, emotion, and long-form closers.
-  - **INITIATIVE:** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** (player); **lower total acts first**. Enemy: **`1d10 + clamp(armor + 3, 3…9)`** (proxy weapon speed).
-  - **HIT CHANCE (T2A):** **`(attackerSkill + 50) / ((defenderSkill + 50) × 2)`**; **`playerSkill = min(100, expertise × 2)`**; **`enemySkill`** default **30** (optional **`weaponSkill`** on enemy payload). **Player** can miss; **enemy** uses the same roll vs **`enemyHitChance`** (miss = dodge narration only — not “armor blocked the hit”).
-  - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1**. **Crit:** roll **&lt; hitChance × 0.08** among hits ⇒ **×2** base weapon roll before STR/Tactics; narrative placeholder **`__CRITICAL__:weapon:enemy:dmg`** replaced in **`app/api/chat/route.ts`** by one **`completeJaneNonStream`** call (**max_tokens 80**), fallback string on failure.
-  - **ENEMY DAMAGE:** **`rollDice(damage) − totalAC`** (body + shield from **`ITEMS[].stats.armorClass`**); if **afterAR ≤ 0**, **0** HP loss and **full armor absorb** narration; else **halve**, **min 1** applied. **Partial armor narration** when AC absorbed **≥ 50%** of raw pre-AC damage.
-  - **Cinematic pools** (re-exported from **`lib/gameData.ts`**, defined in **`lib/combatNarrationPools.ts`):** **156** humanoid player-on-enemy hit lines (**4 × 3 × 13**); **39** humanoid enemy-on-player hit (**3 × 13**); **17** player miss, **17** enemy miss; **armor absorb** / **full absorb** pools per armor key (**buckler**, **leather_armor**, **chain_mail**, **default**). **`getWeaponCategory`** maps equipped weapon id to **slash / pierce / blunt / ranged**.
-  - **Creature body type (`NPC.bodyType` optional, default humanoid):** **`humanoid`** | **`beast`** | **`amorphous`** | **`undead`**. Separate narration pools per type (beast / amorphous / undead: enemy hit player, enemy miss player, player hit enemy). Helpers in **`combatNarrationPools.ts`**: **`getEnemyHitPlayerPool(bodyType, tier)`**, **`getEnemyMissPlayerPool(bodyType)`**, **`getPlayerHitEnemyPool(bodyType, category, tier)`**. **`resolveCombatRound`** / **`ATTACK`** pass **`npcData.bodyType`** into **`enemyData`**.
-  - **Wound tiers** (vs reference HP): **glancing** **&lt; 12%**; **solid** **12–35%**; **devastating** **≥ 35%** (player hits vs **`enemyData.maxHp`**; enemy hits vs **`player.maxHp`**).
-  - **`ATTACK`:** Fully **static** — calls **`resolveCombatRound`**; **`NPCStateEntry.combatHp`** tracks remaining foe HP between rounds; **+1 expertise** / chronicle / valor on win; foe **`isAlive: false`** on player victory.
-  - **Return value:** **`initiativeWinner`**, **`hasCritical`**, **`criticalContext`** (for route / debugging).
+- **Combat (`resolveCombatRound` in `gameEngine.ts`):** Signature **`resolveCombatRound(state, enemyId, enemyHp, { name, damage, armor }, bodyType?)`** → **`{ narrative, newState, enemyHp, combatOver, playerWon }`**. **Player defeat:** **`fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath))`** — **48** lines. **Enemy defeat:** **`fillTemplate(pickTemplate(getEnemyDeathPool(bodyType)), { enemy, weapon })`** — body-type pools (**55** / **40** / **35** / **40** humanoid+).
+  - **INITIATIVE (prepended):** **`⚡ Initiative — You: {p} · {enemy}: {e}`** then **`{winner} acts first.`** Player: **`floor(rand×10)+1 + WEAPON_DATA[weapon].weaponSpeed (default 5) − getDexReactionBonus(dex)`**. Enemy: **`floor(rand×10)+1 + 5`** (no DEX). **Tie → player first.** Order of **`doPlayerAttack` / `doEnemyAttack`** follows initiative.
+  - **HIT CHANCE (T2A):** **`(skill+50)/((foeSkill+50)×2)`**; player skill from expertise; **enemy skill fixed 30**.
+  - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1** (unchanged).
+  - **ENEMY DAMAGE:** **`raw = rollDice(damage)`**; **`enemyDmg = max(0, raw − armorAC − shieldAC)`** from **`ITEMS[].stats.armorClass`** — **no post-AC halving**, **no min-1 clamp** (full block possible). If **`totalAC > 0`** and **`raw > 0`**: narrate **`ARMOR_FULL_ABSORB_DESCRIPTIONS`** or **`ARMOR_ABSORB_DESCRIPTIONS`** using **`absorbKey = player.armor ?? player.shield ?? "default"`** (armor priority for key). If **`enemyDmg === 0`**, skip wound line and **do not** change player HP.
+  - **Cinematic pools:** **`getPlayerHitEnemyPool`**, **`getEnemyHitPlayerPool`**, **`getEnemyMissPlayerPool`**, **`PLAYER_MISS_DESCRIPTIONS`** via **`fillTemplate` + `pickTemplate`**. **Wound tiers:** player on enemy vs **starting `enemyHp`** (this round): **≤15%** glancing, **≤40%** solid, else devastating; enemy on player vs **`player.maxHp`**: **≤10%** / **≤25%** / else.
+  - **`NPCBodyType`:** defined in **`lib/npcBodyType.ts`**, re-exported from **`gameData.ts`**; **`combatNarrationPools.ts`** imports it (no duplicate **`CombatBodyType`**).
+  - **`ATTACK`:** If **`NPCS[id].stats`** exists and foe is hostile → **static** **`resolveCombatRound`** with **`enemyHp = stats.hp`** each command (no persistent foe HP yet). If **no `stats`** → **dynamic** Jane fallback.
 - **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase. Success hint: *"Type EQUIP [item] to equip any weapon, shield, or armor."*
 - **Primary command — `EQUIP [item]`** (and **`WIELD [item]`**, same handler): **`runEquipItemFromPhrase`** resolves in order — (1) shield-slot item in inventory → **`runEquipShield`**, (2) body armor in inventory → **`runEquipArmor`**, (3) else weapon → **`runWieldWeapon`**. Underscores in the phrase are normalized to spaces (e.g. `leather_armor`).
 - **Explicit forms:** **`EQUIP SHIELD …`**, **`EQUIP ARMOR …`**, and **`SHIELD …`** unchanged; equipping still **does not remove** stacks from inventory.
@@ -368,10 +367,16 @@ Do not commit secret values.
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
 - [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
 - [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
-- [x] **Cinematic combat narration:** wound-tier pools, UO armor absorption narration, critical-hit Jane line, static **`ATTACK`** + **`combatHp`**
+- [x] **Cinematic combat narration:** wound-tier pools, armor narration, static **`ATTACK`** path (evolved across sessions)
 - [x] **Body-type combat pools** + **+5 strings** per existing humanoid pool; **`NPCBodyType`** on **`NPC`**
 - [x] **Cinematic death narration:** expanded **`playerDeath`**; body-type enemy death pools + **`getEnemyDeathPool`**
 - [x] **Death pool expansion:** +20 lines each (**48** / **55** / **40** / **35** / **40**)
+- [x] **Combat engine wired:** **`ATTACK`** calls **`resolveCombatRound`** statically when **`npcData.stats`** exists
+- [x] **Initiative display** with **`⚡`** using **`weaponSpeed + getDexReactionBonus`** (player) vs fixed enemy speed **5**
+- [x] **Wound tier narration pools** (glancing / solid / devastating × body type + separate thresholds for player vs enemy hits)
+- [x] **Armor absorption narration** with **`ITEMS` AC** lookup, **`armor` priority** for absorb key, **full-block** path (**`enemyDmg === 0`**)
+- [x] **Enemy death** via **`getEnemyDeathPool(bodyType)`** + **`fillTemplate`** (no missing **`COMBAT_TEMPLATES.enemyDeath`**)
+- [x] **`NPCBodyType` / `CombatBodyType` consolidated** — single type in **`lib/npcBodyType.ts`**
 
 ## 15. Next Up
 
@@ -383,8 +388,21 @@ Do not commit secret values.
 - [ ] Supabase migration file in repo documenting `players` + `shield` column
 - [ ] Push/deploy verification after local tests
 - [ ] Male / female paperdoll art and compositor
+- [ ] **Persistent enemy HP** across combat rounds (NPC combat state on **`WorldState`**)
+- [ ] **Critical hit system** (e.g. crit roll → **`__CRITICAL__`** marker → Jane narration) — reintroduce if desired
+- [ ] **Church of Perpetual Life:** respawn room, NPC, gray robe item, new death flow
 
 ## 16. Session Log
+
+### 2026-04-07 — Combat bugs A–F (engine, pools, types)
+
+- **A:** Enemy kill uses **`getEnemyDeathPool` + fillTemplate** (no **`COMBAT_TEMPLATES.enemyDeath`**).
+- **B:** **`ATTACK`** static when **`npcData.stats`**; each round starts foe at **`stats.hp`**; dynamic fallback if no stats.
+- **C:** Initiative **`1d10 + weaponSpeed − DEX bonus`** vs **`1d10 + 5`**; **`⚡ Initiative — You: · …`** line; turn order from rolls (tie → player).
+- **D:** **`fillTemplate`/`pickTemplate`** on wound/miss pools; tier thresholds per spec (player-on-enemy vs enemy-on-player).
+- **E:** Enemy damage **`max(0, raw − totalAC)`**; armor/shield narration; full block skips HP and hit line.
+- **F:** **`lib/npcBodyType.ts`**; **`CombatBodyType`** removed from **`combatNarrationPools.ts`**.
+- **`resolveCombatRound`** return type slimmed (**no** `initiativeWinner` / `hasCritical` / `criticalContext`).
 
 ### 2026-04-06 — +20 death lines per pool
 

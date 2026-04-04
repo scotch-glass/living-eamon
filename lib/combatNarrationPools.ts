@@ -1,5 +1,7 @@
 // Cinematic combat narration pools (imported/re-exported from gameData).
 
+import type { NPCBodyType } from "./npcBodyType";
+
 // ── WEAPON CATEGORIES ───────────────────────────────────────
 
 export const WEAPON_SLASH_KEYS = new Set([
@@ -567,10 +569,8 @@ export const PLAYER_HIT_UNDEAD_DESCRIPTIONS: Record<WoundTier, string[]> = {
   ],
 };
 
-export type CombatBodyType = "humanoid" | "beast" | "amorphous" | "undead";
-
 export function getEnemyHitPlayerPool(
-  bodyType: CombatBodyType | undefined,
+  bodyType: NPCBodyType | undefined,
   tier: WoundTier
 ): string[] {
   switch (bodyType) {
@@ -586,7 +586,7 @@ export function getEnemyHitPlayerPool(
 }
 
 export function getEnemyMissPlayerPool(
-  bodyType: CombatBodyType | undefined
+  bodyType: NPCBodyType | undefined
 ): string[] {
   switch (bodyType) {
     case "beast":
@@ -601,7 +601,7 @@ export function getEnemyMissPlayerPool(
 }
 
 export function getPlayerHitEnemyPool(
-  bodyType: CombatBodyType | undefined,
+  bodyType: NPCBodyType | undefined,
   category: WeaponCategory,
   tier: WoundTier
 ): string[] {

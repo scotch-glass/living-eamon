@@ -1249,126 +1249,58 @@ function fillTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? key);
 }
 
-/** Wound tier based on damage as a fraction of reference HP */
-function getWoundTier(damage: number, referenceHp: number): WoundTier {
-  const pct = damage / Math.max(1, referenceHp);
-  if (pct >= 0.35) return "devastating";
-  if (pct >= 0.12) return "solid";
-  return "glancing";
-}
-
-/** Safe random pick from a non-empty array */
-function pickRandom<T>(arr: T[]): T {
-  if (!arr || arr.length === 0) throw new Error("pickRandom: empty array");
-  return arr[Math.floor(Math.random() * arr.length)]!;
-}
-
-/** Fill {key} placeholders (cinematic pools) */
-function fillCombat(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? k);
-}
-
-/**
- * Critical hit: roll is in the bottom 8% of the hit-chance window.
- * e.g. hitChance=0.60 → crit if roll < 0.048
- */
-function isCriticalHit(roll: number, hitChance: number): boolean {
-  return roll < hitChance * 0.08;
-}
-
-/**
- * UO absorption model: armor subtracts from damage, never causes miss.
- * Returns narration + fullAbsorb flag, or null if absorption not
- * significant enough to mention.
- */
-function buildArmorAbsorbNarration(
-  player: PlayerState,
-  enemyName: string,
-  rawDamage: number,
-  totalAC: number,
-  afterAR: number
-): { text: string; fullAbsorb: boolean } | null {
-  if (!player.armor && !player.shield) return null;
-  if (totalAC === 0) return null;
-
-  const candidates: string[] = [];
-  if (player.shield) candidates.push(player.shield);
-  if (player.armor) candidates.push(player.armor);
-  const armorKey = pickRandom(candidates);
-  const armorName = ITEMS[armorKey]?.name ?? "your armor";
-
-  if (afterAR <= 0) {
-    const pool =
-      ARMOR_FULL_ABSORB_DESCRIPTIONS[armorKey] ??
-      ARMOR_FULL_ABSORB_DESCRIPTIONS["default"]!;
-    return {
-      text: fillCombat(pickRandom(pool), { enemy: enemyName, armor: armorName }),
-      fullAbsorb: true,
-    };
-  }
-
-  const acAbsorbed = rawDamage - Math.max(0, rawDamage - totalAC);
-  if (acAbsorbed / rawDamage < 0.5) return null;
-
-  const pool =
-    ARMOR_ABSORB_DESCRIPTIONS[armorKey] ?? ARMOR_ABSORB_DESCRIPTIONS["default"]!;
-  return {
-    text: fillCombat(pickRandom(pool), { enemy: enemyName, armor: armorName }),
-    fullAbsorb: false,
-  };
-}
-
 export function resolveCombatRound(
   state: WorldState,
-  _enemyId: string,
+  enemyId: string,
   enemyHp: number,
-  enemyData: {
-    name: string;
-    damage: string;
-    armor: number;
-    maxHp: number;
-    weaponSkill?: number;
-    bodyType?: NPCBodyType;
-  }
+  enemyData: { name: string; damage: string; armor: number },
+  bodyType?: NPCBodyType
 ): {
   narrative: string;
   newState: WorldState;
   enemyHp: number;
   combatOver: boolean;
   playerWon: boolean;
-  initiativeWinner: "player" | "enemy";
-  hasCritical: boolean;
-  criticalContext: string | null;
 } {
   const player = state.player;
   const weaponItem = ITEMS[player.weapon];
-  const weaponData = WEAPON_DATA[player.weapon];
+  const playerSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
+  const playerInit =
+    Math.floor(Math.random() * 10) +
+    1 +
+    playerSpeed -
+    getDexReactionBonus(player.dexterity);
+  const enemyInit = Math.floor(Math.random() * 10) + 1 + 5;
+  const playerGoesFirst = playerInit <= enemyInit;
+  const winnerLabel = playerGoesFirst ? "You" : enemyData.name;
 
-  // ── INITIATIVE (AD&D 2e + UO weapon speeds) ────────────
-  const playerWeaponSpeed = weaponData?.weaponSpeed ?? 5;
-  const dexBonus = getDexReactionBonus(player.dexterity);
-  const playerInitRoll =
-    Math.ceil(Math.random() * 10) + playerWeaponSpeed - dexBonus;
-  const enemyWeaponSpeed = Math.max(
-    3,
-    Math.min(9, (enemyData.armor ?? 0) + 3)
-  );
-  const enemyInitRoll = Math.ceil(Math.random() * 10) + enemyWeaponSpeed;
-  const playerGoesFirst = playerInitRoll <= enemyInitRoll;
-  const initiativeWinner: "player" | "enemy" = playerGoesFirst
-    ? "player"
-    : "enemy";
+  const enemyStartHp = enemyHp;
 
-  // ── HIT CHANCE (T2A UO) ────────────────────────────────
+  let narrative = `⚡ Initiative — You: ${playerInit} · ${enemyData.name}: ${enemyInit}\n${winnerLabel} acts first.\n\n`;
+
   const playerSkill = Math.min(100, player.expertise * 2);
-  const enemySkill = enemyData.weaponSkill ?? 30;
+  const enemySkill = 30;
   const playerHitChance = (playerSkill + 50) / ((enemySkill + 50) * 2);
   const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
 
-  // ── DAMAGE HELPERS ─────────────────────────────────────
+  function getWoundTier(
+    dmg: number,
+    maxHp: number,
+    axis: "playerOnEnemy" | "enemyOnPlayer"
+  ): WoundTier {
+    const pct = dmg / Math.max(1, maxHp);
+    if (axis === "playerOnEnemy") {
+      if (pct <= 0.15) return "glancing";
+      if (pct <= 0.4) return "solid";
+      return "devastating";
+    }
+    if (pct <= 0.1) return "glancing";
+    if (pct <= 0.25) return "solid";
+    return "devastating";
+  }
 
-  function calcPlayerDamage(multiplier: number = 1): number {
-    const base = rollWeaponDamage(player.weapon) * multiplier;
+  function calcPlayerDamage(): number {
+    const base = rollWeaponDamage(player.weapon);
     const strPct = Math.min(0.2, Math.max(0, (player.strength - 10) / 40));
     const tacPct = Math.min(0.2, (player.expertise / 50) * 0.2);
     const boosted = base * (1 + strPct + tacPct);
@@ -1377,83 +1309,35 @@ export function resolveCombatRound(
     return isNaN(result) ? 1 : result;
   }
 
-  function calcEnemyDamage(): {
-    raw: number;
-    afterAR: number;
-    final: number;
-    totalAC: number;
-  } {
-    const raw = Math.max(1, rollDice(enemyData.damage));
-    const armorAC = player.armor
-      ? (ITEMS[player.armor]?.stats?.armorClass ?? 0)
-      : 0;
-    const shieldAC = player.shield
-      ? (ITEMS[player.shield]?.stats?.armorClass ?? 0)
-      : 0;
-    const totalAC = armorAC + shieldAC;
-    const afterAR = raw - totalAC;
-    const final =
-      afterAR <= 0 ? 0 : Math.max(1, Math.floor(afterAR / 2));
-    return {
-      raw,
-      afterAR,
-      final: isNaN(final) ? 1 : final,
-      totalAC,
-    };
-  }
-
-  // ── STATE ──────────────────────────────────────────────
-  let narrative = "";
   let newState = state;
   let newEnemyHp = enemyHp;
-  let hasCritical = false;
-  let criticalContext: string | null = null;
-
-  narrative += playerGoesFirst
-    ? `⚡ You win initiative (${playerInitRoll} vs ${enemyInitRoll}) — you strike first.\n\n`
-    : `⚡ ${enemyData.name} wins initiative (${enemyInitRoll} vs ${playerInitRoll}) — they strike first.\n\n`;
-
-  // ── PLAYER ATTACK ──────────────────────────────────────
 
   function doPlayerAttack(): boolean {
     const roll = Math.random();
-    const isHit = roll < playerHitChance;
-    const isCrit = isHit && isCriticalHit(roll, playerHitChance);
-
-    if (!isHit) {
-      narrative += fillCombat(pickRandom(PLAYER_MISS_DESCRIPTIONS), {
+    if (roll >= playerHitChance) {
+      narrative += fillTemplate(pickTemplate(PLAYER_MISS_DESCRIPTIONS), {
         weapon: weaponItem?.name ?? "weapon",
         enemy: enemyData.name,
       });
       return false;
     }
 
-    if (isCrit) {
-      const dmg = calcPlayerDamage(2);
-      newEnemyHp -= dmg;
-      hasCritical = true;
-      const safeWeapon = (weaponItem?.name ?? "weapon").replace(/:/g, "-");
-      const safeEnemy = enemyData.name.replace(/:/g, "-");
-      criticalContext = `${safeWeapon}:${safeEnemy}:${dmg}`;
-      narrative += `__CRITICAL__:${criticalContext}`;
-    } else {
-      const dmg = calcPlayerDamage(1);
-      newEnemyHp -= dmg;
-      const tier = getWoundTier(dmg, enemyData.maxHp || 20);
-      const cat = getWeaponCategory(player.weapon);
-      const pool = getPlayerHitEnemyPool(enemyData.bodyType, cat, tier);
-      narrative += fillCombat(pickRandom(pool), {
-        weapon: weaponItem?.name ?? "weapon",
-        enemy: enemyData.name,
-        damage: String(dmg),
-      });
-    }
+    const dmg = calcPlayerDamage();
+    newEnemyHp -= dmg;
+    const tier = getWoundTier(dmg, enemyStartHp, "playerOnEnemy");
+    const category = getWeaponCategory(player.weapon);
+    const pool = getPlayerHitEnemyPool(bodyType, category, tier);
+    narrative += fillTemplate(pickTemplate(pool), {
+      weapon: weaponItem?.name ?? "weapon",
+      enemy: enemyData.name,
+      damage: String(dmg),
+    });
 
     if (newEnemyHp <= 0) {
-      const deathPool = getEnemyDeathPool(enemyData.bodyType);
+      const deathPool = getEnemyDeathPool(bodyType);
       narrative +=
         "\n\n" +
-        fillCombat(pickRandom(deathPool), {
+        fillTemplate(pickTemplate(deathPool), {
           enemy: enemyData.name,
           weapon: weaponItem?.name ?? "weapon",
         });
@@ -1462,47 +1346,60 @@ export function resolveCombatRound(
     return false;
   }
 
-  // ── ENEMY ATTACK ───────────────────────────────────────
-
   function doEnemyAttack(): boolean {
     const roll = Math.random();
     if (roll >= enemyHitChance) {
-      narrative += fillCombat(
-        pickRandom(getEnemyMissPlayerPool(enemyData.bodyType)),
-        { enemy: enemyData.name }
-      );
+      const missPool = getEnemyMissPlayerPool(bodyType);
+      narrative +=
+        "\n\n" +
+        fillTemplate(pickTemplate(missPool), {
+          enemy: enemyData.name,
+        });
       return false;
     }
 
-    const { raw, afterAR, final: finalDmg, totalAC } = calcEnemyDamage();
+    const rawEnemyDmg = rollDice(enemyData.damage);
+    const armorAC = player.armor
+      ? (ITEMS[player.armor]?.stats?.armorClass ?? 0)
+      : 0;
+    const shieldAC = player.shield
+      ? (ITEMS[player.shield]?.stats?.armorClass ?? 0)
+      : 0;
+    const totalAC = armorAC + shieldAC;
+    const enemyDmg = Math.max(0, rawEnemyDmg - totalAC);
+    const absorbKey = player.armor ?? player.shield ?? "default";
 
-    const absorbResult = buildArmorAbsorbNarration(
-      player,
-      enemyData.name,
-      raw,
-      totalAC,
-      afterAR
-    );
-
-    if (absorbResult?.fullAbsorb) {
-      narrative += absorbResult.text;
-      return false;
+    if (totalAC > 0 && rawEnemyDmg > 0) {
+      if (enemyDmg <= 0) {
+        const pool =
+          ARMOR_FULL_ABSORB_DESCRIPTIONS[absorbKey] ??
+          ARMOR_FULL_ABSORB_DESCRIPTIONS["default"]!;
+        narrative += "\n\n" + fillTemplate(pickTemplate(pool), {
+          enemy: enemyData.name,
+          armor: ITEMS[absorbKey]?.name ?? absorbKey,
+        });
+      } else {
+        const pool =
+          ARMOR_ABSORB_DESCRIPTIONS[absorbKey] ??
+          ARMOR_ABSORB_DESCRIPTIONS["default"]!;
+        narrative += "\n\n" + fillTemplate(pickTemplate(pool), {
+          enemy: enemyData.name,
+          armor: ITEMS[absorbKey]?.name ?? absorbKey,
+        });
+      }
     }
 
-    const damageToApply = Math.max(1, finalDmg);
-    newState = updatePlayerHP(newState, -damageToApply);
+    if (enemyDmg <= 0) return false;
 
-    if (absorbResult && !absorbResult.fullAbsorb) {
-      narrative += absorbResult.text;
-      narrative += ` (${damageToApply} damage gets through)`;
-    } else {
-      const tier = getWoundTier(damageToApply, player.maxHp || 20);
-      const pool = getEnemyHitPlayerPool(enemyData.bodyType, tier);
-      narrative += fillCombat(pickRandom(pool), {
+    newState = updatePlayerHP(newState, -enemyDmg);
+    const enemyTier = getWoundTier(enemyDmg, player.maxHp, "enemyOnPlayer");
+    const enemyPool = getEnemyHitPlayerPool(bodyType, enemyTier);
+    narrative +=
+      "\n\n" +
+      fillTemplate(pickTemplate(enemyPool), {
         enemy: enemyData.name,
-        damage: String(damageToApply),
+        damage: String(enemyDmg),
       });
-    }
 
     return newState.player.hp <= 0;
   }
@@ -1553,9 +1450,6 @@ export function resolveCombatRound(
         enemyHp: 0,
         combatOver: true,
         playerWon: true,
-        initiativeWinner,
-        hasCritical,
-        criticalContext,
       };
     }
     narrative += "\n\n";
@@ -1567,9 +1461,6 @@ export function resolveCombatRound(
         enemyHp: newEnemyHp,
         combatOver: true,
         playerWon: false,
-        initiativeWinner,
-        hasCritical,
-        criticalContext,
       };
     }
   } else {
@@ -1581,9 +1472,6 @@ export function resolveCombatRound(
         enemyHp: newEnemyHp,
         combatOver: true,
         playerWon: false,
-        initiativeWinner,
-        hasCritical,
-        criticalContext,
       };
     }
     narrative += "\n\n";
@@ -1595,9 +1483,6 @@ export function resolveCombatRound(
         enemyHp: 0,
         combatOver: true,
         playerWon: true,
-        initiativeWinner,
-        hasCritical,
-        criticalContext,
       };
     }
   }
@@ -1608,9 +1493,6 @@ export function resolveCombatRound(
     enemyHp: newEnemyHp,
     combatOver: false,
     playerWon: false,
-    initiativeWinner,
-    hasCritical,
-    criticalContext,
   };
 }
 
@@ -2307,7 +2189,27 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
         stateChanged: false,
       };
     }
-    const npcData = NPCS[target.id]!;
+    const npcData = NPCS[target.id];
+    if (!npcData) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou dost not see that foe here.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    if (!npcData.stats) {
+      return {
+        responseType: "dynamic",
+        staticResponse: null,
+        dynamicContext: `COMBAT / ATTACK: ${p.name} attacks ${npcData.name}.
+NPC has no static combat stats — resolve with narration and sensible consequences.
+Room: ${currentRoom?.name ?? "unknown"}.`,
+        newState,
+        stateChanged: false,
+      };
+    }
     if (!npcData.isHostile) {
       return {
         responseType: "static",
@@ -2317,15 +2219,17 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
         stateChanged: false,
       };
     }
-    const npcEntry = newState.npcs[target.id]!;
-    const startHp = npcEntry.combatHp ?? npcData.stats.hp;
-    const combat = resolveCombatRound(newState, target.id, startHp, {
-      name: npcData.name,
-      damage: npcData.stats.damage,
-      armor: npcData.stats.armor,
-      maxHp: npcData.stats.hp,
-      bodyType: npcData.bodyType,
-    });
+    const combat = resolveCombatRound(
+      newState,
+      target.id,
+      npcData.stats.hp,
+      {
+        name: npcData.name,
+        damage: npcData.stats.damage,
+        armor: npcData.stats.armor,
+      },
+      npcData.bodyType
+    );
     let postState = combat.newState;
     if (combat.playerWon) {
       postState = {
@@ -2335,18 +2239,6 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
           [target.id]: {
             ...postState.npcs[target.id]!,
             isAlive: false,
-            combatHp: undefined,
-          },
-        },
-      };
-    } else {
-      postState = {
-        ...postState,
-        npcs: {
-          ...postState.npcs,
-          [target.id]: {
-            ...postState.npcs[target.id]!,
-            combatHp: combat.enemyHp,
           },
         },
       };
@@ -2357,8 +2249,6 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       dynamicContext: null,
       newState: postState,
       stateChanged: true,
-      hasCritical: combat.hasCritical,
-      criticalContext: combat.criticalContext,
     };
   }
 

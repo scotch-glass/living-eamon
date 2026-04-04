@@ -1,3 +1,9 @@
+## 0. Local Development Path
+
+- Mac laptop username: joshuamcclure
+- Local project path: /Users/joshuamcclure/Desktop/living-eamon
+- Terminal shorthand: ~/Desktop/living-eamon
+
 > 🧑 USER NOTE: This user is not a developer. They need explicit step-by-step instructions for every action — including where to click, what to type, and what terminal commands to run. Never assume they know how to do something. Always spell it out completely.
 
 ---

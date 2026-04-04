@@ -77,7 +77,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 5, 2026 (Aldric divergences fixed)*
+*Last updated: April 4, 2026 (revealed items system)*
 
 
 ## 1. Project Overview
@@ -432,6 +432,7 @@ Do not commit secret values.
 - [x] **TALK Aldric** routes to static topic list (Main Hall; other **TALK** still **SAY**)
 - [x] Combat fumbles, **TALK** = **SAY** (except **TALK Aldric** shortcut), skill gain on hits
 - [x] **`weapon_skills`** DB persistence
+- [x] Revealed items system (container contents in 👁 line)
 
 ## 15. Next Up
 
@@ -442,6 +443,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Revealed items system (container contents in situation block)
+
+- Revealed items system: added **`revealedItems`** field to **`RoomStateEntry`** (array of **`{ itemId, containerId}`**). **`revealItemsInRoom()`** and **`removeRevealedItem()`** mutators added to **`gameState.ts`**. **`changeRoomState`** preserves **`revealedItems`** when updating a room.
+- **`buildSituationBlock`** now shows revealed items on the 👁 line as **`Item Name (in Container Label)`** (container label from **`examinableObjects`** when **`id`** matches).
+- Barrel examine (**`LOOK` / `LOOK AT` / `EXAMINE`** with barrel-related phrasing in **`main_hall`**) calls **`randomClothingSet()`**, stores the four IDs via **`revealItemsInRoom`**, and returns **`stateChanged: true`**.
+- **`GET` / `TAKE` clothing from the barrel:** if a full four-piece set is already revealed for **`charity_barrel`**, that set is used; otherwise a new random set is rolled and revealed. Taking items removes each from **`revealedItems`** via **`removeRevealedItem`**.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-05 — Aldric divergences fixed (hit %, TRAIN tiers, TALK Aldric)
 

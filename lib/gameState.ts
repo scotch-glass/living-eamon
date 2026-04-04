@@ -65,6 +65,13 @@ export interface RoomStateEntry {
     turnsRequired?: number;      // For time recovery
     complete: boolean;
   } | null;
+  /**
+   * Items revealed in this room through container examination.
+   * Each entry: { itemId, containerId }
+   * Shown in the situation block 👁 line.
+   * Removed when the player takes the item.
+   */
+  revealedItems: { itemId: string; containerId: string }[];
 }
 
 // ============================================================
@@ -278,6 +285,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         causeDescription: null,
         turnsInState: 0,
         recovery: null,
+        revealedItems: [],
       },
       armory: {
         roomId: "armory",
@@ -287,6 +295,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         causeDescription: null,
         turnsInState: 0,
         recovery: null,
+        revealedItems: [],
       },
       notice_board: {
         roomId: "notice_board",
@@ -296,6 +305,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         causeDescription: null,
         turnsInState: 0,
         recovery: null,
+        revealedItems: [],
       },
       guild_vault: {
         roomId: "guild_vault",
@@ -305,6 +315,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         causeDescription: null,
         turnsInState: 0,
         recovery: null,
+        revealedItems: [],
       },
       guild_courtyard: {
         roomId: "guild_courtyard",
@@ -314,6 +325,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         causeDescription: null,
         turnsInState: 0,
         recovery: null,
+        revealedItems: [],
       },
       church_of_perpetual_life: {
         roomId: "church_of_perpetual_life",
@@ -323,6 +335,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         causeDescription: null,
         turnsInState: 0,
         recovery: null,
+        revealedItems: [],
       },
     },
 
@@ -478,18 +491,21 @@ export function changeRoomState(
   causeDescription: string,
   recovery: RoomStateEntry["recovery"]
 ): WorldState {
+  const prev = state.rooms[roomId];
   return {
     ...state,
     rooms: {
       ...state.rooms,
       [roomId]: {
+        ...prev,
         roomId,
         currentState: newRoomState,
-        previousState: state.rooms[roomId]?.currentState ?? "normal",
+        previousState: prev?.currentState ?? "normal",
         causedBy,
         causeDescription,
         turnsInState: 0,
         recovery,
+        revealedItems: prev?.revealedItems ?? [],
       },
     },
   };
@@ -697,6 +713,65 @@ export function updateWeaponSkill(
       },
     },
     degradedSkill,
+  };
+}
+
+/**
+ * Reveals items in a room's situation block.
+ * Replaces any existing revealed items for the same
+ * containerId (re-examining a barrel resets what's shown).
+ */
+export function revealItemsInRoom(
+  state: WorldState,
+  roomId: string,
+  containerId: string,
+  itemIds: string[]
+): WorldState {
+  const existing = state.rooms[roomId];
+  if (!existing) return state;
+
+  const filtered = (existing.revealedItems ?? []).filter(
+    r => r.containerId !== containerId
+  );
+  const newRevealed = itemIds.map(itemId => ({
+    itemId,
+    containerId,
+  }));
+
+  return {
+    ...state,
+    rooms: {
+      ...state.rooms,
+      [roomId]: {
+        ...existing,
+        revealedItems: [...filtered, ...newRevealed],
+      },
+    },
+  };
+}
+
+/**
+ * Removes a single revealed item from a room
+ * (called when the player takes the item).
+ */
+export function removeRevealedItem(
+  state: WorldState,
+  roomId: string,
+  itemId: string
+): WorldState {
+  const existing = state.rooms[roomId];
+  if (!existing) return state;
+  return {
+    ...state,
+    rooms: {
+      ...state.rooms,
+      [roomId]: {
+        ...existing,
+        revealedItems: (existing.revealedItems ?? []).filter(
+          r => r.itemId !== itemId
+        ),
+      },
+    },
   };
 }
 

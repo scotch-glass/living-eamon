@@ -57,6 +57,8 @@ import {
   SKILL_NAMES,
   SKILL_CAP,
   normalizeWeaponSkills,
+  revealItemsInRoom,
+  removeRevealedItem,
   type WeaponSkills,
 } from "./gameState";
 
@@ -168,7 +170,21 @@ export function buildSituationBlock(state: WorldState): string {
     .map(id => ITEMS[id]?.name ?? id)
     .filter(Boolean);
   const examLabels = (room.examinableObjects ?? []).map(o => o.label);
-  const eyeSet = [...new Set([...itemLabels, ...examLabels])];
+  const roomStateEntry = state.rooms[room.id];
+  const revealedLabels = (roomStateEntry?.revealedItems ?? [])
+    .map(r => {
+      const item = ITEMS[r.itemId];
+      if (!item) return null;
+      const container = (room.examinableObjects ?? []).find(
+        ex => ex.id === r.containerId
+      );
+      const containerLabel = container?.label ?? r.containerId;
+      return `${item.name} (in ${containerLabel})`;
+    })
+    .filter((x): x is string => x !== null);
+  const eyeSet = [
+    ...new Set([...itemLabels, ...examLabels, ...revealedLabels]),
+  ];
   const eyeLine = eyeSet.length > 0 ? `👁 ${eyeSet.join(" · ")}` : "👁 —";
 
   const lines = [SIT_LINE, exitLine, npcLine, eyeLine];
@@ -1556,6 +1572,16 @@ function randomClothingSet(): {
   };
 }
 
+function revealCharityBarrelContents(state: WorldState): WorldState {
+  const clothingSet = randomClothingSet();
+  return revealItemsInRoom(state, "main_hall", "charity_barrel", [
+    clothingSet.shirt,
+    clothingSet.pants,
+    clothingSet.shoes,
+    clothingSet.belt,
+  ]);
+}
+
 function mainHallBarrelExaminePhrase(s: string): boolean {
   const l = s.toLowerCase();
   return (
@@ -2723,23 +2749,25 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         p.currentRoom === "main_hall" &&
         mainHallBarrelExaminePhrase(targetPhrase.toLowerCase())
       ) {
+        const barrelState = revealCharityBarrelContents(newState);
         return {
           responseType: "static",
           staticResponse: pickTemplate(BARREL_EXAMINE_DESCRIPTIONS),
           dynamicContext: null,
-          newState,
-          stateChanged: false,
+          newState: barrelState,
+          stateChanged: true,
         };
       }
       return buildExamineEngineResult(`look at ${targetPhrase}`, newState, currentRoom);
     }
     if (p.currentRoom === "main_hall" && mainHallBarrelExaminePhrase(rest)) {
+      const barrelState = revealCharityBarrelContents(newState);
       return {
         responseType: "static",
         staticResponse: pickTemplate(BARREL_EXAMINE_DESCRIPTIONS),
         dynamicContext: null,
-        newState,
-        stateChanged: false,
+        newState: barrelState,
+        stateChanged: true,
       };
     }
     return buildExamineEngineResult(trimmed, newState, currentRoom);
@@ -2761,12 +2789,13 @@ Describe what they find to read, or tell them there is nothing to read here.`,
       return buildExamineEngineResult(`examine notice board`, newState, currentRoom, "notice_board");
     }
     if (p.currentRoom === "main_hall" && mainHallBarrelExaminePhrase(bl)) {
+      const barrelState = revealCharityBarrelContents(newState);
       return {
         responseType: "static",
         staticResponse: pickTemplate(BARREL_EXAMINE_DESCRIPTIONS),
         dynamicContext: null,
-        newState,
-        stateChanged: false,
+        newState: barrelState,
+        stateChanged: true,
       };
     }
     return buildExamineEngineResult(`examine ${body}`, newState, currentRoom);
@@ -2840,7 +2869,59 @@ Describe what they find to read, or tell them there is nothing to read here.`,
       const wantsAny = wantsShirt || wantsPants || wantsShoes || wantsBelt;
 
       if (wantsAny) {
-        const set = randomClothingSet();
+        const alreadyRevealed = (
+          newState.rooms["main_hall"]?.revealedItems ?? []
+        ).filter(r => r.containerId === "charity_barrel");
+
+        const shirtIds = SHIRT_VARIANTS as readonly string[];
+        const pantsIds = PANTS_VARIANTS as readonly string[];
+        const shoesIds = SHOES_VARIANTS as readonly string[];
+        const beltIds = BELT_VARIANTS as readonly string[];
+
+        const revealedShirt = alreadyRevealed.find(r =>
+          shirtIds.includes(r.itemId)
+        )?.itemId;
+        const revealedPants = alreadyRevealed.find(r =>
+          pantsIds.includes(r.itemId)
+        )?.itemId;
+        const revealedShoes = alreadyRevealed.find(r =>
+          shoesIds.includes(r.itemId)
+        )?.itemId;
+        const revealedBelt = alreadyRevealed.find(r =>
+          beltIds.includes(r.itemId)
+        )?.itemId;
+
+        const hasRevealedSet = Boolean(
+          revealedShirt &&
+            revealedPants &&
+            revealedShoes &&
+            revealedBelt
+        );
+
+        let clothingState = newState;
+        const clothingSet = hasRevealedSet
+          ? {
+              shirt: revealedShirt!,
+              pants: revealedPants!,
+              shoes: revealedShoes!,
+              belt: revealedBelt!,
+            }
+          : randomClothingSet();
+
+        if (!hasRevealedSet) {
+          clothingState = revealItemsInRoom(
+            clothingState,
+            "main_hall",
+            "charity_barrel",
+            [
+              clothingSet.shirt,
+              clothingSet.pants,
+              clothingSet.shoes,
+              clothingSet.belt,
+            ]
+          );
+        }
+
         const gotItems: string[] = [];
         let newInventory = [...p.inventory];
 
@@ -2857,15 +2938,30 @@ Describe what they find to read, or tell them there is nothing to read here.`,
           gotItems.push(ITEMS[itemId]?.name ?? itemId);
         };
 
-        if (wantsShirt) addItem(set.shirt);
-        if (wantsPants) addItem(set.pants);
-        if (wantsShoes) addItem(set.shoes);
-        if (wantsBelt) addItem(set.belt);
+        if (wantsShirt) addItem(clothingSet.shirt);
+        if (wantsPants) addItem(clothingSet.pants);
+        if (wantsShoes) addItem(clothingSet.shoes);
+        if (wantsBelt) addItem(clothingSet.belt);
 
         let updatedState: WorldState = {
-          ...newState,
-          player: { ...newState.player, inventory: newInventory },
+          ...clothingState,
+          player: { ...clothingState.player, inventory: newInventory },
         };
+
+        const takenIds = [
+          wantsShirt ? clothingSet.shirt : null,
+          wantsPants ? clothingSet.pants : null,
+          wantsShoes ? clothingSet.shoes : null,
+          wantsBelt ? clothingSet.belt : null,
+        ].filter((id): id is string => id !== null);
+
+        for (const id of takenIds) {
+          updatedState = removeRevealedItem(
+            updatedState,
+            "main_hall",
+            id
+          );
+        }
 
         const hasRobe = newInventory.some(e => e.itemId === "gray_robe");
         const tookShirt = wantsShirt;

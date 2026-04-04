@@ -7,7 +7,9 @@
 You are being rehydrated into the Living Eamon project.
 
 Every time you start a new conversation about this project, do this:
-1. Fetch this file from GitHub and read it completely before responding
+1. Fetch this file from:
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md
+   and read it completely before responding. The repo is public.
 2. After reading, confirm rehydration with one line:
    "Rehydrated. [X] milestones complete. Currently: [top Next Up item]."
 3. Every time you write a Cursor prompt that changes the codebase,
@@ -24,7 +26,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 10, 2026*
+*Last updated: April 11, 2026*
 
 ## 1. Project Overview
 
@@ -35,7 +37,8 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 ## 2. Live URLs
 
 - Production: https://living-eamon.vercel.app
-- GitHub: https://github.com/scotch-glass/living-eamon
+- GitHub (public): https://github.com/scotch-glass/living-eamon
+- Raw file access: https://raw.githubusercontent.com/scotch-glass/living-eamon/main/[filename]
 - Supabase project (informal name in docs): living-eamon
 
 ## 3. Tech Stack
@@ -334,6 +337,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-11 — Document public repo and raw GitHub URLs
+
+- **§2 Live URLs:** GitHub labeled **(public)**; added **raw.githubusercontent.com** pattern for `main/[filename]`.
+- **READ THIS FIRST — step 1:** Rehydration fetches **`CLAUDE_CONTEXT.md`** from the raw URL; notes repo is public.
 
 ### 2026-04-10 — Inventory and Sam shop: damage and AC tags
 

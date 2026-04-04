@@ -1,3 +1,5 @@
+> 🧑 USER NOTE: This user is not a developer. They need explicit step-by-step instructions for every action — including where to click, what to type, and what terminal commands to run. Never assume they know how to do something. Always spell it out completely.
+
 ---
 
 # ⚡ CLAUDE — READ THIS FIRST
@@ -290,6 +292,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — User instruction style note (top of CLAUDE_CONTEXT)
+
+- Prepended a USER NOTE blockquote for Claude: spell out every step for a non-developer (clicks, typing, terminal). No code or game logic changes.
 
 ### 2026-04-04 — CLAUDE_CONTEXT.md and Cursor maintenance rule
 

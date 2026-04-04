@@ -22,6 +22,8 @@ export interface Room {
   stateModifiers: Partial<Record<RoomState, RoomStateModifier>>;
   npcs: string[];            // NPC ids present in this room
   items: string[];           // Item ids present by default
+  /** Fixed features the player can examine (engine / Jane object keys) */
+  examinableObjects?: { id: string; label: string }[];
   isAdventureEntrance?: string; // Adventure id if this room leads to one
 }
 
@@ -99,6 +101,11 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     },
     npcs: ["hokas_tokas", "sam_slicker", "old_mercenary"],
     items: ["notice_board_key"],
+    examinableObjects: [
+      { id: "notice_board", label: "Notice board" },
+      { id: "sams_display", label: "Sam's display" },
+      { id: "great_fireplace", label: "The great fireplace" },
+    ],
   },
 
   armory: {
@@ -109,6 +116,11 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     stateModifiers: {},
     npcs: ["armory_attendant"],
     items: ["short_sword", "leather_armor", "torch", "rope"],
+    examinableObjects: [
+      { id: "weapon_racks", label: "Weapon racks" },
+      { id: "armor_stands", label: "Armor stands" },
+      { id: "armory_desk", label: "The attendant's desk" },
+    ],
   },
 
   notice_board: {
@@ -119,6 +131,10 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     stateModifiers: {},
     npcs: [],
     items: [],
+    examinableObjects: [
+      { id: "posted_notices", label: "Posted notices" },
+      { id: "treasure_maps", label: "Dubious treasure maps" },
+    ],
   },
 
   main_hall_exit: {
@@ -129,6 +145,10 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     stateModifiers: {},
     npcs: ["door_guard"],
     items: [],
+    examinableObjects: [
+      { id: "oak_doors", label: "The oak doors" },
+      { id: "street_window", label: "The street window" },
+    ],
   },
 
   guild_vault: {
@@ -139,6 +159,10 @@ export const MAIN_HALL_ROOMS: Record<string, Room> = {
     stateModifiers: {},
     npcs: ["brunt_the_banker"],
     items: [],
+    examinableObjects: [
+      { id: "iron_strongboxes", label: "Iron strongboxes" },
+      { id: "vault_counter", label: "Brunt's counter" },
+    ],
   },
 };
 

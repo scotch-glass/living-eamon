@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { WorldState, createInitialWorldState } from "../lib/gameState";
 import { ITEMS } from "../lib/gameData";
+import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
+import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,7 +24,7 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
   const typingRef = useRef(false);
   const displayedRef = useRef("");
@@ -204,17 +206,15 @@ export default function Home() {
     inputRef.current?.focus();
   };
 
-  const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
   const formatMessage = (text: string, isLast: boolean) => {
     const cleanText = text.split("__STATE__")[0];
-    const lines = cleanText.split("\n");
-    return lines.map((line, i) => {
+    const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
+    const sitIdx = cleanText.indexOf(needle);
+    const narrative = sitIdx === -1 ? cleanText : cleanText.slice(0, sitIdx).trimEnd();
+    const situation = sitIdx === -1 ? null : cleanText.slice(sitIdx + 2).trim();
+
+    const lines = narrative.split("\n");
+    const body = lines.map((line, i) => {
       if (line.startsWith("*") && line.endsWith("*")) {
         return <p key={i} style={{ fontStyle: "italic", color: "rgba(251,191,36,0.7)", fontSize: 14, marginTop: 8 }}>{line.slice(1, -1)}</p>;
       }
@@ -225,12 +225,39 @@ export default function Home() {
       return (
         <p key={i} style={{ marginBottom: 8, lineHeight: 1.7 }}>
           {line}
-          {isLast && i === lines.length - 1 && (
+          {isLast && i === lines.length - 1 && !situation && (
             <span style={{ color: "#f59e0b", marginLeft: 2 }}>▌</span>
           )}
         </p>
       );
     });
+
+    return (
+      <>
+        {body}
+        {situation && (
+          <pre
+            style={{
+              marginTop: 14,
+              marginBottom: 0,
+              paddingTop: 10,
+              borderTop: "1px solid rgba(55,65,81,0.6)",
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+              fontSize: 11,
+              lineHeight: 1.5,
+              color: "rgba(148,163,184,0.95)",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {situation}
+            {isLast && (
+              <span style={{ color: "#f59e0b", marginLeft: 2 }}>▌</span>
+            )}
+          </pre>
+        )}
+      </>
+    );
   };
 
   const player = worldState?.player;
@@ -374,16 +401,15 @@ export default function Home() {
         </div>
 
         <div style={{ borderTop: "1px solid #1f2937", padding: 16, flexShrink: 0 }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 12 }}>
-            <input
+          <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <CommandInput
               ref={inputRef}
-              type="text"
+              worldState={worldState}
               value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder="What do you do?"
+              onChange={setInput}
+              onSubmit={sendMessage}
               disabled={loading || isTyping}
-              style={{ flex: 1, backgroundColor: "#111827", border: "1px solid #374151", color: "#e5e7eb", padding: "12px 16px", borderRadius: 6, outline: "none", fontFamily: "Georgia, serif", fontSize: 15, opacity: loading || isTyping ? 0.5 : 1 }}
+              placeholder="What do you do?"
             />
             <button
               onClick={sendMessage}

@@ -11,8 +11,8 @@ import {
   ITEMS,
   ADVENTURES,
   COMBAT_TEMPLATES,
-  DYNAMIC_TRIGGERS,
   Room,
+  NPC,
 } from "./gameData";
 
 import {
@@ -42,43 +42,371 @@ export interface EngineResult {
   dynamicContext: string | null;   // Injected into Jane prompt if dynamic
   newState: WorldState;
   stateChanged: boolean;
+  /** Prepended before streamed Jane text (SAY / TELL echo lines) */
+  echoPrefix?: string | null;
+  /** World-object cache key when response is examine-specific */
+  examineObjectKey?: string | null;
 }
 
 // ============================================================
-// KEYWORD DETECTION
-// Classify player input without an API call
+// SITUATION BLOCK (static, always appended by API)
 // ============================================================
 
-const MOVEMENT_WORDS = ["go", "walk", "move", "head", "travel", "enter", "leave", "north", "south", "east", "west", "up", "down", "n", "s", "e", "w"];
-const LOOK_WORDS = ["look", "examine", "inspect", "describe", "what", "where", "survey", "check"];
-const INVENTORY_WORDS = ["inventory", "items", "carrying", "bag", "pack", "i"];
-const TAKE_WORDS = ["take", "pick", "grab", "get", "loot", "steal"];
-const DROP_WORDS = ["drop", "leave", "discard", "put down"];
-const ATTACK_WORDS = ["attack", "fight", "hit", "strike", "kill", "stab", "slash", "shoot", "charge"];
-const TALK_WORDS = ["talk", "speak", "ask", "say", "tell", "greet", "hello", "hi", "chat", "converse"];
-const BUY_WORDS = ["buy", "purchase", "trade", "shop", "price", "how much", "cost"];
-const BANK_WORDS = ["bank", "deposit", "withdraw", "balance", "vault", "save gold"];
-const STAT_WORDS = ["stats", "status", "character", "sheet", "hp", "health", "gold", "level", "virtues"];
-const ADVENTURE_WORDS = ["adventure", "quest", "dungeon", "cave", "guild", "enter", "explore"];
-const FIRE_WORDS = ["fireball", "fire", "burn", "ignite", "torch the", "set fire", "flame"];
-const MAGIC_WORDS = ["cast", "spell", "magic", "invoke", "summon", "enchant"];
+export const SITUATION_BLOCK_LINE = "─────────────────────────────────";
+const SIT_LINE = SITUATION_BLOCK_LINE;
 
-function detectIntent(input: string): string {
-  const lower = input.toLowerCase();
-  if (FIRE_WORDS.some(w => lower.includes(w)) && MAGIC_WORDS.some(w => lower.includes(w))) return "cast_fire";
-  if (MAGIC_WORDS.some(w => lower.includes(w))) return "cast_spell";
-  if (MOVEMENT_WORDS.some(w => lower.startsWith(w) || lower === w)) return "movement";
-  if (LOOK_WORDS.some(w => lower.startsWith(w))) return "look";
-  if (INVENTORY_WORDS.some(w => lower === w || lower.startsWith(w))) return "inventory";
-  if (TAKE_WORDS.some(w => lower.startsWith(w))) return "take";
-  if (DROP_WORDS.some(w => lower.startsWith(w))) return "drop";
-  if (ATTACK_WORDS.some(w => lower.startsWith(w))) return "attack";
-  if (TALK_WORDS.some(w => lower.startsWith(w))) return "talk";
-  if (BUY_WORDS.some(w => lower.includes(w))) return "buy";
-  if (BANK_WORDS.some(w => lower.includes(w))) return "bank";
-  if (STAT_WORDS.some(w => lower.includes(w))) return "stats";
-  if (ADVENTURE_WORDS.some(w => lower.includes(w))) return "adventure";
-  return "unknown";
+const EXIT_ARROW: Record<string, string> = {
+  north: "N",
+  east: "E",
+  south: "S",
+  west: "W",
+  up: "U",
+  down: "D",
+};
+
+const EXIT_ORDER = ["north", "east", "south", "west", "up", "down"] as const;
+
+function exitDestinationLabel(roomId: string): string {
+  const dest = MAIN_HALL_ROOMS[roomId];
+  if (!dest) return roomId.replace(/_/g, " ");
+  if (dest.id === "main_hall_exit") return "Exit";
+  return dest.name.replace(/^The\s+/i, "").trim();
+}
+
+/** Static situation footer: exits, present NPCs, room items & examinables */
+export function buildSituationBlock(state: WorldState): string {
+  const room = MAIN_HALL_ROOMS[state.player.currentRoom];
+  if (!room) {
+    return `${SIT_LINE}\n(Unknown location)\n${SIT_LINE}`;
+  }
+
+  const exitParts: string[] = [];
+  for (const dir of EXIT_ORDER) {
+    const to = room.exits[dir];
+    if (!to) continue;
+    const arrow = EXIT_ARROW[dir] ?? dir[0]!.toUpperCase();
+    exitParts.push(`${arrow}→${exitDestinationLabel(to)}`);
+  }
+  const exitLine = exitParts.join("  ");
+
+  const presentNpcs = room.npcs
+    .map(id => state.npcs[id])
+    .filter((n): n is NPCStateEntry => Boolean(n?.isAlive && n.location === room.id))
+    .map(n => NPCS[n.npcId]?.name ?? n.npcId);
+
+  const npcLine = presentNpcs.length > 0 ? `👤 ${presentNpcs.join(" · ")}` : "👤 —";
+
+  const itemLabels = room.items
+    .map(id => ITEMS[id]?.name ?? id)
+    .filter(Boolean);
+  const examLabels = (room.examinableObjects ?? []).map(o => o.label);
+  const eyeSet = [...new Set([...itemLabels, ...examLabels])];
+  const eyeLine = eyeSet.length > 0 ? `👁 ${eyeSet.join(" · ")}` : "👁 —";
+
+  return [SIT_LINE, exitLine, npcLine, eyeLine, SIT_LINE].join("\n");
+}
+
+// ============================================================
+// COMMAND AUTOCOMPLETE (client input bar)
+// ============================================================
+
+export type AutocompleteDispositionTone = "hostile" | "friendly" | "neutral";
+
+export interface AutocompleteItem {
+  label: string;
+  insertText: string;
+  tone?: AutocompleteDispositionTone;
+}
+
+function npcTone(disposition: NPCStateEntry["disposition"], isHostile: boolean): AutocompleteDispositionTone {
+  if (isHostile || disposition === "hostile" || disposition === "furious") return "hostile";
+  if (disposition === "friendly") return "friendly";
+  return "neutral";
+}
+
+function presentNPCsInRoom(room: Room, state: WorldState): {
+  id: string;
+  name: string;
+  firstName: string;
+  disposition: NPCStateEntry["disposition"];
+  isHostile: boolean;
+  merchant?: NPC["merchant"];
+}[] {
+  return room.npcs
+    .map(id => {
+      const nState = state.npcs[id];
+      const data = NPCS[id];
+      if (!nState?.isAlive || nState.location !== room.id || !data) return null;
+      const firstName = data.name.split(/\s+/)[0] ?? data.name;
+      return {
+        id,
+        name: data.name,
+        firstName,
+        disposition: nState.disposition,
+        isHostile: data.isHostile,
+        merchant: data.merchant,
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
+/** Suggestions for CommandInput from live world state */
+export function getCommandAutocompleteSuggestions(
+  state: WorldState | null,
+  rawInput: string
+): AutocompleteItem[] {
+  if (!state) return [];
+  const room = MAIN_HALL_ROOMS[state.player.currentRoom];
+  if (!room) return [];
+
+  const trimmed = rawInput.trimStart();
+  if (!trimmed) return [];
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  const firstLower = tokens[0]?.toLowerCase() ?? "";
+  const restTokens = tokens.slice(1);
+  const partial = restTokens.length > 0 ? restTokens[restTokens.length - 1]! : "";
+  const partialLower = partial.toLowerCase();
+
+  const npcs = presentNPCsInRoom(room, state);
+  const filterPartial = (s: string) =>
+    !partialLower || s.toLowerCase().startsWith(partialLower) || s.toLowerCase().includes(partialLower);
+
+  const exitSuggestions = (): AutocompleteItem[] =>
+    EXIT_ORDER.flatMap(dir => {
+      const to = room.exits[dir];
+      if (!to) return [];
+      const label = `${dir} (→ ${exitDestinationLabel(to)})`;
+      const insert = dir;
+      return [{ label, insertText: insert }];
+    });
+
+  const examineTargets = (): AutocompleteItem[] => {
+    const items: AutocompleteItem[] = [];
+    for (const n of npcs) {
+      items.push({ label: n.name, insertText: n.firstName });
+    }
+    for (const id of room.items) {
+      const it = ITEMS[id];
+      if (it) items.push({ label: it.name, insertText: it.name });
+    }
+    for (const ex of room.examinableObjects ?? []) {
+      items.push({ label: ex.label, insertText: ex.label });
+    }
+    return items;
+  };
+
+  const carryableRoomItems = (): AutocompleteItem[] =>
+    room.items
+      .map(id => ITEMS[id])
+      .filter((it): it is NonNullable<typeof it> => Boolean(it?.isCarryable))
+      .map(it => ({ label: it.name, insertText: it.name }));
+
+  const invItems = (): AutocompleteItem[] =>
+    state.player.inventory
+      .map(e => ITEMS[e.itemId])
+      .filter((it): it is NonNullable<typeof it> => Boolean(it))
+      .map(it => ({ label: it.name, insertText: it.name }));
+
+  const merchantStock = (): AutocompleteItem[] => {
+    const items: AutocompleteItem[] = [];
+    for (const n of npcs) {
+      if (!n.merchant) continue;
+      for (const iid of n.merchant.inventory) {
+        const it = ITEMS[iid];
+        if (it) items.push({ label: `${it.name} (${n.firstName})`, insertText: it.name });
+      }
+    }
+    return items;
+  };
+
+  // Movement: GO <dir> or lone direction token
+  if (/^(go|walk|move)\s*$/i.test(trimmed) || (/^go\s+/i.test(trimmed) && restTokens.length <= 1)) {
+    return exitSuggestions().filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower));
+  }
+  if (tokens.length === 1 && /^[nsewud]$/i.test(tokens[0]!)) {
+    return exitSuggestions().filter(x => x.insertText.toLowerCase().startsWith(tokens[0]!.toLowerCase()));
+  }
+
+  if (/^(n|north|s|south|e|east|w|west|u|up|d|down)$/i.test(trimmed) && tokens.length === 1) {
+    return exitSuggestions();
+  }
+
+  // EXAMINE / LOOK AT
+  if (/^(examine|ex|inspect)\s+/i.test(trimmed) || /^look at\s+/i.test(trimmed)) {
+    return examineTargets().filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+  if (/^look\s+$/i.test(trimmed)) {
+    return [{ label: "around", insertText: "around" }];
+  }
+
+  // GET / TAKE
+  if (/^(get|take|grab)\s+/i.test(trimmed)) {
+    return carryableRoomItems().filter(x => filterPartial(x.insertText));
+  }
+
+  // DROP / SELL
+  if (/^(drop|sell)\s+/i.test(trimmed)) {
+    return invItems().filter(x => filterPartial(x.insertText));
+  }
+
+  // ATTACK
+  if (/^attack\s+/i.test(trimmed)) {
+    return npcs
+      .map(n => ({
+        label: n.name,
+        insertText: n.firstName,
+        tone: npcTone(n.disposition, n.isHostile),
+      }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  // SAY / TALK — room audience + ALL + SELF
+  if (/^(say|talk)\s+/i.test(trimmed)) {
+    const special: AutocompleteItem[] = [
+      { label: "ALL (whole room)", insertText: "ALL" },
+      { label: "SELF", insertText: "SELF" },
+    ];
+    const fromNpcs = npcs.map(n => ({ label: n.name, insertText: n.firstName }));
+    return [...special, ...fromNpcs].filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower) || x.label.toLowerCase().includes(partialLower));
+  }
+
+  // TELL (private)
+  if (/^tell\s+/i.test(trimmed)) {
+    if (restTokens.length <= 1) {
+      return npcs
+        .map(n => ({ label: n.name, insertText: n.firstName }))
+        .filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower) || x.label.toLowerCase().includes(partialLower));
+    }
+    return [];
+  }
+
+  // BUY
+  if (/^buy\s+/i.test(trimmed)) {
+    return merchantStock().filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  // CAST
+  if (/^cast\s+/i.test(trimmed)) {
+    return state.player.knownSpells
+      .map(s => ({ label: s, insertText: s }))
+      .filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower));
+  }
+
+  // INVOKE — never list
+  if (/^invoke\b/i.test(trimmed)) {
+    return [];
+  }
+
+  // PRAY
+  if (/^pray\s+/i.test(trimmed)) {
+    return state.player.knownDeities
+      .map(d => ({ label: d, insertText: d }))
+      .filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower));
+  }
+
+  // DEPOSIT / WITHDRAW — vault only
+  if (state.player.currentRoom === "guild_vault" && /^(deposit|withdraw)\s+/i.test(trimmed)) {
+    return ["10", "20", "50", "100"]
+      .map(n => ({ label: n, insertText: n }))
+      .filter(x => !partialLower || x.insertText.startsWith(partialLower));
+  }
+
+  // ENTER
+  if (/^enter\s+/i.test(trimmed)) {
+    return Object.values(ADVENTURES)
+      .map(a => ({ label: a.name, insertText: a.name }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  return [];
+}
+
+// ============================================================
+// INPUT PARSING (priority order)
+// ============================================================
+
+const FIRE_IN_CAST = ["fireball", "fire ball", "flame", "ignite", "burn the hall", "set fire", "torch the"];
+
+const HELP_TEXT = `MOVEMENT
+  GO [direction]     GO NORTH, GO SOUTH, GO EAST, GO WEST, GO UP, GO DOWN
+  N / S / E / W      Shorthand directions
+
+INTERACTION
+  EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
+  GET [item]         GET SWORD, GET TORCH
+  DROP [item]        DROP SWORD
+
+COMBAT
+  ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
+
+SPEECH (MUD conventions)
+  SAY [text]         SAY Hello everyone!  (speaks to whole room)
+  TELL [name] [text] TELL HOKAS What news?  (speaks to one NPC)
+
+MAGIC
+  CAST [spell]       CAST BLAST, CAST HEAL, CAST LIGHT, CAST SPEED
+  INVOKE [ritual]    INVOKE ...  (occult — discovered through play)
+  PRAY [TO deity]    PRAY TO MYSTRA  (divine — discovered through play)
+
+INVENTORY & STATS
+  INVENTORY / I      Show what you're carrying
+  STATS              Show your character sheet
+
+ECONOMY
+  BUY [item]         BUY SWORD  (must be near a merchant)
+  SELL [item]        SELL DAGGER
+  DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Vault)
+  WITHDRAW [amount]  WITHDRAW 10
+
+ADVENTURES
+  ENTER [adventure]  ENTER THE BEGINNER'S CAVE
+
+META
+  LOOK               Describe your current location
+  HELP               Show this command list`;
+
+function tokenize(input: string): string[] {
+  return input.trim().split(/\s+/).filter(Boolean);
+}
+
+function parseTellTarget(
+  rest: string,
+  room: Room,
+  state: WorldState
+): { npcId: string; displayName: string; firstName: string; message: string } | null {
+  const lower = rest.toLowerCase();
+  const candidates = presentNPCsInRoom(room, state).sort((a, b) => b.name.length - a.name.length);
+  for (const n of candidates) {
+    const full = n.name.toLowerCase();
+    if (lower.startsWith(full + " ") || lower === full) {
+      const message = rest.slice(n.name.length).trim();
+      return { npcId: n.id, displayName: n.name, firstName: n.firstName, message };
+    }
+    const fw = n.firstName.toLowerCase();
+    if (lower.startsWith(fw + " ") || lower === fw) {
+      const message = rest.slice(n.firstName.length).trim();
+      return { npcId: n.id, displayName: n.name, firstName: n.firstName, message };
+    }
+  }
+  return null;
+}
+
+function matchInventoryDrop(inputLower: string, player: PlayerState): string | null {
+  let best: { id: string; len: number } | null = null;
+  for (const entry of player.inventory) {
+    const it = ITEMS[entry.itemId];
+    if (!it) continue;
+    const nl = it.name.toLowerCase();
+    if (nl.includes(inputLower) || inputLower.includes(nl)) {
+      const len = nl.length;
+      if (!best || len > best.len) best = { id: entry.itemId, len };
+    }
+  }
+  return best?.id ?? null;
+}
+
+function isNoticeExamineCommand(lower: string): boolean {
+  return lower === "notice" || lower === "notice board" || lower.startsWith("notice board ");
 }
 
 // ============================================================
@@ -100,6 +428,218 @@ function extractDirection(input: string): string | null {
     if (lower.includes(key)) return val;
   }
   return null;
+}
+
+function directionFromSingleToken(token: string): string | null {
+  const t = token.toLowerCase();
+  return DIRECTION_MAP[t] ?? null;
+}
+
+function extractGoDirection(input: string): string | null {
+  const lower = input.toLowerCase().trim();
+  const m = lower.match(/^(?:go|walk|move)\s+(\S+)/);
+  if (m) return directionFromSingleToken(m[1]!);
+  return null;
+}
+
+function buildExamineEngineResult(
+  originalInput: string,
+  newState: WorldState,
+  currentRoom: Room | null,
+  objectKeyHint?: string
+): EngineResult {
+  const hint =
+    objectKeyHint ??
+    originalInput
+      .toLowerCase()
+      .replace(/look at|examine|inspect|touch|feel|study/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+  return {
+    responseType: "dynamic",
+    staticResponse: null,
+    examineObjectKey: hint,
+    dynamicContext:
+      "Player wants to examine something specific: \"" +
+      originalInput +
+      "\"\n" +
+      "Use object key for cache: " +
+      hint +
+      "\n" +
+      "Current room: " +
+      (currentRoom?.name ?? "unknown") +
+      "\n" +
+      "Room description for context: " +
+      (currentRoom?.description ?? "") +
+      "\n" +
+      "Respond with a vivid, specific description of what they are examining. If they try to interact with it (touch, take, move), describe the result naturally. Keep it to 1-2 paragraphs.",
+    newState,
+    stateChanged: false,
+  };
+}
+
+function tryResolveNameAloneExamine(
+  trimmed: string,
+  newState: WorldState,
+  room: Room | null
+): EngineResult | null {
+  if (!room) return null;
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("say ") || lower.startsWith("tell ")) return null;
+
+  if (isNoticeExamineCommand(lower)) {
+    return buildExamineEngineResult("examine notice board", newState, room, "notice_board");
+  }
+
+  for (const n of presentNPCsInRoom(room, newState)) {
+    if (lower === n.firstName.toLowerCase() || lower === n.name.toLowerCase()) {
+      return buildExamineEngineResult(`examine ${n.name}`, newState, room, n.name.toLowerCase().replace(/\s+/g, "_"));
+    }
+  }
+
+  for (const id of room.items) {
+    const it = ITEMS[id];
+    if (it && lower === it.name.toLowerCase()) {
+      return buildExamineEngineResult(`examine ${it.name}`, newState, room, it.name.toLowerCase().replace(/\s+/g, "_"));
+    }
+  }
+
+  for (const ex of room.examinableObjects ?? []) {
+    if (lower === ex.label.toLowerCase() || lower === ex.id.replace(/_/g, " ")) {
+      return buildExamineEngineResult(`examine ${ex.label}`, newState, room, ex.id);
+    }
+  }
+
+  return null;
+}
+
+function runBanking(
+  input: string,
+  newState: WorldState,
+  player: PlayerState
+): EngineResult {
+  if (player.currentRoom !== "guild_vault") {
+    return {
+      responseType: "static",
+      staticResponse: "The vault is below the Main Hall. Head down to bank thy gold.",
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  const lower = input.toLowerCase();
+  const amountMatch = input.match(/\d+/);
+  const amount = amountMatch ? parseInt(amountMatch[0]!, 10) : 0;
+
+  if (lower.includes("deposit") && amount > 0) {
+    if (amount > player.gold) {
+      return {
+        responseType: "static",
+        staticResponse: `Thou dost not have ${amount} gold to deposit. Thou carriest only ${player.gold}.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    let s = updatePlayerGold(newState, -amount);
+    s = { ...s, player: { ...s.player, bankedGold: s.player.bankedGold + amount } };
+    return {
+      responseType: "static",
+      staticResponse: `Brunt records the deposit without looking up. ${amount} gold secured in thy vault account. Carried gold: ${s.player.gold}. Banked: ${s.player.bankedGold}.`,
+      dynamicContext: null,
+      newState: s,
+      stateChanged: true,
+    };
+  }
+
+  if (lower.includes("withdraw") && amount > 0) {
+    if (amount > player.bankedGold) {
+      return {
+        responseType: "static",
+        staticResponse: `Thou hast only ${player.bankedGold} gold banked.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    let s = updatePlayerGold(newState, amount);
+    s = { ...s, player: { ...s.player, bankedGold: s.player.bankedGold - amount } };
+    return {
+      responseType: "static",
+      staticResponse: `Brunt counts out ${amount} gold coins and slides them across the counter. Carried gold: ${s.player.gold}. Banked: ${s.player.bankedGold}.`,
+      dynamicContext: null,
+      newState: s,
+      stateChanged: true,
+    };
+  }
+
+  return {
+    responseType: "static",
+    staticResponse: `Brunt looks up. "Deposit or withdraw. State the amount."`,
+    dynamicContext: null,
+    newState,
+    stateChanged: false,
+  };
+}
+
+function runTakeItem(
+  lowerInput: string,
+  newState: WorldState,
+  currentRoom: Room | null
+): EngineResult {
+  if (!currentRoom) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou dost not see that here.",
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  const itemInRoom = currentRoom.items.find(id => {
+    const item = ITEMS[id];
+    return item && lowerInput.includes(item.name.toLowerCase());
+  });
+
+  if (!itemInRoom) {
+    return {
+      responseType: "static",
+      staticResponse: "Thou dost not see that here.",
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  const item = ITEMS[itemInRoom];
+  if (!item?.isCarryable) {
+    return {
+      responseType: "static",
+      staticResponse: `${item?.name ?? "That"} cannot be carried.`,
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  const existingEntry = newState.player.inventory.find(e => e.itemId === itemInRoom);
+  const newInventory = existingEntry
+    ? newState.player.inventory.map(e =>
+        e.itemId === itemInRoom ? { ...e, quantity: e.quantity + 1 } : e
+      )
+    : [...newState.player.inventory, { itemId: itemInRoom, quantity: 1 }];
+
+  const s = { ...newState, player: { ...newState.player, inventory: newInventory } };
+
+  return {
+    responseType: "static",
+    staticResponse: `Thou dost take the ${item.name}. ${item.description}`,
+    dynamicContext: null,
+    newState: s,
+    stateChanged: true,
+  };
 }
 
 function getRoom(roomId: string): Room | null {
@@ -316,66 +856,246 @@ export function processInput(
   input: string,
   state: WorldState
 ): EngineResult {
-  // Tick the world forward
   let newState = tickWorldState(state);
-  const intent = detectIntent(input);
   const player = newState.player;
-  const currentRoom = getRoom(player.currentRoom);
-
-  // ── STATS ──────────────────────────────────────────────
-  if (intent === "stats") {
-    return {
-      responseType: "static",
-      staticResponse: buildStatDescription(player),
-      dynamicContext: null,
-      newState,
-      stateChanged: false,
+  if (!player.knownSpells?.length) {
+    newState = {
+      ...newState,
+      player: {
+        ...newState.player,
+        knownSpells: ["BLAST", "HEAL", "LIGHT", "SPEED"],
+        knownDeities: newState.player.knownDeities ?? [],
+      },
     };
   }
+  const p = newState.player;
+  const currentRoom = getRoom(p.currentRoom);
+  const trimmed = input.trim();
+  const lower = trimmed.toLowerCase();
+  const tokens = tokenize(trimmed);
+  const first = tokens[0]?.toUpperCase() ?? "";
 
-  // ── INVENTORY ──────────────────────────────────────────
-  if (intent === "inventory") {
-    return {
-      responseType: "static",
-      staticResponse: buildInventoryDescription(player),
-      dynamicContext: null,
-      newState,
-      stateChanged: false,
-    };
-  }
+  const audienceNames =
+    currentRoom?.npcs
+      .map(id => newState.npcs[id])
+      .filter((n): n is NPCStateEntry => Boolean(n?.isAlive && n.location === p.currentRoom))
+      .map(n => NPCS[n.npcId]?.name ?? n.npcId)
+      .join(", ") || "none";
 
-// ── LOOK ───────────────────────────────────────────────
-  if (intent === "look") {
-    const lower = input.toLowerCase();
-    const isRoomLook = lower === "look" || lower === "look around" || lower === "examine room" || lower === "survey";
-    
-    if (isRoomLook) {
+  // ── 1. PREFIX: SAY ─────────────────────────────────────
+  if (first === "SAY") {
+    const text = trimmed.slice(3).trim();
+    if (!text) {
       return {
         responseType: "static",
-        staticResponse: buildRoomDescription(newState, player.currentRoom),
+        staticResponse: "Say what?",
         dynamicContext: null,
         newState,
         stateChanged: false,
       };
     }
-
-    // Looking at a specific thing — send to Jane
+    const quoted = text.replace(/^["']|["']$/g, "");
+    const echo = `You say, "${quoted}"`;
     return {
       responseType: "dynamic",
       staticResponse: null,
-      dynamicContext: "Player wants to examine something specific: \"" + input + "\"\n" +
-        "Current room: " + (currentRoom?.name ?? "unknown") + "\n" +
-        "Room description for context: " + (currentRoom?.description ?? "") + "\n" +
-        "Respond with a vivid, specific description of what they are examining. If they try to interact with it (touch, take, move), describe the result naturally. Keep it to 1-2 paragraphs.",
+      echoPrefix: echo,
+      dynamicContext: `MUD SAY (room speech). ${p.name} said aloud to everyone present: "${quoted}"
+Current room: ${currentRoom?.name ?? "unknown"}
+Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}
+All NPCs in the room hear this — they are the audience: ${audienceNames}
+React with in-character replies from any NPCs who would naturally respond, ambient room color, and consequences. Use Universal Common for NPC dialogue.`,
       newState,
       stateChanged: false,
     };
   }
 
-  // ── MOVEMENT ───────────────────────────────────────────
-  if (intent === "movement") {
-    const direction = extractDirection(input);
-    if (!direction || !currentRoom) {
+  // ── 1. PREFIX: TELL ────────────────────────────────────
+  if (first === "TELL") {
+    if (!currentRoom) {
+      return {
+        responseType: "static",
+        staticResponse: "There is no one to tell.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const after = trimmed.slice(4).trim();
+    const parsed = parseTellTarget(after, currentRoom, newState);
+    if (!parsed || !parsed.message) {
+      return {
+        responseType: "static",
+        staticResponse: "Tell whom, and what? Example: TELL HOKAS What news?",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const npcData = NPCS[parsed.npcId];
+    const npcState = newState.npcs[parsed.npcId];
+    const quoted = parsed.message.replace(/^["']|["']$/g, "");
+    const echo = `You tell ${parsed.firstName}, "${quoted}"`;
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      echoPrefix: echo,
+      dynamicContext: `MUD TELL (private directed speech). ${p.name} speaks privately to ${npcData?.name ?? parsed.npcId}: "${quoted}"
+Only this NPC should meaningfully respond; others may notice tone but do not interject unless it would be unavoidable.
+NPC personality: ${npcData?.personality ?? ""}
+Disposition: ${npcState?.disposition ?? "neutral"}
+Memory: ${npcState?.memory.map(m => m.action).join(", ") || "none"}
+Agenda: ${npcState?.agenda?.description ?? "none"}
+Room: ${currentRoom.name} (${newState.rooms[p.currentRoom]?.currentState ?? "normal"})
+Respond primarily in character as ${npcData?.name}. Universal Common for dialogue.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  // ── 1. PREFIX: INVOKE ──────────────────────────────────
+  if (first === "INVOKE") {
+    const rest = trimmed.slice(6).trim();
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `Occult / forbidden INVOKE attempt: "${rest || "(unspecified)"}"
+Room: ${currentRoom?.name}. State: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}.
+This is dangerous, rare magic — never listed in UI. Describe tension, risk, and what stirs (or does not).`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  // ── 1. PREFIX: PRAY ────────────────────────────────────
+  if (first === "PRAY") {
+    const rest = trimmed.slice(4).trim();
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `Divine PRAY: "${rest}"
+Player known deities (may be empty): ${p.knownDeities.join(", ") || "none discovered yet"}
+Room: ${currentRoom?.name}. Handle as quiet, sacred communication; hints at faith virtues if appropriate.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  // ── 1. PREFIX: CAST ────────────────────────────────────
+  if (first === "CAST") {
+    const rest = trimmed.slice(4).trim().toLowerCase();
+    if (FIRE_IN_CAST.some(f => rest.includes(f))) {
+      const targetRoom = p.currentRoom;
+      const roomData = getRoom(targetRoom);
+      const currentRoomState = newState.rooms[targetRoom]?.currentState;
+
+      if (currentRoomState === "burnt") {
+        return {
+          responseType: "static",
+          staticResponse: "The room is already burnt. There is nothing more to set alight.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+
+      newState = applyFireballConsequences(newState, targetRoom, p.id);
+      return {
+        responseType: "dynamic",
+        staticResponse: null,
+        dynamicContext: `The player just cast a fireball in ${roomData?.name ?? targetRoom}. 
+The room is now burnt. Hokas Tokas is furious and has sent for the Sheriff. 
+A 50-gold bounty has been placed on the player. 
+Describe the immediate chaos vividly — fire, screaming adventurers, Hokas's fury, smoke filling the hall. 
+Then have Hokas deliver his ultimatum in Universal Common: pay 50 gold, work off the debt by fetching timber from the Darkwood, or face the Sheriff.
+This is a severe virtue moment — Honor is at stake.`,
+        newState,
+        stateChanged: true,
+      };
+    }
+
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `Official CAST magic: "${trimmed}"
+Current room: ${currentRoom?.name}. Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}.
+Known spells: ${p.knownSpells.join(", ")}.
+Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherwise describe failure or ask to clarify.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  // ── 2. STANDARD COMMANDS ─────────────────────────────
+  if (first === "HELP" || lower === "help") {
+    return {
+      responseType: "static",
+      staticResponse: HELP_TEXT,
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  if (first === "STATS" || first === "STAT") {
+    return {
+      responseType: "static",
+      staticResponse: buildStatDescription(p),
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  if (first === "INVENTORY" || first === "I" || first === "INV") {
+    return {
+      responseType: "static",
+      staticResponse: buildInventoryDescription(p),
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  if (first === "LOOK") {
+    const rest = trimmed.slice(4).trim().toLowerCase();
+    if (!rest || rest === "around" || rest === "room") {
+      return {
+        responseType: "static",
+        staticResponse: buildRoomDescription(newState, p.currentRoom),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    if (rest.startsWith("at ")) {
+      const targetPhrase = trimmed.slice(trimmed.toLowerCase().indexOf("at ") + 3).trim();
+      return buildExamineEngineResult(`look at ${targetPhrase}`, newState, currentRoom);
+    }
+    return buildExamineEngineResult(trimmed, newState, currentRoom);
+  }
+
+  if (first === "EXAMINE" || first === "EX") {
+    const body = trimmed.replace(/^(examine|ex)\s+/i, "").trim();
+    if (!body) {
+      return {
+        responseType: "static",
+        staticResponse: "Examine what?",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const bl = body.toLowerCase();
+    if (isNoticeExamineCommand(bl)) {
+      return buildExamineEngineResult(`examine notice board`, newState, currentRoom, "notice_board");
+    }
+    return buildExamineEngineResult(`examine ${body}`, newState, currentRoom);
+  }
+
+  if (first === "GO" || first === "WALK" || first === "MOVE") {
+    const dir = extractGoDirection(trimmed) ?? extractDirection(trimmed);
+    if (!dir || !currentRoom) {
       return {
         responseType: "static",
         staticResponse: "Which way wouldst thou go? (north, south, east, west, up, down)",
@@ -384,241 +1104,118 @@ export function processInput(
         stateChanged: false,
       };
     }
-
-    const destinationId = currentRoom.exits[direction];
+    const destinationId = currentRoom.exits[dir];
     if (!destinationId) {
       return {
         responseType: "static",
-        staticResponse: `There is no passage to the ${direction} from here.`,
+        staticResponse: `There is no passage to the ${dir} from here.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
       };
     }
-
     newState = movePlayer(newState, destinationId);
-    const roomDesc = buildRoomDescription(newState, destinationId);
-
     return {
       responseType: "static",
-      staticResponse: roomDesc,
+      staticResponse: buildRoomDescription(newState, destinationId),
       dynamicContext: null,
       newState,
       stateChanged: true,
     };
   }
 
-  // ── FIRE MAGIC ─────────────────────────────────────────
-  if (intent === "cast_fire") {
-    const targetRoom = player.currentRoom;
-    const roomData = getRoom(targetRoom);
-    const currentRoomState = newState.rooms[targetRoom]?.currentState;
+  if (first === "GET" || first === "TAKE" || first === "GRAB") {
+    return runTakeItem(lower, newState, currentRoom);
+  }
 
-    if (currentRoomState === "burnt") {
+  if (first === "DROP") {
+    const rest = trimmed.slice(4).trim().toLowerCase();
+    if (!rest) {
       return {
         responseType: "static",
-        staticResponse: "The room is already burnt. There is nothing more to set alight.",
+        staticResponse: "Drop what?",
         dynamicContext: null,
         newState,
         stateChanged: false,
       };
     }
-
-    // Apply full consequence cascade
-    newState = applyFireballConsequences(newState, targetRoom, player.id);
-
+    const itemId = matchInventoryDrop(rest, p);
+    if (!itemId) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou dost not carry that.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const item = ITEMS[itemId]!;
+    const entry = newState.player.inventory.find(e => e.itemId === itemId)!;
+    const newQty = entry.quantity - 1;
+    const newInventory =
+      newQty <= 0
+        ? newState.player.inventory.filter(e => e.itemId !== itemId)
+        : newState.player.inventory.map(e =>
+            e.itemId === itemId ? { ...e, quantity: newQty } : e
+          );
+    const s = { ...newState, player: { ...newState.player, inventory: newInventory } };
     return {
-      responseType: "dynamic",
-      staticResponse: null,
-      dynamicContext: `The player just cast a fireball in ${roomData?.name ?? targetRoom}. 
-The room is now burnt. Hokas Tokas is furious and has sent for the Sheriff. 
-A 50-gold bounty has been placed on the player. 
-Describe the immediate chaos vividly — fire, screaming adventurers, Hokas's fury, smoke filling the hall. 
-Then have Hokas deliver his ultimatum in Universal Common: pay 50 gold, work off the debt by fetching timber from the Darkwood, or face the Sheriff.
-This is a severe virtue moment — Honor is at stake.`,
-      newState,
+      responseType: "static",
+      staticResponse: `Thou droppest the ${item.name}.`,
+      dynamicContext: null,
+      newState: s,
       stateChanged: true,
     };
   }
 
-  // ── OTHER MAGIC ────────────────────────────────────────
-  if (intent === "cast_spell") {
-    return {
-      responseType: "dynamic",
-      staticResponse: null,
-      dynamicContext: `Player attempted to cast a spell: "${input}". 
-Current room: ${currentRoom?.name}. 
-Room state: ${newState.rooms[player.currentRoom]?.currentState ?? "normal"}.
-Handle this as an Official Magic action if the spell is standard Eamon magic (BLAST, HEAL, SPEED, LIGHT).
-If it seems like Occult/forbidden magic, hint at danger and ask for clarification.`,
-      newState,
-      stateChanged: false,
-    };
-  }
-
-  // ── TALK TO NPC ────────────────────────────────────────
-  if (intent === "talk") {
-    // Find which NPC the player is addressing
-    const lowerInput = input.toLowerCase();
-    const npcInRoom = currentRoom?.npcs.find(id => {
-      const npc = NPCS[id];
-      return npc && lowerInput.includes(npc.name.toLowerCase().split(" ")[0].toLowerCase());
-    });
-
-    if (npcInRoom) {
-      const npcState = newState.npcs[npcInRoom];
-      const npcData = NPCS[npcInRoom];
-
-      // First greeting = static
-      const hasSpokenBefore = npcState?.memory.length > 0 ||
-        (npcState?.disposition !== "neutral" && npcState?.disposition !== "friendly");
-
-      if (!hasSpokenBefore && input.toLowerCase().includes("greet") || input.toLowerCase().includes("hello") || input.toLowerCase().includes("hi")) {
-        return {
-          responseType: "static",
-          staticResponse: buildNPCGreeting(newState, npcInRoom),
-          dynamicContext: null,
-          newState,
-          stateChanged: false,
-        };
-      }
-
-      // Deeper conversation = dynamic
-      return {
-        responseType: "dynamic",
-        staticResponse: null,
-        dynamicContext: `Player is speaking with ${npcData?.name ?? npcInRoom}.
-NPC personality: ${npcData?.personality}
-Current disposition toward player: ${npcState?.disposition ?? "neutral"}
-NPC memory of player: ${npcState?.memory.map(m => m.action).join(", ") || "none"}
-NPC current agenda: ${npcState?.agenda?.description ?? "none"}
-Room state: ${newState.rooms[player.currentRoom]?.currentState ?? "normal"}
-Player said: "${input}"
-Respond in character as ${npcData?.name}. Use Universal Common for all dialogue.
-If the NPC has an agenda, they should actively pursue it in this conversation.`,
-        newState,
-        stateChanged: false,
-      };
-    }
-
-    // Talking to no one in particular — dynamic
-    return {
-      responseType: "dynamic",
-      staticResponse: null,
-      dynamicContext: `Player said: "${input}" in ${currentRoom?.name ?? "unknown location"}.
-Room state: ${newState.rooms[player.currentRoom]?.currentState ?? "normal"}.
-NPCs present: ${currentRoom?.npcs.map(id => NPCS[id]?.name).join(", ") || "none"}.
-Respond naturally as the world.`,
-      newState,
-      stateChanged: false,
-    };
-  }
-
-  // ── BANK ───────────────────────────────────────────────
-  if (intent === "bank") {
-    if (player.currentRoom !== "guild_vault") {
+  if (first === "ATTACK") {
+    const rest = trimmed.slice(6).trim().toLowerCase();
+    if (!rest) {
       return {
         responseType: "static",
-        staticResponse: "The vault is below the Main Hall. Head down to bank thy gold.",
+        staticResponse: "Attack whom?",
         dynamicContext: null,
         newState,
         stateChanged: false,
       };
     }
-
-    const lower = input.toLowerCase();
-    const amountMatch = input.match(/\d+/);
-    const amount = amountMatch ? parseInt(amountMatch[0]) : 0;
-
-    if (lower.includes("deposit") && amount > 0) {
-      if (amount > player.gold) {
-        return {
-          responseType: "static",
-          staticResponse: `Thou dost not have ${amount} gold to deposit. Thou carriest only ${player.gold}.`,
-          dynamicContext: null, newState, stateChanged: false,
-        };
-      }
-      newState = updatePlayerGold(newState, -amount);
-      newState = { ...newState, player: { ...newState.player, bankedGold: newState.player.bankedGold + amount } };
+    const npcsHere = currentRoom
+      ? presentNPCsInRoom(currentRoom, newState)
+      : [];
+    const target = npcsHere.find(
+      n =>
+        rest.includes(n.firstName.toLowerCase()) ||
+        rest.includes(n.name.toLowerCase())
+    );
+    if (!target) {
       return {
         responseType: "static",
-        staticResponse: `Brunt records the deposit without looking up. ${amount} gold secured in thy vault account. Carried gold: ${newState.player.gold}. Banked: ${newState.player.bankedGold}.`,
-        dynamicContext: null, newState, stateChanged: true,
+        staticResponse: "Thou dost not see that foe here.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
       };
     }
-
-    if (lower.includes("withdraw") && amount > 0) {
-      if (amount > player.bankedGold) {
-        return {
-          responseType: "static",
-          staticResponse: `Thou hast only ${player.bankedGold} gold banked.`,
-          dynamicContext: null, newState, stateChanged: false,
-        };
-      }
-      newState = updatePlayerGold(newState, amount);
-      newState = { ...newState, player: { ...newState.player, bankedGold: newState.player.bankedGold - amount } };
-      return {
-        responseType: "static",
-        staticResponse: `Brunt counts out ${amount} gold coins and slides them across the counter. Carried gold: ${newState.player.gold}. Banked: ${newState.player.bankedGold}.`,
-        dynamicContext: null, newState, stateChanged: true,
-      };
-    }
-
-    return {
-      responseType: "static",
-      staticResponse: `Brunt looks up. "Deposit or withdraw. State the amount."`,
-      dynamicContext: null, newState, stateChanged: false,
-    };
-  }
-
-  // ── TAKE ITEM ──────────────────────────────────────────
-  if (intent === "take") {
-    const lowerInput = input.toLowerCase();
-    const itemInRoom = currentRoom?.items.find(id => {
-      const item = ITEMS[id];
-      return item && lowerInput.includes(item.name.toLowerCase());
-    });
-
-    if (!itemInRoom) {
-      return {
-        responseType: "static",
-        staticResponse: "Thou dost not see that here.",
-        dynamicContext: null, newState, stateChanged: false,
-      };
-    }
-
-    const item = ITEMS[itemInRoom];
-    if (!item?.isCarryable) {
-      return {
-        responseType: "static",
-        staticResponse: `${item?.name ?? "That"} cannot be carried.`,
-        dynamicContext: null, newState, stateChanged: false,
-      };
-    }
-
-    // Add to inventory
-    const existingEntry = newState.player.inventory.find(e => e.itemId === itemInRoom);
-    const newInventory = existingEntry
-      ? newState.player.inventory.map(e => e.itemId === itemInRoom ? { ...e, quantity: e.quantity + 1 } : e)
-      : [...newState.player.inventory, { itemId: itemInRoom, quantity: 1 }];
-
-    newState = { ...newState, player: { ...newState.player, inventory: newInventory } };
-
-    return {
-      responseType: "static",
-      staticResponse: `Thou dost take the ${item.name}. ${item.description}`,
-      dynamicContext: null, newState, stateChanged: true,
-    };
-  }
-
-  // ── BUY ────────────────────────────────────────────────
-  if (intent === "buy") {
+    const npcData = NPCS[target.id]!;
     return {
       responseType: "dynamic",
       staticResponse: null,
-      dynamicContext: `Player wants to buy something. Input: "${input}".
+      dynamicContext: `COMBAT / ATTACK: ${p.name} attacks ${npcData.name}.
+NPC stats: HP ${npcData.stats.hp}, armor ${npcData.stats.armor}, damage ${npcData.stats.damage}, hostile=${npcData.isHostile}
+Disposition: ${newState.npcs[target.id]?.disposition ?? "neutral"}
+Room: ${currentRoom?.name}. Resolve this attack round with vivid narration; apply sensible HP consequences in the fiction. If the NPC is not hostile, this is a grave social choice (virtue).`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  if (first === "BUY") {
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `Player wants to buy something. Input: "${trimmed}".
 They are in ${currentRoom?.name}.
-Player gold: ${player.gold}.
+Player gold: ${p.gold}.
 NPCs present who are merchants: ${currentRoom?.npcs
   .filter(id => NPCS[id]?.merchant)
   .map(id => {
@@ -637,11 +1234,33 @@ If haggling is involved, this is dynamic.`,
     };
   }
 
-  // ── ADVENTURE ENTRANCE ─────────────────────────────────
-  if (intent === "adventure") {
-    const lower = input.toLowerCase();
+  if (first === "SELL") {
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `Player wants to SELL from inventory. Input: "${trimmed}".
+Room: ${currentRoom?.name}. Gold: ${p.gold}.
+Merchants present: ${currentRoom?.npcs
+  .filter(id => NPCS[id]?.merchant)
+  .map(id => NPCS[id]?.name)
+  .join(", ") || "none"}.
+Negotiate sale; update gold/inventory if a deal completes.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  if (first === "DEPOSIT" || first === "WITHDRAW") {
+    return runBanking(trimmed, newState, p);
+  }
+
+  if (first === "ENTER") {
+    const rest = lower.replace(/^enter\s+/, "").trim();
     for (const [advId, adv] of Object.entries(ADVENTURES)) {
-      if (lower.includes(adv.name.toLowerCase()) || lower.includes(advId.replace("_", " "))) {
+      if (
+        rest.includes(adv.name.toLowerCase()) ||
+        rest.includes(advId.replace(/_/g, " "))
+      ) {
         return {
           responseType: "dynamic",
           staticResponse: null,
@@ -649,16 +1268,17 @@ If haggling is involved, this is dynamic.`,
 Adventure description: ${adv.description}
 Entrance text: ${adv.entrance}
 Difficulty: ${adv.difficulty}. Recommended level: ${adv.recommendedLevel}.
-Player current level/expertise: ${player.expertise}.
+Player current level/expertise: ${p.expertise}.
 Present the entrance dramatically using the static entrance text, then begin the first room encounter.
 The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
-          newState: { ...newState, player: { ...newState.player, currentAdventure: advId } },
+          newState: {
+            ...newState,
+            player: { ...newState.player, currentAdventure: advId },
+          },
           stateChanged: true,
         };
       }
     }
-
-    // Generic adventure inquiry
     return {
       responseType: "static",
       staticResponse: `Three adventures are posted on the notice board:
@@ -669,28 +1289,63 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
 
 3. The Haunted Manor — Something is wrong at the old Blackwood estate. Moderate to deadly. Not recommended for the faint of heart.
 
-Say "enter the Beginner's Cave" (or whichever) to begin.`,
+Use ENTER THE BEGINNER'S CAVE (or whichever) to begin.`,
       dynamicContext: null,
       newState,
       stateChanged: false,
     };
   }
 
-  // ── UNKNOWN / COMPLEX ──────────────────────────────────
-  // Anything we can't classify goes to Jane
+  // ── 3. DIRECTION SHORTHAND ─────────────────────────────
+  if (tokens.length === 1 && directionFromSingleToken(tokens[0]!)) {
+    const dir = directionFromSingleToken(tokens[0]!)!;
+    if (!currentRoom) {
+      return {
+        responseType: "static",
+        staticResponse: "Which way wouldst thou go? (north, south, east, west, up, down)",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const destinationId = currentRoom.exits[dir];
+    if (!destinationId) {
+      return {
+        responseType: "static",
+        staticResponse: `There is no passage to the ${dir} from here.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    newState = movePlayer(newState, destinationId);
+    return {
+      responseType: "static",
+      staticResponse: buildRoomDescription(newState, destinationId),
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
+    };
+  }
+
+  // ── 4. NAME ALONE → EXAMINE ───────────────────────────
+  const alone = tryResolveNameAloneExamine(trimmed, newState, currentRoom);
+  if (alone) return alone;
+
+  // ── 5. FREE TEXT → JANE ────────────────────────────────
   return {
     responseType: "dynamic",
     staticResponse: null,
-    dynamicContext: `Player input: "${input}"
+    dynamicContext: `Player input: "${trimmed}"
 Current room: ${currentRoom?.name ?? "unknown"}
-Room state: ${newState.rooms[player.currentRoom]?.currentState ?? "normal"}
-Player HP: ${player.hp}/${player.maxHp} | Gold: ${player.gold} | Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon}
+Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}
+Player HP: ${p.hp}/${p.maxHp} | Gold: ${p.gold} | Weapon: ${ITEMS[p.weapon]?.name ?? p.weapon}
 NPCs present: ${currentRoom?.npcs.map(id => {
-  const s = newState.npcs[id];
-  return `${NPCS[id]?.name} (${s?.disposition ?? "neutral"})`;
-}).join(", ") || "none"}
+      const s = newState.npcs[id];
+      return `${NPCS[id]?.name} (${s?.disposition ?? "neutral"})`;
+    }).join(", ") || "none"}
 Active events: ${newState.activeEvents.map(e => e.description).join("; ") || "none"}
-Bounty on player: ${player.bounty > 0 ? player.bounty + " gold" : "none"}
+Bounty on player: ${p.bounty > 0 ? p.bounty + " gold" : "none"}
 Handle this naturally as the living world. If it is a moral choice, note the relevant virtue.`,
     newState,
     stateChanged: false,

@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import { processInput } from "../../../lib/gameEngine";
+import { processInput, buildSituationBlock } from "../../../lib/gameEngine";
 import { createInitialWorldState, WorldState } from "../../../lib/gameState";
 import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
 import {
@@ -156,6 +156,11 @@ export async function POST(request: NextRequest) {
             bounty: savedPlayer.bounty,
             isWanted: savedPlayer.is_wanted,
             turnCount: savedPlayer.turn_count,
+            knownSpells:
+              (savedPlayer as { known_spells?: string[] }).known_spells ??
+              ["BLAST", "HEAL", "LIGHT", "SPEED"],
+            knownDeities:
+              (savedPlayer as { known_deities?: string[] }).known_deities ?? [],
           },
         };
       } else {
@@ -175,13 +180,16 @@ export async function POST(request: NextRequest) {
       state = worldState ?? createInitialWorldState();
     }
 
+    const appendSituation = (body: string, newState: WorldState) =>
+      body + "\n\n" + buildSituationBlock(newState);
+
     const sendResponse = (text: string, newState: WorldState) => {
       // Save player to Supabase asynchronously
       if (resolvedPlayerId) {
         savePlayer(worldStateToPlayerRecord(newState)).catch(console.error);
       }
 
-      const fullResponse = text + "\n\n__STATE__" + JSON.stringify({
+      const fullResponse = appendSituation(text, newState) + "\n\n__STATE__" + JSON.stringify({
         ...newState,
         playerId: resolvedPlayerId,
       });
@@ -197,7 +205,12 @@ export async function POST(request: NextRequest) {
       );
     };
 
-    const streamJane = async (context: string, newState: WorldState, history: {role: string; content: string}[]) => {
+    const streamJane = async (
+      context: string,
+      newState: WorldState,
+      history: { role: string; content: string }[],
+      echoPrefix?: string | null
+    ) => {
       // Check Jane allocation
       if (resolvedPlayerId) {
         const hasJane = await checkAndDecrementJaneCalls(resolvedPlayerId);
@@ -226,11 +239,15 @@ export async function POST(request: NextRequest) {
 
       const readable = new ReadableStream({
         async start(controller) {
+          if (echoPrefix) {
+            controller.enqueue(encoder.encode(echoPrefix + "\n\n"));
+          }
           for await (const chunk of stream) {
             if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
               controller.enqueue(encoder.encode(chunk.delta.text));
             }
           }
+          controller.enqueue(encoder.encode("\n\n" + buildSituationBlock(newState)));
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...newState,
             playerId: resolvedPlayerId,
@@ -254,7 +271,7 @@ export async function POST(request: NextRequest) {
         "End with jane's one-line observation in lowercase.\n" +
         "Then on a new line suggest 2-3 possible actions formatted as: *You might: [action 1], [action 2], or [action 3].*";
 
-      return await streamJane(openingContext, state, [{ role: "user", content: openingContext }]);
+      return await streamJane(openingContext, state, [{ role: "user", content: openingContext }], null);
     }
 
     // Get last player message
@@ -271,10 +288,13 @@ export async function POST(request: NextRequest) {
 
     // Check world object cache for examine actions
     if (engineResult.dynamicContext && engineResult.dynamicContext.includes("examine something specific")) {
-      const objectKey = playerInput.toLowerCase()
-        .replace(/look at|examine|inspect|touch|feel|study/g, "")
-        .trim()
-        .replace(/\s+/g, "_");
+      const objectKey =
+        engineResult.examineObjectKey ??
+        playerInput
+          .toLowerCase()
+          .replace(/look at|examine|inspect|touch|feel|study/g, "")
+          .trim()
+          .replace(/\s+/g, "_");
 
       const roomState = engineResult.newState.rooms[state.player.currentRoom]?.currentState ?? "normal";
       const cached = await getWorldObject(state.player.currentRoom, objectKey, roomState);
@@ -318,6 +338,7 @@ export async function POST(request: NextRequest) {
             ).catch(console.error);
             savePlayer(worldStateToPlayerRecord(engineResult.newState)).catch(console.error);
           }
+          controller.enqueue(encoder.encode("\n\n" + buildSituationBlock(engineResult.newState)));
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...engineResult.newState,
             playerId: resolvedPlayerId,
@@ -337,7 +358,12 @@ export async function POST(request: NextRequest) {
       engineResult.newState
     );
 
-    return await streamJane(janeContext, engineResult.newState, messages);
+    return await streamJane(
+      janeContext,
+      engineResult.newState,
+      messages,
+      engineResult.echoPrefix ?? null
+    );
 
   } catch (error) {
     console.error("Engine error:", error);

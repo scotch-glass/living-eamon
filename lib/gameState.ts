@@ -162,6 +162,11 @@ export interface PlayerState {
   // Session
   turnCount: number;           // Total actions taken this session
   lastAction: string | null;
+
+  /** Official guild magic — autocomplete for CAST */
+  knownSpells: string[];
+  /** Divine names learned in play — autocomplete for PRAY */
+  knownDeities: string[];
 }
 
 // ============================================================
@@ -353,6 +358,9 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
 
       turnCount: 0,
       lastAction: null,
+
+      knownSpells: ["BLAST", "HEAL", "LIGHT", "SPEED"],
+      knownDeities: [],
     },
 
     activeEvents: [],

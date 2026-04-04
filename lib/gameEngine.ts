@@ -12,6 +12,14 @@ import {
   ADVENTURES,
   COMBAT_TEMPLATES,
   SAM_INVENTORY,
+  PLAYER_HIT_DESCRIPTIONS,
+  ENEMY_HIT_DESCRIPTIONS,
+  ARMOR_ABSORB_DESCRIPTIONS,
+  ARMOR_FULL_ABSORB_DESCRIPTIONS,
+  PLAYER_MISS_DESCRIPTIONS,
+  ENEMY_MISS_DESCRIPTIONS,
+  getWeaponCategory,
+  type WoundTier,
   type SamShopRow,
   Room,
   NPC,
@@ -50,6 +58,8 @@ export interface EngineResult {
   echoPrefix?: string | null;
   /** World-object cache key when response is examine-specific */
   examineObjectKey?: string | null;
+  hasCritical?: boolean;
+  criticalContext?: string | null;
 }
 
 // ============================================================
@@ -1237,14 +1247,84 @@ function fillTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? key);
 }
 
+/** Wound tier based on damage as a fraction of reference HP */
+function getWoundTier(damage: number, referenceHp: number): WoundTier {
+  const pct = damage / Math.max(1, referenceHp);
+  if (pct >= 0.35) return "devastating";
+  if (pct >= 0.12) return "solid";
+  return "glancing";
+}
+
+/** Safe random pick from a non-empty array */
+function pickRandom<T>(arr: T[]): T {
+  if (!arr || arr.length === 0) throw new Error("pickRandom: empty array");
+  return arr[Math.floor(Math.random() * arr.length)]!;
+}
+
+/** Fill {key} placeholders (cinematic pools) */
+function fillCombat(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? k);
+}
+
+/**
+ * Critical hit: roll is in the bottom 8% of the hit-chance window.
+ * e.g. hitChance=0.60 → crit if roll < 0.048
+ */
+function isCriticalHit(roll: number, hitChance: number): boolean {
+  return roll < hitChance * 0.08;
+}
+
+/**
+ * UO absorption model: armor subtracts from damage, never causes miss.
+ * Returns narration + fullAbsorb flag, or null if absorption not
+ * significant enough to mention.
+ */
+function buildArmorAbsorbNarration(
+  player: PlayerState,
+  enemyName: string,
+  rawDamage: number,
+  totalAC: number,
+  afterAR: number
+): { text: string; fullAbsorb: boolean } | null {
+  if (!player.armor && !player.shield) return null;
+  if (totalAC === 0) return null;
+
+  const candidates: string[] = [];
+  if (player.shield) candidates.push(player.shield);
+  if (player.armor) candidates.push(player.armor);
+  const armorKey = pickRandom(candidates);
+  const armorName = ITEMS[armorKey]?.name ?? "your armor";
+
+  if (afterAR <= 0) {
+    const pool =
+      ARMOR_FULL_ABSORB_DESCRIPTIONS[armorKey] ??
+      ARMOR_FULL_ABSORB_DESCRIPTIONS["default"]!;
+    return {
+      text: fillCombat(pickRandom(pool), { enemy: enemyName, armor: armorName }),
+      fullAbsorb: true,
+    };
+  }
+
+  const acAbsorbed = rawDamage - Math.max(0, rawDamage - totalAC);
+  if (acAbsorbed / rawDamage < 0.5) return null;
+
+  const pool =
+    ARMOR_ABSORB_DESCRIPTIONS[armorKey] ?? ARMOR_ABSORB_DESCRIPTIONS["default"]!;
+  return {
+    text: fillCombat(pickRandom(pool), { enemy: enemyName, armor: armorName }),
+    fullAbsorb: false,
+  };
+}
+
 export function resolveCombatRound(
   state: WorldState,
-  enemyId: string,
+  _enemyId: string,
   enemyHp: number,
   enemyData: {
     name: string;
     damage: string;
     armor: number;
+    maxHp: number;
     weaponSkill?: number;
   }
 ): {
@@ -1254,127 +1334,213 @@ export function resolveCombatRound(
   combatOver: boolean;
   playerWon: boolean;
   initiativeWinner: "player" | "enemy";
+  hasCritical: boolean;
+  criticalContext: string | null;
 } {
   const player = state.player;
   const weaponItem = ITEMS[player.weapon];
   const weaponData = WEAPON_DATA[player.weapon];
 
-  // ── INITIATIVE (AD&D 2e) ───────────────────────────────
-  // Roll 1d10, add weapon speed factor, subtract DEX reaction bonus
-  // Lower total acts first
+  // ── INITIATIVE (AD&D 2e + UO weapon speeds) ────────────
   const playerWeaponSpeed = weaponData?.weaponSpeed ?? 5;
   const dexBonus = getDexReactionBonus(player.dexterity);
   const playerInitRoll =
     Math.ceil(Math.random() * 10) + playerWeaponSpeed - dexBonus;
-
-  // Enemy initiative: 1d10 + proxy weapon speed based on enemy armor
-  // Heavier armored enemies assumed to carry heavier weapons
-  const enemyWeaponSpeed = Math.max(3, Math.min(9, enemyData.armor + 3));
+  const enemyWeaponSpeed = Math.max(
+    3,
+    Math.min(9, (enemyData.armor ?? 0) + 3)
+  );
   const enemyInitRoll = Math.ceil(Math.random() * 10) + enemyWeaponSpeed;
-
   const playerGoesFirst = playerInitRoll <= enemyInitRoll;
-  const initiativeWinner: "player" | "enemy" = playerGoesFirst ? "player" : "enemy";
+  const initiativeWinner: "player" | "enemy" = playerGoesFirst
+    ? "player"
+    : "enemy";
 
-  // ── HIT CHANCE (T2A UO formula) ───────────────────────
-  // Hit% = (attackerSkill + 50) / ((defenderSkill + 50) * 2)
-  // Player skill mapped from expertise (0-50 → 0-100)
+  // ── HIT CHANCE (T2A UO) ────────────────────────────────
   const playerSkill = Math.min(100, player.expertise * 2);
   const enemySkill = enemyData.weaponSkill ?? 30;
-
   const playerHitChance = (playerSkill + 50) / ((enemySkill + 50) * 2);
   const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
 
-  // ── DAMAGE FORMULAS (T2A UO) ──────────────────────────
-  // Player: base roll * (1 + STR% + Tactics%) → subtract enemy AR → halve
-  // Enemy:  base roll → subtract player totalAC → halve
-  // Minimum damage after all reductions: 1
+  // ── DAMAGE HELPERS ─────────────────────────────────────
 
-  function calcPlayerDamage(): number {
-    const base = rollWeaponDamage(player.weapon);
+  function calcPlayerDamage(multiplier: number = 1): number {
+    const base = rollWeaponDamage(player.weapon) * multiplier;
     const strPct = Math.min(0.2, Math.max(0, (player.strength - 10) / 40));
     const tacPct = Math.min(0.2, (player.expertise / 50) * 0.2);
     const boosted = base * (1 + strPct + tacPct);
-    const afterAR = Math.max(0, boosted - enemyData.armor);
-    return Math.max(1, Math.floor(afterAR / 2));
+    const afterAR = Math.max(0, boosted - (enemyData.armor ?? 0));
+    const result = Math.max(1, Math.floor(afterAR / 2));
+    return isNaN(result) ? 1 : result;
   }
 
-  function calcEnemyDamage(): number {
-    const base = rollDice(enemyData.damage);
-    const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
-    const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
+  function calcEnemyDamage(): {
+    raw: number;
+    afterAR: number;
+    final: number;
+    totalAC: number;
+  } {
+    const raw = Math.max(1, rollDice(enemyData.damage));
+    const armorAC = player.armor
+      ? (ITEMS[player.armor]?.stats?.armorClass ?? 0)
+      : 0;
+    const shieldAC = player.shield
+      ? (ITEMS[player.shield]?.stats?.armorClass ?? 0)
+      : 0;
     const totalAC = armorAC + shieldAC;
-    const afterAR = Math.max(0, base - totalAC);
-    return Math.max(1, Math.floor(afterAR / 2));
+    const afterAR = raw - totalAC;
+    const final =
+      afterAR <= 0 ? 0 : Math.max(1, Math.floor(afterAR / 2));
+    return {
+      raw,
+      afterAR,
+      final: isNaN(final) ? 1 : final,
+      totalAC,
+    };
   }
 
-  // ── COMBAT RESOLUTION ─────────────────────────────────
+  // ── STATE ──────────────────────────────────────────────
   let narrative = "";
   let newState = state;
   let newEnemyHp = enemyHp;
+  let hasCritical = false;
+  let criticalContext: string | null = null;
 
-  // Initiative announcement
   narrative += playerGoesFirst
     ? `⚡ You win initiative (${playerInitRoll} vs ${enemyInitRoll}) — you strike first.\n\n`
     : `⚡ ${enemyData.name} wins initiative (${enemyInitRoll} vs ${playerInitRoll}) — they strike first.\n\n`;
 
+  // ── PLAYER ATTACK ──────────────────────────────────────
+
   function doPlayerAttack(): boolean {
-    if (Math.random() < playerHitChance) {
-      const dmg = calcPlayerDamage();
+    const roll = Math.random();
+    const isHit = roll < playerHitChance;
+    const isCrit = isHit && isCriticalHit(roll, playerHitChance);
+
+    if (!isHit) {
+      narrative += fillCombat(pickRandom(PLAYER_MISS_DESCRIPTIONS), {
+        weapon: weaponItem?.name ?? "weapon",
+        enemy: enemyData.name,
+      });
+      return false;
+    }
+
+    if (isCrit) {
+      const dmg = calcPlayerDamage(2);
       newEnemyHp -= dmg;
-      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerHit), {
-        weapon: weaponItem?.name ?? "weapon",
-        damage: String(dmg),
-        enemy: enemyData.name,
-      });
-      if (newEnemyHp <= 0) {
-        narrative +=
-          "\n\n" +
-          fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyDeath), {
-            enemy: enemyData.name,
-          });
-        return true;
-      }
+      hasCritical = true;
+      const safeWeapon = (weaponItem?.name ?? "weapon").replace(/:/g, "-");
+      const safeEnemy = enemyData.name.replace(/:/g, "-");
+      criticalContext = `${safeWeapon}:${safeEnemy}:${dmg}`;
+      narrative += `__CRITICAL__:${criticalContext}`;
     } else {
-      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerMiss), {
+      const dmg = calcPlayerDamage(1);
+      newEnemyHp -= dmg;
+      const tier = getWoundTier(dmg, enemyData.maxHp || 20);
+      const cat = getWeaponCategory(player.weapon);
+      const pool = PLAYER_HIT_DESCRIPTIONS[cat][tier];
+      narrative += fillCombat(pickRandom(pool), {
         weapon: weaponItem?.name ?? "weapon",
         enemy: enemyData.name,
+        damage: String(dmg),
       });
+    }
+
+    if (newEnemyHp <= 0) {
+      narrative +=
+        "\n\n" +
+        fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyDeath), {
+          enemy: enemyData.name,
+        });
+      return true;
     }
     return false;
   }
 
+  // ── ENEMY ATTACK ───────────────────────────────────────
+
   function doEnemyAttack(): boolean {
-    if (Math.random() < enemyHitChance) {
-      const dmg = calcEnemyDamage();
-      newState = updatePlayerHP(newState, -dmg);
-      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyHit), {
+    const roll = Math.random();
+    if (roll >= enemyHitChance) {
+      narrative += fillCombat(pickRandom(ENEMY_MISS_DESCRIPTIONS), {
         enemy: enemyData.name,
-        damage: String(dmg),
       });
-      if (newState.player.hp <= 0) return true;
+      return false;
+    }
+
+    const { raw, afterAR, final: finalDmg, totalAC } = calcEnemyDamage();
+
+    const absorbResult = buildArmorAbsorbNarration(
+      player,
+      enemyData.name,
+      raw,
+      totalAC,
+      afterAR
+    );
+
+    if (absorbResult?.fullAbsorb) {
+      narrative += absorbResult.text;
+      return false;
+    }
+
+    const damageToApply = Math.max(1, finalDmg);
+    newState = updatePlayerHP(newState, -damageToApply);
+
+    if (absorbResult && !absorbResult.fullAbsorb) {
+      narrative += absorbResult.text;
+      narrative += ` (${damageToApply} damage gets through)`;
     } else {
-      narrative += fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyMiss), {
+      const tier = getWoundTier(damageToApply, player.maxHp || 20);
+      const pool = ENEMY_HIT_DESCRIPTIONS[tier];
+      narrative += fillCombat(pickRandom(pool), {
         enemy: enemyData.name,
+        damage: String(damageToApply),
       });
     }
-    return false;
+
+    return newState.player.hp <= 0;
+  }
+
+  function applyPlayerDeath(): void {
+    const lostGold = newState.player.gold;
+    newState = updatePlayerGold(newState, -lostGold);
+    newState = updatePlayerHP(newState, newState.player.maxHp);
+    newState = {
+      ...newState,
+      player: { ...newState.player, currentRoom: "main_hall" },
+    };
+    newState = addToChronicle(
+      newState,
+      `${player.name} was defeated by ${enemyData.name}.`,
+      true
+    );
+    narrative +=
+      "\n\n" +
+      fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
+        enemy: enemyData.name,
+      });
+    narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
+  }
+
+  function applyEnemyDeath(): void {
+    newState = updateVirtue(newState, "Valor", 1);
+    newState = addToChronicle(
+      newState,
+      `${player.name} defeated ${enemyData.name}.`,
+      false
+    );
+    newState = {
+      ...newState,
+      player: {
+        ...newState.player,
+        expertise: newState.player.expertise + 1,
+      },
+    };
   }
 
   if (playerGoesFirst) {
     if (doPlayerAttack()) {
-      newState = updateVirtue(newState, "Valor", 1);
-      newState = addToChronicle(
-        newState,
-        `${player.name} defeated ${enemyData.name}.`,
-        false
-      );
-      newState = {
-        ...newState,
-        player: {
-          ...newState.player,
-          expertise: newState.player.expertise + 1,
-        },
-      };
+      applyEnemyDeath();
       return {
         narrative,
         newState,
@@ -1382,28 +1548,13 @@ export function resolveCombatRound(
         combatOver: true,
         playerWon: true,
         initiativeWinner,
+        hasCritical,
+        criticalContext,
       };
     }
     narrative += "\n\n";
     if (doEnemyAttack()) {
-      const lostGold = newState.player.gold;
-      newState = updatePlayerGold(newState, -lostGold);
-      newState = updatePlayerHP(newState, newState.player.maxHp);
-      newState = {
-        ...newState,
-        player: { ...newState.player, currentRoom: "main_hall" },
-      };
-      newState = addToChronicle(
-        newState,
-        `${player.name} was defeated by ${enemyData.name}.`,
-        true
-      );
-      narrative +=
-        "\n\n" +
-        fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
-          enemy: enemyData.name,
-        });
-      narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
+      applyPlayerDeath();
       return {
         narrative,
         newState,
@@ -1411,28 +1562,13 @@ export function resolveCombatRound(
         combatOver: true,
         playerWon: false,
         initiativeWinner,
+        hasCritical,
+        criticalContext,
       };
     }
   } else {
     if (doEnemyAttack()) {
-      const lostGold = newState.player.gold;
-      newState = updatePlayerGold(newState, -lostGold);
-      newState = updatePlayerHP(newState, newState.player.maxHp);
-      newState = {
-        ...newState,
-        player: { ...newState.player, currentRoom: "main_hall" },
-      };
-      newState = addToChronicle(
-        newState,
-        `${player.name} was defeated by ${enemyData.name}.`,
-        true
-      );
-      narrative +=
-        "\n\n" +
-        fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath), {
-          enemy: enemyData.name,
-        });
-      narrative += `\n\nYou lost ${lostGold} gold, but your legend endures. You awaken in the Main Hall.`;
+      applyPlayerDeath();
       return {
         narrative,
         newState,
@@ -1440,23 +1576,13 @@ export function resolveCombatRound(
         combatOver: true,
         playerWon: false,
         initiativeWinner,
+        hasCritical,
+        criticalContext,
       };
     }
     narrative += "\n\n";
     if (doPlayerAttack()) {
-      newState = updateVirtue(newState, "Valor", 1);
-      newState = addToChronicle(
-        newState,
-        `${player.name} defeated ${enemyData.name}.`,
-        false
-      );
-      newState = {
-        ...newState,
-        player: {
-          ...newState.player,
-          expertise: newState.player.expertise + 1,
-        },
-      };
+      applyEnemyDeath();
       return {
         narrative,
         newState,
@@ -1464,6 +1590,8 @@ export function resolveCombatRound(
         combatOver: true,
         playerWon: true,
         initiativeWinner,
+        hasCritical,
+        criticalContext,
       };
     }
   }
@@ -1475,6 +1603,8 @@ export function resolveCombatRound(
     combatOver: false,
     playerWon: false,
     initiativeWinner,
+    hasCritical,
+    criticalContext,
   };
 }
 
@@ -1581,7 +1711,7 @@ Total AC: ${totalAC}
 Hit% vs avg enemy: ${hitVsAvg}%
 STR damage bonus: +${strPct}%
 Tactics bonus: +${tacPct}%
-Initiative: 1d10 + ${wSpeed} (weapon spd) - ${dexBonus} (DEX)
+Initiative: 1d10 + ${wSpeed} (weapon) - ${dexBonus} (DEX)
 Reputation: ${player.reputationLevel}${player.knownAs ? ` — known as "${player.knownAs}"` : ""}${player.bounty > 0 ? `\n⚠ Bounty on your head: ${player.bounty} gold` : ""}${virtueLines ? `\n\nVirtues:\n${virtueLines}` : ""}`;
 }
 
@@ -2172,15 +2302,56 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       };
     }
     const npcData = NPCS[target.id]!;
+    if (!npcData.isHostile) {
+      return {
+        responseType: "static",
+        staticResponse: `${npcData.name} is not thy foe here. To strike unprovoked would be a grave act.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const npcEntry = newState.npcs[target.id]!;
+    const startHp = npcEntry.combatHp ?? npcData.stats.hp;
+    const combat = resolveCombatRound(newState, target.id, startHp, {
+      name: npcData.name,
+      damage: npcData.stats.damage,
+      armor: npcData.stats.armor,
+      maxHp: npcData.stats.hp,
+    });
+    let postState = combat.newState;
+    if (combat.playerWon) {
+      postState = {
+        ...postState,
+        npcs: {
+          ...postState.npcs,
+          [target.id]: {
+            ...postState.npcs[target.id]!,
+            isAlive: false,
+            combatHp: undefined,
+          },
+        },
+      };
+    } else {
+      postState = {
+        ...postState,
+        npcs: {
+          ...postState.npcs,
+          [target.id]: {
+            ...postState.npcs[target.id]!,
+            combatHp: combat.enemyHp,
+          },
+        },
+      };
+    }
     return {
-      responseType: "dynamic",
-      staticResponse: null,
-      dynamicContext: `COMBAT / ATTACK: ${p.name} attacks ${npcData.name}.
-NPC stats: HP ${npcData.stats.hp}, armor ${npcData.stats.armor}, damage ${npcData.stats.damage}, hostile=${npcData.isHostile}
-Disposition: ${newState.npcs[target.id]?.disposition ?? "neutral"}
-Room: ${currentRoom?.name}. Resolve this attack round with vivid narration; apply sensible HP consequences in the fiction. If the NPC is not hostile, this is a grave social choice (virtue).`,
-      newState,
-      stateChanged: false,
+      responseType: "static",
+      staticResponse: combat.narrative,
+      dynamicContext: null,
+      newState: postState,
+      stateChanged: true,
+      hasCritical: combat.hasCritical,
+      criticalContext: combat.criticalContext,
     };
   }
 

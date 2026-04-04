@@ -95,6 +95,8 @@ export interface NPCStateEntry {
   location: string;            // Current room id
   isAlive: boolean;
   customGreeting: string | null; // Override default greeting based on state
+  /** Remaining HP in combat; if unset, next round uses NPC template max HP */
+  combatHp?: number;
 }
 
 // ============================================================

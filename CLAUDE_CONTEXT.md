@@ -37,6 +37,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/page.tsx
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/components/CommandInput.tsx
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/eslint.config.mjs
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/combatNarrationPools.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameData.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameEngine.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameState.ts
@@ -53,7 +54,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 16, 2026*
+*Last updated: April 4, 2026*
 
 ## 1. Project Overview
 
@@ -259,20 +260,22 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - **`getDexReactionBonus(dex)`:** AD&D 2e PHB Table 2 (exported from `uoData.ts`), used in initiative below.
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
-- **Combat (`resolveCombatRound` in `gameEngine.ts`):**
-  - **INITIATIVE (AD&D 2e):** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** for the player; **lower total acts first**. **`weaponSpeed`** from **`WEAPON_DATA`** (T2A UO swing speeds on 1–10 scale). Enemy uses **`1d10 + clamp(armor + 3, 3…9)`** as a proxy weapon speed.
-  - **HIT CHANCE (T2A):** **`(attackerSkill + 50) / ((defenderSkill + 50) × 2)`**. **`playerSkill = min(100, expertise × 2)`**; **`enemySkill`** defaults to **30** (optional **`weaponSkill`** on enemy payload).
-  - **PLAYER DAMAGE (T2A-style):** **`rollWeaponDamage(weapon) × (1 + STR% + Tactics%)`**, subtract enemy **`armor`** (AR), **halve**, **minimum 1**. **STR%** capped **20%**, scales **`(STR − 10) / 40`**. **Tactics%** capped **20%**, **`(expertise / 50) × 0.2`**.
-  - **ENEMY DAMAGE:** **`rollDice(enemy.damage) − totalPlayerAC`**, **halve**, **minimum 1**. **`totalAC`** = equipped body armor **`armorClass`** + shield **`armorClass`** (from **`ITEMS`**).
-  - **EXPERTISE:** **+1** on a **combat win**; feeds **hit chance** and **tactics** bonus.
-  - **Return value** includes **`initiativeWinner`:** **`"player"`** | **`"enemy"`**.
+- **Combat (`resolveCombatRound` in `gameEngine.ts`):** **Pure UO absorption** — armor **never** causes a miss; it **only** reduces damage (AR / AC subtract, then T2A halving). **`COMBAT_TEMPLATES`** (**`enemyDeath`**, **`playerDeath`**) still used for kill / defeat closers.
+  - **INITIATIVE:** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** (player); **lower total acts first**. Enemy: **`1d10 + clamp(armor + 3, 3…9)`** (proxy weapon speed).
+  - **HIT CHANCE (T2A):** **`(attackerSkill + 50) / ((defenderSkill + 50) × 2)`**; **`playerSkill = min(100, expertise × 2)`**; **`enemySkill`** default **30** (optional **`weaponSkill`** on enemy payload). **Player** can miss; **enemy** uses the same roll vs **`enemyHitChance`** (miss = dodge narration only — not “armor blocked the hit”).
+  - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1**. **Crit:** roll **&lt; hitChance × 0.08** among hits ⇒ **×2** base weapon roll before STR/Tactics; narrative placeholder **`__CRITICAL__:weapon:enemy:dmg`** replaced in **`app/api/chat/route.ts`** by one **`completeJaneNonStream`** call (**max_tokens 80**), fallback string on failure.
+  - **ENEMY DAMAGE:** **`rollDice(damage) − totalAC`** (body + shield from **`ITEMS[].stats.armorClass`**); if **afterAR ≤ 0**, **0** HP loss and **full armor absorb** narration; else **halve**, **min 1** applied. **Partial armor narration** when AC absorbed **≥ 50%** of raw pre-AC damage.
+  - **Cinematic pools** (re-exported from **`lib/gameData.ts`**, defined in **`lib/combatNarrationPools.ts`):** **96** player hit lines (**4** weapon categories × **3** wound tiers × **8**); **24** enemy hit (**3 × 8**); **12** player miss, **12** enemy miss; **armor absorb** / **full absorb** pools per armor key (**buckler**, **leather_armor**, **chain_mail**, **default**). **`getWeaponCategory`** maps equipped weapon id to **slash / pierce / blunt / ranged**.
+  - **Wound tiers** (vs reference HP): **glancing** **&lt; 12%**; **solid** **12–35%**; **devastating** **≥ 35%** (player hits vs **`enemyData.maxHp`**; enemy hits vs **`player.maxHp`**).
+  - **`ATTACK`:** Fully **static** — calls **`resolveCombatRound`**; **`NPCStateEntry.combatHp`** tracks remaining foe HP between rounds; **+1 expertise** / chronicle / valor on win; foe **`isAlive: false`** on player victory.
+  - **Return value:** **`initiativeWinner`**, **`hasCritical`**, **`criticalContext`** (for route / debugging).
 - **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase. Success hint: *"Type EQUIP [item] to equip any weapon, shield, or armor."*
 - **Primary command — `EQUIP [item]`** (and **`WIELD [item]`**, same handler): **`runEquipItemFromPhrase`** resolves in order — (1) shield-slot item in inventory → **`runEquipShield`**, (2) body armor in inventory → **`runEquipArmor`**, (3) else weapon → **`runWieldWeapon`**. Underscores in the phrase are normalized to spaces (e.g. `leather_armor`).
 - **Explicit forms:** **`EQUIP SHIELD …`**, **`EQUIP ARMOR …`**, and **`SHIELD …`** unchanged; equipping still **does not remove** stacks from inventory.
 - **Unequip:** **`REMOVE SHIELD`** / **`UNEQUIP SHIELD`**; **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; **`UNEQUIP [item]`** / **`REMOVE [item]`** (with a following phrase) clears **shield**, **armor**, or **weapon** when the phrase matches the **equipped** item by name. Weapon unequip sets **`player.weapon`** back to default **`short_sword`**.
 - **`WIELD`:** Alias only — same behavior as bare **`EQUIP [item]`**; HELP lists it second.
 - **`INVENTORY` / `I`:** Each line shows `(xN)`, then optional **`[dmg: min-max]`** (from **`WEAPON_DATA`** first, else **`ITEMS[].stats.damage`**) and **`[2H]`** for two-handed weapons, or **`[AC: n]`** for armor (buckler fixed at **`[AC: 1]`**), then **`(wielded)`** / **`(shield equipped)`** / **`(armor equipped)`** when that row’s `itemId` matches the active slot.
-- **`STATS`:** **Weapon** with **`[spd: n]`**; **Armor** / **Shield** with **`[AC: n]`**; **Total AC**; separator; **Hit% vs avg enemy** (skill 30); **STR damage bonus %** and **Tactics bonus %**; **Initiative** formula line **`1d10 + weapon spd − DEX bonus`**. Primary stats use **Dexterity**.
+- **`STATS`:** **Weapon** with **`[spd: n]`**; **Armor** / **Shield** with **`[AC: n]`**; **Total AC**; separator; **Hit% vs avg enemy** (foe skill 30); **STR damage bonus %** and **Tactics bonus %**; **Initiative** line **`1d10 + [spd] (weapon) − [DEX bonus] (DEX)`**. Primary stats use **Dexterity**.
 - **Shield slot items:** `isShieldSlotItem` — currently **`buckler`** only. **Body armor slot:** `leather_armor`, `chain_mail` (`isBodyArmorSlotItem`).
 - **Autocomplete:** After **`EQUIP `** (not `EQUIP SHIELD` / `EQUIP ARMOR`), suggestions include **all** equippable inventory rows (weapons + shield + body armor). **`WIELD `** uses the **same** item list with the **`WIELD`** prefix.
 - **UI:** Sidebar shows *"— both hands occupied —"* when a two-handed weapon is equipped (`app/page.tsx` + `isTwoHanded`).
@@ -364,6 +367,7 @@ Do not commit secret values.
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
 - [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
 - [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
+- [x] **Cinematic combat narration:** wound-tier pools, UO armor absorption narration, critical-hit Jane line, static **`ATTACK`** + **`combatHp`**
 
 ## 15. Next Up
 
@@ -377,6 +381,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Cinematic combat narration (UO absorption, crits, static ATTACK)
+
+- **`lib/combatNarrationPools.ts` + `gameData` re-exports:** weapon category sets, **`PLAYER_HIT_DESCRIPTIONS`**, **`ENEMY_HIT_DESCRIPTIONS`**, armor absorb / full-absorb pools, miss pools; **`getWeaponCategory`**, **`WoundTier`**.
+- **`resolveCombatRound`:** T2A hit chance; initiative with **`getDexReactionBonus`**; player damage with optional crit (**×2** weapon roll); enemy damage **raw − totalAC**, halve, min 1 when damage applies; armor-only narration for full / heavy partial absorption; returns **`hasCritical`** / **`criticalContext`**.
+- **`ATTACK`:** Resolves one round statically; persists **`npcs[id].combatHp`**; non-hostile NPCs get a refusal line.
+- **`app/api/chat/route.ts`:** Static responses: replace **`__CRITICAL__:`** payload with one Jane sentence (**80** tokens max) + **`(N damage — CRITICAL HIT)`**.
+- **`CLAUDE_CONTEXT` §9** updated for absorption model and pool counts.
 
 ### 2026-04-16 — Rebuilt combat: T2A hit/damage + AD&D initiative
 

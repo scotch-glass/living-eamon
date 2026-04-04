@@ -681,6 +681,22 @@ export const COMBAT_TEMPLATES = {
   ],
 };
 
+export {
+  WEAPON_SLASH_KEYS,
+  WEAPON_PIERCE_KEYS,
+  WEAPON_BLUNT_KEYS,
+  WEAPON_RANGED_KEYS,
+  type WoundTier,
+  type WeaponCategory,
+  getWeaponCategory,
+  PLAYER_HIT_DESCRIPTIONS,
+  ENEMY_HIT_DESCRIPTIONS,
+  ARMOR_ABSORB_DESCRIPTIONS,
+  ARMOR_FULL_ABSORB_DESCRIPTIONS,
+  PLAYER_MISS_DESCRIPTIONS,
+  ENEMY_MISS_DESCRIPTIONS,
+} from "./combatNarrationPools";
+
 // ============================================================
 // ADVENTURES
 // ============================================================

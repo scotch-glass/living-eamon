@@ -63,11 +63,21 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/scripts/test-plate-chest.mjs
    ---
 
+7. PROMPT SIZE RULE: When writing Cursor prompts that touch
+   more than 3 files or exceed ~150 lines of instruction,
+   split into sequential numbered parts (Part 1, Part 2,
+   etc.). Each part must be small enough to run completely
+   in one Cursor context window. Each part must be committed
+   before the next part runs. Never write a single prompt
+   that touches 4+ files with complex interdependencies —
+   it will be silently truncated and Cursor will infer the
+   missing parts incorrectly, causing divergences.
+
 ---
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 5, 2026 (skills + Aldric engine)*
+*Last updated: April 5, 2026*
 
 
 ## 1. Project Overview
@@ -430,6 +440,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-05 — Prompt size rule added to READ THIS FIRST
+
+- Added **PROMPT SIZE RULE** to the rehydration instructions: prompts touching 4+ files or exceeding ~150 lines must be split into sequential committed parts.
+- Reason: the Aldric/weapon-skills prompt was truncated mid-execution causing three divergences (flat training costs instead of tiered, different hit chance formula, TALK not fully wired to Aldric topic system).
 
 ### 2026-04-05 — Aldric the Veteran, weapon skills (700 cap), TRAIN, fumbles, TALK
 

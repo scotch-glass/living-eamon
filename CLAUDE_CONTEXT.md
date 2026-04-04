@@ -10,8 +10,9 @@ Every time you start a new conversation about this project, do this:
 1. Fetch this file from:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md
    and read it completely before responding. The repo is public.
-2. After reading, confirm rehydration with one line:
-   "Rehydrated. [X] milestones complete. Currently: [top Next Up item]."
+2. After reading, confirm rehydration with:
+   "Rehydrated. [X] milestones complete. Currently: [top Next Up item].
+   Paste the file URLs above so I can read the code."
 3. Every time you write a Cursor prompt that changes the codebase,
    end that prompt with:
    "After making these changes, update CLAUDE_CONTEXT.md: update all
@@ -21,12 +22,38 @@ Every time you start a new conversation about this project, do this:
    as the code changes."
 4. Never write a Cursor prompt that omits step 3. The file must stay
    current at all times.
+5. At the end of your rehydration confirmation message, print this
+   exact block so the user can copy and paste all file URLs into
+   the chat in one shot. Then tell the user: "Paste all of these URLs
+   into the chat now so I can read the current code before we begin."
+
+   ---
+   📋 PASTE THESE INTO CHAT SO CLAUDE CAN READ THE CODE:
+
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/chat/route.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/player/route.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/globals.css
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/layout.tsx
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/page.tsx
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/components/CommandInput.tsx
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/eslint.config.mjs
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameData.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameEngine.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/gameState.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/supabase.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/uoData.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next-env.d.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next.config.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/postcss.config.mjs
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/scripts/generate-all-art.mjs
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/scripts/test-plate-chest.mjs
+   ---
 
 ---
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 12, 2026*
+*Last updated: April 13, 2026*
 
 ## 1. Project Overview
 
@@ -337,6 +364,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-13 — Rehydration file URL block, .cursorrules audit rule, full file list
+
+- **READ THIS FIRST:** Step 2 confirmation text updated; **step 5** adds **📋 PASTE THESE INTO CHAT** raw URL block (audited list of all project **.ts** / **.tsx** / **.mjs** / **app/globals.css** under repo root, excluding `node_modules` / `.next` / build).
+- **`.cursorrules`:** **FILE URL LIST RULE** — new source files in those extensions must add a raw GitHub URL to that block; deleted files removed from the list.
 
 ### 2026-04-12 — Combat AC from real armor + shield; STATS Total AC
 

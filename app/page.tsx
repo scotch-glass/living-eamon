@@ -46,6 +46,36 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isTyping]);
 
+  useEffect(() => {
+    if (!started) return;
+    inputRef.current?.focus();
+    const t = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(t);
+  }, [started]);
+
+  useEffect(() => {
+    if (!started || loading || isTyping) return;
+    inputRef.current?.focus();
+  }, [started, loading, isTyping]);
+
+  useEffect(() => {
+    if (!started) return;
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if (loading || isTyping) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.length !== 1) return;
+      const active = document.activeElement as HTMLElement | null;
+      const tag = active?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (active?.isContentEditable) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+      setInput(prev => prev + e.key);
+    };
+    window.addEventListener("keydown", handleGlobalKey);
+    return () => window.removeEventListener("keydown", handleGlobalKey);
+  }, [started, loading, isTyping]);
+
   const drainQueue = useCallback(() => {
     if (typingRef.current) return;
     typingRef.current = true;

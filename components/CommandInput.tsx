@@ -51,7 +51,7 @@ const CommandInput = forwardRef<CommandInputHandle, Props>(function CommandInput
   const [highlight, setHighlight] = useState(0);
 
   useImperativeHandle(ref, () => ({
-    focus: () => innerRef.current?.focus(),
+    focus: () => innerRef.current?.focus({ preventScroll: true }),
   }));
 
   const suggestions = useMemo(

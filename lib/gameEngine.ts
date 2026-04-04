@@ -111,7 +111,10 @@ function exitDestinationLabel(roomId: string): string {
 export function buildSituationBlock(state: WorldState): string {
   const room = MAIN_HALL_ROOMS[state.player.currentRoom];
   if (!room) {
-    return [SIT_LINE, "🧭 —", "👤 —", "👁 —", SIT_LINE].join("\n");
+    const lines = [SIT_LINE, "🧭 —", "👤 —", "👁 —"];
+    if (state.player.currentRoom === "main_hall") lines.push("Type HELP for help");
+    lines.push(SIT_LINE);
+    return lines.join("\n");
   }
 
   const exitParts: string[] = [];
@@ -151,7 +154,12 @@ export function buildSituationBlock(state: WorldState): string {
   const eyeSet = [...new Set([...itemLabels, ...examLabels])];
   const eyeLine = eyeSet.length > 0 ? `👁 ${eyeSet.join(" · ")}` : "👁 —";
 
-  return [SIT_LINE, exitLine, npcLine, eyeLine, SIT_LINE].join("\n");
+  const lines = [SIT_LINE, exitLine, npcLine, eyeLine];
+  if (state.player.currentRoom === "main_hall") {
+    lines.push("Type HELP for help");
+  }
+  lines.push(SIT_LINE);
+  return lines.join("\n");
 }
 
 /**

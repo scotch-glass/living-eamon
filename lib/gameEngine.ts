@@ -1253,8 +1253,17 @@ export function resolveCombatRound(
   const weaponData = ITEMS[player.weapon];
   const strBonus = Math.floor((player.strength - 10) / 2);
 
-  // Player attacks
-  const playerHit = Math.random() > 0.25; // 75% hit chance base
+  // DEX modifier: each point above/below 10 = +/-2% hit/dodge
+  const dexMod = (player.dexterity - 10) * 0.02;
+
+  // Player hit chance: 75% base + DEX modifier (capped 40%-95%)
+  const playerHitChance = Math.min(0.95, Math.max(0.4, 0.75 + dexMod));
+  const playerHit = Math.random() < playerHitChance;
+
+  // Enemy hit chance: 70% base - DEX modifier (higher DEX = harder to hit)
+  const enemyHitChance = Math.min(0.95, Math.max(0.15, 0.7 - dexMod));
+  const enemyHit = Math.random() < enemyHitChance;
+
   let narrative = "";
   let newState = state;
   let newEnemyHp = enemyHp;
@@ -1284,8 +1293,7 @@ export function resolveCombatRound(
     return { narrative, newState, enemyHp: 0, combatOver: true, playerWon: true };
   }
 
-  // Enemy attacks back
-  const enemyHit = Math.random() > 0.3; // 70% hit chance
+  // Enemy attacks back (enemyHit computed above from DEX)
   if (enemyHit) {
     // Calculate total AC from equipped armor + shield
     const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
@@ -1403,16 +1411,23 @@ function buildStatDescription(player: PlayerState): string {
   const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
   const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
   const totalAC = armorAC + shieldAC;
+  const strBonus = Math.floor((player.strength - 10) / 2);
+  const dexMod = (player.dexterity - 10) * 0.02;
+  const hitChance = Math.round(Math.min(0.95, Math.max(0.4, 0.75 + dexMod)) * 100);
+  const dodgeChance = Math.round(
+    (1 - Math.min(0.95, Math.max(0.15, 0.7 - dexMod))) * 100
+  );
 
   return `— ${player.name} —
 HP: ${player.hp} / ${player.maxHp}
-Strength: ${player.strength} | Agility: ${player.agility} | Charisma: ${player.charisma}
+Strength: ${player.strength} | Dexterity: ${player.dexterity} | Charisma: ${player.charisma}
 Expertise: ${player.expertise}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
 Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon}
 Armor: ${player.armor ? `${ITEMS[player.armor]?.name ?? player.armor} [AC: ${armorAC}]` : "None"}
 Shield: ${player.shield ? `${ITEMS[player.shield]?.name ?? player.shield} [AC: ${shieldAC}]` : "None"}
-Total AC: ${totalAC}
+Total AC: ${totalAC} | Hit: ${hitChance}% | Dodge: ${dodgeChance}%
+STR bonus to damage: ${strBonus >= 0 ? "+" : ""}${strBonus}
 Reputation: ${player.reputationLevel}${player.knownAs ? ` — known as "${player.knownAs}"` : ""}${player.bounty > 0 ? `\n⚠ Bounty on your head: ${player.bounty} gold` : ""}${virtueLines ? `\n\nVirtues:\n${virtueLines}` : ""}`;
 }
 

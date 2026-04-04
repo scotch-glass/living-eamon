@@ -30,7 +30,7 @@ export async function savePlayer(player: Record<string, unknown>) {
       hp: player.hp,
       max_hp: player.maxHp,
       strength: player.strength,
-      agility: player.agility,
+      dexterity: player.dexterity,
       charisma: player.charisma,
       expertise: player.expertise,
       gold: player.gold,

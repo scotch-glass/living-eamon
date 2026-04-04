@@ -53,7 +53,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 13, 2026*
+*Last updated: April 14, 2026*
 
 ## 1. Project Overview
 
@@ -130,7 +130,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `hp`: `number`
 - `maxHp`: `number`
 - `strength`: `number`
-- `agility`: `number`
+- `dexterity`: `number`
 - `charisma`: `number`
 - `expertise`: `number`
 - `gold`: `number`
@@ -161,7 +161,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `currentRoom`: `"main_hall"`
 - `previousRoom`: `null`
 - `hp` / `maxHp`: `20` / `20`
-- `strength`: `12`, `agility`: `10`, `charisma`: `10`, `expertise`: `0`
+- `strength`: `12`, `dexterity`: `10`, `charisma`: `10`, `expertise`: `0`
 - `gold`: `10000`, `bankedGold`: `0`
 - `weapon`: `"short_sword"`, `armor`: `null`, `shield`: `null`
 - `inventory`: `[{ itemId: "short_sword", quantity: 1 }]`
@@ -257,14 +257,18 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed). **`halberd`** and **`bardiche`** use **`Mace Fighting`** (corrected from Swordsmanship).
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
-- **Combat:** `resolveCombatRound` in `gameEngine.ts` uses `rollWeaponDamage(player.weapon) +` strength bonus (not `ITEMS[].stats.damage` dice). Enemy hits subtract **total AC** = **`ITEMS[player.armor]?.stats?.armorClass`** (or 0) **+** **`ITEMS[player.shield]?.stats?.armorClass`** (or 0) from the rolled damage; minimum damage taken is **1**.
+- **Combat (`resolveCombatRound`):**
+  - **Player damage:** `rollWeaponDamage(weapon) + floor((STR − 10) / 2)`.
+  - **Player hit chance:** **75%** base **+** `(DEX − 10) × 2%`, capped **40%–95%**.
+  - **Enemy damage:** `rollDice(enemy.damage) − totalAC`, minimum **1**; **`totalAC`** = body armor **`ITEMS[player.armor]?.stats?.armorClass`** (or 0) **+** shield **`ITEMS[player.shield]?.stats?.armorClass`** (or 0).
+  - **Enemy hit chance:** **70%** base **−** `(DEX − 10) × 2%`, capped **15%–95%** (higher DEX ⇒ harder for the enemy to hit).
 - **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase. Success hint: *"Type EQUIP [item] to equip any weapon, shield, or armor."*
 - **Primary command — `EQUIP [item]`** (and **`WIELD [item]`**, same handler): **`runEquipItemFromPhrase`** resolves in order — (1) shield-slot item in inventory → **`runEquipShield`**, (2) body armor in inventory → **`runEquipArmor`**, (3) else weapon → **`runWieldWeapon`**. Underscores in the phrase are normalized to spaces (e.g. `leather_armor`).
 - **Explicit forms:** **`EQUIP SHIELD …`**, **`EQUIP ARMOR …`**, and **`SHIELD …`** unchanged; equipping still **does not remove** stacks from inventory.
 - **Unequip:** **`REMOVE SHIELD`** / **`UNEQUIP SHIELD`**; **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; **`UNEQUIP [item]`** / **`REMOVE [item]`** (with a following phrase) clears **shield**, **armor**, or **weapon** when the phrase matches the **equipped** item by name. Weapon unequip sets **`player.weapon`** back to default **`short_sword`**.
 - **`WIELD`:** Alias only — same behavior as bare **`EQUIP [item]`**; HELP lists it second.
 - **`INVENTORY` / `I`:** Each line shows `(xN)`, then optional **`[dmg: min-max]`** (from **`WEAPON_DATA`** first, else **`ITEMS[].stats.damage`**) and **`[2H]`** for two-handed weapons, or **`[AC: n]`** for armor (buckler fixed at **`[AC: 1]`**), then **`(wielded)`** / **`(shield equipped)`** / **`(armor equipped)`** when that row’s `itemId` matches the active slot.
-- **`STATS`:** **Weapon**; **Armor** and **Shield** lines show equipped names with **`[AC: n]`** per slot (from `ITEMS[].stats.armorClass`); **`Total AC`** sums body armor AC + shield AC.
+- **`STATS`:** **Weapon**; **Armor** / **Shield** with **`[AC: n]`** per slot; **`Total AC | Hit: n% | Dodge: n%`** (from the same caps as combat); **`STR bonus to damage`** (same formula as combat). Primary stat line uses **Dexterity** (not agility).
 - **Shield slot items:** `isShieldSlotItem` — currently **`buckler`** only. **Body armor slot:** `leather_armor`, `chain_mail` (`isBodyArmorSlotItem`).
 - **Autocomplete:** After **`EQUIP `** (not `EQUIP SHIELD` / `EQUIP ARMOR`), suggestions include **all** equippable inventory rows (weapons + shield + body armor). **`WIELD `** uses the **same** item list with the **`WIELD`** prefix.
 - **UI:** Sidebar shows *"— both hands occupied —"* when a two-handed weapon is equipped (`app/page.tsx` + `isTwoHanded`).
@@ -289,7 +293,7 @@ No SQL migrations live in this repo. The following is **inferred** from `lib/sup
 | `id` | UUID / text (primary key) |
 | `character_name` | text |
 | `hp`, `max_hp` | number |
-| `strength`, `agility`, `charisma`, `expertise` | number |
+| `strength`, `dexterity`, `charisma`, `expertise` | number |
 | `gold`, `banked_gold` | number |
 | `weapon` | text |
 | `armor` | text nullable |
@@ -327,6 +331,11 @@ Do not commit secret values.
 
 ## 13. Known Issues / Parked Items
 
+- **Supabase `players` column `agility` → `dexterity`:** The **`players`** table must rename **`agility`** to **`dexterity`**. Run in the Supabase SQL editor:
+  ```
+  ALTER TABLE players RENAME COLUMN agility TO dexterity;
+  ```
+  Until this is done, **dexterity will not persist correctly** across sessions. (The chat route falls back to **`agility`** on load only when **`dexterity`** is missing.)
 - **`main_hall` Jane streaming disabled for testing:** When `responseType === "dynamic"` and `player.currentRoom === "main_hall"`, `/api/chat` returns **`application/json`** `{ response, worldState }` instead of a streamed `text/plain` body. **Re-enable streaming for production** (remove or gate the `bufferMainHallDynamic` path in `app/api/chat/route.ts`) so Main Hall behaves like other rooms unless you intentionally keep this for debugging.
 - `known_spells` / `known_deities`: loaded from DB when present but **not** written in `worldStateToPlayerRecord` / `savePlayer` — persistence gap.
 - `main_hall_exit` room has no `RoomStateEntry` in `createInitialWorldState.rooms`.
@@ -364,6 +373,12 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-14 — Dexterity rename, combat DEX hit/dodge, STATS combat readout
+
+- **`PlayerState`:** **`agility`** → **`dexterity`** (`gameState`, `gameEngine` **`STATS`**, sidebar **DEX**, `worldStateToPlayerRecord`, **`savePlayer`** upsert **`dexterity`**). Load path supports legacy **`agility`** until DB column is renamed.
+- **`resolveCombatRound`:** DEX modifier **±2% per point from 10** on player hit (75% base, cap 40–95%) and enemy hit (70% base, cap 15–95%). Enemy damage still uses **total AC** from equipped armor + shield, min 1.
+- **`buildStatDescription`:** **Total AC | Hit% | Dodge%**, **STR bonus to damage** line.
 
 ### 2026-04-13 — Rehydration file URL block, .cursorrules audit rule, full file list
 

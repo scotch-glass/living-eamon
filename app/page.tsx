@@ -373,7 +373,7 @@ export default function Home() {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, marginBottom: 14 }}>
-            {[["STR", player.strength], ["AGI", player.agility], ["CHA", player.charisma], ["EXP", player.expertise]].map(([label, val]) => (
+            {[["STR", player.strength], ["DEX", player.dexterity], ["CHA", player.charisma], ["EXP", player.expertise]].map(([label, val]) => (
               <div key={label as string} style={{ backgroundColor: "#1f2937", padding: "6px 8px", borderRadius: 4 }}>
                 <div style={{ color: "#6b7280" }}>{label}</div>
                 <div style={{ color: "#fbbf24", fontWeight: "bold", fontSize: 14 }}>{val}</div>

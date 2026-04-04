@@ -117,7 +117,7 @@ export interface PlayerState {
   hp: number;
   maxHp: number;
   strength: number;
-  agility: number;
+  dexterity: number;
   charisma: number;
   expertise: number;
 
@@ -319,7 +319,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       hp: 20,
       maxHp: 20,
       strength: 12,
-      agility: 10,
+      dexterity: 10,
       charisma: 10,
       expertise: 0,
 

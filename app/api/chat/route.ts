@@ -189,7 +189,7 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     hp: state.player.hp,
     maxHp: state.player.maxHp,
     strength: state.player.strength,
-    agility: state.player.agility,
+    dexterity: state.player.dexterity,
     charisma: state.player.charisma,
     expertise: state.player.expertise,
     gold: state.player.gold,
@@ -233,7 +233,12 @@ export async function POST(request: NextRequest) {
             hp: savedPlayer.hp,
             maxHp: savedPlayer.max_hp,
             strength: savedPlayer.strength,
-            agility: savedPlayer.agility,
+            dexterity:
+              typeof (savedPlayer as { dexterity?: number }).dexterity === "number"
+                ? (savedPlayer as { dexterity: number }).dexterity
+                : typeof (savedPlayer as { agility?: number }).agility === "number"
+                  ? (savedPlayer as { agility: number }).agility
+                  : 10,
             charisma: savedPlayer.charisma,
             expertise: savedPlayer.expertise,
             gold: savedPlayer.gold,

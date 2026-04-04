@@ -103,10 +103,10 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, type **`clothing`**), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`** clothing, **`rusty_shortsword`** weapon), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
-| `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, reset weapon/armor/shield, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with 10% **`__CRITICAL__`**, **`FLEE`**), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
+| `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, weapon sentinel **`unarmed`** (not an ITEMS id), armor/shield **null**, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
+| `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG`**), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
@@ -396,6 +396,8 @@ Do not commit secret values.
 - [x] Guild Courtyard (live Warsaw weather, CET time, 24 static descriptions)
 - [x] Death redesign: inventory wipe, gray robe, `applyPlayerDeath`
 - [x] Gray robe humiliation on every room transition while worn
+- [x] BEG command (BEG SAM gives rusty sword while unarmed)
+- [x] Unarmed state after death (weapon sentinel `unarmed`)
 
 ## 15. Next Up
 
@@ -406,6 +408,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Unarmed death, BEG SAM, rusty shortsword
+
+- Fixed death state: **`player.weapon = 'unarmed'`** after death (not **`short_sword`**). Inventory contains only **`gray_robe`**.
+- Added **`unarmed`** sentinel handling throughout the engine: **`ATTACK`** blocked with message; **`STATS`** / free-text Jane context show **Unarmed**; **`resolveCombatRound`** early guard; unequip autocomplete skips **`unarmed`**.
+- **`rusty_shortsword`** in **`ITEMS`** and **`WEAPON_DATA`** (`uoData.ts`).
+- **`BEG`** command: **`BEG SAM`** (or **slicker**) in **`main_hall`** while **`unarmed`** gives the rusty short sword and equips it once per session (inventory check). Other **`BEG`** targets or bare **`BEG`** go to Jane with robe/unarmed context.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Church of Perpetual Life, Guild Courtyard, death redesign, live weather
 

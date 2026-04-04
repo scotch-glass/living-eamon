@@ -79,6 +79,12 @@ export interface EngineResult {
 export const SITUATION_BLOCK_LINE = "─────────────────────────────────";
 const SIT_LINE = SITUATION_BLOCK_LINE;
 
+/** "unarmed" is a sentinel — not an ITEMS id. */
+function equippedWeaponDisplayLabel(weaponId: string): string {
+  if (weaponId === "unarmed") return "Unarmed";
+  return ITEMS[weaponId]?.name ?? weaponId;
+}
+
 const EXIT_ARROW: Record<string, string> = {
   north: "N",
   east: "E",
@@ -441,7 +447,7 @@ export function getCommandAutocompleteSuggestions(
         autoSubmit: true,
       });
     }
-    if (pl.weapon) {
+    if (pl.weapon && pl.weapon !== "unarmed") {
       const it = ITEMS[pl.weapon]!;
       suggestions.push({
         label: `UNEQUIP ${it.name}`,
@@ -471,6 +477,24 @@ export function getCommandAutocompleteSuggestions(
 
   if (/^(fl|fle|flee)$/i.test(trimmed)) {
     return [{ label: "FLEE", insertText: "FLEE", autoSubmit: true }];
+  }
+
+  if (/^(b|be|beg)$/i.test(trimmed)) {
+    return [{ label: "BEG", insertText: "BEG ", autoSubmit: false }];
+  }
+  if (/^beg\s+/i.test(trimmed)) {
+    return npcs
+      .map(n => ({
+        label: n.name,
+        insertText: `BEG ${n.firstName.toUpperCase()}`,
+        autoSubmit: true,
+      }))
+      .filter(
+        x =>
+          !partialLower ||
+          x.insertText.toLowerCase().includes(partialLower) ||
+          x.label.toLowerCase().includes(partialLower)
+      );
   }
 
   // SAY / TALK — room audience + ALL + SELF (trailing space for message)
@@ -630,6 +654,7 @@ INTERACTION
 COMBAT
   ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
   FLEE               Escape through a random exit (enemy stays wounded)
+  BEG [name]         BEG SAM — Sam may take pity on the truly destitute
 
 SPEECH (MUD conventions)
   SAY [text]         SAY Hello everyone!  (speaks to whole room)
@@ -1289,6 +1314,15 @@ export function resolveCombatRound(
   playerWon: boolean;
 } {
   const player = state.player;
+  if (player.weapon === "unarmed") {
+    return {
+      narrative: "You cannot fight unarmed.",
+      newState: state,
+      enemyHp,
+      combatOver: false,
+      playerWon: false,
+    };
+  }
   const weaponItem = ITEMS[player.weapon];
   const playerSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
   const playerInit =
@@ -1660,7 +1694,9 @@ HP: ${player.hp} / ${player.maxHp}
 Strength: ${player.strength} | Dexterity: ${player.dexterity} | Charisma: ${player.charisma}
 Expertise: ${player.expertise}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
-Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon} [spd: ${wSpeed}]
+Weapon: ${player.weapon === "unarmed"
+    ? "Unarmed"
+    : (ITEMS[player.weapon]?.name ?? player.weapon)} [spd: ${wSpeed}]
 Armor: ${player.armor ? `${ITEMS[player.armor]?.name ?? player.armor} [AC: ${armorAC}]` : "None"}
 Shield: ${player.shield ? `${ITEMS[player.shield]?.name ?? player.shield} [AC: ${shieldAC}]` : "None"}
 Total AC: ${totalAC}
@@ -2284,7 +2320,94 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     };
   }
 
+  if (first === "BEG") {
+    const rest = trimmed.slice(3).trim().toLowerCase();
+
+    const isSamTarget =
+      rest.includes("sam") || rest.includes("slicker");
+
+    if (
+      isSamTarget &&
+      p.currentRoom === "main_hall" &&
+      p.weapon === "unarmed"
+    ) {
+      const alreadyHasRusty = p.inventory.some(
+        e => e.itemId === "rusty_shortsword"
+      );
+      if (alreadyHasRusty) {
+        return {
+          responseType: "static",
+          staticResponse:
+            `Sam glances at the rusty sword already in your hands. "I've given thee what I can spare, friend. The rest is up to thee."`,
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+
+      const newInventory = [
+        ...p.inventory,
+        { itemId: "rusty_shortsword", quantity: 1 },
+      ];
+      const afterGift: WorldState = {
+        ...newState,
+        player: {
+          ...newState.player,
+          weapon: "rusty_shortsword",
+          inventory: newInventory,
+        },
+      };
+
+      return {
+        responseType: "static",
+        staticResponse:
+          `Sam looks at you for a long moment — the robe, the empty hands, the whole situation.\n\n` +
+          `He reaches under the counter and produces a short sword so rusty it looks like it was ` +
+          `recovered from a riverbed. He sets it on the bar without ceremony.\n\n` +
+          `"Don't thank me. Kill something with it and buy a real one."\n\n` +
+          `You have the Rusty Short Sword. It is equipped.`,
+        dynamicContext: null,
+        newState: afterGift,
+        stateChanged: true,
+      };
+    }
+
+    if (!rest) {
+      return {
+        responseType: "dynamic",
+        staticResponse: null,
+        dynamicContext: `${p.name} attempts to beg. They are wearing a backless gray robe and are unarmed.
+Room: ${currentRoom?.name ?? "unknown"}.
+NPCs present: ${audienceNames}.
+Describe the reaction of whoever is present. This is a low moment. Play it with dignity and a little dark humor.`,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    return {
+      responseType: "dynamic",
+      staticResponse: null,
+      dynamicContext: `${p.name} begs from ${rest}. They are wearing a backless gray robe and are unarmed.
+Room: ${currentRoom?.name ?? "unknown"}.
+NPCs present: ${audienceNames}.
+Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
   if (first === "ATTACK") {
+    if (p.weapon === "unarmed") {
+      return {
+        responseType: "static",
+        staticResponse:
+          "Thou art unarmed. Find a weapon before picking a fight.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
     const rest = trimmed.slice(6).trim().toLowerCase();
     if (!rest) {
       return {
@@ -2525,7 +2648,7 @@ Use ENTER THE BEGINNER'S CAVE (or whichever) to begin.`,
     dynamicContext: `Player input: "${trimmed}"
 Current room: ${currentRoom?.name ?? "unknown"}
 Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}
-Player HP: ${p.hp}/${p.maxHp} | Gold: ${p.gold} | Weapon: ${ITEMS[p.weapon]?.name ?? p.weapon}
+Player HP: ${p.hp}/${p.maxHp} | Gold: ${p.gold} | Weapon: ${equippedWeaponDisplayLabel(p.weapon)}
 NPCs present: ${currentRoom?.npcs.map(id => {
       const s = newState.npcs[id];
       const disp = String(s?.disposition ?? "neutral").replace(/,\s*,+/g, ", ").trim();

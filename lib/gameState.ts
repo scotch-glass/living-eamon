@@ -605,7 +605,7 @@ export function applyPlayerDeath(
       ...state.player,
       hp: state.player.maxHp,
       gold: 0,
-      weapon: "short_sword",
+      weapon: "unarmed",
       armor: null,
       shield: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],

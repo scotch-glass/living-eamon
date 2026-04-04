@@ -19,6 +19,14 @@ export const WEAPON_DATA: Record<
   }
 > = {
   short_sword: { artId: 5049, twoHanded: false, skill: "Swordsmanship", damage: "3-14", layer: 1, weaponSpeed: 3 },
+  rusty_shortsword: {
+    artId: 5049,
+    twoHanded: false,
+    skill: "Swordsmanship",
+    damage: "1-4",
+    layer: 1,
+    weaponSpeed: 5,
+  },
   long_sword: { artId: 3937, twoHanded: false, skill: "Swordsmanship", damage: "5-17", layer: 1, weaponSpeed: 5 },
   katana: { artId: 5051, twoHanded: false, skill: "Swordsmanship", damage: "4-15", layer: 1, weaponSpeed: 1 },
   kryss: { artId: 5121, twoHanded: false, skill: "Fencing", damage: "2-13", layer: 1, weaponSpeed: 2 },

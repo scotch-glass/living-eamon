@@ -414,6 +414,16 @@ export const ITEMS: Record<string, Item> = {
     stats: { damage: "1d6" },
     isCarryable: true,
   },
+  rusty_shortsword: {
+    id: "rusty_shortsword",
+    name: "Rusty Short Sword",
+    description:
+      "A short sword that has seen better decades. The blade is pitted with rust and the edge is uneven, but it is heavier than a fist and that is the point.",
+    type: "weapon",
+    value: 1,
+    stats: { damage: "1d4" },
+    isCarryable: true,
+  },
   long_sword: {
     id: "long_sword",
     name: "Long Sword",

@@ -1287,7 +1287,11 @@ export function resolveCombatRound(
   // Enemy attacks back
   const enemyHit = Math.random() > 0.3; // 70% hit chance
   if (enemyHit) {
-    const enemyDmg = Math.max(1, rollDice(enemyData.damage) - (player.armor ? 2 : 0));
+    // Calculate total AC from equipped armor + shield
+    const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
+    const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
+    const totalAC = armorAC + shieldAC;
+    const enemyDmg = Math.max(1, rollDice(enemyData.damage) - totalAC);
     newState = updatePlayerHP(newState, -enemyDmg);
     narrative += "\n\n" + fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyHit), {
       enemy: enemyData.name,
@@ -1396,14 +1400,19 @@ function buildStatDescription(player: PlayerState): string {
     .map(([k, v]) => `  ${k}: ${v > 0 ? "+" : ""}${v}`)
     .join("\n");
 
+  const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
+  const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
+  const totalAC = armorAC + shieldAC;
+
   return `— ${player.name} —
 HP: ${player.hp} / ${player.maxHp}
 Strength: ${player.strength} | Agility: ${player.agility} | Charisma: ${player.charisma}
 Expertise: ${player.expertise}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
 Weapon: ${ITEMS[player.weapon]?.name ?? player.weapon}
-Armor: ${player.armor ? ITEMS[player.armor]?.name : "None"}
-Shield: ${player.shield ? ITEMS[player.shield]?.name ?? player.shield : "None"}
+Armor: ${player.armor ? `${ITEMS[player.armor]?.name ?? player.armor} [AC: ${armorAC}]` : "None"}
+Shield: ${player.shield ? `${ITEMS[player.shield]?.name ?? player.shield} [AC: ${shieldAC}]` : "None"}
+Total AC: ${totalAC}
 Reputation: ${player.reputationLevel}${player.knownAs ? ` — known as "${player.knownAs}"` : ""}${player.bounty > 0 ? `\n⚠ Bounty on your head: ${player.bounty} gold` : ""}${virtueLines ? `\n\nVirtues:\n${virtueLines}` : ""}`;
 }
 

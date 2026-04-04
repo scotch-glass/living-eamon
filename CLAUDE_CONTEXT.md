@@ -105,7 +105,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
-| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat, banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
+| `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`**, **`FLEE`**), banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
@@ -120,7 +120,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 
 ## 5. Game Architecture
 
-**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
+**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs, **`FLEE`**), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM call when `responseType === "static"`.
 
 **Tier 2 — State-modified static:** Room `RoomState` (`normal` \| `burnt` \| `flooded` \| `dark` \| `ransacked`) with `stateModifiers` copy in `gameData.ts`; NPC `disposition` / memory / agenda in `WorldState.npcs`. Applied by engine + `gameState` helpers; still no AI for pure state ticks.
 
@@ -275,7 +275,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
   - **ENEMY DAMAGE:** **`raw = rollDice(damage)`**; **`enemyDmg = max(0, raw − armorAC − shieldAC)`** from **`ITEMS[].stats.armorClass`** — **no post-AC halving**, **no min-1 clamp** (full block possible). If **`totalAC > 0`** and **`raw > 0`**: narrate **`ARMOR_FULL_ABSORB_DESCRIPTIONS`** or **`ARMOR_ABSORB_DESCRIPTIONS`** using **`absorbKey = player.armor ?? player.shield ?? "default"`** (armor priority for key). If **`enemyDmg === 0`**, skip wound line and **do not** change player HP.
   - **Cinematic pools:** **`getPlayerHitEnemyPool`**, **`getEnemyHitPlayerPool`**, **`getEnemyMissPlayerPool`**, **`PLAYER_MISS_DESCRIPTIONS`** via **`fillTemplate` + `pickTemplate`**. **Wound tiers:** player on enemy vs **starting `enemyHp`** (this round): **≤15%** glancing, **≤40%** solid, else devastating; enemy on player vs **`player.maxHp`**: **≤10%** / **≤25%** / else.
   - **`NPCBodyType`:** defined in **`lib/npcBodyType.ts`**, re-exported from **`gameData.ts`**; **`combatNarrationPools.ts`** imports it (no duplicate **`CombatBodyType`**).
-  - **`ATTACK`:** If **`NPCS[id].stats`** exists and foe is hostile → **static** **`resolveCombatRound`** with **`enemyHp = npcs[id].combatHp ?? stats.hp`**; ongoing fights persist **`combatHp`** until kill, player death, or leaving the room (**`GO`** / direction clears **`combatHp`** for NPCs left behind). If **no `stats`** → **dynamic** Jane fallback.
+  - **`ATTACK`:** If **`NPCS[id].stats`** exists and foe is hostile → **static** **`resolveCombatRound`** with **`enemyHp = npcs[id].combatHp ?? stats.hp`**; ongoing fights persist **`combatHp`** until kill or round-ending player death (**`combatHp → null`** only then). **`GO`**, direction shorthand, and **`FLEE`** do **not** reset foe **`combatHp`**. If **no `stats`** → **dynamic** Jane fallback.
 - **Buy flow:** Sam **`BUY`** (and any future static shops) add items **only** to **`player.inventory`**. Nothing auto-fills **`weapon`**, **`armor`**, or **`shield`** on purchase. Success hint: *"Type EQUIP [item] to equip any weapon, shield, or armor."*
 - **Primary command — `EQUIP [item]`** (and **`WIELD [item]`**, same handler): **`runEquipItemFromPhrase`** resolves in order — (1) shield-slot item in inventory → **`runEquipShield`**, (2) body armor in inventory → **`runEquipArmor`**, (3) else weapon → **`runWieldWeapon`**. Underscores in the phrase are normalized to spaces (e.g. `leather_armor`).
 - **Explicit forms:** **`EQUIP SHIELD …`**, **`EQUIP ARMOR …`**, and **`SHIELD …`** unchanged; equipping still **does not remove** stacks from inventory.
@@ -385,6 +385,7 @@ Do not commit secret values.
 - [x] Enemy death body type pools (humanoid/beast/amorphous/undead) via getEnemyDeathPool
 - [x] NPCBodyType / CombatBodyType consolidated to single type in lib/npcBodyType.ts
 - [x] Persistent enemy HP tracking across combat rounds (`NPCStateEntry.combatHp` + `setNPCCombatHp`)
+- [x] FLEE command (random exit, enemy HP preserved on flee)
 
 ## 15. Next Up
 
@@ -398,10 +399,15 @@ Do not commit secret values.
 
 ## 16. Session Log
 
-### 2026-04-04 — Persistent enemy HP (`combatHp`, flee clears, situation bar)
+### 2026-04-04 — FLEE command; movement no longer clears combatHp
+
+- **`FLEE`** added: picks a random **`currentRoom.exits`** entry, **`movePlayer`** to destination, static line + **`buildRoomDescription`**; does not modify **`combatHp`**.
+- Removed incorrect **`combatHp`** reset from **`GO`/`WALK`/`MOVE`** and single-token direction handlers — fleeing or walking away does **not** reset enemy HP; only fight-end (**kill** or **player death** round) clears **`combatHp`**.
+- `npx tsc --noEmit` — clean.
+
+### 2026-04-04 — Persistent enemy HP (`combatHp`, situation bar)
 
 - Persistent enemy HP via **`NPCStateEntry.combatHp`** (`number | null`); **`setNPCCombatHp`** in **`gameState.ts`**. **`ATTACK`** reads **`combatHp ?? npcData.stats.hp`** each round; on kill or round-ending player death, **`combatHp → null`**; mid-fight, **`combatHp`** stores **`resolveCombatRound`**’s remaining enemy HP.
-- **`GO`** / single-token direction: after **`movePlayer`**, clear **`combatHp`** for any NPC still located in the **previous** room (abandoned fight → foe “heals” to full for next encounter).
 - **`buildSituationBlock`:** compact **█/░** HP bar + **`current/max`** for NPCs with **`combatHp !== null`**.
 - `npx tsc --noEmit` — clean.
 

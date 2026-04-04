@@ -462,6 +462,10 @@ export function getCommandAutocompleteSuggestions(
       });
   }
 
+  if (/^(fl|fle|flee)$/i.test(trimmed)) {
+    return [{ label: "FLEE", insertText: "FLEE", autoSubmit: true }];
+  }
+
   // SAY / TALK — room audience + ALL + SELF (trailing space for message)
   if (/^(say|talk)\s+/i.test(trimmed)) {
     const special: AutocompleteItem[] = [
@@ -618,6 +622,7 @@ INTERACTION
 
 COMBAT
   ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
+  FLEE               Escape through a random exit (enemy stays wounded)
 
 SPEECH (MUD conventions)
   SAY [text]         SAY Hello everyone!  (speaks to whole room)
@@ -2075,17 +2080,7 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
         stateChanged: false,
       };
     }
-    const leftRoom = p.currentRoom;
     newState = movePlayer(newState, destinationId);
-    for (const npcId of Object.keys(newState.npcs)) {
-      const npcState = newState.npcs[npcId];
-      if (
-        npcState?.combatHp !== null &&
-        npcState?.location === leftRoom
-      ) {
-        newState = setNPCCombatHp(newState, npcId, null);
-      }
-    }
     return {
       responseType: "static",
       staticResponse: buildRoomDescription(newState, destinationId),
@@ -2183,6 +2178,42 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       };
     }
     return runUnequipByPhrase(newState, phrase);
+  }
+
+  if (first === "FLEE") {
+    if (!currentRoom) {
+      return {
+        responseType: "static",
+        staticResponse: "There is nowhere to flee.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const exits = Object.entries(currentRoom.exits);
+    if (exits.length === 0) {
+      return {
+        responseType: "static",
+        staticResponse: "There is no way out. You are trapped.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const [fleeDir, fleeDest] =
+      exits[Math.floor(Math.random() * exits.length)]!;
+    newState = movePlayer(newState, fleeDest);
+    const destRoom = getRoom(fleeDest);
+    const destName = destRoom?.name ?? fleeDest.replace(/_/g, " ");
+    return {
+      responseType: "static",
+      staticResponse:
+        `You bolt for the ${fleeDir} exit, crashing into ${destName}.\n\n` +
+        buildRoomDescription(newState, fleeDest),
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
+    };
   }
 
   if (first === "ATTACK") {
@@ -2405,17 +2436,7 @@ Use ENTER THE BEGINNER'S CAVE (or whichever) to begin.`,
         stateChanged: false,
       };
     }
-    const leftRoom = p.currentRoom;
     newState = movePlayer(newState, destinationId);
-    for (const npcId of Object.keys(newState.npcs)) {
-      const npcState = newState.npcs[npcId];
-      if (
-        npcState?.combatHp !== null &&
-        npcState?.location === leftRoom
-      ) {
-        newState = setNPCCombatHp(newState, npcId, null);
-      }
-    }
     return {
       responseType: "static",
       staticResponse: buildRoomDescription(newState, destinationId),

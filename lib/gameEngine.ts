@@ -340,17 +340,16 @@ export function getCommandAutocompleteSuggestions(
   const examineTargets = (): AutocompleteItem[] => {
     const items: AutocompleteItem[] = [];
     for (const n of npcs) {
-      const tail = n.name.toUpperCase();
-      items.push({ label: n.name, insertText: `EXAMINE ${tail}`, autoSubmit: false });
+      items.push({ label: n.name, insertText: `EXAMINE ${n.name}`, autoSubmit: false });
     }
     for (const id of room.items) {
       const it = ITEMS[id];
-      if (it) items.push({ label: it.name, insertText: `EXAMINE ${it.name.toUpperCase()}`, autoSubmit: false });
+      if (it) items.push({ label: it.name, insertText: `EXAMINE ${it.name}`, autoSubmit: false });
     }
     for (const ex of room.examinableObjects ?? []) {
       items.push({
         label: ex.label,
-        insertText: `EXAMINE ${ex.label.toUpperCase()}`,
+        insertText: `EXAMINE ${ex.label}`,
         autoSubmit: false,
       });
     }
@@ -363,7 +362,7 @@ export function getCommandAutocompleteSuggestions(
       .filter((it): it is NonNullable<typeof it> => Boolean(it?.isCarryable))
       .map(it => ({
         label: it.name,
-        insertText: `GET ${it.name.toUpperCase()}`,
+        insertText: `GET ${it.name}`,
         autoSubmit: true,
       }));
 
@@ -373,7 +372,7 @@ export function getCommandAutocompleteSuggestions(
       .filter((it): it is NonNullable<typeof it> => Boolean(it))
       .map(it => ({
         label: it.name,
-        insertText: `${verb} ${it.name.toUpperCase()}`,
+        insertText: `${verb} ${it.name}`,
         autoSubmit: verb === "DROP",
       }));
 
@@ -386,7 +385,7 @@ export function getCommandAutocompleteSuggestions(
         if (it)
           items.push({
             label: `${it.name} (${n.firstName})`,
-            insertText: `BUY ${it.name.toUpperCase()}`,
+            insertText: `BUY ${it.name}`,
             autoSubmit: false,
           });
       }
@@ -463,7 +462,7 @@ export function getCommandAutocompleteSuggestions(
       .map(e => ITEMS[e.itemId]!)
       .map(it => ({
         label: it.name,
-        insertText: `${verbPrefix} ${it.name.toUpperCase()}`,
+        insertText: `${verbPrefix} ${it.name}`,
         autoSubmit: true,
       }));
 
@@ -477,7 +476,7 @@ export function getCommandAutocompleteSuggestions(
       .map(e => ITEMS[e.itemId]!)
       .map(it => ({
         label: it.name,
-        insertText: `EQUIP SHIELD ${it.name.toUpperCase()}`,
+        insertText: `EQUIP SHIELD ${it.name}`,
         autoSubmit: true,
       }))
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
@@ -489,7 +488,7 @@ export function getCommandAutocompleteSuggestions(
       .map(e => ITEMS[e.itemId]!)
       .map(it => ({
         label: it.name,
-        insertText: `EQUIP ARMOR ${it.name.toUpperCase()}`,
+        insertText: `EQUIP ARMOR ${it.name}`,
         autoSubmit: true,
       }))
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
@@ -505,7 +504,7 @@ export function getCommandAutocompleteSuggestions(
       .map(e => ITEMS[e.itemId]!)
       .map(it => ({
         label: it.name,
-        insertText: `SHIELD ${it.name.toUpperCase()}`,
+        insertText: `SHIELD ${it.name}`,
         autoSubmit: true,
       }))
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
@@ -526,7 +525,7 @@ export function getCommandAutocompleteSuggestions(
       const it = ITEMS[pl.shield]!;
       suggestions.push({
         label: `UNEQUIP ${it.name}`,
-        insertText: `UNEQUIP ${it.name.toUpperCase()}`,
+        insertText: `UNEQUIP ${it.name}`,
         autoSubmit: true,
       });
     }
@@ -534,7 +533,7 @@ export function getCommandAutocompleteSuggestions(
       const it = ITEMS[pl.armor]!;
       suggestions.push({
         label: `UNEQUIP ${it.name}`,
-        insertText: `UNEQUIP ${it.name.toUpperCase()}`,
+        insertText: `UNEQUIP ${it.name}`,
         autoSubmit: true,
       });
     }
@@ -542,7 +541,7 @@ export function getCommandAutocompleteSuggestions(
       const it = ITEMS[pl.weapon]!;
       suggestions.push({
         label: `UNEQUIP ${it.name}`,
-        insertText: `UNEQUIP ${it.name.toUpperCase()}`,
+        insertText: `UNEQUIP ${it.name}`,
         autoSubmit: true,
       });
     }
@@ -556,7 +555,7 @@ export function getCommandAutocompleteSuggestions(
     return npcs
       .map(n => ({
         label: n.name,
-        insertText: `ATTACK ${n.name.toUpperCase()}`,
+        insertText: `ATTACK ${n.name}`,
         tone: npcTone(n.disposition, n.isHostile),
         autoSubmit: true,
       }))
@@ -577,7 +576,7 @@ export function getCommandAutocompleteSuggestions(
     return npcs
       .map(n => ({
         label: n.name,
-        insertText: `BEG ${n.name.toUpperCase()}`,
+        insertText: `BEG ${n.name}`,
         autoSubmit: true,
       }))
       .filter(
@@ -596,7 +595,7 @@ export function getCommandAutocompleteSuggestions(
     ];
     const fromNpcs = npcs.map(n => ({
       label: n.name,
-      insertText: `SAY ${n.name.toUpperCase()} `,
+      insertText: `SAY ${n.name} `,
       autoSubmit: false,
     }));
     return [...special, ...fromNpcs].filter(
@@ -613,7 +612,7 @@ export function getCommandAutocompleteSuggestions(
       return npcs
         .map(n => ({
           label: n.name,
-          insertText: `TELL ${n.name.toUpperCase()} `,
+          insertText: `TELL ${n.name} `,
           autoSubmit: false,
         }))
         .filter(
@@ -765,7 +764,7 @@ export function getCommandAutocompleteSuggestions(
     return Object.values(ADVENTURES)
       .map(a => ({
         label: a.name,
-        insertText: `ENTER ${a.name.toUpperCase()}`,
+        insertText: `ENTER ${a.name}`,
         autoSubmit: false,
       }))
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));

@@ -421,6 +421,11 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-04 — Autocomplete natural casing for names and items
+
+- **Autocomplete name casing fixed:** NPC names and item names in **`insertText`** now use natural case (e.g. **`TELL Hokas Tokas`** not **`TELL HOKAS TOKAS`**). Command words stay uppercase. Spell and deity names stay uppercase. Applied in **`getCommandAutocompleteSuggestions`** (**`lib/gameEngine.ts`**) to **SAY**, **TELL**, **ATTACK**, **BEG**, **EXAMINE** (NPCs, room items, examinable labels), **GET**, **DROP**, **SELL**, **BUY**, **EQUIP**, **WIELD**, **SHIELD**, **UNEQUIP**, and **ENTER** adventure titles (no forced all-caps on **`a.name`**).
+- `npx tsc --noEmit` — clean.
+
 ### 2026-04-04 — Charity barrels, robe ceremony, clothing, autocomplete NPC names
 
 - **Charity barrels in Main Hall:** Barrel 1 (Clothes for the Poor) gives random clothing variants (3 per category: shirts, pants, shoes, belts). Barrel 2 (Used Gowns Only) receives returned robes in narrative. Taking a shirt while wearing **`gray_robe`** triggers automatic robe ceremony — robe removed from inventory, 5 narrative variants fire. **`BARREL_EXAMINE_DESCRIPTIONS`** (4 variants), **`ROBE_CEREMONY_NARRATIVES`** (5 variants), **`BARREL_NPC_HINTS`** (5 variants) added to **`gameData.ts`**. **`BEG SAM`** and **`BEG HOKAS`** now append barrel hint. **SAY** / **TELL** Jane context gets robe-awareness injection. Barrel autocomplete added for **`main_hall`**. Autocomplete full NPC names fixed: **SAY** / **TELL** / **BEG** now use **`n.name`** not **`n.firstName`** in **`insertText`**.

@@ -54,7 +54,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 5, 2026*
+*Last updated: April 6, 2026*
 
 ## 1. Project Overview
 
@@ -260,7 +260,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - **`getDexReactionBonus(dex)`:** AD&D 2e PHB Table 2 (exported from `uoData.ts`), used in initiative below.
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
-- **Combat (`resolveCombatRound` in `gameEngine.ts`):** **Pure UO absorption** — armor **never** causes a miss; it **only** reduces damage (AR / AC subtract, then T2A halving). **Player defeat:** **`fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath))`** — **28** cinematic lines (`{enemy}`). **Enemy defeat:** **`getEnemyDeathPool(bodyType)`** + **`fillCombat(pickRandom(pool), { enemy, weapon })`** — **`HUMANOID_DEATH_DESCRIPTIONS`** (**33**), **`BEAST_DEATH_DESCRIPTIONS`** (**21**), **`AMORPHOUS_DEATH_DESCRIPTIONS`** (**16**), **`UNDEAD_DEATH_DESCRIPTIONS`** (**21**); default / omitted **`bodyType`** uses humanoid pool. Pools mix short/brutal, sensory detail, emotion, and long-form closers.
+- **Combat (`resolveCombatRound` in `gameEngine.ts`):** **Pure UO absorption** — armor **never** causes a miss; it **only** reduces damage (AR / AC subtract, then T2A halving). **Player defeat:** **`fillTemplate(pickTemplate(COMBAT_TEMPLATES.playerDeath))`** — **48** cinematic lines (`{enemy}`). **Enemy defeat:** **`getEnemyDeathPool(bodyType)`** + **`fillCombat(pickRandom(pool), { enemy, weapon })`** — **`HUMANOID_DEATH_DESCRIPTIONS`** (**55**), **`BEAST_DEATH_DESCRIPTIONS`** (**40**), **`AMORPHOUS_DEATH_DESCRIPTIONS`** (**35**), **`UNDEAD_DEATH_DESCRIPTIONS`** (**40**); default / omitted **`bodyType`** uses humanoid pool. Pools mix short/brutal, sensory detail, emotion, and long-form closers.
   - **INITIATIVE:** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** (player); **lower total acts first**. Enemy: **`1d10 + clamp(armor + 3, 3…9)`** (proxy weapon speed).
   - **HIT CHANCE (T2A):** **`(attackerSkill + 50) / ((defenderSkill + 50) × 2)`**; **`playerSkill = min(100, expertise × 2)`**; **`enemySkill`** default **30** (optional **`weaponSkill`** on enemy payload). **Player** can miss; **enemy** uses the same roll vs **`enemyHitChance`** (miss = dodge narration only — not “armor blocked the hit”).
   - **PLAYER DAMAGE:** **`rollWeaponDamage × (1 + STR% + Tactics%)`**, minus enemy **AR**, **halve**, **min 1**. **Crit:** roll **&lt; hitChance × 0.08** among hits ⇒ **×2** base weapon roll before STR/Tactics; narrative placeholder **`__CRITICAL__:weapon:enemy:dmg`** replaced in **`app/api/chat/route.ts`** by one **`completeJaneNonStream`** call (**max_tokens 80**), fallback string on failure.
@@ -371,6 +371,7 @@ Do not commit secret values.
 - [x] **Cinematic combat narration:** wound-tier pools, UO armor absorption narration, critical-hit Jane line, static **`ATTACK`** + **`combatHp`**
 - [x] **Body-type combat pools** + **+5 strings** per existing humanoid pool; **`NPCBodyType`** on **`NPC`**
 - [x] **Cinematic death narration:** expanded **`playerDeath`**; body-type enemy death pools + **`getEnemyDeathPool`**
+- [x] **Death pool expansion:** +20 lines each (**48** / **55** / **40** / **35** / **40**)
 
 ## 15. Next Up
 
@@ -384,6 +385,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-06 — +20 death lines per pool
+
+- **`COMBAT_TEMPLATES.playerDeath`:** **48** strings. **`HUMANOID_DEATH_DESCRIPTIONS`:** **55**. **`BEAST_DEATH_DESCRIPTIONS`:** **40**. **`AMORPHOUS_DEATH_DESCRIPTIONS`:** **35**. **`UNDEAD_DEATH_DESCRIPTIONS`:** **40**.
 
 ### 2026-04-05 — Cinematic death lines (player + body-type enemy)
 

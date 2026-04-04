@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import { processInput, buildSituationBlock } from "../../../lib/gameEngine";
+import { processInput, buildSituationBlock, stripTrailingSituationBlocks } from "../../../lib/gameEngine";
 import { createInitialWorldState, WorldState } from "../../../lib/gameState";
 import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
 import {
@@ -42,6 +42,7 @@ WORLD RULES:
 - Room states persist. A burnt hall stays burnt until repaired.
 - Death loses carried gold only. The hero always persists.
 - Keep responses to 3-5 paragraphs. Vivid but efficient.
+- Never output the dashed-line situation summary block (lines of ─) or duplicate that UI; the engine appends it once after your text.
 - Always end with 2-3 italicized suggested actions on a new line, formatted like: *You might: [action 1], [action 2], or [something unexpected].*
 - These suggestions should feel organic to the moment — not a menu, but a living world hinting at possibilities.`;
 
@@ -60,8 +61,12 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
     const npcData = NPCS[id];
     const name = npcData ? npcData.name : id;
     const disposition = npcState ? npcState.disposition : "neutral";
-    const agenda = npcState && npcState.agenda ? ", agenda: " + npcState.agenda.description : "";
-    return name + " (disposition: " + disposition + agenda + ")";
+    const parts = ["disposition: " + disposition];
+    const agendaDesc = npcState?.agenda?.description?.trim();
+    if (agendaDesc) parts.push("agenda: " + agendaDesc);
+    let inner = parts.join(", ");
+    inner = inner.replace(/,\s*,+/g, ", ").replace(/^\s*,\s*/, "").replace(/\s*,\s*$/, "").trim();
+    return name + " (" + inner + ")";
   }).join(", ") || "none";
 
   const virtueList = Object.entries(player.virtues)
@@ -180,8 +185,10 @@ export async function POST(request: NextRequest) {
       state = worldState ?? createInitialWorldState();
     }
 
-    const appendSituation = (body: string, newState: WorldState) =>
-      body + "\n\n" + buildSituationBlock(newState);
+    const appendSituation = (body: string, newState: WorldState) => {
+      const cleaned = stripTrailingSituationBlocks(body);
+      return cleaned + "\n\n" + buildSituationBlock(newState);
+    };
 
     const sendResponse = (text: string, newState: WorldState) => {
       // Save player to Supabase asynchronously
@@ -247,7 +254,8 @@ export async function POST(request: NextRequest) {
               controller.enqueue(encoder.encode(chunk.delta.text));
             }
           }
-          controller.enqueue(encoder.encode("\n\n" + buildSituationBlock(newState)));
+          const situationSuffix = "\n\n" + buildSituationBlock(newState);
+          controller.enqueue(encoder.encode(situationSuffix));
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...newState,
             playerId: resolvedPlayerId,
@@ -338,7 +346,8 @@ export async function POST(request: NextRequest) {
             ).catch(console.error);
             savePlayer(worldStateToPlayerRecord(engineResult.newState)).catch(console.error);
           }
-          controller.enqueue(encoder.encode("\n\n" + buildSituationBlock(engineResult.newState)));
+          const examineSituationSuffix = "\n\n" + buildSituationBlock(engineResult.newState);
+          controller.enqueue(encoder.encode(examineSituationSuffix));
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...engineResult.newState,
             playerId: resolvedPlayerId,

@@ -190,9 +190,10 @@ export default function Home() {
     inputRef.current?.focus();
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading || isTyping) return;
-    const userMsg: Message = { role: "user", content: input.trim() };
+  const sendMessage = async (commandOverride?: string) => {
+    const text = (commandOverride ?? input).trim();
+    if (!text || loading || isTyping) return;
+    const userMsg: Message = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -412,7 +413,7 @@ export default function Home() {
               placeholder="What do you do?"
             />
             <button
-              onClick={sendMessage}
+              onClick={() => void sendMessage()}
               disabled={loading || isTyping || !input.trim()}
               style={{ backgroundColor: "#92400e", color: "#fef3c7", padding: "12px 20px", borderRadius: 6, border: "none", cursor: "pointer", opacity: loading || isTyping || !input.trim() ? 0.5 : 1, fontSize: 16 }}
             >

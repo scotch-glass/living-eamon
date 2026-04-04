@@ -24,7 +24,8 @@ type Props = {
   worldState: WorldState | null;
   value: string;
   onChange: (v: string) => void;
-  onSubmit: () => void;
+  /** Pass `command` when submitting a specific string (e.g. autocomplete) so it is not lost to batched state. */
+  onSubmit: (command?: string) => void;
   disabled?: boolean;
   placeholder?: string;
 };
@@ -38,18 +39,6 @@ function inputTextColor(raw: string): string {
   if (/^cast\b/i.test(t)) return "#a855f7";
   if (/^attack\b/i.test(t)) return "#f97316";
   return "#d1d5db";
-}
-
-function applyAutocomplete(raw: string, insertText: string): string {
-  const v = raw;
-  if (v.endsWith(" ") || v.length === 0) {
-    return v + insertText + " ";
-  }
-  const lastSpace = v.lastIndexOf(" ");
-  if (lastSpace === -1) {
-    return insertText + " ";
-  }
-  return v.slice(0, lastSpace + 1) + insertText + " ";
 }
 
 const CommandInput = forwardRef<CommandInputHandle, Props>(function CommandInput(
@@ -84,12 +73,16 @@ const CommandInput = forwardRef<CommandInputHandle, Props>(function CommandInput
 
   const pick = useCallback(
     (item: AutocompleteItem) => {
-      onChange(applyAutocomplete(value, item.insertText));
-      setOpen(true);
+      onChange(item.insertText);
+      setOpen(false);
       setHighlight(0);
-      requestAnimationFrame(() => innerRef.current?.focus());
+      if (item.autoSubmit) {
+        onSubmit(item.insertText.trim());
+      } else {
+        requestAnimationFrame(() => innerRef.current?.focus());
+      }
     },
-    [onChange, value]
+    [onChange, onSubmit]
   );
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -174,15 +167,15 @@ const CommandInput = forwardRef<CommandInputHandle, Props>(function CommandInput
             position: "absolute",
             left: 0,
             right: 0,
-            top: "100%",
-            marginTop: 4,
+            bottom: "100%",
+            marginBottom: 4,
             maxHeight: 6 * 36,
             overflowY: "auto",
             backgroundColor: "#0f172a",
             border: "1px solid #334155",
             borderRadius: 6,
             zIndex: 50,
-            boxShadow: "0 12px 24px rgba(0,0,0,0.45)",
+            boxShadow: "0 -12px 24px rgba(0,0,0,0.45)",
           }}
         >
           {suggestions.map((item, idx) => {

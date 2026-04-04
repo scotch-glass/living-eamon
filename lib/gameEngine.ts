@@ -64,6 +64,9 @@ const EXIT_ARROW: Record<string, string> = {
   down: "D",
 };
 
+/** Order on situation line: N, S, E, W, U, D (matches typical map layout) */
+const SITUATION_EXIT_ORDER = ["north", "south", "east", "west", "up", "down"] as const;
+
 const EXIT_ORDER = ["north", "east", "south", "west", "up", "down"] as const;
 
 function exitDestinationLabel(roomId: string): string {
@@ -77,17 +80,18 @@ function exitDestinationLabel(roomId: string): string {
 export function buildSituationBlock(state: WorldState): string {
   const room = MAIN_HALL_ROOMS[state.player.currentRoom];
   if (!room) {
-    return `${SIT_LINE}\n(Unknown location)\n${SIT_LINE}`;
+    return [SIT_LINE, "🧭 —", "👤 —", "👁 —", SIT_LINE].join("\n");
   }
 
   const exitParts: string[] = [];
-  for (const dir of EXIT_ORDER) {
+  for (const dir of SITUATION_EXIT_ORDER) {
     const to = room.exits[dir];
     if (!to) continue;
     const arrow = EXIT_ARROW[dir] ?? dir[0]!.toUpperCase();
     exitParts.push(`${arrow}→${exitDestinationLabel(to)}`);
   }
-  const exitLine = exitParts.join("  ");
+  const exitLine =
+    exitParts.length > 0 ? `🧭 ${exitParts.join(" · ")}` : "🧭 —";
 
   const presentNpcs = room.npcs
     .map(id => state.npcs[id])
@@ -106,6 +110,22 @@ export function buildSituationBlock(state: WorldState): string {
   return [SIT_LINE, exitLine, npcLine, eyeLine, SIT_LINE].join("\n");
 }
 
+/**
+ * Removes a trailing situation block (dashed box) if present, so the API
+ * does not stack two blocks when the body already contained one.
+ */
+export function stripTrailingSituationBlocks(text: string): string {
+  const esc = SITUATION_BLOCK_LINE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`\\n\\n${esc}\\n[\\s\\S]*?\\n${esc}$`);
+  let t = text.trimEnd();
+  let prev = "";
+  while (t !== prev) {
+    prev = t;
+    t = t.replace(re, "").trimEnd();
+  }
+  return t;
+}
+
 // ============================================================
 // COMMAND AUTOCOMPLETE (client input bar)
 // ============================================================
@@ -114,8 +134,11 @@ export type AutocompleteDispositionTone = "hostile" | "friendly" | "neutral";
 
 export interface AutocompleteItem {
   label: string;
+  /** Full value for the input field (ready to submit or continue typing) */
   insertText: string;
   tone?: AutocompleteDispositionTone;
+  /** When true, picking this item should send the command immediately */
+  autoSubmit?: boolean;
 }
 
 function npcTone(disposition: NPCStateEntry["disposition"], isHostile: boolean): AutocompleteDispositionTone {
@@ -176,21 +199,26 @@ export function getCommandAutocompleteSuggestions(
       const to = room.exits[dir];
       if (!to) return [];
       const label = `${dir} (→ ${exitDestinationLabel(to)})`;
-      const insert = dir;
-      return [{ label, insertText: insert }];
+      const cmd = `GO ${dir.toUpperCase()}`;
+      return [{ label, insertText: cmd, autoSubmit: true }];
     });
 
   const examineTargets = (): AutocompleteItem[] => {
     const items: AutocompleteItem[] = [];
     for (const n of npcs) {
-      items.push({ label: n.name, insertText: n.firstName });
+      const tail = n.name.toUpperCase();
+      items.push({ label: n.name, insertText: `EXAMINE ${tail}`, autoSubmit: false });
     }
     for (const id of room.items) {
       const it = ITEMS[id];
-      if (it) items.push({ label: it.name, insertText: it.name });
+      if (it) items.push({ label: it.name, insertText: `EXAMINE ${it.name.toUpperCase()}`, autoSubmit: false });
     }
     for (const ex of room.examinableObjects ?? []) {
-      items.push({ label: ex.label, insertText: ex.label });
+      items.push({
+        label: ex.label,
+        insertText: `EXAMINE ${ex.label.toUpperCase()}`,
+        autoSubmit: false,
+      });
     }
     return items;
   };
@@ -199,13 +227,21 @@ export function getCommandAutocompleteSuggestions(
     room.items
       .map(id => ITEMS[id])
       .filter((it): it is NonNullable<typeof it> => Boolean(it?.isCarryable))
-      .map(it => ({ label: it.name, insertText: it.name }));
+      .map(it => ({
+        label: it.name,
+        insertText: `GET ${it.name.toUpperCase()}`,
+        autoSubmit: true,
+      }));
 
-  const invItems = (): AutocompleteItem[] =>
+  const invItemsForVerb = (verb: "DROP" | "SELL"): AutocompleteItem[] =>
     state.player.inventory
       .map(e => ITEMS[e.itemId])
       .filter((it): it is NonNullable<typeof it> => Boolean(it))
-      .map(it => ({ label: it.name, insertText: it.name }));
+      .map(it => ({
+        label: it.name,
+        insertText: `${verb} ${it.name.toUpperCase()}`,
+        autoSubmit: verb === "DROP",
+      }));
 
   const merchantStock = (): AutocompleteItem[] => {
     const items: AutocompleteItem[] = [];
@@ -213,7 +249,12 @@ export function getCommandAutocompleteSuggestions(
       if (!n.merchant) continue;
       for (const iid of n.merchant.inventory) {
         const it = ITEMS[iid];
-        if (it) items.push({ label: `${it.name} (${n.firstName})`, insertText: it.name });
+        if (it)
+          items.push({
+            label: `${it.name} (${n.firstName})`,
+            insertText: `BUY ${it.name.toUpperCase()}`,
+            autoSubmit: false,
+          });
       }
     }
     return items;
@@ -221,10 +262,34 @@ export function getCommandAutocompleteSuggestions(
 
   // Movement: GO <dir> or lone direction token
   if (/^(go|walk|move)\s*$/i.test(trimmed) || (/^go\s+/i.test(trimmed) && restTokens.length <= 1)) {
-    return exitSuggestions().filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower));
+    return exitSuggestions().filter(
+      x =>
+        !partialLower ||
+        x.insertText.toLowerCase().includes(partialLower) ||
+        x.label.toLowerCase().includes(partialLower)
+    );
   }
   if (tokens.length === 1 && /^[nsewud]$/i.test(tokens[0]!)) {
-    return exitSuggestions().filter(x => x.insertText.toLowerCase().startsWith(tokens[0]!.toLowerCase()));
+    const letter = tokens[0]!.toLowerCase();
+    const dirMap: Record<string, string> = {
+      n: "north",
+      s: "south",
+      e: "east",
+      w: "west",
+      u: "up",
+      d: "down",
+    };
+    const full = dirMap[letter];
+    if (full && room.exits[full]) {
+      return [
+        {
+          label: `${full} (→ ${exitDestinationLabel(room.exits[full]!)})`,
+          insertText: letter.toUpperCase(),
+          autoSubmit: true,
+        },
+      ];
+    }
+    return [];
   }
 
   if (/^(n|north|s|south|e|east|w|west|u|up|d|down)$/i.test(trimmed) && tokens.length === 1) {
@@ -236,7 +301,7 @@ export function getCommandAutocompleteSuggestions(
     return examineTargets().filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
   if (/^look\s+$/i.test(trimmed)) {
-    return [{ label: "around", insertText: "around" }];
+    return [{ label: "around", insertText: "LOOK", autoSubmit: true }];
   }
 
   // GET / TAKE
@@ -245,8 +310,11 @@ export function getCommandAutocompleteSuggestions(
   }
 
   // DROP / SELL
-  if (/^(drop|sell)\s+/i.test(trimmed)) {
-    return invItems().filter(x => filterPartial(x.insertText));
+  if (/^drop\s+/i.test(trimmed)) {
+    return invItemsForVerb("DROP").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+  if (/^sell\s+/i.test(trimmed)) {
+    return invItemsForVerb("SELL").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
   // ATTACK
@@ -254,28 +322,50 @@ export function getCommandAutocompleteSuggestions(
     return npcs
       .map(n => ({
         label: n.name,
-        insertText: n.firstName,
+        insertText: `ATTACK ${n.name.toUpperCase()}`,
         tone: npcTone(n.disposition, n.isHostile),
+        autoSubmit: true,
       }))
-      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+      .filter(x => {
+        const first = x.label.split(/\s+/)[0] ?? "";
+        return filterPartial(x.insertText) || filterPartial(x.label) || filterPartial(first);
+      });
   }
 
-  // SAY / TALK — room audience + ALL + SELF
+  // SAY / TALK — room audience + ALL + SELF (trailing space for message)
   if (/^(say|talk)\s+/i.test(trimmed)) {
     const special: AutocompleteItem[] = [
-      { label: "ALL (whole room)", insertText: "ALL" },
-      { label: "SELF", insertText: "SELF" },
+      { label: "ALL (whole room)", insertText: "SAY ALL ", autoSubmit: false },
+      { label: "SELF", insertText: "SAY SELF ", autoSubmit: false },
     ];
-    const fromNpcs = npcs.map(n => ({ label: n.name, insertText: n.firstName }));
-    return [...special, ...fromNpcs].filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower) || x.label.toLowerCase().includes(partialLower));
+    const fromNpcs = npcs.map(n => ({
+      label: n.name,
+      insertText: `SAY ${n.firstName.toUpperCase()} `,
+      autoSubmit: false,
+    }));
+    return [...special, ...fromNpcs].filter(
+      x =>
+        !partialLower ||
+        x.insertText.toLowerCase().includes(partialLower) ||
+        x.label.toLowerCase().includes(partialLower)
+    );
   }
 
   // TELL (private)
   if (/^tell\s+/i.test(trimmed)) {
     if (restTokens.length <= 1) {
       return npcs
-        .map(n => ({ label: n.name, insertText: n.firstName }))
-        .filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower) || x.label.toLowerCase().includes(partialLower));
+        .map(n => ({
+          label: n.name,
+          insertText: `TELL ${n.firstName.toUpperCase()} `,
+          autoSubmit: false,
+        }))
+        .filter(
+          x =>
+            !partialLower ||
+            x.insertText.toLowerCase().includes(partialLower) ||
+            x.label.toLowerCase().includes(partialLower)
+        );
     }
     return [];
   }
@@ -288,8 +378,17 @@ export function getCommandAutocompleteSuggestions(
   // CAST
   if (/^cast\s+/i.test(trimmed)) {
     return state.player.knownSpells
-      .map(s => ({ label: s, insertText: s }))
-      .filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower));
+      .map(s => ({
+        label: s,
+        insertText: `CAST ${s.toUpperCase()}`,
+        autoSubmit: true,
+      }))
+      .filter(
+        x =>
+          !partialLower ||
+          x.insertText.toLowerCase().includes(partialLower) ||
+          x.label.toLowerCase().startsWith(partialLower)
+      );
   }
 
   // INVOKE — never list
@@ -300,22 +399,54 @@ export function getCommandAutocompleteSuggestions(
   // PRAY
   if (/^pray\s+/i.test(trimmed)) {
     return state.player.knownDeities
-      .map(d => ({ label: d, insertText: d }))
-      .filter(x => !partialLower || x.insertText.toLowerCase().startsWith(partialLower));
+      .map(d => ({
+        label: d,
+        insertText: `PRAY ${d.toUpperCase()}`,
+        autoSubmit: false,
+      }))
+      .filter(
+        x =>
+          !partialLower ||
+          x.insertText.toLowerCase().includes(partialLower) ||
+          x.label.toLowerCase().startsWith(partialLower)
+      );
   }
 
   // DEPOSIT / WITHDRAW — vault only
   if (state.player.currentRoom === "guild_vault" && /^(deposit|withdraw)\s+/i.test(trimmed)) {
+    const verb = /^deposit/i.test(trimmed) ? "DEPOSIT" : "WITHDRAW";
     return ["10", "20", "50", "100"]
-      .map(n => ({ label: n, insertText: n }))
-      .filter(x => !partialLower || x.insertText.startsWith(partialLower));
+      .map(n => ({
+        label: n,
+        insertText: `${verb} ${n}`,
+        autoSubmit: true,
+      }))
+      .filter(x => !partialLower || x.insertText.toLowerCase().includes(partialLower));
   }
 
   // ENTER
   if (/^enter\s+/i.test(trimmed)) {
     return Object.values(ADVENTURES)
-      .map(a => ({ label: a.name, insertText: a.name }))
+      .map(a => ({
+        label: a.name,
+        insertText: `ENTER ${a.name.toUpperCase()}`,
+        autoSubmit: false,
+      }))
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  // HELP / STATS / INVENTORY / LOOK — typed prefixes (full command)
+  if (/^(h|he|hel|help)$/i.test(trimmed)) {
+    return [{ label: "HELP", insertText: "HELP", autoSubmit: true }];
+  }
+  if (/^(s|st|sta|stat|stats)$/i.test(trimmed)) {
+    return [{ label: "STATS", insertText: "STATS", autoSubmit: true }];
+  }
+  if (/^(i|in|inv|inve|inven|invent|invento|inventor|inventory)$/i.test(trimmed)) {
+    return [{ label: "INVENTORY", insertText: "INVENTORY", autoSubmit: true }];
+  }
+  if (/^(l|lo|loo|look)$/i.test(trimmed)) {
+    return [{ label: "LOOK", insertText: "LOOK", autoSubmit: true }];
   }
 
   return [];
@@ -1342,7 +1473,8 @@ Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}
 Player HP: ${p.hp}/${p.maxHp} | Gold: ${p.gold} | Weapon: ${ITEMS[p.weapon]?.name ?? p.weapon}
 NPCs present: ${currentRoom?.npcs.map(id => {
       const s = newState.npcs[id];
-      return `${NPCS[id]?.name} (${s?.disposition ?? "neutral"})`;
+      const disp = String(s?.disposition ?? "neutral").replace(/,\s*,+/g, ", ").trim();
+      return `${NPCS[id]?.name} (${disp})`;
     }).join(", ") || "none"}
 Active events: ${newState.activeEvents.map(e => e.description).join("; ") || "none"}
 Bounty on player: ${p.bounty > 0 ? p.bounty + " gold" : "none"}

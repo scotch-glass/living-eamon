@@ -55,7 +55,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 7, 2026*
+*Last updated: April 12, 2026*
 
 ## 1. Project Overview
 
@@ -97,6 +97,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
 | `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators, `tickWorldState`, `applyFireballConsequences` |
 | `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock`, combat, banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
@@ -371,38 +372,39 @@ Do not commit secret values.
 - [x] **Body-type combat pools** + **+5 strings** per existing humanoid pool; **`NPCBodyType`** on **`NPC`**
 - [x] **Cinematic death narration:** expanded **`playerDeath`**; body-type enemy death pools + **`getEnemyDeathPool`**
 - [x] **Death pool expansion:** +20 lines each (**48** / **55** / **40** / **35** / **40**)
-- [x] **Combat engine wired:** **`ATTACK`** calls **`resolveCombatRound`** statically when **`npcData.stats`** exists
-- [x] **Initiative display** with **`⚡`** using **`weaponSpeed + getDexReactionBonus`** (player) vs fixed enemy speed **5**
-- [x] **Wound tier narration pools** (glancing / solid / devastating × body type + separate thresholds for player vs enemy hits)
-- [x] **Armor absorption narration** with **`ITEMS` AC** lookup, **`armor` priority** for absorb key, **full-block** path (**`enemyDmg === 0`**)
-- [x] **Enemy death** via **`getEnemyDeathPool(bodyType)`** + **`fillTemplate`** (no missing **`COMBAT_TEMPLATES.enemyDeath`**)
-- [x] **`NPCBodyType` / `CombatBodyType` consolidated** — single type in **`lib/npcBodyType.ts`**
+- [x] Combat engine wired: ATTACK handler calls resolveCombatRound statically for any NPC with stats
+- [x] Initiative display with ⚡ using weaponSpeed + getDexReactionBonus
+- [x] Wound tier narration (glancing/solid/devastating × weapon category × body type) via combatNarrationPools.ts
+- [x] Armor absorption narration with AC lookup from ITEMS and full-block path (no minimum-1 clamp)
+- [x] Enemy death body type pools (humanoid/beast/amorphous/undead) via getEnemyDeathPool
+- [x] NPCBodyType / CombatBodyType consolidated to single type in lib/npcBodyType.ts
 
 ## 15. Next Up
 
-- [ ] **Re-enable Jane streaming in `main_hall`** (or gate behind env) before production — see Known Issues
-- [ ] Persist `known_spells` / `known_deities` in `savePlayer` + `worldStateToPlayerRecord`
+- [ ] **Persistent enemy HP** — each ATTACK round currently restarts enemy at full HP; requires NPC combat state in WorldState
+- [ ] **Critical hit system** — 10% crit roll → CRITICAL marker → Jane narrates the result
+- [ ] **Church of Perpetual Life** — new respawn room, NPC, gray robe item; player respawns there naked (gray robe only) instead of Main Hall; inventory wiped on death; banked gold preserved
+- [ ] Re-enable Jane streaming in `main_hall` before production
+- [ ] Persist `known_spells` / `known_deities` in savePlayer
 - [ ] Static structured shop for Pip (beginner gear)
-- [ ] Align any remaining `WEAPON_DATA`-only keys with `ITEMS` if new shops add them
-- [ ] End-to-end test of two-handed blocking in UI
-- [ ] Supabase migration file in repo documenting `players` + `shield` column
-- [ ] Push/deploy verification after local tests
+- [ ] Supabase migration file in repo documenting players + shield column
 - [ ] Male / female paperdoll art and compositor
-- [ ] **Persistent enemy HP** across combat rounds (NPC combat state on **`WorldState`**)
-- [ ] **Critical hit system** (e.g. crit roll → **`__CRITICAL__`** marker → Jane narration) — reintroduce if desired
-- [ ] **Church of Perpetual Life:** respawn room, NPC, gray robe item, new death flow
 
 ## 16. Session Log
 
-### 2026-04-07 — Combat bugs A–F (engine, pools, types)
+### 2026-04-07 — Fix combat bugs A–F: ATTACK static resolve, initiative, wounds, armor AC, body type pools, NPCBodyType
 
-- **A:** Enemy kill uses **`getEnemyDeathPool` + fillTemplate** (no **`COMBAT_TEMPLATES.enemyDeath`**).
-- **B:** **`ATTACK`** static when **`npcData.stats`**; each round starts foe at **`stats.hp`**; dynamic fallback if no stats.
-- **C:** Initiative **`1d10 + weaponSpeed − DEX bonus`** vs **`1d10 + 5`**; **`⚡ Initiative — You: · …`** line; turn order from rolls (tie → player).
-- **D:** **`fillTemplate`/`pickTemplate`** on wound/miss pools; tier thresholds per spec (player-on-enemy vs enemy-on-player).
-- **E:** Enemy damage **`max(0, raw − totalAC)`**; armor/shield narration; full block skips HP and hit line.
-- **F:** **`lib/npcBodyType.ts`**; **`CombatBodyType`** removed from **`combatNarrationPools.ts`**.
-- **`resolveCombatRound`** return type slimmed (**no** `initiativeWinner` / `hasCritical` / `criticalContext`).
+- **Bug A (enemyDeath crash):** `resolveCombatRound` now calls `getEnemyDeathPool(bodyType)` instead of the non-existent `COMBAT_TEMPLATES.enemyDeath`. Template receives `{enemy, weapon}`.
+- **Bug B (ATTACK wired to static engine):** `processInput` ATTACK handler calls `resolveCombatRound` for any NPC with defined stats; returns `responseType: "static"` with `combat.narrative`. Falls through to dynamic Jane only when NPC has no stats. On player win, sets `npc.isAlive: false`.
+- **Bug C (initiative):** `resolveCombatRound` now rolls initiative for both sides using `weaponSpeed` from `WEAPON_DATA` and `getDexReactionBonus(dex)` from `uoData.ts`. Narrative starts with `⚡ Initiative — You: {n} · {enemy}: {n}` line. Enemy goes first when it wins; tie goes to player.
+- **Bug D (wound tier pools):** `resolveCombatRound` uses `getWoundTier(dmg, maxHp, side)` with 15%/40% (player on enemy) and 10%/25% (enemy on player) cutoffs. All four narration picks (`playerHit`, `playerMiss`, `enemyHit`, `enemyMiss`) now use `getPlayerHitEnemyPool`, `PLAYER_MISS_DESCRIPTIONS`, `getEnemyHitPlayerPool`, `getEnemyMissPlayerPool` from `combatNarrationPools.ts` via `gameData.ts` re-exports.
+- **Bug E (armor absorption):** `rawEnemyDmg - totalAC` where `totalAC = armorAC + shieldAC` from `ITEMS[id].stats.armorClass`. No minimum-1 clamp — full block is possible. Partial and full absorb narration from `ARMOR_ABSORB_DESCRIPTIONS` / `ARMOR_FULL_ABSORB_DESCRIPTIONS`. No HP change and no wound line when fully blocked.
+- **Bug F (type consolidation):** New `lib/npcBodyType.ts` exports `NPCBodyType`. `gameData.ts` imports and re-exports it. `NPC.bodyType` unchanged. `combatNarrationPools.ts` imports `NPCBodyType` from `./npcBodyType`; `CombatBodyType` removed entirely.
+- **`resolveCombatRound` new signature:** `resolveCombatRound(state, enemyId, enemyHp, {name,damage,armor}, bodyType?)`
+- **Death/respawn logic unchanged** — Church of Perpetual Life deferred.
+- `npx tsc --noEmit` — clean after all changes.
+
+*Recorded in docs 2026-04-12; implementation landed in commit `27a34e4`.*
 
 ### 2026-04-06 — +20 death lines per pool
 

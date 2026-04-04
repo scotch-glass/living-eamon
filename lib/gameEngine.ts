@@ -34,6 +34,7 @@ import {
 import {
   WorldState,
   PlayerState,
+  PlayerInventoryItem,
   NPCStateEntry,
   tickWorldState,
   movePlayer,
@@ -932,7 +933,7 @@ function runEquipItemFromPhrase(state: WorldState, phrase: string): EngineResult
   return runWieldWeapon(state, phraseLower);
 }
 
-const DEFAULT_WIELDED_WEAPON = "short_sword";
+const SHEATHED_WEAPON = "unarmed";
 
 function runRemoveArmor(state: WorldState): EngineResult {
   const p = state.player;
@@ -979,22 +980,13 @@ function runUnequipByPhrase(state: WorldState, phraseLower: string): EngineResul
   if (p.armor && phraseMatchesEquippedItem(norm, p.armor)) {
     return runRemoveArmor(state);
   }
-  if (p.weapon && phraseMatchesEquippedItem(norm, p.weapon)) {
-    if (p.weapon === DEFAULT_WIELDED_WEAPON) {
-      return {
-        responseType: "static",
-        staticResponse: "Thou art already bearing thy humble blade.",
-        dynamicContext: null,
-        newState: state,
-        stateChanged: false,
-      };
-    }
+  if (p.weapon && p.weapon !== "unarmed" && phraseMatchesEquippedItem(norm, p.weapon)) {
     const item = ITEMS[p.weapon]!;
     return {
       responseType: "static",
       staticResponse: `Thou sheathest the ${item.name}.`,
       dynamicContext: null,
-      newState: { ...state, player: { ...p, weapon: DEFAULT_WIELDED_WEAPON } },
+      newState: { ...state, player: { ...p, weapon: SHEATHED_WEAPON } },
       stateChanged: true,
     };
   }
@@ -1830,6 +1822,26 @@ function findSamShopRow(raw: string): SamShopRow | null {
   return best?.row ?? null;
 }
 
+const SAM_STARTER_OUTFIT_IDS = [
+  "plain_shirt",
+  "plain_trousers",
+  "plain_belt",
+  "plain_shoes",
+] as const;
+
+function applySamFirstPurchaseOutfit(inv: PlayerInventoryItem[]): PlayerInventoryItem[] {
+  let next = inv.filter(e => e.itemId !== "gray_robe");
+  for (const id of SAM_STARTER_OUTFIT_IDS) {
+    const idx = next.findIndex(e => e.itemId === id);
+    if (idx < 0) next = [...next, { itemId: id, quantity: 1 }];
+    else
+      next = next.map((e, i) =>
+        i === idx ? { ...e, quantity: e.quantity + 1 } : e
+      );
+  }
+  return next;
+}
+
 function runSamPurchase(state: WorldState, query: string): EngineResult {
   const row = findSamShopRow(query);
   if (!row) {
@@ -1862,11 +1874,24 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
     idx < 0
       ? [...inv, { itemId: row.key, quantity: 1 }]
       : inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e));
-  const nextPlayer: PlayerState = { ...pg, inventory: nextInv };
+  let nextPlayer: PlayerState = { ...pg, inventory: nextInv };
+
+  let outfitNote = "";
+  if (!p.receivedSamStarterOutfit) {
+    nextPlayer = {
+      ...nextPlayer,
+      inventory: applySamFirstPurchaseOutfit(nextPlayer.inventory),
+      receivedSamStarterOutfit: true,
+    };
+    outfitNote =
+      "\n\nSam mutters about guild dignity and slides a plain bundle across the counter — shirt, trousers, belt, and shoes, nothing worth bragging about. The gray robe goes into his rag bin. Thou art at least dressed like a person.";
+  }
 
   const newState: WorldState = { ...afterGold, player: nextPlayer };
 
-  const msg = `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType EQUIP [item] to equip any weapon, shield, or armor.`;
+  const msg =
+    `Purchased: ${row.displayName} for ${row.price} gp. (${remaining} gp remaining.)\nType EQUIP [item] to equip any weapon, shield, or armor.` +
+    outfitNote;
 
   return {
     responseType: "static",

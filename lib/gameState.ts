@@ -170,6 +170,9 @@ export interface PlayerState {
   knownSpells: string[];
   /** Divine names learned in play — autocomplete for PRAY */
   knownDeities: string[];
+
+  /** After first Sam shop purchase, Sam gives a plain outfit and removes the gray robe; reset on death. */
+  receivedSamStarterOutfit: boolean;
 }
 
 // ============================================================
@@ -359,15 +362,13 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       charisma: 10,
       expertise: 0,
 
-      gold: 10000,
+      gold: 0,
       bankedGold: 0,
 
-      weapon: "short_sword",
+      weapon: "unarmed",
       armor: null,
       shield: null,
-      inventory: [
-        { itemId: "short_sword", quantity: 1 },
-      ],
+      inventory: [{ itemId: "gray_robe", quantity: 1 }],
 
       virtues: {
         Honesty: 0,
@@ -399,6 +400,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
 
       knownSpells: ["BLAST", "HEAL", "LIGHT", "SPEED"],
       knownDeities: [],
+
+      receivedSamStarterOutfit: false,
     },
 
     activeEvents: [],
@@ -609,6 +612,7 @@ export function applyPlayerDeath(
       armor: null,
       shield: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
+      receivedSamStarterOutfit: false,
       currentRoom: "church_of_perpetual_life",
       previousRoom: state.player.currentRoom,
     },

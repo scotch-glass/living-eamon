@@ -214,6 +214,7 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     bounty: state.player.bounty,
     isWanted: state.player.isWanted,
     turnCount: state.player.turnCount,
+    receivedSamStarterOutfit: state.player.receivedSamStarterOutfit,
   };
 }
 
@@ -268,6 +269,9 @@ export async function POST(request: NextRequest) {
               ["BLAST", "HEAL", "LIGHT", "SPEED"],
             knownDeities:
               (savedPlayer as { known_deities?: string[] }).known_deities ?? [],
+            receivedSamStarterOutfit:
+              (savedPlayer as { received_sam_starter_outfit?: boolean })
+                .received_sam_starter_outfit ?? false,
           },
         };
 
@@ -291,17 +295,11 @@ export async function POST(request: NextRequest) {
               ...ws.player,
               id: savedPlayer.id,
               name: savedPlayer.character_name,
+              receivedSamStarterOutfit:
+                ws.player.receivedSamStarterOutfit ??
+                state.player.receivedSamStarterOutfit,
             },
           };
-        }
-
-        // Dev: old test characters may still have low gold in DB; bump once without wiping legitimate mid-game purses in prod (adjust threshold if needed).
-        if (state.player.gold < 1000) {
-          state = {
-            ...state,
-            player: { ...state.player, gold: 10000 },
-          };
-          savePlayer(worldStateToPlayerRecord(state)).catch(console.error);
         }
       } else {
         state = worldState ?? createInitialWorldState(playerName ?? "Adventurer");
@@ -429,6 +427,7 @@ export async function POST(request: NextRequest) {
     // Opening game
     if (!messages || messages.length === 0) {
       const openingContext = "This is the very start of the game. The player " + state.player.name + " has just arrived at the Main Hall for the first time.\n" +
+        "They have no gold, no weapon, and wear only the guild's thin gray robe — a backless humiliation meant for the newly arrived or the recently reborn.\n" +
         "Describe the Main Hall vividly using this as your foundation:\n" +
         MAIN_HALL_ROOMS.main_hall.description + "\n" +
         "Address the player by their name: " + state.player.name + "\n" +

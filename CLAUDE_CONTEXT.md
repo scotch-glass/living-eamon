@@ -103,13 +103,13 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `next-env.d.ts` | Next.js type refs |
 | `eslint.config.mjs` | ESLint flat config |
 | `postcss.config.mjs` | PostCSS (Tailwind) |
-| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`** clothing, **`rusty_shortsword`** weapon), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
+| `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS` (incl. **`guild_courtyard`**, **`church_of_perpetual_life`**), `NPCS`, `ITEMS` (incl. **`gray_robe`**, plain shirt/trousers/belt/shoes clothing, **`rusty_shortsword`** weapon), `PRIEST_SILENCE_RESPONSES`, `REBIRTH_NARRATIVES`, `ROOM_ROBE_HUMILIATION`, `COURTYARD_ROBE_HUMILIATION`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/npcBodyType.ts` | Shared `NPCBodyType` union (`"humanoid" \| "beast" \| "amorphous" \| "undead"`); imported by `gameData.ts` and `combatNarrationPools.ts` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, **`applyPlayerDeath`** (Church respawn: wipe carried gold + inventory, **`gray_robe`**, weapon sentinel **`unarmed`** (not an ITEMS id), armor/shield **null**, HP full, room **`church_of_perpetual_life`**), mutators incl. **`setNPCCombatHp`**, **`NPCStateEntry.combatHp`**, `tickWorldState`, `applyFireballConsequences` |
 | `lib/gameEngine.ts` | `processInput`, **`buildCourtyardDescription`**, autocomplete, `buildSituationBlock` (NPC HP bar when **`combatHp`** set), combat (**`ATTACK`** with **`unarmed`** guard, 10% **`__CRITICAL__`**, **`FLEE`**, **`BEG`**), Church **`SAY`/`TELL`** → static priest silence pool, robe humiliation on **`buildRoomDescription`**, banking, **EQUIP** / **WIELD**, **Sam shop**, `extractDirection` (token-safe) |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
-| `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
+| `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: name gate, chat log, `CommandInput`, sidebar, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
@@ -164,6 +164,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `lastAction`: `string | null`
 - `knownSpells`: `string[]`
 - `knownDeities`: `string[]`
+- `receivedSamStarterOutfit`: `boolean` — set after Sam’s first-purchase outfit bundle; reset to **`false`** on **`applyPlayerDeath`**
 
 **Default values for a new world** (`createInitialWorldState(playerName)`):
 
@@ -173,15 +174,16 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `previousRoom`: `null`
 - `hp` / `maxHp`: `20` / `20`
 - `strength`: `12`, `dexterity`: `10`, `charisma`: `10`, `expertise`: `0`
-- `gold`: `10000`, `bankedGold`: `0`
-- `weapon`: `"short_sword"`, `armor`: `null`, `shield`: `null`
-- `inventory`: `[{ itemId: "short_sword", quantity: 1 }]`
+- `gold`: `0`, `bankedGold`: `0`
+- `weapon`: `"unarmed"`, `armor`: `null`, `shield`: `null`
+- `inventory`: `[{ itemId: "gray_robe", quantity: 1 }]`
 - All virtues: `0`
 - `reputationScore`: `0`, `reputationLevel`: `"neutral"`, `knownAs`: `null`
 - `currentAdventure`: `null`, `completedAdventures`: `[]`, `activeQuests`: `[]`
 - `bounty`: `0`, `isWanted`: `false`, `prisonTurnsRemaining`: `0`
 - `turnCount`: `0`, `lastAction`: `null`
 - `knownSpells`: `["BLAST", "HEAL", "LIGHT", "SPEED"]`, `knownDeities`: `[]`
+- `receivedSamStarterOutfit`: `false`
 
 ## 7. World State
 
@@ -213,7 +215,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 ## 8. Merchants
 
-**Sam (Main Hall):** prices and keys come from **`SAM_INVENTORY`** in `lib/gameData.ts` (static `SHOP` / `BUY`). **`NPCS.sam_slicker.merchant.inventory`** is `SAM_INVENTORY.map(r => r.key)` for autocomplete.
+**Sam (Main Hall):** prices and keys come from **`SAM_INVENTORY`** in `lib/gameData.ts` (static `SHOP` / `BUY`). **`NPCS.sam_slicker.merchant.inventory`** is `SAM_INVENTORY.map(r => r.key)` for autocomplete. The **first** successful **`BUY`** also grants a complimentary plain outfit (see Session Log — destitute new player).
 
 **Hokas / Pip (non-Sam):** reference `ITEMS[itemId].value` for display; purchases still **Jane** unless a static Pip shop is added later.
 
@@ -303,7 +305,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 ## 11. Supabase Schema (inferred from code)
 
-No SQL migrations live in this repo. The following is **inferred** from `lib/supabase.ts` and `app/api/chat/route.ts`.
+SQL migrations: **`supabase/migrations/`** (e.g. **`received_sam_starter_outfit`** on **`players`**). The following is **inferred** from `lib/supabase.ts` and `app/api/chat/route.ts`.
 
 **`players` table — columns touched by `savePlayer` upsert (camelCase → snake_case in DB):**
 
@@ -328,6 +330,7 @@ No SQL migrations live in this repo. The following is **inferred** from `lib/sup
 | `bounty` | number |
 | `is_wanted` | boolean |
 | `turn_count` | number |
+| `received_sam_starter_outfit` | boolean (default false) — Sam’s first-purchase plain outfit already given |
 | `last_seen` | timestamptz (ISO string from code) |
 
 **Also referenced on `players` (Jane limits):** `jane_calls_today`, `jane_calls_reset_at`, `tier` — see `checkAndDecrementJaneCalls`.
@@ -373,7 +376,7 @@ Do not commit secret values.
 - [x] `WEAPON_DATA` with `twoHanded`, damage bands, `artId`, `layer`
 - [x] `isTwoHanded()` and `rollWeaponDamage()`
 - [x] Two-handed vs shield equip guards + `shield` on `PlayerState` + sidebar messaging
-- [x] Starting gold `10000` for new initial state
+- [x] New characters: **`0`** gold, **`unarmed`**, **`gray_robe`** only; first Sam **`BUY`** adds complimentary plain outfit (shirt, trousers, belt, shoes) and removes the robe
 - [x] Direction parsing: `extractDirection` uses whole tokens (fixes `STATS` / substring false positives)
 - [x] Batch art script targeting Grok image API (`grok-imagine-image`)
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
@@ -404,10 +407,20 @@ Do not commit secret values.
 - [ ] Re-enable Jane streaming in `main_hall` before production
 - [ ] Persist `known_spells` / `known_deities` in savePlayer
 - [ ] Static structured shop for Pip (beginner gear)
-- [ ] Supabase migration file in repo documenting players + shield column
+- [ ] Apply **`supabase/migrations`** on the Supabase project (incl. **`received_sam_starter_outfit`**; shield column if still missing on older DBs)
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Destitute new player, Sam first-purchase outfit
+
+- **`createInitialWorldState`:** **`gold: 0`**, **`weapon: unarmed`**, inventory only **`gray_robe`** (matches post-death poverty).
+- **First successful Sam `BUY` in Main Hall:** if **`receivedSamStarterOutfit`** is false, Sam adds **`plain_shirt`**, **`plain_trousers`**, **`plain_belt`**, **`plain_shoes`** to inventory, removes **`gray_robe`**, sets flag true, and appends narration. Flag resets on **`applyPlayerDeath`** so reborn characters can earn the bundle again on next first purchase.
+- **`ITEMS`:** four nondescript clothing entries (no AC; robe humiliation stops once the robe is gone).
+- **`UNEQUIP` weapon:** sheathes to **`unarmed`** (removed old “humble blade” short-sword lock).
+- **`/api/chat`:** opening Jane prompt notes no gold, no weapon, backless gray robe; **removed** dev **`gold < 1000` → 10000** bump.
+- **Persistence:** **`received_sam_starter_outfit`** on **`players`** via **`savePlayer`** / load merge; migration **`supabase/migrations/20260404180000_players_received_sam_starter_outfit.sql`**.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Unarmed death, BEG SAM, rusty shortsword
 
@@ -420,7 +433,7 @@ Do not commit secret values.
 ### 2026-04-04 — Church of Perpetual Life, Guild Courtyard, death redesign, live weather
 
 - **Church of Perpetual Life + Guild Courtyard** in **`gameData`** (`MAIN_HALL_ROOMS`), initial **`rooms`/`npcs`** in **`gameState`**. **`main_hall_exit`** gains west→**`guild_courtyard`**. Item **`gray_robe`** (`type: "clothing"`). NPC **`priest_of_perpetual_life`** (silent). Pools: **`PRIEST_SILENCE_RESPONSES`** (10), **`REBIRTH_NARRATIVES`** (15), **`ROOM_ROBE_HUMILIATION`** / **`COURTYARD_ROBE_HUMILIATION`** (10 each).
-- **Death:** **`applyPlayerDeath`** — carried **gold → 0**, inventory → **gray robe only**, weapon default **short_sword**, armor/shield **null**, **HP** full, **`currentRoom` → `church_of_perpetual_life`**, chronicle line. **`resolveCombatRound`** appends **`COMBAT_TEMPLATES.playerDeath`**, rebirth line, gold/carry loss text.
+- **Death:** **`applyPlayerDeath`** — carried **gold → 0**, inventory → **gray robe only**, weapon **`unarmed`**, armor/shield **null**, **`receivedSamStarterOutfit` → false**, **HP** full, **`currentRoom` → `church_of_perpetual_life`**, chronicle line. **`resolveCombatRound`** appends **`COMBAT_TEMPLATES.playerDeath`**, rebirth line, gold/carry loss text.
 - **Priest:** **`SAY`** / **`TELL`** in church → static **`pickTemplate(PRIEST_SILENCE_RESPONSES)`**, no Jane.
 - **Robe humiliation:** **`buildRoomDescription`** appends a line whenever **`gray_robe`** is in inventory (**`ROOM_ROBE_HUMILIATION`** or courtyard pool in courtyard).
 - **Courtyard:** **`lib/weatherService.ts`** — **`getCourtyardWeather()`** (Open-Meteo Warsaw + CET/CEST **`TimeOfDay`**, 24 **`weatherLine`** strings). **`app/api/chat/route.ts`** intercepts static responses when **`currentRoom === "guild_courtyard"`** and replaces body with **`buildCourtyardDescription`** (no LLM). Fallback if API fails.
@@ -523,7 +536,7 @@ Do not commit secret values.
 - **`EQUIP [item]`** uses **`runEquipItemFromPhrase`**: try shield in pack → armor in pack → weapon (**`runWieldWeapon`**). **`EQUIP SHIELD`** / **`EQUIP ARMOR`** long forms unchanged.
 - **`WIELD [item]`** calls the **same** router (alias; no separate behavior).
 - **Player text:** BUY hint and HELP emphasize **`EQUIP`**; empty-weapon prompt is *"Equip what?"*
-- **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; generic **`REMOVE [item]`** / **`UNEQUIP [item]`** for equipped gear (weapon sheathes to **`short_sword`**).
+- **`REMOVE ARMOR`** / **`UNEQUIP ARMOR`**; generic **`REMOVE [item]`** / **`UNEQUIP [item]`** for equipped gear (weapon sheathes to **`unarmed`** in current code).
 - **Autocomplete:** **`EQUIP `** suggests weapons + shields + body armor from inventory; **`WIELD `** mirrors those targets.
 
 ### 2026-04-07 — Equip system: buy → inventory only, explicit equip, INVENTORY tags
@@ -540,7 +553,7 @@ Do not commit secret values.
 - **BUG 1 (BUY not updating inventory/shield/armor):** Engine `runSamPurchase` now builds a single **`nextPlayer`** snapshot after `updatePlayerGold` (buckler → `shield`, leather/chain → `armor`, weapons → new/merged **`inventory`** array). Root cause of “lost” purchases was **`/api/chat` reloading state from Supabase only** and ignoring the client’s **`worldState`**, so the next command ran on stale DB before async `savePlayer` finished. **Fix:** after a successful `loadPlayer`, if the request body’s **`worldState.player.id`** matches the saved player, **merge** rooms/npcs/events/chronicle/worldTurn and **player** from the client over the DB-built state (keep canonical `id` / `name` from DB).
 - **BUG 2 (EQUIP SHIELD after buy):** **`matchShieldFromPhrase`** now also matches the **equipped** `player.shield` (e.g. buckler from Sam’s shop). **`runEquipShield`** short-circuits if already bearing that shield.
 - **BUG 3 (EQUIP BUCKLER → weapon path):** After `EQUIP SHIELD …`, **`EQUIP <phrase>`** checks **`isShieldSlotItem(asKey)`** (underscore-normalized) and routes to **`runEquipShield`** before **`runWieldWeapon`**.
-- **BUG 4 (starting gold 50):** `createInitialWorldState` already uses **`gold: 10000`**; old rows kept **`50`** in Supabase. **Fix:** after merge, if **`player.gold < 1000`**, set **`gold` to `10000`** and **`savePlayer`** once (dev/stale-test bump; does not lower gold for rich characters).
+- **BUG 4 (starting gold 50):** *Superseded (2026-04-04):* new characters now start at **`0`** gold; the route’s **`< 1000` → 10000** bump was **removed** so destitute onboarding is real.
 
 ### 2026-04-05 — Static Sam shop + main_hall JSON Jane (testing)
 

@@ -49,6 +49,7 @@ export async function savePlayer(player: Record<string, unknown>) {
       bounty: player.bounty,
       is_wanted: player.isWanted,
       turn_count: player.turnCount,
+      received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
       last_seen: new Date().toISOString(),
     });
 

@@ -53,7 +53,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 14, 2026*
+*Last updated: April 15, 2026*
 
 ## 1. Project Overview
 
@@ -97,7 +97,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameData.ts` | Static world: `MAIN_HALL_ROOMS`, `NPCS`, `ITEMS`, `SAM_INVENTORY`, `ADVENTURES`, `COMBAT_TEMPLATES` |
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, …), `createInitialWorldState()`, state mutators, `tickWorldState`, `applyFireballConsequences` |
 | `lib/gameEngine.ts` | `processInput`, autocomplete, `buildSituationBlock`, combat, banking, **EQUIP** (primary) / **WIELD** (alias), **Sam shop** (`SHOP`/`LIST`/`SAM`, `BUY` in `main_hall`), `extractDirection` (token-safe) |
-| `lib/uoData.ts` | `WEAPON_DATA`, `isTwoHanded()`, `rollWeaponDamage()` |
+| `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer`, `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
@@ -254,10 +254,12 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 ## 9. Weapon & Equip System
 
-- **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed). **`halberd`** and **`bardiche`** use **`Mace Fighting`** (corrected from Swordsmanship).
+- **Data:** `lib/uoData.ts` — `WEAPON_DATA`: keys are weapon item ids; each entry has `artId`, `twoHanded`, `skill`, `damage` (`"min-max"` string), `layer` (1 = one-handed, 2 = two-handed), **`weaponSpeed`** (AD&D 2e initiative factor **1–10**, **1 = fastest**). **`halberd`** and **`bardiche`** use **`Mace Fighting`** (corrected from Swordsmanship).
+- **`weaponSpeed` source:** Ultima Online **T2A** swing speeds (see [wiki.uosecondage.com/Weapons](https://wiki.uosecondage.com/Weapons)), converted to the AD&D scale with **`round(10 − ((UOspeed − 10) / 48) × 9)`** (higher UO speed ⇒ lower AD&D factor ⇒ acts earlier).
+- **`getDexReactionBonus(dex)`:** AD&D 2e PHB Table 2 reaction adjustment for initiative (exported from `uoData.ts`). **Initiative (when used):** **`1d10 + weaponSpeed − getDexReactionBonus(dex)`** — **lower total acts first**. Starting DEX **10** ⇒ bonus **0**.
 - **`isTwoHanded(weaponKey)`:** `WEAPON_DATA[weaponKey]?.twoHanded ?? false`.
 - **`rollWeaponDamage(weaponKey)`:** Parses `damage` range; if key missing, returns uniform **1–5**.
-- **Combat (`resolveCombatRound`):**
+- **Combat (`resolveCombatRound`) — current engine:**
   - **Player damage:** `rollWeaponDamage(weapon) + floor((STR − 10) / 2)`.
   - **Player hit chance:** **75%** base **+** `(DEX − 10) × 2%`, capped **40%–95%**.
   - **Enemy damage:** `rollDice(enemy.damage) − totalAC`, minimum **1**; **`totalAC`** = body armor **`ITEMS[player.armor]?.stats?.armorClass`** (or 0) **+** shield **`ITEMS[player.shield]?.stats?.armorClass`** (or 0).
@@ -373,6 +375,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-15 — T2A `weaponSpeed` + AD&D DEX reaction bonus in `uoData`
+
+- **`WEAPON_DATA`:** each weapon has **`weaponSpeed`** (1–10) from T2A UO swing speeds via **`round(10 − ((UOspeed − 10) / 48) × 9)`**; comments cite wiki.uosecondage.com/Weapons.
+- **`getDexReactionBonus(dex)`:** PHB Table 2; intended initiative **`1d10 + weaponSpeed − getDexReactionBonus(dex)`**, lower total first (not yet wired into `resolveCombatRound`).
 
 ### 2026-04-14 — Dexterity rename, combat DEX hit/dodge, STATS combat readout
 

@@ -11,6 +11,7 @@ import {
   ITEMS,
   ADVENTURES,
   COMBAT_TEMPLATES,
+  getEnemyDeathPool,
   SAM_INVENTORY,
   ARMOR_ABSORB_DESCRIPTIONS,
   ARMOR_FULL_ABSORB_DESCRIPTIONS,
@@ -1449,10 +1450,12 @@ export function resolveCombatRound(
     }
 
     if (newEnemyHp <= 0) {
+      const deathPool = getEnemyDeathPool(enemyData.bodyType);
       narrative +=
         "\n\n" +
-        fillTemplate(pickTemplate(COMBAT_TEMPLATES.enemyDeath), {
+        fillCombat(pickRandom(deathPool), {
           enemy: enemyData.name,
+          weapon: weaponItem?.name ?? "weapon",
         });
       return true;
     }

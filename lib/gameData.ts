@@ -672,18 +672,161 @@ export const COMBAT_TEMPLATES = {
     "The {enemy}'s blow goes wide.",
     "You parry the {enemy}'s strike.",
   ],
-  enemyDeath: [
-    "The {enemy} collapses, defeated.",
-    "The {enemy} falls to the ground and moves no more.",
-    "With a final cry, the {enemy} is vanquished.",
-    "The {enemy} crumbles — the fight is over.",
-  ],
   playerDeath: [
-    "Your vision darkens. The {enemy} has bested you this day.",
-    "You fall, defeated. The darkness takes you.",
-    "The {enemy} stands over your fallen form.",
+    "Dark.",
+    "The floor comes up fast.",
+    "Not like this.",
+    "You had more to do.",
+    "The {enemy} was better. Today.",
+    "Your legs go first. Then everything else. The {enemy} watches you fall.",
+    "You try to raise your weapon. Your arm won't answer. The darkness is faster.",
+    "The wound is bad. You knew it the moment it happened. You just didn't want to believe it.",
+    "Your knees hit the stone before you decide to kneel. Your body has already surrendered.",
+    "The last thing you feel is the cold of the floor against your cheek.",
+    "You think of home. Briefly. Then nothing.",
+    "There was so much left undone. The {enemy} didn't care.",
+    "You weren't afraid. That surprises you, in the last moment.",
+    "The pain stops. That's almost a mercy.",
+    "You fought well. It wasn't enough. Not today.",
+    "The {enemy} stands over you, breath heaving. You try to get up. You cannot.",
+    "Your vision narrows to a point. The {enemy} is just a shape in the grey. Then gone.",
+    "You hear yourself make a sound you've never made before. Then silence.",
+    "The world tilts. You reach for something to hold. There is nothing. You fall.",
+    "Blood. So much of it. Yours. You stare at it with something like wonder before the dark takes you.",
+    "That was— you didn't even— the {enemy} moves so fast.",
+    "You don't remember falling. You're just already on the ground.",
+    "One moment you were fighting. The next you are looking at the ceiling.",
+    "You blink. The fight is over. You lost. The realization arrives just before the darkness.",
+    "It happens between heartbeats. The {enemy} finds the gap. That's all it takes.",
+    "You don't fall all at once. You go in stages — first the weapon drops, then the knees, then the chest, then the cheek against cold stone, and somewhere in the long falling you understand that this is how it ends, here, like this, in this place, at the hands of this creature, and there is nothing you can do about it now.",
+    "The {enemy} steps back and watches you bleed. You press your hand against the wound but the pressure does nothing and you both know it. You want to say something. Something that matters. But the words won't come and the dark is already eating the edges of your vision, and then it eats the middle too.",
+    "You've been hurt before. This is different. This is the wound you don't come back from and your body knows it even if your mind refuses. You sink to your knees. You look up at the {enemy}. You want it to mean something. It doesn't. It's just a fight and you lost. The dark is kind, in the end. It comes quickly.",
   ],
 };
+
+// ── HUMANOID ENEMY DEATH ────────────────────────────────────
+
+export const HUMANOID_DEATH_DESCRIPTIONS: string[] = [
+  "Dead.",
+  "The {enemy} drops.",
+  "It's over.",
+  "The {enemy} stops moving.",
+  "One less.",
+  "The {enemy} folds at the knees and goes down hard.",
+  "The {enemy} hits the ground face-first and does not move again.",
+  "The {enemy}'s weapon clatters from its hand. It follows it to the floor.",
+  "The {enemy} staggers back, hits the wall, slides down it. Still.",
+  "The {enemy} crumples like something essential has been removed.",
+  "The {enemy} makes a sound — not a word, not a scream, just a sound — and then silence.",
+  "The {enemy} gurgles once. Then the light goes out of its eyes.",
+  "A long exhale. The {enemy}'s last breath mists in the cold air. Then nothing.",
+  "The {enemy} screams — short, sharp, surprised — and then the scream stops.",
+  "The {enemy} says something you can't hear. Its lips move once more. Then still.",
+  "The {enemy}'s eyes go glassy. It takes a moment for the rest of it to catch up.",
+  "The {enemy} looks at you with something you can't quite name. Then it's gone.",
+  "The light leaves the {enemy}'s eyes before its body knows it's dead.",
+  "The {enemy} stares at the wound with an expression of pure disbelief. Then falls.",
+  "There is a moment — just a moment — where the {enemy} seems to understand. Then the eyes go empty.",
+  "The {enemy} reaches for you one last time. The hand falls short. It falls shorter still.",
+  "The {enemy} tries to speak. Blood fills the attempt. It pitches forward.",
+  "On its back now, the {enemy} stares at the ceiling with an expression of profound surprise.",
+  "The {enemy} gets back up once. You put it down again. It doesn't get up a third time.",
+  "The {enemy} fights dying the way it fought living — hard and ugly and without grace. In the end it loses both fights.",
+  "Your {weapon} found something vital. The {enemy} knows it. Falls.",
+  "The {enemy} had a plan. The plan ended here.",
+  "It bleeds out quickly. You watch to be sure.",
+  "The {enemy} doesn't die all at once. But it gets there.",
+  "No last words. Just the floor.",
+  "The {enemy} goes down slow. It keeps trying to get back up and each time it nearly makes it and each time it doesn't quite, and then it stops trying and just lies there breathing in wet ragged pulls and you stand over it and wait and then even those stop and the room is quiet.",
+  "The {enemy} falls and in the falling seems almost graceful, one arm thrown out, weapon spinning away, and it hits the ground with a sound that is more final than you expected, and lies there in a spreading red halo, and you realize your hands are shaking.",
+  "It dies looking at you. Right at you. And you meet its gaze because it seems wrong not to, and you stand there together in that strange intimacy of one who killed and one who was killed, and then the eyes go still and you are alone with what you've done.",
+];
+
+// ── BEAST ENEMY DEATH ───────────────────────────────────────
+
+export const BEAST_DEATH_DESCRIPTIONS: string[] = [
+  "It drops.",
+  "The {enemy} falls mid-lunge.",
+  "A yelp. Then silence.",
+  "It tries to rise. Cannot.",
+  "Still at last.",
+  "The {enemy} lets out a long, low whine and then is quiet.",
+  "A sharp cry — almost human in its surprise — and then the {enemy} folds.",
+  "The {enemy} snarls once more, weakly, then the snarl fades into nothing.",
+  "A howl that cuts off wrong. The {enemy} falls sideways.",
+  "The {enemy} whimpers. Just once. Then still.",
+  "The {enemy} collapses mid-stride, momentum carrying it forward even as the life leaves it.",
+  "Four legs buckle at once. The {enemy} goes down like a felled tree.",
+  "The {enemy} tries to crawl toward you with its last strength. It doesn't make it.",
+  "The {enemy} rolls onto its side and its legs keep running for a moment, going nowhere.",
+  "The great body shudders once, twice, then is motionless.",
+  "The {enemy}'s eyes go dim. Not like a person — like a lamp guttering out.",
+  "Something leaves the {enemy}'s eyes before its body stops moving. Something that was watching.",
+  "The {enemy} was magnificent and terrible and now it is neither. Now it is just weight on the ground.",
+  "The {enemy} looked at you at the end. You'll remember that look.",
+  "It fought until it had nothing left. Then it gave that too.",
+  "The {enemy} goes down hard and tries to get up — haunches first, then front legs — and almost makes it, almost, before the legs give out again and it lies there with its sides heaving and those eyes still on you, still watching, still something in them even now, and then the heaving slows and the eyes close and the breathing stops and there is just the silence and the weight of what happened here.",
+];
+
+// ── AMORPHOUS ENEMY DEATH ───────────────────────────────────
+
+export const AMORPHOUS_DEATH_DESCRIPTIONS: string[] = [
+  "It stops moving.",
+  "The mass goes still.",
+  "The {enemy} collapses inward.",
+  "Nothing left.",
+  "Just a stain now.",
+  "The {enemy}'s mass loses cohesion all at once — it spreads across the floor and does not reform.",
+  "The {enemy} contracts to half its size, then a quarter, then collapses into a still, dark puddle.",
+  "The surface of the {enemy} stops rippling. The pseudopods retract. It is simply a mass now. Inert.",
+  "Something like a shudder passes through the {enemy}'s entire body. Then it spreads flat and doesn't move.",
+  "The {enemy} deflates. That's the only word for it. Whatever held it together is gone.",
+  "The {enemy} makes no sound as it dies. It simply stops being what it was.",
+  "There is no cry, no gasp, no last breath. The {enemy} is alive and then it is not and the difference is disturbingly subtle.",
+  "The {enemy} dissolves at the edges first, then the center follows, and then there is nothing that could be called alive.",
+  "Whatever the {enemy} was — whatever it wanted, if it wanted anything — it is finished now. The remains are already beginning to evaporate.",
+  "You watch the {enemy} die and realize you have no idea what just ended. Something old. Something strange. Gone now.",
+  "The {enemy}'s mass shudders — a full-body convulsion that sends ripples racing to its edges — and then it contracts violently inward, smaller and smaller, the surface bubbling and hissing, and the smell is awful, and then it is just a small dark puddle on the stone that slowly, slowly stops moving, and then does not move at all, and the silence after is very complete.",
+];
+
+// ── UNDEAD ENEMY DEATH ──────────────────────────────────────
+
+export const UNDEAD_DEATH_DESCRIPTIONS: string[] = [
+  "It falls apart.",
+  "Finally still.",
+  "The {enemy} collapses.",
+  "Bones. Just bones now.",
+  "Whatever drove it — gone.",
+  "The {enemy} drops like its strings were cut — all at once, no warning, just suddenly on the floor.",
+  "The {enemy} comes apart as it falls — pieces of it clattering separately across the stone.",
+  "The animating force leaves the {enemy} mid-stride. The body doesn't know it's dead until it hits the floor.",
+  "The {enemy} crumbles from the top down — skull first, then ribs, then the rest, rattling into a pile.",
+  "The {enemy} falls and its bones scatter and the sound of them is very loud in the silence.",
+  "The {enemy}'s eyes — those horrible burning eyes — gutter out. The silence that follows is merciful.",
+  "Whatever light burned in the {enemy}'s eyes dies. The body falls. Just bones now. Just matter.",
+  "The magic holding the {enemy} together gives out all at once. What remains is not frightening. It's just old.",
+  "The {enemy} dies — if dying is even the right word for something already dead — without sound, without drama. It simply stops.",
+  "You destroyed it. Whether that counts as killing it, you're not sure. But it's not moving anymore.",
+  "The {enemy} falls and a part of you keeps waiting for it to get back up. It doesn't. You wait a little longer anyway.",
+  "Even dead — truly dead this time — the {enemy}'s hand keeps reaching for you. Reflex. Instinct. Nothing more. You step back anyway.",
+  "The {enemy} is destroyed. The wrongness it carried lingers for a moment in the air, like a smell, and then that too is gone.",
+  "It didn't deserve to be what it was. Whatever it was in life, it didn't deserve that. You try not to think about it too hard.",
+  "The {enemy} goes down and this time it stays down and the relief of that is profound and a little shameful.",
+  "The {enemy} falls in pieces — not all at once but in stages, the way old things collapse — and the bones that were held together by something that should not have existed scatter across the floor with a sound like thrown dice, and the light that burned where eyes should have been dies mid-fall, and what's left on the stone is just old bones and old dust and whatever the thing was it isn't anymore and the room feels cleaner for it.",
+];
+
+export function getEnemyDeathPool(bodyType: NPCBodyType | undefined): string[] {
+  switch (bodyType) {
+    case "beast":
+      return BEAST_DEATH_DESCRIPTIONS;
+    case "amorphous":
+      return AMORPHOUS_DEATH_DESCRIPTIONS;
+    case "undead":
+      return UNDEAD_DEATH_DESCRIPTIONS;
+    default:
+      return HUMANOID_DEATH_DESCRIPTIONS;
+  }
+}
 
 export {
   WEAPON_SLASH_KEYS,

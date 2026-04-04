@@ -1,4 +1,6 @@
+// Run: npm install openai
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { processInput, buildSituationBlock, stripTrailingSituationBlocks } from "../../../lib/gameEngine";
 import { createInitialWorldState, WorldState } from "../../../lib/gameState";
@@ -12,9 +14,12 @@ import {
   checkAndDecrementJaneCalls,
 } from "../../../lib/supabase";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const grok = new OpenAI({
+  apiKey: process.env.GROK_API_KEY,
+  baseURL: "https://api.x.ai/v1",
 });
+
+const useGrok = !!process.env.GROK_API_KEY;
 
 const JANE_SYSTEM_PROMPT = `You are Jane — an ancient intelligence woven into the fabric of the realms of Living Eamon.
 
@@ -50,6 +55,56 @@ WORLD RULES:
 const JANE_UNAVAILABLE_FREE = "The air grows still. Whatever stirs in the shadows does not speak today. The voices will return at dawn.\n\n*You might: look around, check your inventory, or head in a new direction.*";
 const JANE_UNAVAILABLE_PAID = "You have walked far today, hero. The realm grows quiet as evening falls. Rest until dawn, when the voices return.\n\n*You might: look around, check your inventory, or bank your gold.*";
 const CONTENT_NOT_YET_KNOWN = "This holds its secrets close. Some things in this realm are not yet fully known.\n\n*You might: look around, try something else, or move on.*";
+
+async function streamWithFallback(
+  messages: { role: "user" | "assistant"; content: string }[],
+  systemPrompt: string,
+  maxTokens: number = 1024
+): Promise<ReadableStream<Uint8Array>> {
+  const encoder = new TextEncoder();
+
+  if (useGrok) {
+    try {
+      const stream = await grok.chat.completions.create({
+        model: "grok-3",
+        max_tokens: maxTokens,
+        stream: true,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+      });
+
+      return new ReadableStream({
+        async start(controller) {
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) controller.enqueue(encoder.encode(text));
+          }
+          controller.close();
+        },
+      });
+    } catch (err) {
+      console.warn("Grok failed, falling back to Claude:", err);
+    }
+  }
+
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const stream = await anthropic.messages.stream({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages,
+  });
+
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+          controller.enqueue(encoder.encode(chunk.delta.text));
+        }
+      }
+      controller.close();
+    },
+  });
+}
 
 function buildJaneContext(dynamicContext: string, state: WorldState): string {
   const player = state.player;
@@ -232,12 +287,7 @@ export async function POST(request: NextRequest) {
         return { role: m.role as "user" | "assistant", content: m.content };
       }).concat([{ role: "user" as const, content: context }]);
 
-      const stream = await client.messages.stream({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1024,
-        system: JANE_SYSTEM_PROMPT,
-        messages: conversationMessages,
-      });
+      const llmStream = await streamWithFallback(conversationMessages, JANE_SYSTEM_PROMPT, 1024);
 
       // Save player to Supabase
       if (resolvedPlayerId) {
@@ -249,10 +299,15 @@ export async function POST(request: NextRequest) {
           if (echoPrefix) {
             controller.enqueue(encoder.encode(echoPrefix + "\n\n"));
           }
-          for await (const chunk of stream) {
-            if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-              controller.enqueue(encoder.encode(chunk.delta.text));
+          const reader = llmStream.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) controller.enqueue(value);
             }
+          } finally {
+            reader.releaseLock();
           }
           const situationSuffix = "\n\n" + buildSituationBlock(newState);
           controller.enqueue(encoder.encode(situationSuffix));
@@ -319,21 +374,29 @@ export async function POST(request: NextRequest) {
         return sendResponse(CONTENT_NOT_YET_KNOWN, engineResult.newState);
       }
 
-      const stream = await client.messages.stream({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 512,
-        system: JANE_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: janeContext }],
-      });
+      const llmStream = await streamWithFallback(
+        [{ role: "user", content: janeContext }],
+        JANE_SYSTEM_PROMPT,
+        512
+      );
 
       let fullDescription = "";
       const readable = new ReadableStream({
         async start(controller) {
-          for await (const chunk of stream) {
-            if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-              fullDescription += chunk.delta.text;
-              controller.enqueue(encoder.encode(chunk.delta.text));
+          const reader = llmStream.getReader();
+          const decoder = new TextDecoder();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) {
+                fullDescription += decoder.decode(value, { stream: true });
+                controller.enqueue(value);
+              }
             }
+            fullDescription += decoder.decode();
+          } finally {
+            reader.releaseLock();
           }
           // Save to world object cache
           if (resolvedPlayerId) {

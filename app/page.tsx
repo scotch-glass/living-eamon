@@ -30,10 +30,25 @@ export default function Home() {
   const typingRef = useRef(false);
   const displayedRef = useRef("");
   const skipTypingRef = useRef(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledRef = useRef(false);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!userScrolledRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      userScrolledRef.current = (scrollHeight - scrollTop - clientHeight) > 100;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -237,6 +252,7 @@ export default function Home() {
   };
 
   const sendMessage = async (commandOverride?: string) => {
+    userScrolledRef.current = false;
     const text = (commandOverride ?? input).trim();
     if (!text || loading || isTyping) return;
     const userMsg: Message = { role: "user", content: text };
@@ -467,7 +483,7 @@ export default function Home() {
           {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11, marginLeft: "auto" }}>⚠ WANTED</span>}
         </div>
 
-        <div style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}>
+        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: 24, textAlign: msg.role === "user" ? "right" : "left" }}>

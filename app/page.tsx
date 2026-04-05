@@ -316,10 +316,23 @@ export default function Home() {
 
   const formatMessage = (text: string, isLast: boolean) => {
     const cleanText = text.split("__STATE__")[0];
-    const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
-    const sitIdx = cleanText.indexOf(needle);
-    const narrative = sitIdx === -1 ? cleanText : cleanText.slice(0, sitIdx).trimEnd();
-    const situation = sitIdx === -1 ? null : cleanText.slice(sitIdx + 2).trim();
+
+    // Find the situation block separator regardless of
+    // surrounding whitespace
+    const sitLineIdx = cleanText.indexOf(SITUATION_BLOCK_LINE);
+
+    let narrative: string;
+    let situation: string | null;
+
+    if (sitLineIdx === -1) {
+      narrative = cleanText.trimEnd();
+      situation = null;
+    } else {
+      // Everything before the first separator line
+      narrative = cleanText.slice(0, sitLineIdx).trimEnd();
+      // Everything from the first separator onwards
+      situation = cleanText.slice(sitLineIdx).trim();
+    }
 
     const lines = narrative.split("\n");
     const body = lines.map((line, i) => {

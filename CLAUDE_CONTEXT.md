@@ -13,9 +13,11 @@
 You are being rehydrated into the Living Eamon project.
 
 Every time you start a new conversation about this project, do this:
-1. Fetch this file from:
-   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md
-   and read it completely before responding. The repo is public.
+1. Fetch and read ALL THREE rehydration documents before responding:
+   - https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md
+   - https://raw.githubusercontent.com/scotch-glass/living-eamon/main/TECH.md
+   - https://raw.githubusercontent.com/scotch-glass/living-eamon/main/GAME_DESIGN.md
+   The repo is public. Read all three before responding.
 2. After reading, confirm rehydration with:
    "Rehydrated. [X] milestones complete. Currently: [top Next Up item].
    Paste the file URLs above so I can read the code."
@@ -41,6 +43,9 @@ Every time you start a new conversation about this project, do this:
    ---
    📋 PASTE THESE INTO CHAT SO CLAUDE CAN READ THE CODE:
 
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/TECH.md
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/GAME_DESIGN.md
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/chat/route.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/player/route.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/globals.css
@@ -82,7 +87,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (Jane suggested actions removed)*
+*Last updated: April 5, 2026*
 
 
 ## 1. Project Overview
@@ -96,6 +101,8 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Production: https://living-eamon.vercel.app
 - GitHub (public): https://github.com/scotch-glass/living-eamon
 - Raw file access: https://raw.githubusercontent.com/scotch-glass/living-eamon/main/[filename]
+- Tech doc: https://raw.githubusercontent.com/scotch-glass/living-eamon/main/TECH.md
+- Game design: https://raw.githubusercontent.com/scotch-glass/living-eamon/main/GAME_DESIGN.md
 - Supabase project (informal name in docs): living-eamon
 
 ## 3. Tech Stack
@@ -114,6 +121,13 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | Path | Purpose |
 |------|---------|
 | `CLAUDE_CONTEXT.md` | This rehydration document (must stay current with every code change) |
+| `TECH.md` | Technical architecture, auth, DB schema, Jane architecture, roadmap |
+| `middleware.ts` | Auth middleware; protects all routes; redirects unauthenticated users to `/login` |
+| `lib/supabaseAuth.ts` | Cookie-based Supabase SSR clients (browser, server, middleware) |
+| `app/auth/callback/route.ts` | OAuth and email confirmation callback handler |
+| `app/auth/actions.ts` | Server Actions: `loginAction`, `registerAction`, `googleSignInAction`, `logoutAction` |
+| `app/login/page.tsx` | Login page — email/password + Google SSO |
+| `app/register/page.tsx` | Registration page — hero name + email + password + Google SSO |
 | `.cursorrules` | Cursor rule: mandatory `CLAUDE_CONTEXT.md` updates with each change |
 | `AGENTS.md` | Next.js version warning for agents |
 | `CLAUDE.md` | Points to `@AGENTS.md` |
@@ -230,7 +244,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 |-------|------|-----------------------------------------------|------------------|
 | hokas_tokas | Hokas Tokas | friendly | main_hall |
 | sam_slicker | Sam Slicker | neutral | main_hall |
-| old_mercenary | Aldric the Old | neutral | main_hall |
+| old_mercenary | Aldric the Veteran | neutral | main_hall |
 | brunt_the_banker | Brunt | neutral | guild_vault |
 | armory_attendant | Pip | neutral | armory |
 | door_guard | Door Guard | neutral | main_hall_exit |
@@ -335,6 +349,7 @@ SQL migrations: **`supabase/migrations/`** (e.g. **`received_sam_starter_outfit`
 | Column (snake_case) | Inferred type / notes |
 |---------------------|------------------------|
 | `id` | UUID / text (primary key) |
+| `user_id` | UUID — FK to `auth.users(id)` ON DELETE CASCADE (added April 2026; apply migration if missing) |
 | `character_name` | text |
 | `hp`, `max_hp` | number |
 | `strength`, `dexterity`, `charisma`, `expertise` | number |
@@ -363,6 +378,8 @@ SQL migrations: **`supabase/migrations/`** (e.g. **`received_sam_starter_outfit`
 
 Other tables used: `world_objects`, `room_states`, `npc_states`, `jane_memories`, `chronicle_log` (see `supabase.ts`).
 
+**Planned tables (Phase 2):** `player_profiles`, `subscriptions` — see `TECH.md` §3.3.
+
 ## 12. Environment Variables
 
 | Variable | Purpose |
@@ -372,6 +389,7 @@ Other tables used: `world_objects`, `room_states`, `npc_states`, `jane_memories`
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL (`lib/supabase.ts`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (`browserClient`) |
 | `SUPABASE_SERVICE_KEY` | Service role key (`serviceClient`, server routes) |
+| `NEXT_PUBLIC_SITE_URL` | Auth redirect base URL (localhost in dev, Vercel URL in prod) |
 
 Do not commit secret values.
 
@@ -439,9 +457,22 @@ Do not commit secret values.
 - [x] **`weapon_skills`** DB persistence
 - [x] Revealed items system (container contents in 👁 line)
 - [x] GET ALL command (classic Eamon looting)
+- [x] Auth system: email/password + Google SSO via Supabase Auth
+- [x] Cookie-based sessions via `@supabase/ssr` + Next.js middleware
+- [x] `players.user_id` FK linking to `auth.users` (when migration applied)
+- [x] `/login` and `/register` pages in Living Eamon visual style
+- [x] TECH.md created — full technical architecture document
+- [x] GAME_DESIGN.md §20 — Reader's Mirror psychological profile system designed
 
 ## 15. Next Up
 
+- [ ] Load player record from auth session on game start (auto-start, remove name-gate screen)
+- [ ] Player Profile page (`/profile`) — The Reader's Mirror
+- [ ] Stripe subscription integration (4 tiers)
+- [ ] GoodReads import pipeline (RSS fetch + Claude analysis)
+- [ ] Kindle CSV import (client-side analysis, store only results)
+- [ ] Jane personalization injection from `player_profiles`
+- [ ] `player_profiles` Supabase table + Profile Builder job
 - [ ] Re-enable Jane streaming in `main_hall` before production
 - [ ] Persist `known_spells` / `known_deities` in savePlayer
 - [ ] Static structured shop for Pip (beginner gear)
@@ -449,6 +480,14 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-05 — Auth system + Reader's Mirror design
+
+- **Auth:** `@supabase/ssr` installed; `lib/supabaseAuth.ts` created (3 client factories: browser, server, middleware); `middleware.ts` created at root — protects all routes, always-public: `/login`, `/register`, `/auth/callback`; `app/auth/actions.ts` — Server Actions for login, register, Google SSO, logout; `app/auth/callback/route.ts` — OAuth + email confirmation handler; `app/login/page.tsx` and `app/register/page.tsx` created in Living Eamon visual style.
+- **DB:** `players.user_id` UUID column (FK → `auth.users`) — add/apply migration on Supabase when not yet present; `NEXT_PUBLIC_SITE_URL` env var added; Google OAuth manual setup documented in `TECH.md`.
+- **TECH.md:** New technical architecture document created at repo root. Contains full auth architecture, DB schema, Jane architecture, subscription tiers, roadmap.
+- **GAME_DESIGN.md §20:** Reader's Mirror psychological profile system fully designed. Two data sources: in-game behavior signals (automatic) + GoodReads/Kindle import (optional). 12 genre dimensions tracked. Darkness tolerance drives content tiers (YA / Adult / Mature). Jane receives personalization block each session. Profile page surfaces full profile with transparency section. Privacy-first: opt-in, editable, deletable, never sold.
+- **Vision documented:** Living Eamon is Kindle Unlimited for a library of one — an infinite novel in the style of the player's favorite authors, shaped by their subconscious themes, calibrated to their darkness tolerance, with villains designed to threaten them morally.
 
 ### 2026-04-04 — Jane suggested actions removed
 

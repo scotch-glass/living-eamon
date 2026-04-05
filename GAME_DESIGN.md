@@ -400,3 +400,168 @@ The Order considers runebooks strong evidence of Occult practice.
 - Night Sight (Circle 1 Occult) corrected: grants vision in
   complete darkness without a light source, not merely
   illumination.
+
+---
+
+## 20. The Reader's Mirror — Psychological Profile System
+
+*The most ambitious feature of Living Eamon. The engine that makes this the player's favorite novel.*
+
+---
+
+### The Vision
+
+Living Eamon is not a game. It is a novel. Specifically, it is the player's favorite novel — the one they have always wanted to read but that has never existed because it requires knowing them.
+
+Every reader carries a subconscious library: the authors whose prose made them feel something they could not name, the villains who frightened them in ways that felt personal, the themes that recur across every book they have ever loved. Living Eamon reads that library and writes from it.
+
+Jane does not write generic fantasy. She writes in the style of the player's favorite authors. She builds plots around the moral dilemmas that genuinely disturb the player. She calibrates darkness, romance, humor, and violence to the player's demonstrated tolerance — not to what they say they want, but to what their choices reveal.
+
+The product is a Kindle Unlimited subscription to an infinite library of one — a living novel that is always in progress, always shaped by the reader's subconscious, and always their favorite book.
+
+---
+
+### 20.1 The Two Sources of Truth
+
+The psychological profile is built from two sources:
+
+**Source 1 — In-game behavior (automatic, continuous)**
+
+Every choice a player makes is a data point. Jane observes silently:
+
+- **Virtue pattern:** A player who consistently chooses Mercy over Justice has a different moral center than one who chooses Justice over Compassion. These patterns map to literary preferences — the Mercy-dominant player likely prefers Dostoevsky to Cormac McCarthy.
+- **Combat vs. diplomacy ratio:** Players who always try to talk first before fighting prefer character-driven fiction over action. Jane paces their narrative accordingly.
+- **NPC relationship investment:** Players who spend turns building relationships with NPCs rather than moving toward goals prefer sprawling character novels (Tolstoy, George R.R. Martin) over tight thrillers.
+- **Risk appetite:** Players who attempt the Occult despite knowing it is illegal are drawn to transgressive fiction — Nabokov, Bret Easton Ellis, Chuck Palahniuk.
+- **Darkness tolerance:** A player who casts fireball in the Main Hall without hesitation can handle darker narrative. A player who carefully deposits gold before every adventure prefers order and resolution.
+- **Curiosity signals:** Players who examine everything before acting prefer literary fiction with layered prose (Le Guin, Ishiguro, Toni Morrison).
+- **Adventure selection:** Players who go straight to The Beginner's Cave prefer genre fiction with clear goals. Players who spend hours in the Main Hall building relationships prefer character studies.
+
+**Source 2 — Reading history (player-provided, one-time import)**
+
+- **GoodReads public profile:** The player provides their GoodReads URL. The system reads their shelves, ratings, and read lists. A 5-star rating for *Blood Meridian* and *Crime and Punishment* tells Jane more about the player's ideal fiction than any survey.
+- **Kindle reading history:** Amazon provides a CSV export of every book purchased and read. Completion rates (did they finish it?), re-reads, and purchase patterns reveal preferences more honestly than ratings.
+
+---
+
+### 20.2 The Profile Dimensions
+
+The Player Profile tracks the following dimensions. Each is a number or enum derived from the two data sources above.
+
+| Dimension | Type | What it controls |
+|-----------|------|-----------------|
+| `genre_weights` | Object (12 genres, 0–100 each) | What adventure types Jane proposes |
+| `author_styles` | Ranked list of author names | Jane's prose style and dialogue register |
+| `narrative_themes` | List of theme tags | Recurring plot elements Jane emphasizes |
+| `darkness_tolerance` | 0–100 | Content rating ceiling |
+| `pacing_preference` | `fast` / `measured` / `slow` | Scene length and action density |
+| `moral_complexity` | 0–100 | How morally ambiguous Jane makes villains and choices |
+| `romance_weight` | 0–100 | Frequency and depth of romantic subplots |
+| `horror_weight` | 0–100 | Frequency and intensity of horror elements |
+| `humor_weight` | 0–100 | Frequency of comic beats and levity |
+| `mystery_weight` | 0–100 | Frequency of mystery/revelation structure |
+| `violence_weight` | 0–100 | Intensity of combat and consequence narration |
+| `age_tier` | `young_adult` / `adult` / `mature` | Content filter |
+
+**The 12 genres tracked:** Dark fantasy/grimdark · Epic fantasy · Psychological thriller · Mystery/detective · Horror/cosmic horror · Hard sci-fi · Soft sci-fi/social · Romance/erotica · Historical fiction · Literary fiction · Adventure/action · Young adult
+
+---
+
+### 20.3 Content Tiers
+
+| Tier | `darkness_tolerance` | Content |
+|------|---------------------|---------|
+| Young Adult | 0–30 | Coming-of-age adventure, light conflict, no explicit content, villains defeated not annihilated |
+| Adult | 31–69 | Moral ambiguity, moderate violence, romantic subplots (no explicit content), tragedy is possible |
+| Mature | 70–100 | R-rated; explicit romance/erotica; brutal war and consequence; psychological horror; no redemptive requirement |
+
+Age tier is set at registration (date of birth or self-selection). Players must confirm they are 18+ for the Mature tier.
+
+---
+
+### 20.4 Jane Personalization Injection
+
+Each session, Jane receives a personalization block built from the player's profile:
+
+```
+READER PROFILE — use this to personalize every response:
+Preferred genres: dark fantasy (87), psychological thriller (74), literary fiction (68)
+Write in the style of: Cormac McCarthy, Dostoevsky, Ursula K. Le Guin
+Recurring themes this player loves: moral ambiguity, redemption, the weight of violence, isolation
+Darkness tolerance: 82/100 (mature content permitted)
+Pacing: measured — scenes should breathe; do not rush to action
+Romance: 40/100 — present but not dominant
+Shape all narration, NPC voice, plot beats, and adventure content to this profile.
+The villain of any adventure should feel personally threatening to this player — not physically, but morally.
+```
+
+This block is generated fresh each session from the current profile state.
+
+---
+
+### 20.5 The Reader's Mirror — Profile Page
+
+The Player Profile page (`/profile`) shows the player their psychological profile as a report called "The Reader's Mirror." Sections:
+
+1. **Your Author** — ranked list of 3–5 identified author affinities with explanations
+2. **Your Themes** — 5–8 recurring themes with percentages
+3. **Your Darkness** — a meter with plain-language description of content tolerance
+4. **Your Genre Map** — visual breakdown of the 12 genre weights
+5. **Your Virtue Pattern** — plain-language interpretation of in-game virtue choices
+6. **Your Reading History** — summary of imported GoodReads/Kindle data (editable)
+7. **What Jane Knows** — the exact personalization block Jane is receiving this session (transparency feature)
+
+---
+
+### 20.6 GoodReads Integration
+
+Player provides their GoodReads public profile URL. The system:
+1. Fetches the public `read` shelf via GoodReads RSS (`https://www.goodreads.com/review/list_rss/<user_id>?shelf=read`)
+2. Sends the book list to Claude for analysis (authors, genres, themes, rating patterns)
+3. Stores the analysis in `player_profiles` and merges with in-game signals
+
+---
+
+### 20.7 Kindle Integration
+
+Player uploads an Amazon "Request My Data" CSV export. We analyze:
+- Books with high page-count read (completion = strong preference signal)
+- Re-reads (the strongest signal of all)
+- Sample-to-purchase conversions (curiosity signal)
+
+The raw CSV is never stored server-side — processed client-side and only the analysis is stored.
+
+---
+
+### 20.8 The Infinite Novel — Content Generation Vision
+
+At full development, Jane operates in four modes:
+
+**Mode 1 — Style Mimicry:** Jane writes in the prose style of the player's identified authors.
+
+**Mode 2 — Theme Weaving:** Jane builds recurring themes into every adventure. A player with high Redemption weight finds that their past follows them across the world.
+
+**Mode 3 — Genre Adaptation:** The same adventure is written differently for different players. The Beginner's Cave is a dungeon crawl for the action player, a locked-room mystery for the thriller player, a cosmic horror for the horror player, and an archaeological mystery for the sci-fi player.
+
+**Mode 4 — Villain Personalization:** Jane builds villains that are morally threatening to each player — mirrors of their fears, their temptations, or the choices they have avoided.
+
+---
+
+### 20.9 Privacy and Consent
+
+- Players opt in to profile building. It is not on by default.
+- The full profile is always visible and editable by the player on their Profile page.
+- Players can delete the profile entirely at any time.
+- GoodReads and Kindle data is never stored raw — only the analysis is kept.
+- The profile is never sold or shared. The business model is subscription only.
+- Players can export their profile as JSON.
+
+---
+
+## 21. Design Decisions Log (continued)
+
+### April 2026 (continued)
+
+- **Auth system:** Email/password + Google SSO via Supabase Auth; cookie-based sessions via `@supabase/ssr`; middleware protects all routes; `players.user_id` FK to `auth.users`; `/login` and `/register` pages match game visual style.
+- **Reader's Mirror (§20) designed:** Psychological profile built from in-game virtue/choice signals + optional GoodReads/Kindle import; 12 genre dimensions; darkness tolerance drives content rating (YA / Adult / Mature); Jane receives personalization block each session; Profile page surfaces the profile with a transparency section showing Jane's exact current instructions. Privacy-first: opt-in, editable, deletable, never sold.
+- **Living Eamon vision:** Kindle Unlimited for a library of one — an infinite novel written in the style of the player's favorite authors, shaped by the themes they love, calibrated to their darkness tolerance, featuring villains designed to threaten them morally rather than physically.

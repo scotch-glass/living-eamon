@@ -30,30 +30,11 @@ export default function Home() {
   const typingRef = useRef(false);
   const displayedRef = useRef("");
   const skipTypingRef = useRef(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const userScrolledRef = useRef(false);
 
-  // Smart auto-scroll: only scroll to bottom if user
-  // hasn't manually scrolled up
-  useEffect(() => {
-    if (userScrolledRef.current) return;
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Track whether user has scrolled up away from bottom
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const isNearBottom =
-        scrollHeight - scrollTop - clientHeight < 100;
-      userScrolledRef.current = !isNearBottom;
-    };
-    container.addEventListener("scroll", handleScroll,
-      { passive: true });
-    return () =>
-      container.removeEventListener("scroll", handleScroll);
+  const scrollToBottom = useCallback((smooth = true) => {
+    bottomRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "instant",
+    });
   }, []);
 
   useEffect(() => {
@@ -171,6 +152,7 @@ export default function Home() {
       setWorldState(ws);
       if (ws.playerId) setPlayerId(ws.playerId);
       setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      scrollToBottom(false);
       return;
     }
 
@@ -183,6 +165,7 @@ export default function Home() {
     displayedRef.current = "";
     charQueueRef.current = [];
     setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    scrollToBottom(false);
 
     while (true) {
       const { done, value } = await reader.read();
@@ -247,7 +230,6 @@ export default function Home() {
       setStarted(true);
 
       // Step 3: Start the game
-      userScrolledRef.current = false;
       await streamResponse([], initialState, heroName.trim(), newPlayerId ?? undefined);
     } catch (err) {
       console.error("Start game error:", err);
@@ -259,12 +241,12 @@ export default function Home() {
   };
 
   const sendMessage = async (commandOverride?: string) => {
-    userScrolledRef.current = false;
     const text = (commandOverride ?? input).trim();
     if (!text || loading || isTyping) return;
     const userMsg: Message = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
+    scrollToBottom(false);
     setInput("");
     setLoading(true);
     try {
@@ -490,12 +472,9 @@ export default function Home() {
           {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11, marginLeft: "auto" }}>⚠ WANTED</span>}
         </div>
 
-        <div
-          ref={scrollContainerRef}
-          style={{ flex: 1, overflowY: "scroll", padding: 24,
+        <div style={{ flex: 1, overflowY: "scroll", padding: 24,
             scrollbarWidth: "thin",
-            scrollbarColor: "#4b5563 #111827", height: 0 }}
-        >
+            scrollbarColor: "#4b5563 #111827", height: 0 }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: 24, textAlign: msg.role === "user" ? "right" : "left" }}>

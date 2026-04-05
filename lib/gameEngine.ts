@@ -468,6 +468,21 @@ export function getCommandAutocompleteSuggestions(
   }
 
   // GET / TAKE
+  if (/^(get|take|grab)\s*$/i.test(trimmed)) {
+    const hasRoomItems = room.items.some(id => ITEMS[id]?.isCarryable);
+    const hasRevealedItems =
+      (state.rooms[state.player.currentRoom]?.revealedItems ?? []).length > 0;
+    if (hasRoomItems || hasRevealedItems) {
+      return [
+        {
+          label: "GET ALL — take everything",
+          insertText: "GET ALL",
+          autoSubmit: true,
+        },
+        ...carryableRoomItems(),
+      ];
+    }
+  }
   if (/^(get|take|grab)\s+/i.test(trimmed)) {
     return carryableRoomItems().filter(x => filterPartial(x.insertText));
   }
@@ -861,6 +876,7 @@ INTERACTION
   EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
   READ               Read notices, signs, or posted contracts
   GET [item]         GET SWORD, GET TORCH
+  GET ALL            Take everything visible in the room
   DROP [item]        DROP SWORD
   EQUIP [item]       Weapon, shield, or armor from inventory (primary)
   WIELD [item]       Alias for EQUIP [item] (either works)
@@ -2833,6 +2849,178 @@ Describe what they find to read, or tell them there is nothing to read here.`,
   }
 
   if (first === "GET" || first === "TAKE" || first === "GRAB") {
+    const isGetAll =
+      /^(get|take|grab)\s+(all|everything|it all|them all)$/i.test(trimmed);
+
+    if (isGetAll) {
+      const room = MAIN_HALL_ROOMS[p.currentRoom];
+      if (!room) {
+        return {
+          responseType: "static",
+          staticResponse: "There is nothing here to take.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+
+      let updatedState = newState;
+      const takenNames: string[] = [];
+
+      for (const itemId of room.items) {
+        const item = ITEMS[itemId];
+        if (!item?.isCarryable) continue;
+        if (updatedState.player.inventory.some(e => e.itemId === itemId)) continue;
+
+        const inv = updatedState.player.inventory;
+        const newInventory = [...inv, { itemId, quantity: 1 }];
+        updatedState = {
+          ...updatedState,
+          player: { ...updatedState.player, inventory: newInventory },
+        };
+        takenNames.push(item.name);
+      }
+
+      const roomState = updatedState.rooms[p.currentRoom];
+      const revealed = roomState?.revealedItems ?? [];
+
+      for (const entry of revealed) {
+        const item = ITEMS[entry.itemId];
+        if (!item?.isCarryable) continue;
+        if (updatedState.player.inventory.some(e => e.itemId === entry.itemId))
+          continue;
+
+        const newInventory = [
+          ...updatedState.player.inventory,
+          { itemId: entry.itemId, quantity: 1 },
+        ];
+        updatedState = {
+          ...updatedState,
+          player: {
+            ...updatedState.player,
+            inventory: newInventory,
+          },
+        };
+
+        updatedState = removeRevealedItem(
+          updatedState,
+          p.currentRoom,
+          entry.itemId
+        );
+
+        takenNames.push(item.name);
+      }
+
+      if (p.currentRoom === "main_hall") {
+        const alreadyRevealed = (
+          updatedState.rooms["main_hall"]?.revealedItems ?? []
+        ).filter(r => r.containerId === "charity_barrel");
+
+        const SHIRT_IDS = [
+          "moth_eaten_woolen_shirt",
+          "threadbare_linen_shirt",
+          "stained_canvas_tunic",
+        ];
+        const PANTS_IDS = [
+          "homespun_pants",
+          "patched_wool_breeches",
+          "rough_canvas_trousers",
+        ];
+        const SHOES_IDS = [
+          "cloth_shoes",
+          "worn_leather_sandals",
+          "mismatched_boots",
+        ];
+        const BELT_IDS = [
+          "worn_leather_belt",
+          "fraying_rope_belt",
+          "cracked_hide_strap",
+        ];
+        const allBarrelIds = [
+          ...SHIRT_IDS,
+          ...PANTS_IDS,
+          ...SHOES_IDS,
+          ...BELT_IDS,
+        ];
+
+        const alreadyHasBarrelItems =
+          alreadyRevealed.length > 0 ||
+          updatedState.player.inventory.some(e =>
+            allBarrelIds.includes(e.itemId)
+          );
+
+        if (!alreadyHasBarrelItems) {
+          const set = randomClothingSet();
+          const barrelItems = [set.shirt, set.pants, set.shoes, set.belt];
+          for (const itemId of barrelItems) {
+            const barrelItem = ITEMS[itemId];
+            if (!barrelItem) continue;
+            updatedState = {
+              ...updatedState,
+              player: {
+                ...updatedState.player,
+                inventory: [
+                  ...updatedState.player.inventory,
+                  { itemId, quantity: 1 },
+                ],
+              },
+            };
+            takenNames.push(barrelItem.name);
+          }
+        }
+      }
+
+      if (takenNames.length === 0) {
+        return {
+          responseType: "static",
+          staticResponse: "There is nothing here to take.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+
+      const tookShirt = updatedState.player.inventory.some(e =>
+        [
+          "moth_eaten_woolen_shirt",
+          "threadbare_linen_shirt",
+          "stained_canvas_tunic",
+        ].includes(e.itemId)
+      );
+      const robeWasInInventoryBefore = newState.player.inventory.some(
+        e => e.itemId === "gray_robe"
+      );
+
+      if (robeWasInInventoryBefore && tookShirt) {
+        updatedState = {
+          ...updatedState,
+          player: {
+            ...updatedState.player,
+            inventory: updatedState.player.inventory.filter(
+              e => e.itemId !== "gray_robe"
+            ),
+          },
+        };
+        const gotLine = `You take everything: ${takenNames.join(", ")}.`;
+        return {
+          responseType: "static",
+          staticResponse:
+            gotLine + "\n\n" + pickTemplate(ROBE_CEREMONY_NARRATIVES),
+          dynamicContext: null,
+          newState: updatedState,
+          stateChanged: true,
+        };
+      }
+
+      return {
+        responseType: "static",
+        staticResponse: `You take everything: ${takenNames.join(", ")}.`,
+        dynamicContext: null,
+        newState: updatedState,
+        stateChanged: true,
+      };
+    }
+
     if (p.currentRoom === "main_hall") {
       const lowerRest = trimmed.slice(first.length).trim().toLowerCase();
 

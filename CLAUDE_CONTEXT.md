@@ -77,7 +77,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (revealed items system)*
+*Last updated: April 4, 2026 (GET ALL command)*
 
 
 ## 1. Project Overview
@@ -433,6 +433,7 @@ Do not commit secret values.
 - [x] Combat fumbles, **TALK** = **SAY** (except **TALK Aldric** shortcut), skill gain on hits
 - [x] **`weapon_skills`** DB persistence
 - [x] Revealed items system (container contents in 👁 line)
+- [x] GET ALL command (classic Eamon looting)
 
 ## 15. Next Up
 
@@ -443,6 +444,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — GET ALL command
+
+- **GET ALL** command added: takes all carryable items from **`room.items`** and **`revealedItems`** in one action (**`GET` / `TAKE` / `GRAB`** + **`all`**, **`everything`**, **`it all`**, **`them all`**). In **`main_hall`**, auto-rolls and takes the random charity-barrel clothing set when nothing from that barrel is revealed and the player does not already carry barrel clothing. Triggers robe ceremony when appropriate (**`gray_robe`** was in inventory before and a barrel shirt variant was taken). Autocomplete offers **GET ALL** when the room has carryable floor items or any revealed items; **HELP_TEXT** documents the command.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Revealed items system (container contents in situation block)
 

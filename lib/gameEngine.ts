@@ -1988,27 +1988,24 @@ function buildRoomDescription(state: WorldState, roomId: string): string {
   return description;
 }
 
-/** Guild courtyard narrative: time-of-day base + live weather line (no async here). */
 export function buildCourtyardDescription(
   state: WorldState,
   weatherLine: string,
   timeOfDay: TimeOfDay
 ): string {
-  const bases: Record<string, string> = {
-    dawn: "The courtyard is caught in the grey hour before sunrise. The cobblestones are dark with dew. The Church of Perpetual Life rises to the west, its white walls the only bright thing in the half-light. The Main Hall entrance stands to the east, a line of warm amber light showing under its door.",
-    day: "The courtyard lies open between the Church of Perpetual Life and the Main Hall, cobblestones worn smooth by ten thousand crossings. The sky is above it all, indifferent.",
-    dusk: "The courtyard is filling with shadow. The western sky behind the Church of Perpetual Life has gone the color of a bruise. The Main Hall to the east glows amber, the sound of voices just audible through the walls.",
-    night: "The courtyard at night is lit only by the lantern above the Main Hall entrance and whatever light escapes the Church's high windows. The cobblestones are slick and dark. The silence from the Church extends all the way out here.",
-  };
+  // Base room description comes from gameData.ts
+  // We only add the live weather line here
+  const room = MAIN_HALL_ROOMS["guild_courtyard"];
+  const baseDesc = room?.description ?? "";
 
-  let description = bases[timeOfDay] ?? bases.day;
-  description += "\n\n" + weatherLine;
+  let description = baseDesc + "\n\n" + weatherLine;
 
-  description +=
-    "\n\nExits: west (Church of Perpetual Life), east (Main Hall Entrance).";
+  description += "\n\nExits: west (Church of Perpetual Life), east (Main Hall Entrance).";
 
   const hasRobe =
-    state.player.inventory?.some(e => e.itemId === "gray_robe") || false;
+    state.player.inventory?.some(
+      e => e.itemId === "gray_robe"
+    ) ?? false;
   if (hasRobe) {
     description += "\n\n" + pickTemplate(COURTYARD_ROBE_HUMILIATION);
   }

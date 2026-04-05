@@ -6,6 +6,8 @@ import { ITEMS } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
 import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
+import { logoutAction } from "./auth/actions";
+import { createBrowserSupabase } from "../lib/supabaseAuthClient";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,11 +19,10 @@ const CHAR_DELAY = 12;
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [worldState, setWorldState] = useState<WorldState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [started, setStarted] = useState(false);
-  const [heroName, setHeroName] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -217,40 +218,86 @@ export default function Home() {
     });
   };
 
-  const startGame = async () => {
-    if (!heroName.trim()) return;
-    setLoading(true);
-    try {
-      // Step 1: Create player in Supabase first
-      const playerRes = await fetch("/api/player", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerName: heroName.trim() }),
-      });
+  useEffect(() => {
+    let cancelled = false;
 
-      let newPlayerId: string | null = null;
-      if (playerRes.ok) {
-        const playerData = await playerRes.json();
-        newPlayerId = playerData.playerId;
-        setPlayerId(newPlayerId);
+    (async () => {
+      setLoading(true);
+      try {
+        const supabase = createBrowserSupabase();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (!user) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const res = await fetch(
+          `/api/player?id=${encodeURIComponent(user.id)}`
+        );
+        if (cancelled) return;
+
+        if (!res.ok) {
+          setStarted(true);
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "The realm stirs... but your hero could not be found. Try signing in again or completing registration.",
+            },
+          ]);
+          setLoading(false);
+          return;
+        }
+
+        const data = (await res.json()) as { player?: { id: string; character_name?: string } };
+        const row = data.player;
+        if (cancelled || !row?.id) {
+          setStarted(true);
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "The realm stirs... but something is wrong. Refresh and try again.",
+            },
+          ]);
+          setLoading(false);
+          return;
+        }
+
+        const characterName = row.character_name?.trim() || "Adventurer";
+        const initialState = createInitialWorldState(characterName);
+        initialState.player.id = row.id;
+        setPlayerId(row.id);
+        setWorldState(initialState);
+        setStarted(true);
+
+        await streamResponse([], initialState, characterName, row.id);
+      } catch (err) {
+        console.error("Bootstrap error:", err);
+        if (!cancelled) {
+          setStarted(true);
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "The realm stirs... but something is wrong. Refresh and try again.",
+            },
+          ]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+      inputRef.current?.focus();
+    })();
 
-      // Step 2: Create local world state with Supabase ID
-      const initialState = createInitialWorldState(heroName.trim());
-      if (newPlayerId) initialState.player.id = newPlayerId;
-      setWorldState(initialState);
-      setStarted(true);
-
-      // Step 3: Start the game
-      await streamResponse([], initialState, heroName.trim(), newPlayerId ?? undefined);
-    } catch (err) {
-      console.error("Start game error:", err);
-      setStarted(true);
-      setMessages([{ role: "assistant", content: "The realm stirs... but something is wrong. Refresh and try again." }]);
-    }
-    setLoading(false);
-    inputRef.current?.focus();
-  };
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only auth bootstrap; streamResponse is stable for this call pattern
+  }, []);
 
   const sendMessage = async (commandOverride?: string) => {
     userScrolledRef.current = false;
@@ -367,37 +414,6 @@ export default function Home() {
         .slice(0, 5)
     : [];
 
-  if (!started) {
-    return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#030712", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center", maxWidth: 480, padding: "0 32px" }}>
-          <h1 style={{ fontSize: 48, fontWeight: "bold", color: "#fbbf24", marginBottom: 8, letterSpacing: "0.05em", fontFamily: "Georgia, serif" }}>LIVING EAMON</h1>
-          <p style={{ color: "#92400e", fontSize: 12, marginBottom: 8, letterSpacing: "0.15em", textTransform: "uppercase" }}>One Hero. Infinite Realms.</p>
-          <div style={{ width: 96, height: 1, backgroundColor: "#92400e", margin: "0 auto 32px" }} />
-          <p style={{ color: "#9ca3af", marginBottom: 24, fontSize: 18, fontFamily: "Georgia, serif" }}>What is thy name, adventurer?</p>
-          <input
-            autoFocus
-            type="text"
-            value={heroName}
-            onChange={e => setHeroName(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && heroName.trim() && startGame()}
-            placeholder="Enter your name..."
-            maxLength={30}
-            style={{ width: "100%", backgroundColor: "#111827", border: "1px solid #374151", color: "#e5e7eb", padding: "12px 16px", borderRadius: 6, outline: "none", fontFamily: "Georgia, serif", fontSize: 16, marginBottom: 16, textAlign: "center" }}
-          />
-          <button
-            onClick={startGame}
-            disabled={!heroName.trim() || loading}
-            style={{ backgroundColor: "#92400e", color: "#fef3c7", padding: "12px 40px", fontSize: 16, letterSpacing: "0.15em", textTransform: "uppercase", border: "none", cursor: heroName.trim() && !loading ? "pointer" : "not-allowed", fontFamily: "Georgia, serif", opacity: heroName.trim() && !loading ? 1 : 0.5 }}
-          >
-            {loading ? "Entering..." : "Enter the Realm"}
-          </button>
-          <p style={{ color: "#1f2937", fontSize: 11, marginTop: 32 }}>v0.1 — The Main Hall</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#030712", color: "#e5e7eb" }}>
       {sidebarOpen && player && (
@@ -481,7 +497,23 @@ export default function Home() {
         <div style={{ borderBottom: "1px solid #1f2937", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
           <button onClick={() => setSidebarOpen(o => !o)} style={{ color: "#6b7280", fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>☰</button>
           <span style={{ color: "#92400e", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>Living Eamon</span>
-          {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11, marginLeft: "auto" }}>⚠ WANTED</span>}
+          {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11 }}>⚠ WANTED</span>}
+          <form action={logoutAction} style={{ marginLeft: "auto" }}>
+            <button
+              type="submit"
+              style={{
+                color: "#4b5563",
+                fontSize: 12,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Georgia, serif",
+                letterSpacing: "0.05em",
+              }}
+            >
+              Sign out
+            </button>
+          </form>
         </div>
 
         <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}>

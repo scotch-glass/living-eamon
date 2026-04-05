@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPlayer, loadPlayer } from "../../../lib/supabase";
+import { createPlayer, loadPlayer, loadPlayerByUserId } from "../../../lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Player ID required" }, { status: 400 });
     }
 
-    const player = await loadPlayer(playerId);
+    let player = await loadPlayer(playerId);
+    if (!player) {
+      player = await loadPlayerByUserId(playerId);
+    }
 
     if (!player) {
       return NextResponse.json({ error: "Player not found" }, { status: 404 });

@@ -21,39 +21,54 @@ export const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 // PLAYER OPERATIONS
 // ============================================================
 
+/**
+ * Persist player row. Upsert conflicts on primary key `id`. When `player.userId`
+ * is set, `user_id` is included in the row payload (e.g. backfill / link).
+ */
 export async function savePlayer(player: Record<string, unknown>) {
+  const authUserId =
+    typeof player.userId === "string" && player.userId.length > 0
+      ? player.userId
+      : undefined;
+
+  const row: Record<string, unknown> = {
+    id: player.id,
+    character_name: player.name,
+    hp: player.hp,
+    max_hp: player.maxHp,
+    strength: player.strength,
+    dexterity: player.dexterity,
+    charisma: player.charisma,
+    expertise: player.expertise,
+    gold: player.gold,
+    banked_gold: player.bankedGold,
+    weapon: player.weapon,
+    armor: player.armor,
+    shield: player.shield,
+    inventory: player.inventory,
+    virtues: player.virtues,
+    reputation_score: player.reputationScore,
+    reputation_level: player.reputationLevel,
+    known_as: player.knownAs,
+    current_room: player.currentRoom,
+    current_adventure: player.currentAdventure,
+    completed_adventures: player.completedAdventures,
+    bounty: player.bounty,
+    is_wanted: player.isWanted,
+    turn_count: player.turnCount,
+    received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
+    received_hokas_unarmed_gift: Boolean(player.receivedHokasUnarmedGift),
+    weapon_skills: player.weaponSkills ?? {},
+    last_seen: new Date().toISOString(),
+  };
+
+  if (authUserId) {
+    row.user_id = authUserId;
+  }
+
   const { error } = await serviceClient
     .from("players")
-    .upsert({
-      id: player.id,
-      character_name: player.name,
-      hp: player.hp,
-      max_hp: player.maxHp,
-      strength: player.strength,
-      dexterity: player.dexterity,
-      charisma: player.charisma,
-      expertise: player.expertise,
-      gold: player.gold,
-      banked_gold: player.bankedGold,
-      weapon: player.weapon,
-      armor: player.armor,
-      shield: player.shield,
-      inventory: player.inventory,
-      virtues: player.virtues,
-      reputation_score: player.reputationScore,
-      reputation_level: player.reputationLevel,
-      known_as: player.knownAs,
-      current_room: player.currentRoom,
-      current_adventure: player.currentAdventure,
-      completed_adventures: player.completedAdventures,
-      bounty: player.bounty,
-      is_wanted: player.isWanted,
-      turn_count: player.turnCount,
-      received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
-      received_hokas_unarmed_gift: Boolean(player.receivedHokasUnarmedGift),
-      weapon_skills: player.weaponSkills ?? {},
-      last_seen: new Date().toISOString(),
-    });
+    .upsert(row, { onConflict: "id" });
 
   if (error) console.error("Error saving player:", error);
   return !error;
@@ -64,6 +79,18 @@ export async function loadPlayer(playerId: string) {
     .from("players")
     .select("*")
     .eq("id", playerId)
+    .single();
+
+  if (error) return null;
+  return data;
+}
+
+/** Resolve by Supabase Auth user id (see `players.user_id`). */
+export async function loadPlayerByUserId(userId: string) {
+  const { data, error } = await serviceClient
+    .from("players")
+    .select("*")
+    .eq("user_id", userId)
     .single();
 
   if (error) return null;
@@ -299,6 +326,7 @@ export async function checkAndDecrementJaneCalls(playerId: string): Promise<bool
   const needsReset = now.getTime() - resetAt.getTime() > 24 * 60 * 60 * 1000;
 
   // Unlimited tiers
+  if (process.env.NODE_ENV === "development") return true;
   if (data.tier === "worldshaper" || data.tier === "eternal_legend") return true;
 
   const maxCalls = data.tier === "adventurer" ? 100 : 10;

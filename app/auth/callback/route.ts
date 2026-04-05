@@ -1,0 +1,22 @@
+// app/auth/callback/route.ts
+// Handles OAuth redirects (Google SSO) and email confirmation links
+
+import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabase } from "../../../lib/supabaseAuthServer";
+
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = new URL(request.url);
+  const code = searchParams.get("code");
+  const next = searchParams.get("next") ?? "/";
+
+  if (code) {
+    const supabase = await createServerSupabase();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      return NextResponse.redirect(`${origin}${next}`);
+    }
+  }
+
+  // Auth error — redirect to login with error flag
+  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+}

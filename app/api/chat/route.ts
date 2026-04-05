@@ -23,6 +23,7 @@ import {
   saveWorldObject,
   checkAndDecrementJaneCalls,
 } from "../../../lib/supabase";
+import { createServerSupabase } from "../../../lib/supabaseAuthServer";
 
 const grok = new OpenAI({
   apiKey: process.env.GROK_API_KEY,
@@ -236,6 +237,18 @@ export async function POST(request: NextRequest) {
     const { messages, worldState, playerId, playerName } = await request.json();
     const encoder = new TextEncoder();
 
+    const supabaseAuth = await createServerSupabase();
+    const {
+      data: { user: authUser },
+    } = await supabaseAuth.auth.getUser();
+    const authUserId = authUser?.id;
+
+    const persistPlayer = (ws: WorldState) => {
+      const rec = worldStateToPlayerRecord(ws);
+      if (authUserId) rec.userId = authUserId;
+      return savePlayer(rec);
+    };
+
     // Load or create player from Supabase
     let state: WorldState;
     let resolvedPlayerId = playerId;
@@ -349,7 +362,7 @@ export async function POST(request: NextRequest) {
     const sendResponse = (text: string, newState: WorldState) => {
       // Save player to Supabase asynchronously
       if (resolvedPlayerId) {
-        savePlayer(worldStateToPlayerRecord(newState)).catch(console.error);
+        persistPlayer(newState).catch(console.error);
       }
 
       const fullResponse = appendSituation(text, newState) + "\n\n__STATE__" + JSON.stringify({
@@ -399,7 +412,7 @@ export async function POST(request: NextRequest) {
         const narrative = echoPrefix ? echoPrefix + "\n\n" + body : body;
         const fullResponse = appendSituation(narrative, newState);
         if (resolvedPlayerId) {
-          savePlayer(worldStateToPlayerRecord(newState)).catch(console.error);
+          persistPlayer(newState).catch(console.error);
         }
         return NextResponse.json({
           response: fullResponse,
@@ -414,7 +427,7 @@ export async function POST(request: NextRequest) {
 
       // Save player to Supabase
       if (resolvedPlayerId) {
-        savePlayer(worldStateToPlayerRecord(newState)).catch(console.error);
+        persistPlayer(newState).catch(console.error);
       }
 
       const readable = new ReadableStream({
@@ -562,7 +575,7 @@ export async function POST(request: NextRequest) {
               resolvedPlayerId,
               roomState
             ).catch(console.error);
-            savePlayer(worldStateToPlayerRecord(engineResult.newState)).catch(console.error);
+            persistPlayer(engineResult.newState).catch(console.error);
           }
           const examineSituationSuffix = "\n\n" + buildSituationBlock(engineResult.newState);
           controller.enqueue(encoder.encode(examineSituationSuffix));

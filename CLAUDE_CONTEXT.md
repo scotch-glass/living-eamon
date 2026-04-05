@@ -77,7 +77,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (GET ALL command)*
+*Last updated: April 4, 2026 (smart auto-scroll)*
 
 
 ## 1. Project Overview
@@ -444,6 +444,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Smart auto-scroll (`app/page.tsx`)
+
+- Smart auto-scroll: the transcript **`overflowY: scroll`** container uses **`scrollContainerRef`**. A passive **`scroll`** listener sets **`userScrolledRef`** when the user is more than **100px** above the bottom. The **`messages`** effect calls **`bottomRef.scrollIntoView({ behavior: "smooth" })`** only when **`userScrolledRef`** is false, so scrolling up during streaming pauses follow mode. **`userScrolledRef`** resets to **`false`** at the start of **`sendMessage`** and just before **`streamResponse`** in **`startGame`**.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — GET ALL command
 

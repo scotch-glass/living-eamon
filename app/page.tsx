@@ -25,6 +25,8 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledRef = useRef(false);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
   const typingRef = useRef(false);
@@ -32,6 +34,22 @@ export default function Home() {
   const skipTypingRef = useRef(false);
 
   useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isNearBottom =
+        scrollHeight - scrollTop - clientHeight < 100;
+      userScrolledRef.current = !isNearBottom;
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (userScrolledRef.current) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -226,6 +244,7 @@ export default function Home() {
       setStarted(true);
 
       // Step 3: Start the game
+      userScrolledRef.current = false;
       await streamResponse([], initialState, heroName.trim(), newPlayerId ?? undefined);
     } catch (err) {
       console.error("Start game error:", err);
@@ -237,6 +256,7 @@ export default function Home() {
   };
 
   const sendMessage = async (commandOverride?: string) => {
+    userScrolledRef.current = false;
     const text = (commandOverride ?? input).trim();
     if (!text || loading || isTyping) return;
     const userMsg: Message = { role: "user", content: text };
@@ -467,7 +487,10 @@ export default function Home() {
           {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11, marginLeft: "auto" }}>⚠ WANTED</span>}
         </div>
 
-        <div style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}>
+        <div
+          ref={scrollContainerRef}
+          style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}
+        >
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: 24, textAlign: msg.role === "user" ? "right" : "left" }}>

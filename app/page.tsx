@@ -33,11 +33,12 @@ export default function Home() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledRef = useRef(false);
 
+  const messageCount = messages.length;
   useEffect(() => {
     if (!userScrolledRef.current) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messageCount]);
 
   useEffect(() => {
     const el = scrollContainerRef.current;

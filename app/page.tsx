@@ -30,6 +30,7 @@ export default function Home() {
   const typingRef = useRef(false);
   const displayedRef = useRef("");
   const skipTypingRef = useRef(false);
+  const streamingDivRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback((smooth = true) => {
     bottomRef.current?.scrollIntoView({
@@ -78,48 +79,75 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleGlobalKey);
   }, [started, loading, isTyping]);
 
-  const drainQueue = useCallback(() => {
+  const drainQueue = useCallback((onComplete?: () => void) => {
     if (typingRef.current) return;
     typingRef.current = true;
     setIsTyping(true);
+
     const tick = () => {
       if (charQueueRef.current.length === 0) {
-        typingRef.current = false;
-        setIsTyping(false);
-        skipTypingRef.current = false;
-        return;
-      }
-      if (skipTypingRef.current) {
-        const remaining = charQueueRef.current.join("");
-        charQueueRef.current = [];
-        displayedRef.current += remaining;
-        const displayed = displayedRef.current;
+        if (displayedRef.current.length === 0) {
+          typingRef.current = false;
+          setIsTyping(false);
+          skipTypingRef.current = false;
+          onComplete?.();
+          return;
+        }
+        const finalText = displayedRef.current;
         setMessages(prev => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
           if (last?.role === "assistant") {
-            updated[updated.length - 1] = { ...last, content: displayed };
+            updated[updated.length - 1] = {
+              ...last,
+              content: finalText,
+            };
           }
           return updated;
         });
         typingRef.current = false;
         setIsTyping(false);
         skipTypingRef.current = false;
+        onComplete?.();
         return;
       }
+
+      if (skipTypingRef.current) {
+        const remaining = charQueueRef.current.join("");
+        charQueueRef.current = [];
+        displayedRef.current += remaining;
+        if (streamingDivRef.current) {
+          streamingDivRef.current.textContent = displayedRef.current;
+        }
+        const finalText = displayedRef.current;
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.role === "assistant") {
+            updated[updated.length - 1] = {
+              ...last,
+              content: finalText,
+            };
+          }
+          return updated;
+        });
+        typingRef.current = false;
+        setIsTyping(false);
+        skipTypingRef.current = false;
+        onComplete?.();
+        return;
+      }
+
       const char = charQueueRef.current.shift()!;
       displayedRef.current += char;
-      const displayed = displayedRef.current;
-      setMessages(prev => {
-        const updated = [...prev];
-        const last = updated[updated.length - 1];
-        if (last?.role === "assistant") {
-          updated[updated.length - 1] = { ...last, content: displayed };
-        }
-        return updated;
-      });
+
+      if (streamingDivRef.current) {
+        streamingDivRef.current.textContent = displayedRef.current;
+      }
+
       setTimeout(tick, CHAR_DELAY);
     };
+
     tick();
   }, []);
 
@@ -164,7 +192,13 @@ export default function Home() {
 
     displayedRef.current = "";
     charQueueRef.current = [];
-    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    if (streamingDivRef.current) {
+      streamingDivRef.current.textContent = "";
+    }
+    setMessages(prev => [
+      ...prev,
+      { role: "assistant", content: "__STREAMING__" },
+    ]);
     scrollToBottom(false);
 
     while (true) {
@@ -202,6 +236,18 @@ export default function Home() {
         else setTimeout(check, 50);
       };
       check();
+    });
+
+    setMessages(prev => {
+      const updated = [...prev];
+      const last = updated[updated.length - 1];
+      if (last?.role === "assistant" && last.content === "__STREAMING__") {
+        updated[updated.length - 1] = {
+          ...last,
+          content: displayedRef.current,
+        };
+      }
+      return updated;
     });
   };
 
@@ -476,19 +522,32 @@ export default function Home() {
             scrollbarWidth: "thin",
             scrollbarColor: "#4b5563 #111827", height: 0 }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            {messages.map((msg, i) => (
-              <div key={i} style={{ marginBottom: 24, textAlign: msg.role === "user" ? "right" : "left" }}>
-                {msg.role === "user" ? (
-                  <div style={{ display: "inline-block", backgroundColor: "#1f2937", color: "#e5e7eb", padding: "8px 16px", borderRadius: 8, maxWidth: 480, textAlign: "left", fontFamily: "Georgia, serif" }}>
-                    {msg.content}
-                  </div>
-                ) : (
-                  <div style={{ color: "#d1d5db", fontSize: 16, fontFamily: "Georgia, serif" }}>
-                    {formatMessage(msg.content, i === messages.length - 1 && isTyping)}
-                  </div>
-                )}
-              </div>
-            ))}
+            {messages.map((msg, i) => {
+              const isStreaming =
+                msg.role === "assistant" &&
+                msg.content === "__STREAMING__" &&
+                i === messages.length - 1 &&
+                isTyping;
+
+              return (
+                <div key={i} style={{ marginBottom: 24, textAlign: msg.role === "user" ? "right" : "left" }}>
+                  {msg.role === "user" ? (
+                    <div style={{ display: "inline-block", backgroundColor: "#1f2937", color: "#e5e7eb", padding: "8px 16px", borderRadius: 8, maxWidth: 480, textAlign: "left", fontFamily: "Georgia, serif" }}>
+                      {msg.content}
+                    </div>
+                  ) : isStreaming ? (
+                    <div
+                      ref={streamingDivRef}
+                      style={{ color: "#d1d5db", fontSize: 16, fontFamily: "Georgia, serif", lineHeight: 1.7, whiteSpace: "pre-wrap" }}
+                    />
+                  ) : (
+                    <div style={{ color: "#d1d5db", fontSize: 16, fontFamily: "Georgia, serif" }}>
+                      {formatMessage(msg.content, i === messages.length - 1 && isTyping)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {loading && !isTyping && (
               <div style={{ marginBottom: 24, display: "flex", gap: 4 }}>
                 {[0, 150, 300].map(d => (

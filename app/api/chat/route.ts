@@ -182,14 +182,26 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
   const roomStateName = roomState ? roomState.currentState : "normal";
   const bountyText = player.bounty > 0 ? player.bounty + "g" : "none";
 
+  const churchJaneNote =
+    player.currentRoom === "church_of_perpetual_life"
+      ? "\n\nROOM-SPECIFIC INSTRUCTION:\n" +
+        "The priests here do not speak under any circumstances. " +
+        "Do not generate suggested actions that involve speaking " +
+        "to, talking to, or asking the priest anything. Suggested " +
+        "actions should only involve movement (go east) or " +
+        "examining objects (examine the altar, examine the robe " +
+        "rack). Never suggest conversation with the priest.\n"
+      : "";
+
   return "WORLD CONTEXT:\n" +
     "Player: " + player.name + " | HP: " + player.hp + "/" + player.maxHp + " | Gold: " + player.gold + " | Weapon: " + weaponName + "\n" +
     "Room: " + roomName + " | State: " + roomStateName + "\n" +
     "NPCs present: " + npcList + "\n" +
     "Bounty: " + bountyText + " | Reputation: " + player.reputationLevel + "\n" +
     "Virtues: " + virtueList + "\n" +
-    "Active events: " + eventList + "\n\n" +
-    "ENGINE CONTEXT:\n" + dynamicContext;
+    "Active events: " + eventList +
+    churchJaneNote +
+    "\n\nENGINE CONTEXT:\n" + dynamicContext;
 }
 
 function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {

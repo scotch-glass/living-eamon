@@ -2342,6 +2342,19 @@ export function processInput(
       .map(n => NPCS[n.npcId]?.name ?? n.npcId)
       .join(", ") || "none";
 
+  if (
+    p.currentRoom === "church_of_perpetual_life" &&
+    (first === "ASK" || first === "SPEAK")
+  ) {
+    return {
+      responseType: "static",
+      staticResponse: pickTemplate(PRIEST_SILENCE_RESPONSES),
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
   // ── 1. PREFIX: TALK → Aldric topic list (before SAY alias) ─
   if (first === "TALK") {
     const talkRest = trimmed.slice(4).trim().toLowerCase().replace(/^to\s+/, "");

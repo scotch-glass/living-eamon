@@ -359,7 +359,7 @@ export const NPCS: Record<string, NPC> = {
 
   priest_of_perpetual_life: {
     id: "priest_of_perpetual_life",
-    name: "A Priest of Perpetual Life",
+    name: "The Priest of Perpetual Life",
     description:
       "Pale, unhurried, dressed in white. Their eyes are open and aware but carry no warmth and no hostility. Simply present.",
     greeting:

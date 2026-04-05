@@ -77,7 +77,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (smart auto-scroll)*
+*Last updated: April 4, 2026 (priest name / church Jane context)*
 
 
 ## 1. Project Overview
@@ -229,7 +229,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | brunt_the_banker | Brunt | neutral | guild_vault |
 | armory_attendant | Pip | neutral | armory |
 | door_guard | The Door Guard | neutral | main_hall_exit |
-| priest_of_perpetual_life | A Priest of Perpetual Life | neutral | church_of_perpetual_life |
+| priest_of_perpetual_life | The Priest of Perpetual Life | neutral | church_of_perpetual_life |
 
 ## 8. Merchants
 
@@ -444,6 +444,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — "Talk to A" / priest silence
+
+- Fixed **"Talk to A"** bug: **`priest_of_perpetual_life`** display name renamed from **"A Priest of Perpetual Life"** to **"The Priest of Perpetual Life"** in **`gameData.ts`** (avoids article-style truncation in Jane’s suggested actions). **`buildJaneContext`** (**`app/api/chat/route.ts`**) appends a **church-only** instruction: no suggested actions involving speaking to the priest; movement and examine-objects only. **`ASK`** and **`SPEAK`** in **`church_of_perpetual_life`** now return **`PRIEST_SILENCE_RESPONSES`** like **`SAY` / `TALK` / `TELL`**.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Smart auto-scroll (`app/page.tsx`)
 

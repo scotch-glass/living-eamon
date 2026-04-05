@@ -73,11 +73,16 @@ Every time you start a new conversation about this project, do this:
    it will be silently truncated and Cursor will infer the
    missing parts incorrectly, causing divergences.
 
+8. **NPC NAMING RULE:** Never name an NPC with a leading article ("A", "An", "The"). NPC names are always proper identifiers without articles. Examples:
+   - **CORRECT:** "Priest of Perpetual Life", "Orc Captain", "King Elric", "Door Guard"
+   - **WRONG:** "A Priest", "The Guard", "An Elder"
+   Leading articles break Jane's suggested action generation — she treats "A" or "The" as the name itself and generates "talk to A" or "talk to The" in suggestions. This rule applies to all NPCs in `gameData.ts` forever.
+
 ---
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (priest name / church Jane context)*
+*Last updated: April 4, 2026 (NPC naming rule, priest display name)*
 
 
 ## 1. Project Overview
@@ -229,7 +234,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | brunt_the_banker | Brunt | neutral | guild_vault |
 | armory_attendant | Pip | neutral | armory |
 | door_guard | The Door Guard | neutral | main_hall_exit |
-| priest_of_perpetual_life | The Priest of Perpetual Life | neutral | church_of_perpetual_life |
+| priest_of_perpetual_life | Priest of Perpetual Life | neutral | church_of_perpetual_life |
 
 ## 8. Merchants
 
@@ -444,6 +449,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — NPC naming rule (no leading articles)
+
+- **NPC naming rule** established: no leading articles in **`NPCS[].name`** in **`gameData.ts`**. **READ THIS FIRST** in **`CLAUDE_CONTEXT.md`** now includes rule **§8** (examples + Jane suggested-action rationale). **`priest_of_perpetual_life`** display name set to **"Priest of Perpetual Life"** (was **"The Priest of Perpetual Life"**); greeting prose updated to avoid **"The priest"** as an opener.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — "Talk to A" / priest silence
 

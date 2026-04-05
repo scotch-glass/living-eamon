@@ -359,11 +359,11 @@ export const NPCS: Record<string, NPC> = {
 
   priest_of_perpetual_life: {
     id: "priest_of_perpetual_life",
-    name: "The Priest of Perpetual Life",
+    name: "Priest of Perpetual Life",
     description:
       "Pale, unhurried, dressed in white. Their eyes are open and aware but carry no warmth and no hostility. Simply present.",
     greeting:
-      "The priest turns toward you and raises one finger slowly to their lips.",
+      "Someone in white turns toward you and raises one finger slowly to their lips.",
     personality:
       "Completely silent. Never speaks. Never hostile. Never warm. Responds to all attempts at conversation with a varied silent gesture. Do not generate dialogue for this NPC under any circumstances.",
     isHostile: false,

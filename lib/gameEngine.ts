@@ -1967,13 +1967,6 @@ function buildRoomDescription(state: WorldState, roomId: string): string {
   const exitList = Object.keys(room.exits).join(", ");
   description += `\n\nExits: ${exitList}.`;
 
-  // Suggest actions
-  const npcSuggestions = presentNpcs.length > 0
-    ? `talk to ${presentNpcs.map(n => NPCS[n.npcId]?.name?.split(" ")[0]).join(" or ")}, `
-    : "";
-  const itemSuggestions = room.items.length > 0 ? "examine the room, " : "";
-  description += `\n\n*You might: ${npcSuggestions}${itemSuggestions}head ${Object.keys(room.exits)[0]}, or do something unexpected.*`;
-
   const player = state.player;
   const hasRobe =
     player.inventory?.some(e => e.itemId === "gray_robe") || false;

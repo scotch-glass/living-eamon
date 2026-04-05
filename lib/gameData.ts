@@ -349,7 +349,7 @@ export const NPCS: Record<string, NPC> = {
 
   door_guard: {
     id: "door_guard",
-    name: "The Door Guard",
+    name: "Door Guard",
     description: "A large person in Guild livery who manages foot traffic in and out of the hall.",
     greeting: `"In or out. Make up your mind."`,
     personality: "The door guard is efficient, humorless, and not interested in conversation. They know nothing useful and will say so.",

@@ -82,7 +82,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (NPC naming rule, priest display name)*
+*Last updated: April 4, 2026 (Door Guard display name)*
 
 
 ## 1. Project Overview
@@ -233,7 +233,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | old_mercenary | Aldric the Old | neutral | main_hall |
 | brunt_the_banker | Brunt | neutral | guild_vault |
 | armory_attendant | Pip | neutral | armory |
-| door_guard | The Door Guard | neutral | main_hall_exit |
+| door_guard | Door Guard | neutral | main_hall_exit |
 | priest_of_perpetual_life | Priest of Perpetual Life | neutral | church_of_perpetual_life |
 
 ## 8. Merchants
@@ -449,6 +449,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Door Guard display name
+
+- **`door_guard`** **`NPCS[].name`:** **"The Door Guard"** → **"Door Guard"** (§8 NPC naming rule). NPC table in this doc updated.
 
 ### 2026-04-04 — NPC naming rule (no leading articles)
 

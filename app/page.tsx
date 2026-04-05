@@ -25,33 +25,36 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const userScrolledRef = useRef(false);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
   const typingRef = useRef(false);
   const displayedRef = useRef("");
   const skipTypingRef = useRef(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledRef = useRef(false);
 
+  // Smart auto-scroll: only scroll to bottom if user
+  // hasn't manually scrolled up
+  useEffect(() => {
+    if (userScrolledRef.current) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Track whether user has scrolled up away from bottom
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
       const isNearBottom =
         scrollHeight - scrollTop - clientHeight < 100;
       userScrolledRef.current = !isNearBottom;
     };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
+    container.addEventListener("scroll", handleScroll,
+      { passive: true });
+    return () =>
+      container.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    if (userScrolledRef.current) return;
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -489,7 +492,9 @@ export default function Home() {
 
         <div
           ref={scrollContainerRef}
-          style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}
+          style={{ flex: 1, overflowY: "scroll", padding: 24,
+            scrollbarWidth: "thin",
+            scrollbarColor: "#4b5563 #111827", height: 0 }}
         >
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             {messages.map((msg, i) => (

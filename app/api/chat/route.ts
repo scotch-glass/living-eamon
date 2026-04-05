@@ -57,14 +57,12 @@ WORLD RULES:
 - Room states persist. A burnt hall stays burnt until repaired.
 - Death loses carried gold only. The hero always persists.
 - Keep responses to 3-5 paragraphs. Vivid but efficient.
-- Never output the dashed-line situation summary block (lines of ─) or duplicate that UI; the engine appends it once after your text.
-- Always end with 2-3 italicized suggested actions on a new line, formatted like: *You might: [action 1], [action 2], or [something unexpected].*
-- These suggestions should feel organic to the moment — not a menu, but a living world hinting at possibilities.`;
+- Never output the dashed-line situation summary block (lines of ─) or duplicate that UI; the engine appends it once after your text.`;
 
 // Fallback responses when Jane is unavailable
-const JANE_UNAVAILABLE_FREE = "The air grows still. Whatever stirs in the shadows does not speak today. The voices will return at dawn.\n\n*You might: look around, check your inventory, or head in a new direction.*";
-const JANE_UNAVAILABLE_PAID = "You have walked far today, hero. The realm grows quiet as evening falls. Rest until dawn, when the voices return.\n\n*You might: look around, check your inventory, or bank your gold.*";
-const CONTENT_NOT_YET_KNOWN = "This holds its secrets close. Some things in this realm are not yet fully known.\n\n*You might: look around, try something else, or move on.*";
+const JANE_UNAVAILABLE_FREE = "The air grows still. Whatever stirs in the shadows does not speak today. The voices will return at dawn.";
+const JANE_UNAVAILABLE_PAID = "You have walked far today, hero. The realm grows quiet as evening falls. Rest until dawn, when the voices return.";
+const CONTENT_NOT_YET_KNOWN = "This holds its secrets close. Some things in this realm are not yet fully known.";
 
 async function streamWithFallback(
   messages: { role: "user" | "assistant"; content: string }[],
@@ -186,11 +184,8 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
     player.currentRoom === "church_of_perpetual_life"
       ? "\n\nROOM-SPECIFIC INSTRUCTION:\n" +
         "The priests here do not speak under any circumstances. " +
-        "Do not generate suggested actions that involve speaking " +
-        "to, talking to, or asking the priest anything. Suggested " +
-        "actions should only involve movement (go east) or " +
-        "examining objects (examine the altar, examine the robe " +
-        "rack). Never suggest conversation with the priest.\n"
+        "Do not write dialogue for them or imply they answer the player. " +
+        "The room is defined by silence.\n"
       : "";
 
   return "WORLD CONTEXT:\n" +
@@ -460,8 +455,7 @@ export async function POST(request: NextRequest) {
         MAIN_HALL_ROOMS.main_hall.description + "\n" +
         "Address the player by their name: " + state.player.name + "\n" +
         "Introduce Hokas Tokas and Sam Slicker naturally.\n" +
-        "End with jane's one-line observation in lowercase.\n" +
-        "Then on a new line suggest 2-3 possible actions formatted as: *You might: [action 1], [action 2], or [action 3].*";
+        "End with jane's one-line observation in lowercase.";
 
       return await streamJane(openingContext, state, [{ role: "user", content: openingContext }], null);
     }

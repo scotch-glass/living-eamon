@@ -82,7 +82,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 4, 2026 (Door Guard display name)*
+*Last updated: April 4, 2026 (Jane suggested actions removed)*
 
 
 ## 1. Project Overview
@@ -449,6 +449,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-04 — Jane suggested actions removed
+
+- Removed Jane **suggested actions** from **`JANE_SYSTEM_PROMPT`** and from opening-game instructions in **`app/api/chat/route.ts`**. Stripped **`*You might: …*`** tails from **`JANE_UNAVAILABLE_FREE`**, **`JANE_UNAVAILABLE_PAID`**, and **`CONTENT_NOT_YET_KNOWN`**. Church **`buildJaneContext`** note rewritten to silence-only (no suggestion wording). **Autocomplete** handles command discovery. Jane suggestions were causing confusion — wrong syntax, truncated NPC names, not matching actual game commands.
+- `npx tsc --noEmit` — clean.
 
 ### 2026-04-04 — Door Guard display name
 

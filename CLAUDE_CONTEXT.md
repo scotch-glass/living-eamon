@@ -938,6 +938,10 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-18 — Church cold open: trim pre-YESNO paragraphs
+
+- **`app/api/chat/route.ts`:** Removed five lines (figures / door / survival beat) before **`__YESNO__`** in static cold open.
+
 ### 2026-04-18 — Session start respects saved **`currentRoom`**
 
 - **`/api/chat`:** Empty messages → branch on **`currentRoom`** + **`turnCount`**: Church cold open / Church respawn / **Jane re-entry** for other rooms (room name, state, description from **`MAIN_HALL_ROOMS`**). Load merge: **`current_room`** null → **`church_of_perpetual_life`** (in **`route.ts`** player merge — not in **`page.tsx`**).

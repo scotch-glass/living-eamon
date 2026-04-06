@@ -505,12 +505,6 @@ export async function POST(request: NextRequest) {
           "",
           "*...have I been here before?*",
           "",
-          "The figures do not move. The light does not change. The altar offers nothing.",
-          "",
-          "Part of you wants to stay still — to press into the fog, find the edge of what you have lost. Another part is already reading the room: one door, set into the north wall, the only interruption in all that white. Beyond it, distantly, the smell of woodsmoke. Iron. People.",
-          "",
-          "Survival does not wait for memory.",
-          "",
           "__YESNO__",
         ].join("\n");
 

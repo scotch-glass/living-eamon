@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
             reputationScore: savedPlayer.reputation_score,
             reputationLevel: savedPlayer.reputation_level,
             knownAs: savedPlayer.known_as,
-            currentRoom: savedPlayer.current_room ?? "main_hall",
+            currentRoom: savedPlayer.current_room ?? "church_of_perpetual_life",
             currentAdventure: savedPlayer.current_adventure,
             completedAdventures: savedPlayer.completed_adventures ?? [],
             bounty: savedPlayer.bounty,
@@ -468,18 +468,22 @@ export async function POST(request: NextRequest) {
       });
     };
 
-    // ── Opening game — all pre-written static content, zero Jane calls ────────
+    // ── Session start — fires when messages array is empty (page load / refresh) ──
+    // This is NOT always a "new game". It fires every time the player's browser
+    // loads fresh — after a refresh, power outage, closing the laptop, etc.
+    // The player's currentRoom is loaded from Supabase and respected.
     if (!messages || messages.length === 0) {
+      const currentRoom = state.player.currentRoom;
       const isFirstEver = state.player.turnCount === 0;
 
-      if (isFirstEver) {
-        // Cold open — new player, Church of Perpetual Life, no memory
+      // ── Brand new player — cold open in Church of Perpetual Life ─────────────
+      if (isFirstEver && currentRoom === "church_of_perpetual_life") {
         const coldOpen = [
           "White.",
           "",
           "That is the first thing. Not darkness — white. A white so complete and sourceless it takes several seconds to understand that your eyes are open. There is no lamp, no window, no torch. The light simply exists, emanating from everywhere equally, pressing against every surface with cold indifference.",
           "",
-          "The floor beneath your cheek is polished marble. White. You know the word for it without knowing how you know. It is perfectly smooth — it neither warms to the flesh nor is naturally cold in the way stone should be cold. It is… perpetual.",
+          "The floor beneath your cheek is marble. You know the word for it without knowing how you know. It is perfectly smooth, neither warm nor cold in the way stone should be cold — it is something else. Something that has been this temperature for longer than temperature is supposed to last.",
           "",
           "You sit up.",
           "",
@@ -493,7 +497,7 @@ export async function POST(request: NextRequest) {
           "",
           "You reach for your name.",
           "",
-          "The place where it should be is smooth and unbroken — Blank. Like the floor, like the walls, like the altar.  You press at it. Nothing gives. There is no pain in the absence. That is the strangest part. There is simply nothing there, the way a room has nothing in a corner that has always been empty.",
+          "The place where it should be is smooth and unbroken — like the floor, like the walls, like the altar. You press at it. Nothing gives. There is no pain in the absence. That is the strangest part. There is simply nothing there, the way a room has nothing in a corner that has always been empty.",
           "",
           "You look at your hands. They are yours. You are certain of this and uncertain of almost everything else.",
           "",
@@ -501,32 +505,68 @@ export async function POST(request: NextRequest) {
           "",
           "*...have I been here before?*",
           "",
+          "The figures do not move. The light does not change. The altar offers nothing.",
+          "",
+          "Part of you wants to stay still — to press into the fog, find the edge of what you have lost. Another part is already reading the room: one door, set into the north wall, the only interruption in all that white. Beyond it, distantly, the smell of woodsmoke. Iron. People.",
+          "",
+          "Survival does not wait for memory.",
+          "",
           "__YESNO__",
         ].join("\n");
 
         return sendResponse(coldOpen, state);
       }
 
-      // Returning player / death respawn
-      const returningOpen = [
-        "Stone again.",
-        "",
-        "The same white. The same sourceless cold light pressing against every surface with its total indifference. The same figures at the walls — white robes, gray eyes, hands folded, utterly still.",
-        "",
-        "You open your eyes and you know exactly where you are. You have been here before. You remember how this ends: you stand up, you walk out the door, you start again.",
-        "",
-        "What you had is gone. Carried gold. Everything you were wearing. Everything in your pack. The banked gold waits untouched. What is locked away safely waits. Everything else is gone, as completely as if it never existed.",
-        "",
-        "The figures do not acknowledge you. They never do.",
-        "",
-        "You stand.",
-      ].join("\n");
+      // ── Death respawn — player has died and woken in the Church ──────────────
+      if (currentRoom === "church_of_perpetual_life" && !isFirstEver) {
+        const respawnOpen = [
+          "Stone again.",
+          "",
+          "The same white. The same sourceless cold light pressing against every surface with its total indifference. The same figures at the walls — white robes, gray eyes, hands folded, utterly still.",
+          "",
+          "You open your eyes and you know exactly where you are. You have been here before. You remember how this ends: you stand up, you walk out the door, you start again.",
+          "",
+          "What you had is gone. Carried gold. Everything you were wearing. Everything in your pack. The banked gold waits untouched. What is locked away safely waits. Everything else is gone, as completely as if it never existed.",
+          "",
+          "The figures do not acknowledge you. They never do.",
+          "",
+          "You stand.",
+        ].join("\n");
 
-      return sendResponse(returningOpen, state);
+        return sendResponse(respawnOpen, state);
+      }
+
+      // ── Returning to any other room — player is resuming a saved session ─────
+      // The player was somewhere in the world when their session ended.
+      // Describe the room they are returning to — NOT a welcome screen.
+      const room = MAIN_HALL_ROOMS[currentRoom];
+      const roomDisplayName = room?.name ?? currentRoom.replace(/_/g, " ");
+      const roomDesc = room?.description ?? "";
+      const roomStateEntry = state.rooms[currentRoom];
+      const roomStateName = roomStateEntry?.currentState ?? "normal";
+
+      const reEntryContext = [
+        "SCENE: The player " + state.player.name + " is returning to a saved session.",
+        "They were in: " + roomDisplayName + " (state: " + roomStateName + ")",
+        roomDesc ? "Room description: " + roomDesc : "",
+        "",
+        "Write 1-2 short paragraphs describing the player becoming aware of their surroundings again.",
+        "Do NOT say 'welcome back'. Do NOT greet them by name or explain they saved the game.",
+        "Write it as the world reasserting itself — their senses returning to where they left off.",
+        "Describe what they see, smell, and hear in this specific room right now.",
+        "If NPCs are present, note them naturally. End with Jane's one-line observation in lowercase.",
+      ].filter(Boolean).join("\n");
+
+      return await streamJane(
+        reEntryContext,
+        state,
+        [{ role: "user", content: reEntryContext }],
+        null,
+        currentRoom === "main_hall"
+      );
     }
 
     // ── YES / NO tutorial branch ─────────────────────────────────────────────
-    // Fires when turnCount === 0 and the player's first message is YES or NO
     {
       const userMessages = messages.filter((m: { role: string }) => m.role === "user");
       const userMessageCount = userMessages.length;
@@ -554,7 +594,6 @@ export async function POST(request: NextRequest) {
           return sendResponse(skipText, state);
         }
 
-        // Tutorial path
         const tutorialText = [
           "Nothing. The fog holds.",
           "",
@@ -562,13 +601,15 @@ export async function POST(request: NextRequest) {
           "",
           "Your eyes move before you decide to move them, cataloguing the room, finding the exits. __CMD:LOOK AROUND__ — something in you understands. Not a thought. A reflex. North wall. One door. Light under it. Warmth.",
           "",
-          "You look down at yourself. A gray robe, thin as an apology. You pat your sides without thinking — __CMD:I__ — and find nothing. If you ever had something, you do not have it now. Not even a name.",
+          "You look down at yourself. A gray robe, thin as an apology. You pat your sides without thinking — __CMD:I__ — and find nothing. No coin. No blade. No anything. Whatever you had, you do not have it now.",
           "",
-          "The body knows things the mind does not. You can feel your own condition without searching for it — a quiet inner census, like a sailor checking the ship before leaving port. __CMD:HEALTH__ will show you what the realm knows about your physical state. What it reports now: intact. Whole. Unremarkably alive. At least you have your health.",
+          "The body knows things the mind does not. You can feel your own condition without searching for it — a quiet inner census, like a sailor checking the ship before leaving port. __CMD:HEALTH__ will show you what the realm knows about your physical state. What it reports now: intact. Whole. Unremarkably alive.",
           "",
           "You take a step toward the door. Then another. __CMD:GO NORTH__ — your feet already know.",
           "",
-          "Whatever answers exist — they are not in here. The figures at the walls will not tell you. The light will not answer.",
+          "Beyond this room is a place called the Main Hall. Beyond that: everything else.",
+          "",
+          "Whatever answers exist about who you are — they are not in here. The figures at the walls will not tell you. The light will not answer.",
           "",
           "You push open the door.",
         ].join("\n");

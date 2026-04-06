@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 17, 2026*
+*Last updated: April 18, 2026*
 
 
 ## 1. Project Overview
@@ -597,7 +597,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: auth, **`ScenePanel`**, header/sidebar chrome, **`formatMessage`** parses **`__YESNO__`** (YES/NO chips) and **`__CMD:COMMAND__`** (amber chips → **`sendMessage(cmd)`**); `CommandInput`, **JSON vs stream** for `/api/chat` |
-| `app/api/chat/route.ts` | POST: identity + merge + `processInput`; **empty `messages`:** static **`sendResponse`** cold open (**`__YESNO__`** in text) or returning-player prose — **no Jane**; **YES/NO** first user message → static skip or tutorial (**`__CMD:…__`** tokens for chips); then engine + Jane paths as before; **`guild_courtyard`** weather; **`__CRITICAL__`** → Jane; **`main_hall`** JSON when applicable |
+| `app/api/chat/route.ts` | **Empty `messages` (session start):** respects **`currentRoom`** from DB — **`turnCount === 0`** + Church → static cold open + **`__YESNO__`**; Church + **`turnCount > 0`** → respawn prose; **other rooms** → **`streamJane`** re-entry prompt (**`MAIN_HALL_ROOMS`** name/desc; JSON buffer if **`main_hall`**). **`savedPlayer.current_room`** fallback **`church_of_perpetual_life`**. YES/NO branch unchanged. Then **`processInput`** + static/dynamic Jane as before |
 | `app/api/scene-image/route.ts` | **GET**, **`runtime = "nodejs"`** — cache → Grok → Storage → **`scene_image_cache`**; errors → **`void appendErrorLog`** (structured **`console.error`** + **`grok_imagine_error_log`** insert); sanitized retry; JSON **`visualDescription`** / **`error`**; outer catch HTTP 200 **`url: null`** |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
@@ -937,6 +937,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-18 — Session start respects saved **`currentRoom`**
+
+- **`/api/chat`:** Empty messages → branch on **`currentRoom`** + **`turnCount`**: Church cold open / Church respawn / **Jane re-entry** for other rooms (room name, state, description from **`MAIN_HALL_ROOMS`**). Load merge: **`current_room`** null → **`church_of_perpetual_life`** (in **`route.ts`** player merge — not in **`page.tsx`**).
 
 ### 2026-04-17 — Static Church open, command chips, white Church scene art
 

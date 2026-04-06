@@ -365,8 +365,8 @@ export async function POST(request: NextRequest) {
         state = worldState ?? createInitialWorldState(playerName ?? "Adventurer");
       }
     } else if (playerName) {
-      // New player — create in Supabase
-      const newPlayer = await createPlayer(playerName);
+      // New player — create in Supabase (link auth user immediately when present)
+      const newPlayer = await createPlayer(playerName, authUserId);
       if (newPlayer) {
         resolvedPlayerId = newPlayer.id;
         state = createInitialWorldState(playerName);

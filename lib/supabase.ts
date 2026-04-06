@@ -97,10 +97,38 @@ export async function loadPlayerByUserId(userId: string) {
   return data;
 }
 
-export async function createPlayer(name: string) {
+/**
+ * Creates a new player row, linked to the auth user immediately.
+ * If a player already exists for this auth user, returns the existing one.
+ * This prevents duplicate rows from repeated logins or page refreshes.
+ */
+export async function createPlayer(name: string, authUserId?: string) {
+  // Guard: if authUserId provided, check for existing player first
+  if (authUserId) {
+    const { data: existing } = await serviceClient
+      .from("players")
+      .select("*")
+      .eq("user_id", authUserId)
+      .single();
+
+    if (existing) {
+      return existing;
+    }
+  }
+
+  const row: Record<string, unknown> = {
+    character_name: name,
+    current_room: "church_of_perpetual_life",
+    turn_count: 0,
+  };
+
+  if (authUserId) {
+    row.user_id = authUserId;
+  }
+
   const { data, error } = await serviceClient
     .from("players")
-    .insert({ character_name: name })
+    .insert(row)
     .select()
     .single();
 

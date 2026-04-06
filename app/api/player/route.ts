@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPlayer, loadPlayer, loadPlayerByUserId } from "../../../lib/supabase";
+import { createServerSupabase } from "../../../lib/supabaseAuthServer";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name required" }, { status: 400 });
     }
 
-    const player = await createPlayer(playerName.trim());
+    const supabaseAuth = await createServerSupabase();
+    const {
+      data: { user: authUser },
+    } = await supabaseAuth.auth.getUser();
+    const authUserId = authUser?.id;
+    if (!authUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const player = await createPlayer(playerName.trim(), authUserId);
 
     if (!player) {
       return NextResponse.json({ error: "Could not create player" }, { status: 500 });

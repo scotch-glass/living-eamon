@@ -496,6 +496,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/layout.tsx
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/page.tsx
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/components/CommandInput.tsx
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/components/ScenePanel.tsx
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/eslint.config.mjs
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/combatNarrationPools.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/npcBodyType.ts
@@ -533,14 +534,14 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 8, 2026*
+*Last updated: April 9, 2026*
 
 
 ## 1. Project Overview
 
 Living Eamon is an AI-powered recreation of the classic Apple II text-adventure system **Eamon**, intended for **LivingEamon.ai**. It features a persistent living world, the AI narrator **Jane**, virtue tracking, a consequence engine (room/NPC state, bounties, chronicle), and Ultima Online–inspired item/weapon metadata and batch icon generation.
 
-**Tech stack (runtime):** Next.js (App Router), TypeScript, React 19, Supabase (Postgres), Vercel deployment, **Anthropic Claude** (Jane via `/api/chat`), **xAI Grok** (optional text via OpenAI-compatible API; image generation in `scripts/`). Tailwind CSS v4 is a project dependency (PostCSS); the main play UI in `app/page.tsx` is largely **inline-styled**.
+**Tech stack (runtime):** Next.js (App Router), TypeScript, React 19, Supabase (Postgres), Vercel deployment, **Anthropic Claude** (Jane via `/api/chat`), **xAI Grok** (optional text via OpenAI-compatible API; image generation in `scripts/` and **`components/ScenePanel`** → **`/api/scene-image`**). Tailwind CSS v4 is a project dependency (PostCSS); the main play UI in `app/page.tsx` is largely **inline-styled**.
 
 ## 2. Live URLs
 
@@ -600,6 +601,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `app/api/scene-image/route.ts` | **GET** — query `room`, `state`, `tone`; **`scene_image_cache`** lookup → else Grok Imagine **`b64_json`** → upload **`scene-images`** → insert cache; returns `{ url, cached? }` or **`{ url: null }`** on error (HTTP 200) |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
+| `components/ScenePanel.tsx` | Client **`ScenePanel`** — fetches **`/api/scene-image`** by `roomId` / `roomState` / `tone`; shimmer skeleton, crossfade, vignette, room label |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
 | `scripts/test-plate-chest.mjs` | Single-item art test |
 | `public/*.svg` | Default Next/Vercel assets (`public/uo-art` may be generated locally and not committed) |
@@ -874,6 +876,7 @@ Do not commit secret values.
 - [x] Direction parsing: `extractDirection` uses whole tokens (fixes `STATS` / substring false positives)
 - [x] Batch art script targeting Grok image API (`grok-imagine-image`)
 - [x] **`GET /api/scene-image`** — room scene JPEGs via Grok Imagine, Supabase cache + **`scene-images`** bucket
+- [x] **`ScenePanel`** client component — scene art strip above chat (import from **`components/ScenePanel.tsx`** in **`app/page.tsx`** when wiring UI)
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
 - [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
 - [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
@@ -932,6 +935,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-09 — **`ScenePanel`** (`components/ScenePanel.tsx`)
+
+- Client component: **`GET /api/scene-image`** with **`room`**, **`state`**, **`tone`** query params; shimmer while loading; opacity crossfade on room/state change; bottom vignette and title-case room label.
 
 ### 2026-04-08 — `GET /api/scene-image` (Grok Imagine + Supabase cache)
 

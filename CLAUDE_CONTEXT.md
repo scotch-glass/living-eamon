@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 9, 2026*
+*Last updated: April 10, 2026*
 
 
 ## 1. Project Overview
@@ -596,7 +596,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
-| `app/page.tsx` | Client UI: auth bootstrap via Supabase user, auto-load player, chat log, `CommandInput`, sidebar, header sign-out, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
+| `app/page.tsx` | Client UI: auth bootstrap via Supabase user, auto-load player, **`ScenePanel`** (room / engine **`RoomState`** → **`normal` \| `damaged` \| `ruined`**; **`grimdark`** tone for church + pit), chat log, `CommandInput`, sidebar, header sign-out, **JSON vs stream** for `/api/chat` |
 | `app/api/chat/route.ts` | POST: resolves authenticated user's linked player id (prefers `players.user_id` mapping over request body `playerId`), then load/merge player + `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
 | `app/api/scene-image/route.ts` | **GET** — query `room`, `state`, `tone`; **`scene_image_cache`** lookup → else Grok Imagine **`b64_json`** → upload **`scene-images`** → insert cache; returns `{ url, cached? }` or **`{ url: null }`** on error (HTTP 200) |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
@@ -876,7 +876,7 @@ Do not commit secret values.
 - [x] Direction parsing: `extractDirection` uses whole tokens (fixes `STATS` / substring false positives)
 - [x] Batch art script targeting Grok image API (`grok-imagine-image`)
 - [x] **`GET /api/scene-image`** — room scene JPEGs via Grok Imagine, Supabase cache + **`scene-images`** bucket
-- [x] **`ScenePanel`** client component — scene art strip above chat (import from **`components/ScenePanel.tsx`** in **`app/page.tsx`** when wiring UI)
+- [x] **`ScenePanel`** wired in **`app/page.tsx`** above main header (room, mapped state, tone)
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
 - [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
 - [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
@@ -935,6 +935,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-10 — Wire **`ScenePanel`** in **`app/page.tsx`**
+
+- Import **`ScenePanel`**; render above top bar with **`roomId`** from **`worldState.player.currentRoom`**, **`roomState`** from **`rooms[currentRoom].currentState`** (**`burnt`** → **`ruined`**, other non-**`normal`** → **`damaged`**), **`tone`** **`grimdark`** for **`church_of_perpetual_life`** and **`pit`** else **`civilized`**.
 
 ### 2026-04-09 — **`ScenePanel`** (`components/ScenePanel.tsx`)
 

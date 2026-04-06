@@ -8,6 +8,7 @@ import CommandInput, { type CommandInputHandle } from "../components/CommandInpu
 import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
+import ScenePanel from "../components/ScenePanel";
 
 interface Message {
   role: "user" | "assistant";
@@ -494,7 +495,21 @@ export default function Home() {
       )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ borderBottom: "1px solid #1f2937", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+      <ScenePanel
+        roomId={worldState?.player?.currentRoom ?? "main_hall"}
+        roomState={(() => {
+          const raw = worldState?.rooms?.[worldState?.player?.currentRoom ?? "main_hall"]?.currentState;
+          if (!raw || raw === "normal") return "normal";
+          if (raw === "burnt") return "ruined";
+          return "damaged";
+        })()}
+        tone={(() => {
+          const room = worldState?.player?.currentRoom ?? "main_hall";
+          if (room === "church_of_perpetual_life" || room === "pit") return "grimdark";
+          return "civilized";
+        })()}
+      />
+      <div style={{ borderBottom: "1px solid #1f2937", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
           <button onClick={() => setSidebarOpen(o => !o)} style={{ color: "#6b7280", fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>☰</button>
           <span style={{ color: "#92400e", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>Living Eamon</span>
           {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11 }}>⚠ WANTED</span>}

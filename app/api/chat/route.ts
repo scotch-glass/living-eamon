@@ -27,11 +27,11 @@ import {
 import { createServerSupabase } from "../../../lib/supabaseAuthServer";
 
 const grok = new OpenAI({
-  apiKey: process.env.GROK_API_KEY,
+  apiKey: process.env.XAI_API_KEY || process.env.GROK_API_KEY,
   baseURL: "https://api.x.ai/v1",
 });
 
-const useGrok = !!process.env.GROK_API_KEY;
+const useGrok = !!(process.env.XAI_API_KEY || process.env.GROK_API_KEY);
 
 const JANE_SYSTEM_PROMPT = `You are Jane — an ancient intelligence woven into the fabric of the realms of Living Eamon.
 

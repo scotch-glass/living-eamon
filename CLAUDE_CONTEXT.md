@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 12, 2026*
+*Last updated: April 13, 2026*
 
 
 ## 1. Project Overview
@@ -558,7 +558,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Language: TypeScript
 - Styling: Tailwind v4 (dependency); primary game UI uses inline styles in `app/page.tsx`
 - Database: Supabase (Postgres)
-- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic). **Guild Courtyard:** when `responseType === "static"` and the player is in **`guild_courtyard`**, **`route.ts`** calls **`getCourtyardWeather()`** (Open-Meteo, Warsaw) and replaces the body with **`buildCourtyardDescription`** (no LLM).
+- AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when **`XAI_API_KEY` or `GROK_API_KEY`** is set (`useGrok` / shared OpenAI client). **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic). **Guild Courtyard:** when `responseType === "static"` and the player is in **`guild_courtyard`**, **`route.ts`** calls **`getCourtyardWeather()`** (Open-Meteo, Warsaw) and replaces the body with **`buildCourtyardDescription`** (no LLM).
 - Image generation: xAI **`grok-imagine-image`** — batch item art in `scripts/generate-all-art.mjs` (`GROK_API_KEY`); **scene establishing shots** via **`GET /api/scene-image`** (`export const runtime = "nodejs"`, `XAI_API_KEY`, OpenAI SDK at `https://api.x.ai/v1`, Supabase **`scene_image_cache`** + **`scene-images`** bucket). **Scene route:** moderation-shaped failures → **`console.error`** + insert **`grok_imagine_error_log`** (fire-and-forget **`void appendErrorLog`**); one **`buildScenePromptSanitized`** retry; JSON **`visualDescription`**, **`error`**, **`retried`**. **ScenePanel:** loading copy, errors, 30s abort, apology on **`retried`**. 
 - Deployment: Vercel
 - IDE: Cursor (e.g. MacBook Pro)
@@ -841,7 +841,7 @@ Other tables used: `world_objects`, `room_states`, `npc_states`, `jane_memories`
 |----------|---------|
 | `ANTHROPIC_API_KEY` | Claude client in `app/api/chat/route.ts` |
 | `GROK_API_KEY` | Optional Grok chat + required for `scripts/generate-all-art.mjs` / `test-plate-chest.mjs` (script reads `.env.local`) |
-| `XAI_API_KEY` | xAI key for **`GET /api/scene-image`** (OpenAI SDK client with base URL `https://api.x.ai/v1`) |
+| `XAI_API_KEY` | xAI key for **`GET /api/scene-image`** and optional **Jane Grok** in **`app/api/chat/route.ts`** (same key as **`GROK_API_KEY`** fallback); OpenAI SDK at `https://api.x.ai/v1` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL (`lib/supabase.ts`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (`browserClient`) |
 | `SUPABASE_SERVICE_KEY` | Service role key (`serviceClient`, server routes) |
@@ -937,6 +937,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-13 — **`/api/chat`** accepts **`XAI_API_KEY`** for Grok Jane
+
+- **`app/api/chat/route.ts`:** **`useGrok`** and the shared **`grok`** OpenAI client use **`process.env.XAI_API_KEY`** or **`process.env.GROK_API_KEY`** so one xAI key can drive both Imagine and **`grok-3`** chat when **`GROK_API_KEY`** is unset.
 
 ### 2026-04-12 — **`grok_imagine_error_log`** + Node route runtime (`scene-image`)
 

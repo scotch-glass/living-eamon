@@ -488,8 +488,13 @@ export default function Home() {
             </div>
           )}
 
-          <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #1f2937" }}>
-            <p style={{ color: "#374151", fontSize: 11, fontStyle: "italic", textAlign: "center" }}>she is watching</p>
+          <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ color: "#374151", fontSize: 11, fontStyle: "italic", margin: 0 }}>she is watching</p>
+            <form action={logoutAction}>
+              <button type="submit" style={{ color: "#4b5563", fontSize: 11, background: "none", border: "none", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.05em" }}>
+                Sign out
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -510,26 +515,24 @@ export default function Home() {
         })()}
       />
       <div style={{ borderBottom: "1px solid #1f2937", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <button onClick={() => setSidebarOpen(o => !o)} style={{ color: "#6b7280", fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>☰</button>
-          <span style={{ color: "#92400e", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>Living Eamon</span>
-          {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11 }}>⚠ WANTED</span>}
-          <form action={logoutAction} style={{ marginLeft: "auto" }}>
-            <button
-              type="submit"
-              style={{
-                color: "#4b5563",
-                fontSize: 12,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "Georgia, serif",
-                letterSpacing: "0.05em",
-              }}
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          title={sidebarOpen ? "Hide panel" : "Show panel"}
+          style={{ color: "#6b7280", fontSize: 13, fontFamily: "ui-monospace, monospace", background: "none", border: "1px solid #374151", borderRadius: 4, cursor: "pointer", padding: "2px 6px", lineHeight: 1, letterSpacing: 0 }}
+        >
+          {sidebarOpen ? "◀" : "▶"}
+        </button>
+        <span style={{ color: "#92400e", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>
+          Living Eamon
+          {player?.currentRoom && (
+            <span style={{ color: "#6b7280", fontWeight: "normal" }}>
+              {" — "}
+              {(player.currentRoom.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()))}
+            </span>
+          )}
+        </span>
+        {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11 }}>⚠ WANTED</span>}
+      </div>
 
         <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>

@@ -1,11 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SCENE_DATA } from "../lib/sceneData";
 
 interface ScenePanelProps {
   roomId: string;
   roomState?: string;
   tone?: string;
+}
+
+type PanelStatus = "loading" | "loaded" | "retrying" | "error";
+
+interface SceneResult {
+  url: string | null;
+  visualDescription: string | null;
+  retried?: boolean;
+  error?: string;
+  errorType?: string;
 }
 
 export default function ScenePanel({
@@ -14,11 +25,18 @@ export default function ScenePanel({
   tone = "civilized",
 }: ScenePanelProps) {
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
-  const [fetching, setFetching] = useState(false);
+  const [status, setStatus] = useState<PanelStatus>("loading");
   const [opacity, setOpacity] = useState(1);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showApology, setShowApology] = useState(false);
 
   const prevRoomRef = useRef<string | null>(null);
   const prevStateRef = useRef<string | null>(null);
+
+  // Visual description for the loading state — from sceneData or API response
+  const localDescription = SCENE_DATA[roomId]?.visualDescription ?? null;
+  const displayName = SCENE_DATA[roomId]?.displayName
+    ?? roomId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   useEffect(() => {
     if (
@@ -33,15 +51,30 @@ export default function ScenePanel({
 
     if (!roomId) return;
 
-    setFetching(true);
+    setStatus("loading");
+    setErrorMessage(null);
+    setShowApology(false);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
 
     fetch(
-      `/api/scene-image?room=${encodeURIComponent(roomId)}&state=${encodeURIComponent(roomState)}&tone=${encodeURIComponent(tone)}`
+      `/api/scene-image?room=${encodeURIComponent(roomId)}&state=${encodeURIComponent(roomState)}&tone=${encodeURIComponent(tone)}`,
+      { signal: controller.signal }
     )
       .then((r) => r.json())
-      .then((data: { url: string | null }) => {
+      .then((data: SceneResult) => {
+        clearTimeout(timeout);
+
+        if (data.retried) {
+          setShowApology(true);
+          // Hide apology after 4 seconds
+          setTimeout(() => setShowApology(false), 4000);
+        }
+
         if (!data.url) {
-          setFetching(false);
+          setErrorMessage(data.error ?? "The Sight is unavailable.");
+          setStatus("error");
           return;
         }
 
@@ -52,23 +85,38 @@ export default function ScenePanel({
             setTimeout(() => {
               setDisplayUrl(data.url);
               setOpacity(1);
+              setStatus("loaded");
             }, 400);
           } else {
             setDisplayUrl(data.url);
             setOpacity(1);
+            setStatus("loaded");
           }
-          setFetching(false);
         };
-        img.onerror = () => setFetching(false);
-        img.src = data.url;
+        img.onerror = () => {
+          setErrorMessage("The vision formed but could not be shown.");
+          setStatus("error");
+        };
+        img.src = data.url!;
       })
-      .catch(() => setFetching(false));
+      .catch((err: Error) => {
+        clearTimeout(timeout);
+        if (err.name === "AbortError") {
+          setErrorMessage("The Sight takes too long. The realm continues without vision.");
+        } else {
+          setErrorMessage("The Sight is unavailable. Jane cannot show you this place.");
+        }
+        setStatus("error");
+      });
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, roomState, tone]);
 
-  const roomDisplayName = roomId
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const roomDisplayName = displayName;
 
   return (
     <>
@@ -76,6 +124,10 @@ export default function ScenePanel({
         @keyframes le-shimmer {
           0%   { background-position: 200% 0; }
           100% { background-position: -200% 0; }
+        }
+        @keyframes le-pulse {
+          0%, 100% { opacity: 0.5; }
+          50%       { opacity: 1; }
         }
       `}</style>
       <div
@@ -90,21 +142,126 @@ export default function ScenePanel({
           flexShrink: 0,
         }}
       >
-        {/* Shimmer skeleton — visible while fetching with no image yet */}
-        {fetching && !displayUrl && (
+        {/* ── Loading state ─────────────────────────────────────────────── */}
+        {(status === "loading" || status === "retrying") && (
+          <>
+            {/* Shimmer background */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(90deg, #0d0d14 25%, #1a1a28 50%, #0d0d14 75%)",
+                backgroundSize: "200% 100%",
+                animation: "le-shimmer 2.2s linear infinite",
+              }}
+            />
+
+            {/* Location name */}
+            <div
+              style={{
+                position: "absolute",
+                top: 20,
+                left: 20,
+                right: 20,
+              }}
+            >
+              <p
+                style={{
+                  color: "rgba(251,191,36,0.5)",
+                  fontSize: 11,
+                  fontFamily: "Georgia, serif",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  margin: 0,
+                  marginBottom: 8,
+                  animation: "le-pulse 2s ease-in-out infinite",
+                }}
+              >
+                {status === "retrying"
+                  ? "The Sight reforms — a moment, traveller..."
+                  : `Rendering ${roomDisplayName}...`}
+              </p>
+
+              {/* Visual description as loading text */}
+              {localDescription && (
+                <p
+                  style={{
+                    color: "rgba(148,163,184,0.35)",
+                    fontSize: 12,
+                    fontFamily: "Georgia, serif",
+                    lineHeight: 1.6,
+                    margin: 0,
+                    fontStyle: "italic",
+                    maxWidth: 600,
+                  }}
+                >
+                  {localDescription}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── Error state ───────────────────────────────────────────────── */}
+        {status === "error" && (
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                "linear-gradient(90deg, #111118 25%, #1c1c28 50%, #111118 75%)",
-              backgroundSize: "200% 100%",
-              animation: "le-shimmer 2s linear infinite",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              padding: "20px 24px",
+              background: "linear-gradient(135deg, #0d0d14 0%, #0f0a0a 100%)",
             }}
-          />
+          >
+            <p
+              style={{
+                color: "rgba(239,68,68,0.6)",
+                fontSize: 11,
+                fontFamily: "Georgia, serif",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                margin: 0,
+                marginBottom: 8,
+              }}
+            >
+              The Sight fails
+            </p>
+            <p
+              style={{
+                color: "rgba(148,163,184,0.5)",
+                fontSize: 13,
+                fontFamily: "Georgia, serif",
+                fontStyle: "italic",
+                lineHeight: 1.6,
+                margin: 0,
+                maxWidth: 560,
+              }}
+            >
+              {errorMessage}
+            </p>
+            {localDescription && (
+              <p
+                style={{
+                  color: "rgba(148,163,184,0.25)",
+                  fontSize: 11,
+                  fontFamily: "Georgia, serif",
+                  fontStyle: "italic",
+                  lineHeight: 1.5,
+                  margin: "12px 0 0",
+                  maxWidth: 560,
+                }}
+              >
+                {localDescription}
+              </p>
+            )}
+          </div>
         )}
 
-        {/* Scene image */}
+        {/* ── Scene image ───────────────────────────────────────────────── */}
         {displayUrl && (
           <img
             src={displayUrl}
@@ -123,7 +280,37 @@ export default function ScenePanel({
           />
         )}
 
-        {/* Bottom vignette — blends into chat text below */}
+        {/* ── Retry apology toast ───────────────────────────────────────── */}
+        {showApology && (
+          <div
+            style={{
+              position: "absolute",
+              top: 12,
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: "rgba(10,10,20,0.85)",
+              border: "1px solid rgba(251,191,36,0.3)",
+              borderRadius: 6,
+              padding: "6px 16px",
+              zIndex: 10,
+            }}
+          >
+            <p
+              style={{
+                color: "rgba(251,191,36,0.8)",
+                fontSize: 12,
+                fontFamily: "Georgia, serif",
+                fontStyle: "italic",
+                margin: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              The Sight wavered — Jane has found another way to show you this place.
+            </p>
+          </div>
+        )}
+
+        {/* ── Bottom vignette ───────────────────────────────────────────── */}
         <div
           style={{
             position: "absolute",
@@ -136,8 +323,8 @@ export default function ScenePanel({
           }}
         />
 
-        {/* Room name — bottom left, only when image is showing */}
-        {displayUrl && (
+        {/* ── Room name pill ────────────────────────────────────────────── */}
+        {status === "loaded" && displayUrl && (
           <span
             style={{
               position: "absolute",

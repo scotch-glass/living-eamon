@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
-import { buildScenePrompt, SceneTone, SceneState } from "../../../lib/sceneData";
+import fs from "fs";
+import path from "path";
+import {
+  buildScenePrompt,
+  buildScenePromptSanitized,
+  SceneTone,
+  SceneState,
+  SCENE_DATA,
+} from "../../../lib/sceneData";
 
 const grok = new OpenAI({
   apiKey: process.env.XAI_API_KEY!,
@@ -13,14 +21,105 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_KEY!
 );
 
-export async function GET(request: NextRequest) {
+// ── Error log writer ────────────────────────────────────────────────────────
+function appendErrorLog(entry: {
+  timestamp: string;
+  roomId: string;
+  tone: SceneTone;
+  roomState: SceneState;
+  attemptNumber: number;
+  promptUsed: string;
+  errorType: "censored" | "api_error" | "timeout" | "no_data";
+  rawError: string;
+}) {
   try {
-    const { searchParams } = new URL(request.url);
-    const roomId = searchParams.get("room") ?? "main_hall";
-    const roomState = (searchParams.get("state") ?? "normal") as SceneState;
-    const tone = (searchParams.get("tone") ?? "civilized") as SceneTone;
+    const logPath = path.join(process.cwd(), "GROK_IMAGINE_ERROR_LOG.md");
+    const exists = fs.existsSync(logPath);
+    const header = exists ? "" : "# Grok Imagine Error Log\n\n";
+    const block = [
+      `## ${entry.timestamp}`,
+      `- **Room:** ${entry.roomId}`,
+      `- **Tone:** ${entry.tone} | **State:** ${entry.roomState}`,
+      `- **Attempt:** ${entry.attemptNumber}`,
+      `- **Error type:** ${entry.errorType}`,
+      `- **Raw error:** ${entry.rawError}`,
+      `- **Prompt used:**`,
+      "```",
+      entry.promptUsed,
+      "```",
+      "",
+    ].join("\n");
+    fs.appendFileSync(logPath, header + block, "utf8");
+  } catch {
+    console.error("Could not write to GROK_IMAGINE_ERROR_LOG.md");
+  }
+}
 
-    // ── 1. Cache check ──────────────────────────────────────────────────────
+// ── Single Grok Imagine call ─────────────────────────────────────────────────
+async function callGrokImagine(prompt: string): Promise<{
+  b64: string | null;
+  censored: boolean;
+  error: string | null;
+}> {
+  try {
+    const imageResponse = await grok.images.generate({
+      model: "grok-imagine-image",
+      prompt,
+      response_format: "b64_json",
+      // @ts-expect-error — xAI-specific parameter
+      aspect_ratio: "16:9",
+    });
+
+    const b64 = imageResponse.data?.[0]?.b64_json ?? null;
+    if (!b64) {
+      return { b64: null, censored: false, error: "No image data in response" };
+    }
+    return { b64, censored: false, error: null };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // xAI returns moderation rejections as errors containing these strings
+    const isCensored =
+      msg.toLowerCase().includes("moderat") ||
+      msg.toLowerCase().includes("policy") ||
+      msg.toLowerCase().includes("safety") ||
+      msg.toLowerCase().includes("content") ||
+      msg.toLowerCase().includes("violat");
+    return { b64: null, censored: isCensored, error: msg };
+  }
+}
+
+// ── Upload b64 image to Supabase Storage ─────────────────────────────────────
+async function uploadToStorage(
+  b64: string,
+  fileName: string
+): Promise<string | null> {
+  const imageBuffer = Buffer.from(b64, "base64");
+  const { error } = await supabaseAdmin.storage
+    .from("scene-images")
+    .upload(fileName, imageBuffer, {
+      contentType: "image/jpeg",
+      upsert: false,
+    });
+  if (error) {
+    console.error("Storage upload failed:", error.message);
+    return null;
+  }
+  const { data } = supabaseAdmin.storage
+    .from("scene-images")
+    .getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const roomId = searchParams.get("room") ?? "main_hall";
+  const roomState = (searchParams.get("state") ?? "normal") as SceneState;
+  const tone = (searchParams.get("tone") ?? "civilized") as SceneTone;
+  const scene = SCENE_DATA[roomId];
+  const visualDescription = scene?.visualDescription ?? null;
+
+  try {
+    // ── 1. Cache check ────────────────────────────────────────────────────────
     const { data: cached } = await supabaseAdmin
       .from("scene_image_cache")
       .select("image_url")
@@ -30,67 +129,120 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (cached?.image_url) {
-      return NextResponse.json({ url: cached.image_url, cached: true });
+      return NextResponse.json({
+        url: cached.image_url,
+        cached: true,
+        visualDescription,
+      });
     }
 
-    // ── 2. Build prompt ─────────────────────────────────────────────────────
+    // ── 2. First attempt ──────────────────────────────────────────────────────
     const prompt = buildScenePrompt(roomId, tone, roomState);
+    const attempt1 = await callGrokImagine(prompt);
 
-    // ── 3. Call Grok Imagine (standard tier — $0.02, cached after first gen) ─
-    // response_format b64_json so we can upload to Supabase immediately —
-    // xAI temporary URLs expire quickly and cannot be stored long-term.
-    const imageResponse = await grok.images.generate({
-      model: "grok-imagine-image",
-      prompt,
-      response_format: "b64_json",
-      // @ts-expect-error — xAI-specific parameter not in OpenAI SDK types
-      aspect_ratio: "16:9",
-    });
-
-    const b64 = imageResponse.data?.[0]?.b64_json;
-    if (!b64) {
-      throw new Error("No image data returned from Grok Imagine");
+    if (attempt1.b64) {
+      // Success on first try
+      const fileName = `${roomId}__${tone}__${roomState}__${Date.now()}.jpg`;
+      const url = await uploadToStorage(attempt1.b64, fileName);
+      if (url) {
+        await supabaseAdmin.from("scene_image_cache").insert({
+          room_id: roomId,
+          room_state: roomState,
+          tone,
+          image_url: url,
+          prompt_used: prompt,
+        });
+        return NextResponse.json({ url, cached: false, visualDescription });
+      }
     }
 
-    // ── 4. Upload to Supabase Storage ────────────────────────────────────────
-    const imageBuffer = Buffer.from(b64, "base64");
-    const fileName = `${roomId}__${tone}__${roomState}__${Date.now()}.jpg`;
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("scene-images")
-      .upload(fileName, imageBuffer, {
-        contentType: "image/jpeg",
-        upsert: false,
+    // ── 3. Censorship retry ───────────────────────────────────────────────────
+    if (attempt1.censored) {
+      const timestamp = new Date().toISOString();
+      appendErrorLog({
+        timestamp,
+        roomId,
+        tone,
+        roomState,
+        attemptNumber: 1,
+        promptUsed: prompt,
+        errorType: "censored",
+        rawError: attempt1.error ?? "unknown",
       });
 
-    if (uploadError) {
-      throw new Error(`Storage upload failed: ${uploadError.message}`);
+      // Retry with sanitized prompt
+      const sanitizedPrompt = buildScenePromptSanitized(roomId, tone, roomState);
+      const attempt2 = await callGrokImagine(sanitizedPrompt);
+
+      if (attempt2.b64) {
+        const fileName = `${roomId}__${tone}__${roomState}__retry__${Date.now()}.jpg`;
+        const url = await uploadToStorage(attempt2.b64, fileName);
+        if (url) {
+          await supabaseAdmin.from("scene_image_cache").insert({
+            room_id: roomId,
+            room_state: roomState,
+            tone,
+            image_url: url,
+            prompt_used: sanitizedPrompt,
+          });
+          return NextResponse.json({
+            url,
+            cached: false,
+            visualDescription,
+            retried: true, // tells ScenePanel to show the apology
+          });
+        }
+      }
+
+      // Both attempts censored or failed
+      appendErrorLog({
+        timestamp: new Date().toISOString(),
+        roomId,
+        tone,
+        roomState,
+        attemptNumber: 2,
+        promptUsed: sanitizedPrompt,
+        errorType: attempt2.censored ? "censored" : "api_error",
+        rawError: attempt2.error ?? "unknown",
+      });
+
+      return NextResponse.json({
+        url: null,
+        cached: false,
+        visualDescription,
+        error: "Scene could not be rendered — the Sight is clouded here.",
+        errorType: "censored",
+      });
     }
 
-    // ── 5. Get permanent public URL ──────────────────────────────────────────
-    const { data: publicData } = supabaseAdmin.storage
-      .from("scene-images")
-      .getPublicUrl(fileName);
-
-    const permanentUrl = publicData.publicUrl;
-
-    // ── 6. Save to cache ─────────────────────────────────────────────────────
-    await supabaseAdmin.from("scene_image_cache").insert({
-      room_id: roomId,
-      room_state: roomState,
+    // ── 4. Non-censorship API error ───────────────────────────────────────────
+    appendErrorLog({
+      timestamp: new Date().toISOString(),
+      roomId,
       tone,
-      image_url: permanentUrl,
-      prompt_used: prompt,
+      roomState,
+      attemptNumber: 1,
+      promptUsed: prompt,
+      errorType: "api_error",
+      rawError: attempt1.error ?? "unknown",
     });
 
-    return NextResponse.json({ url: permanentUrl, cached: false });
-
+    return NextResponse.json({
+      url: null,
+      cached: false,
+      visualDescription,
+      error: "The Sight falters. Jane cannot show you this place right now.",
+      errorType: "api_error",
+    });
   } catch (error) {
-    console.error("Scene image error:", error);
-    // Return 200 with null URL — ScenePanel handles this gracefully
-    return NextResponse.json(
-      { url: null, error: "Scene image unavailable" },
-      { status: 200 }
-    );
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Scene image route error:", msg);
+    return NextResponse.json({
+      url: null,
+      cached: false,
+      visualDescription,
+      error: "The Sight is unavailable. The realm continues without vision.",
+      errorType: "unknown",
+    });
   }
 }

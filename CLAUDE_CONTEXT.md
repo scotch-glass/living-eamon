@@ -504,6 +504,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/supabase.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/uoData.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/weatherService.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/scenePrompt.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next-env.d.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next.config.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/postcss.config.mjs
@@ -586,6 +587,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, **`WeaponSkills`**, **`SKILL_CAP` 700**), `createInitialWorldState()`, **`updateWeaponSkill`** (cap + decay), **`applyPlayerDeath`**, **`setNPCCombatHp`**, `tickWorldState`, `applyFireballConsequences` |
 | `lib/gameEngine.ts` | `processInput`, **`READ`**, **`ENTER`**, **Main Hall barrels** / **robe ceremony**, **Aldric** (**`TELL Aldric`**, **`TALK Aldric`**, tiered **`TRAIN`**), **`TALK`** else = **`SAY`**, player hit **75% + skill** (max **95%**) + **fumbles**, `buildSituationBlock`, combat, **BEG**, Sam shop, … |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
+| `lib/scenePrompt.ts` | Scene image prompts — **`SceneTone`** / **`SceneState`**, **`SCENE_DATA`**, **`buildScenePrompt()`** for Grok Imagine establishing shots (Tolkienian-GrimDark) |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
@@ -922,6 +924,10 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-06 — Scene image prompt module (`lib/scenePrompt.ts`)
+
+- Added **`SceneTone`**, **`SceneState`**, per-room **`SCENE_DATA`** with visual descriptions, tone/state modifier strings, and **`buildScenePrompt(roomId, tone, state)`** for full Grok Imagine prompts (known rooms + generic fallback).
 
 ### 2026-04-06 — Auth system implementation sync
 

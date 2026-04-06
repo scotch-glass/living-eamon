@@ -18,6 +18,7 @@ import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
 import {
   savePlayer,
   loadPlayer,
+  loadPlayerByUserId,
   createPlayer,
   getWorldObject,
   saveWorldObject,
@@ -249,12 +250,19 @@ export async function POST(request: NextRequest) {
       return savePlayer(rec);
     };
 
-    // Load or create player from Supabase
+    // Resolve player identity (auth-linked player wins over request body playerId)
     let state: WorldState;
     let resolvedPlayerId = playerId;
+    if (authUserId) {
+      const linkedPlayer = await loadPlayerByUserId(authUserId);
+      if (linkedPlayer?.id) {
+        resolvedPlayerId = linkedPlayer.id;
+      }
+    }
 
-    if (playerId) {
-      const savedPlayer = await loadPlayer(playerId);
+    // Load or create player from Supabase
+    if (resolvedPlayerId) {
+      const savedPlayer = await loadPlayer(resolvedPlayerId);
       if (savedPlayer) {
         const initial = createInitialWorldState(savedPlayer.character_name);
         state = {

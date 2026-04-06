@@ -87,7 +87,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 5, 2026*
+*Last updated: April 6, 2026*
 
 
 ## 1. Project Overview
@@ -126,8 +126,8 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/supabaseAuth.ts` | Cookie-based Supabase SSR clients (browser, server, middleware) |
 | `app/auth/callback/route.ts` | OAuth and email confirmation callback handler |
 | `app/auth/actions.ts` | Server Actions: `loginAction`, `registerAction`, `googleSignInAction`, `logoutAction` |
-| `app/login/page.tsx` | Login page — email/password + Google SSO |
-| `app/register/page.tsx` | Registration page — hero name + email + password + Google SSO |
+| `app/login/page.tsx` | Login page (email/password) |
+| `app/register/page.tsx` | Registration page (hero name + email + password) |
 | `.cursorrules` | Cursor rule: mandatory `CLAUDE_CONTEXT.md` updates with each change |
 | `AGENTS.md` | Next.js version warning for agents |
 | `CLAUDE.md` | Points to `@AGENTS.md` |
@@ -147,8 +147,8 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
-| `app/page.tsx` | Client UI: name gate, chat log, `CommandInput`, sidebar, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
-| `app/api/chat/route.ts` | POST: load/merge player, `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
+| `app/page.tsx` | Client UI: auth bootstrap via Supabase user, auto-load player, chat log, `CommandInput`, sidebar, header sign-out, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
+| `app/api/chat/route.ts` | POST: resolves authenticated user's linked player id (prefers `players.user_id` mapping over request body `playerId`), then load/merge player + `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
@@ -459,18 +459,17 @@ Do not commit secret values.
 - [x] GET ALL command (classic Eamon looting)
 - [x] Auth system: email/password + Google SSO via Supabase Auth
 - [x] Cookie-based sessions via `@supabase/ssr` + Next.js middleware
-- [x] `players.user_id` FK linking to `auth.users` (when migration applied)
+- [x] players table linked to `auth.users` via `user_id`
 - [x] `/login` and `/register` pages in Living Eamon visual style
 - [x] TECH.md created — full technical architecture document
 - [x] GAME_DESIGN.md §20 — Reader's Mirror psychological profile system designed
 
 ## 15. Next Up
 
-- [ ] Load player record from auth session on game start (auto-start, remove name-gate screen)
-- [ ] Player Profile page (`/profile`) — The Reader's Mirror
-- [ ] Stripe subscription integration (4 tiers)
-- [ ] GoodReads import pipeline (RSS fetch + Claude analysis)
-- [ ] Kindle CSV import (client-side analysis, store only results)
+- [ ] Load player record from auth session on game start (replace name-gate with auto-start)
+- [ ] Player Profile page (`/profile`) — psychological profile report
+- [ ] Stripe subscription integration (Lone Wanderer / Adventurer / Worldshaper / Eternal Legend tiers)
+- [ ] GoodReads/Kindle integration for reader profile import
 - [ ] Jane personalization injection from `player_profiles`
 - [ ] `player_profiles` Supabase table + Profile Builder job
 - [ ] Re-enable Jane streaming in `main_hall` before production
@@ -480,6 +479,17 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-06 — Auth system implementation sync
+
+- **Auth routing + pages:** Confirmed auth route surface and pages (`/auth/callback`, `/login`, `/register`) with Living Eamon styling and email/password path active.
+- **Schema + env alignment:** Confirmed `players.user_id` linkage to `auth.users` in context docs and `NEXT_PUBLIC_SITE_URL` env variable coverage for local and production redirect base URL.
+- **Progress tracking:** Updated File Map, Supabase schema notes, Completed Milestones, and Next Up auth-specific items to reflect the current implementation and remaining auth/profile work.
+
+### 2026-04-06 — Auth-linked player resolution hardened in chat route
+
+- **Identity resolution:** `app/api/chat/route.ts` now resolves the authenticated user's linked player first (`loadPlayerByUserId(authUser.id)`), then uses that canonical player id for load/merge/save. Request-body `playerId` no longer overrides another account's player when auth is present.
+- **Behavioral intent:** Existing world-state merge logic is unchanged; only player identity source-of-truth was tightened for authenticated sessions.
 
 ### 2026-04-05 — Auth system + Reader's Mirror design
 

@@ -42,7 +42,7 @@ export const SCENE_DATA: Record<string, SceneDefinition> = {
     displayName: "Church of Perpetual Life",
     defaultTone: "grimdark",
     visualDescription:
-      "A cold stone nave lit only by guttering black candles arranged in concentric rings on the floor, a plain altar of dark stone at the far end bearing no symbol. Silent priests in black robes stand utterly still at the walls, faces obscured by deep hoods. The air is thick with incense and something older — something that predates fire.",
+      "A vast chamber of white marble so pale it appears to emit light rather than reflect it — no torch, no window, no flame, yet every surface is equally, coldly illuminated. Floor, walls, vaulted ceiling, altar: all the same unblemished white. The surfaces are neither rough nor smooth. The corners are neither sharp nor truly rounded — as though the room was formed rather than built. Robed figures stand motionless at intervals along the walls, white robes, white hands folded, faces the color of porcelain with flat gray eyes. The silence. Silence is the absence of sound. Yet, here it is more like a presence.",
   },
   armoury: {
     displayName: "The Armoury",
@@ -75,6 +75,9 @@ export const STATE_MODIFIERS: Record<SceneState, string> = {
     "Catastrophically destroyed. Roofless or collapsed walls, charred timbers, rubble covering the floor, nothing standing above chest height. Sulfur traces on the stone.",
 };
 
+const CHURCH_ATMOSPHERE =
+  "Sourceless white light emanating from everywhere and nowhere. Clinical, cold, white-themed. No shadows. No warmth. The white is not peaceful — it is the white of pure mind and math that predates life and is therefore not biological and also aware but not alive.";
+
 function buildBasePromptLines(
   roomId: string,
   tone: SceneTone,
@@ -97,7 +100,7 @@ function buildBasePromptLines(
     "",
     `Location: ${scene.displayName}`,
     `Visual: ${scene.visualDescription}`,
-    `Atmosphere: ${TONE_MODIFIERS[tone]}`,
+    `Atmosphere: ${roomId === "church_of_perpetual_life" ? CHURCH_ATMOSPHERE : TONE_MODIFIERS[tone]}`,
     `Condition: ${STATE_MODIFIERS[state]}`,
     "",
     "Style reference: Tolkien's Middle-earth concept art crossed with Warhammer Fantasy grimness.",
@@ -134,7 +137,7 @@ export function buildScenePromptSanitized(
     "No text, no logos, no watermarks.",
     "",
     `Setting: ${base}`,
-    `Lighting style: ${TONE_MODIFIERS[tone]}`,
+    `Lighting style: ${roomId === "church_of_perpetual_life" ? CHURCH_ATMOSPHERE : TONE_MODIFIERS[tone]}`,
     `Structural condition: ${STATE_MODIFIERS[state]}`,
     "",
     "Focus entirely on architecture, materials, light, and atmosphere.",

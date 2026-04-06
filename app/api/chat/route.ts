@@ -468,145 +468,112 @@ export async function POST(request: NextRequest) {
       });
     };
 
-    // Opening game
+    // ── Opening game — all pre-written static content, zero Jane calls ────────
     if (!messages || messages.length === 0) {
-      const isFirstEverOpen = state.player.turnCount === 0;
+      const isFirstEver = state.player.turnCount === 0;
 
-      if (isFirstEverOpen) {
-        // ── Amnesia cold open — player wakes in Church of Perpetual Life ──
-        // Do NOT address the player by name. Do NOT welcome them.
-        // Do NOT mention the guild or Main Hall yet.
-        // This is a stark, disorienting awakening with no memory.
-        const openingContext = [
-          "SCENE: The Church of Perpetual Life. Cold stone floor. Black candles in concentric rings.",
-          "Silent priests in deep hoods stand motionless at the walls. The air smells of incense and something older.",
+      if (isFirstEver) {
+        // Cold open — new player, Church of Perpetual Life, no memory
+        const coldOpen = [
+          "White.",
           "",
-          "INSTRUCTION: Write the opening of Living Eamon. This is the player's very first moment of consciousness.",
-          "Do NOT use the player's name. Do NOT welcome them. Do NOT mention any guild.",
-          "Do NOT explain where they are. Do NOT have any NPC speak yet.",
+          "That is the first thing. Not darkness — white. A white so complete and sourceless it takes several seconds to understand that your eyes are open. There is no lamp, no window, no torch. The light simply exists, emanating from everywhere equally, pressing against every surface with cold indifference.",
           "",
-          "Write in second person, present tense. 3-4 paragraphs.",
+          "The floor beneath your cheek is polished marble. White. You know the word for it without knowing how you know. It is perfectly smooth — it neither warms to the flesh nor is naturally cold in the way stone should be cold. It is… perpetual.",
           "",
-          "Paragraph 1: Pure sensation. Cold stone under the body. The smell. The silence.",
-          "The weight of existing without knowing who you are. No name comes when you reach for it.",
-          "A body that works but feels borrowed. Not pain — something stranger. Absence.",
+          "You sit up.",
           "",
-          "Paragraph 2: The visual. Slowly taking in the room. The candle rings on the floor.",
-          "The hooded figures. The altar with no symbol. The architecture of a place that has seen",
-          "many people wake on its floor and said nothing about any of them.",
+          "The room is vast. White walls rise to a white vaulted ceiling that may or may not have an apex — the light makes it impossible to tell where the stone ends and the air begins. A white altar stands at the far end bearing nothing: no symbol, no scripture, no offering, no shadow. The angles of this room are not quite sharp, not quite rounded. Like something that was thought into existence by something that had seen rooms, but never stood inside one.",
           "",
-          "Paragraph 3: The first coherent thought. Not panic — a strange calm that itself feels wrong.",
-          "The sense that this is not the first time. Or is it? The feeling slips away before it forms.",
-          "One question surfaces above all others, floating up through the blankness:",
-          "— have I been here before?",
+          "There are figures at the walls.",
           "",
-          "Paragraph 4 (short): Present this as an internal fork in the player's mind — not a game menu.",
-          "Write it as a thought, not a prompt. Something like:",
-          "\"Something stirs. A shape in the fog. *Have I been here before?* The question hangs.",
-          "Part of you wants to sit with it — to remember, to understand. Another part knows",
-          "that survival does not wait for memory.\"",
-          "Then end with exactly this line, on its own, as Jane's voice:",
-          "\"— answer your own question. (YES / NO)\"",
+          "White robes. White hands folded at the waist. Faces the color of old paper — flat gray eyes that do not move, do not track, do not blink at a rate you can catch. They are not looking at you. They may not be capable of looking. They stand with the absolute stillness of things that do not need to breathe between moments.",
           "",
-          "Jane's lowercase observation at the very end, one sentence only.",
+          "You become aware, slowly, that you are also wearing a robe. Gray. Thin as an apology. It feels borrowed. Everything feels borrowed.",
+          "",
+          "You reach for your name.",
+          "",
+          "The place where it should be is smooth and unbroken — Blank. Like the floor, like the walls, like the altar.  You press at it. Nothing gives. There is no pain in the absence. That is the strangest part. There is simply nothing there, the way a room has nothing in a corner that has always been empty.",
+          "",
+          "You look at your hands. They are yours. You are certain of this and uncertain of almost everything else.",
+          "",
+          "A thought surfaces from somewhere beneath the blankness — not a memory, more like the outline of one:",
+          "",
+          "*...have I been here before?*",
+          "",
+          "__YESNO__",
         ].join("\n");
 
-        return await streamJane(
-          openingContext,
-          state,
-          [{ role: "user", content: openingContext }],
-          null
-        );
+        return sendResponse(coldOpen, state);
       }
 
-      // ── Returning player / death respawn open ──
-      // Player has played before (turnCount > 0) or died and respawned.
-      const returningContext = [
-        "SCENE: The Church of Perpetual Life. The player " + state.player.name + " has woken here again.",
-        "This is NOT their first time. They remember who they are.",
-        "HP: " + state.player.hp + "/" + state.player.maxHp,
-        "Gold lost on death: all carried gold is gone. Banked gold is safe.",
+      // Returning player / death respawn
+      const returningOpen = [
+        "Stone again.",
         "",
-        "Write 1-2 paragraphs only. Stark and cold. The stone floor again.",
-        "The same candles. The same silence. The priests do not acknowledge them.",
-        "The player knows the drill. End with Jane's one-line observation in lowercase.",
+        "The same white. The same sourceless cold light pressing against every surface with its total indifference. The same figures at the walls — white robes, gray eyes, hands folded, utterly still.",
+        "",
+        "You open your eyes and you know exactly where you are. You have been here before. You remember how this ends: you stand up, you walk out the door, you start again.",
+        "",
+        "What you had is gone. Carried gold. Everything you were wearing. Everything in your pack. The banked gold waits untouched. What is locked away safely waits. Everything else is gone, as completely as if it never existed.",
+        "",
+        "The figures do not acknowledge you. They never do.",
+        "",
+        "You stand.",
       ].join("\n");
 
-      return await streamJane(
-        returningContext,
-        state,
-        [{ role: "user", content: returningContext }],
-        null
-      );
+      return sendResponse(returningOpen, state);
     }
 
-    // ── YES/NO tutorial branch ───────────────────────────────────────────────
-    // Player has just seen the cold open and answered YES or NO.
+    // ── YES / NO tutorial branch ─────────────────────────────────────────────
+    // Fires when turnCount === 0 and the player's first message is YES or NO
     {
-      const lastForYesNo = messages[messages.length - 1];
-      const yesNoInput = lastForYesNo ? lastForYesNo.content.trim().toUpperCase() : "";
-      const userMessageCount = messages.filter((m: { role: string }) => m.role === "user").length;
-
-      if (
+      const userMessages = messages.filter((m: { role: string }) => m.role === "user");
+      const userMessageCount = userMessages.length;
+      const lastForYesNo = userMessages[userMessageCount - 1] as { role: string; content: string } | undefined;
+      const answerRaw = lastForYesNo?.content?.trim().toUpperCase() ?? "";
+      const isYesNo =
         state.player.turnCount === 0 &&
         userMessageCount === 1 &&
-        lastForYesNo?.role === "user" &&
-        (yesNoInput === "YES" || yesNoInput === "NO" ||
-         yesNoInput === "Y" || yesNoInput === "N")
-      ) {
-        const answeredYes =
-          yesNoInput === "YES" || yesNoInput === "Y";
+        (answerRaw === "YES" || answerRaw === "Y" || answerRaw === "NO" || answerRaw === "N");
+
+      if (isYesNo) {
+        const answeredYes = answerRaw === "YES" || answerRaw === "Y";
 
         if (answeredYes) {
-          // Skip tutorial — player knows the game. Move to Church and let them go.
-          const skipContext = [
-            "The player answered YES — they believe they have been here before.",
-            "They are an experienced player who wants to skip the tutorial.",
-            "Write 1 short paragraph only: a flicker of almost-memory that vanishes.",
-            "Something like recognising a smell, or a shape — then nothing.",
-            "Then one sentence: the player stands. They know what to do.",
-            "End with Jane's lowercase observation. Do NOT explain commands. Do NOT mention the Main Hall yet.",
+          const skipText = [
+            "A flicker. Not quite a memory — more like the ghost of one. The smell of this place. The weight of the air. Something in the muscle of your hand that knows, without being told, how to make a fist.",
+            "",
+            "You have been here before.",
+            "",
+            "You stand. Your legs find the floor without hesitation. Whatever you have lost, your body remembers the rest. The door ahead leads out. Beyond it: noise, firelight, the smell of ale and iron.",
+            "",
+            "You know what to do.",
           ].join("\n");
 
-          return await streamJane(
-            skipContext,
-            state,
-            messages,
-            null
-          );
-        } else {
-          // Tutorial path — player said NO, they want guidance.
-          const tutorialContext = [
-            "The player answered NO — they have no memory, no sense of having been here.",
-            "They are a new player who wants orientation.",
-            "",
-            "Write the tutorial as IN-WORLD experience, not a game manual.",
-            "Use second person. The player's body moves instinctively even as the mind is blank.",
-            "",
-            "Introduce these commands woven into the narrative naturally:",
-            "- LOOK AROUND — describe it as the instinct to take in surroundings",
-            "- EXAMINE SELF — describe it as looking down at your own hands, your own body",
-            "- INVENTORY or I — describe it as patting yourself down, checking what you carry",
-            "- HEALTH or STATS — describe it as a strange inner sense of your own condition",
-            "- GO [direction] or GO [room name] — describe it as the impulse to move",
-            "",
-            "Write this as 3 paragraphs of in-world prose where each command arises naturally",
-            "from what the character does, not as a list. Example style (do not copy verbatim):",
-            "\"Your eyes move without instruction — taking in the room, cataloguing exits.",
-            "LOOK AROUND, something in you understands. Not a thought. A reflex.\"",
-            "",
-            "End the third paragraph with the player standing. The Church door is ahead.",
-            "Beyond it: the Main Hall, and whatever answers wait there.",
-            "End with Jane's lowercase observation, one sentence.",
-          ].join("\n");
-
-          return await streamJane(
-            tutorialContext,
-            state,
-            messages,
-            null
-          );
+          return sendResponse(skipText, state);
         }
+
+        // Tutorial path
+        const tutorialText = [
+          "Nothing. The fog holds.",
+          "",
+          "You stand anyway — slowly, testing each joint — and take stock of what your body knows even when your mind does not.",
+          "",
+          "Your eyes move before you decide to move them, cataloguing the room, finding the exits. __CMD:LOOK AROUND__ — something in you understands. Not a thought. A reflex. North wall. One door. Light under it. Warmth.",
+          "",
+          "You look down at yourself. A gray robe, thin as an apology. You pat your sides without thinking — __CMD:I__ — and find nothing. If you ever had something, you do not have it now. Not even a name.",
+          "",
+          "The body knows things the mind does not. You can feel your own condition without searching for it — a quiet inner census, like a sailor checking the ship before leaving port. __CMD:HEALTH__ will show you what the realm knows about your physical state. What it reports now: intact. Whole. Unremarkably alive. At least you have your health.",
+          "",
+          "You take a step toward the door. Then another. __CMD:GO NORTH__ — your feet already know.",
+          "",
+          "Whatever answers exist — they are not in here. The figures at the walls will not tell you. The light will not answer.",
+          "",
+          "You push open the door.",
+        ].join("\n");
+
+        return sendResponse(tutorialText, state);
       }
     }
 

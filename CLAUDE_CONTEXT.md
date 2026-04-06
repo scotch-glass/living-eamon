@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 16, 2026*
+*Last updated: April 17, 2026*
 
 
 ## 1. Project Overview
@@ -590,14 +590,14 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameState.ts` | Types (`PlayerState`, `WorldState`, **`WeaponSkills`**, **`SKILL_CAP` 700**), `createInitialWorldState()`, **`updateWeaponSkill`** (cap + decay), **`applyPlayerDeath`**, **`setNPCCombatHp`**, `tickWorldState`, `applyFireballConsequences` |
 | `lib/gameEngine.ts` | `processInput`, **`READ`**, **`ENTER`**, **Main Hall barrels** / **robe ceremony**, **Aldric** (**`TELL Aldric`**, **`TALK Aldric`**, tiered **`TRAIN`**), **`TALK`** else = **`SAY`**, player hit **75% + skill** (max **95%**) + **fumbles**, `buildSituationBlock`, combat, **BEG**, Sam shop, … |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
-| `lib/sceneData.ts` | **Canonical** scene module: **`SCENE_DATA`**, **`buildScenePrompt`**, **`buildScenePromptSanitized`** (retry / safer wording), tone/state modifiers, types |
+| `lib/sceneData.ts` | **`SCENE_DATA`**, **`CHURCH_ATMOSPHERE`** (Church overrides grim **`TONE_MODIFIERS`** in **`buildScenePrompt`** + **`buildScenePromptSanitized`**), **`buildScenePrompt`**, modifiers, types |
 | `lib/scenePrompt.ts` | Re-exports **`./sceneData`** (backward compatibility; prefer **`sceneData`**) |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
-| `app/page.tsx` | Client UI: auth bootstrap, **`ScenePanel`**, header (◀/▶ sidebar toggle, **Living Eamon — Current Room**), **Sign out** in sidebar footer beside *she is watching*; `CommandInput`, **JSON vs stream** for `/api/chat` |
-| `app/api/chat/route.ts` | POST: identity + merge + `processInput`; **empty `messages`:** **`turnCount === 0`** → Church **amnesia cold open** (no name / no guild); else **Church rebirth** open; **first user line YES/NO** (`user` count 1) → **skip tutorial** vs **in-world command tutorial** via **`streamJane`**; **`guild_courtyard`** weather; **`__CRITICAL__`** → Jane; **`main_hall`** JSON path when applicable; situation append |
+| `app/page.tsx` | Client UI: auth, **`ScenePanel`**, header/sidebar chrome, **`formatMessage`** parses **`__YESNO__`** (YES/NO chips) and **`__CMD:COMMAND__`** (amber chips → **`sendMessage(cmd)`**); `CommandInput`, **JSON vs stream** for `/api/chat` |
+| `app/api/chat/route.ts` | POST: identity + merge + `processInput`; **empty `messages`:** static **`sendResponse`** cold open (**`__YESNO__`** in text) or returning-player prose — **no Jane**; **YES/NO** first user message → static skip or tutorial (**`__CMD:…__`** tokens for chips); then engine + Jane paths as before; **`guild_courtyard`** weather; **`__CRITICAL__`** → Jane; **`main_hall`** JSON when applicable |
 | `app/api/scene-image/route.ts` | **GET**, **`runtime = "nodejs"`** — cache → Grok → Storage → **`scene_image_cache`**; errors → **`void appendErrorLog`** (structured **`console.error`** + **`grok_imagine_error_log`** insert); sanitized retry; JSON **`visualDescription`** / **`error`**; outer catch HTTP 200 **`url: null`** |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
@@ -938,11 +938,15 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-17 — Static Church open, command chips, white Church scene art
+
+- **`/api/chat`:** Opening + YES/NO + tutorial are **pre-written** **`sendResponse`** (no Jane). Cold open ends with **`__YESNO__`**; tutorial embeds **`__CMD:LOOK AROUND__`**, **`__CMD:I__`**, **`__CMD:HEALTH__`**, **`__CMD:GO NORTH__`**.
+- **`app/page.tsx`:** Renders **`__YESNO__`** and **`__CMD:…__`** as clickable chips calling **`sendMessage`**. Fixed **`react/no-unescaped-entities`** on **`knownAs`** quotes.
+- **`lib/sceneData.ts`:** Church **visualDescription** (white marble chamber); **`CHURCH_ATMOSPHERE`** for prompts instead of grimdark modifier for that room.
+
 ### 2026-04-16 — Opening narrative + YES/NO tutorial branch (`/api/chat`)
 
-- **Empty messages:** First session (**`turnCount === 0`**) → Jane **Church amnesia** cold open (ends with YES/NO); **`turnCount > 0`** → shorter **Church rebirth** open with name.
-- **Follow-up:** Exactly **one** user message, **`turnCount === 0`**, **`YES`/`NO`/`Y`/`N`** → **skip** vs **tutorial** Jane paths (matches client history: assistant cold open + first user line — not `messages.length === 1`).
-- Engine path uses **`lastMessageRaw`** / **`playerInput`** after the branch.
+- *(Superseded by 2026-04-17: opening is now static prose, not Jane.)*
 
 ### 2026-04-15 — New players spawn in **Church of Perpetual Life**
 

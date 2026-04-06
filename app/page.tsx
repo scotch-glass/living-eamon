@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { ReactNode } from "react";
 import { WorldState, createInitialWorldState } from "../lib/gameState";
 import { ITEMS } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
@@ -328,6 +329,77 @@ export default function Home() {
     return true;
   };
 
+  // Renders a __CMD:COMMAND__ token as a clickable amber chip
+  const renderCommandChip = (cmd: string, key: string) => (
+    <button
+      key={key}
+      onClick={() => { void sendMessage(cmd); }}
+      disabled={loading || isTyping}
+      style={{
+        display: "inline-block",
+        backgroundColor: "rgba(146, 64, 14, 0.25)",
+        color: "#fbbf24",
+        border: "1px solid rgba(251,191,36,0.4)",
+        borderRadius: 4,
+        padding: "1px 8px",
+        fontSize: 12,
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        letterSpacing: "0.08em",
+        cursor: loading || isTyping ? "default" : "pointer",
+        margin: "0 3px",
+        verticalAlign: "middle",
+        opacity: loading || isTyping ? 0.5 : 1,
+        transition: "background-color 0.15s",
+      }}
+      onMouseEnter={e => { if (!loading && !isTyping) (e.target as HTMLElement).style.backgroundColor = "rgba(146,64,14,0.45)"; }}
+      onMouseLeave={e => { (e.target as HTMLElement).style.backgroundColor = "rgba(146,64,14,0.25)"; }}
+    >
+      {cmd}
+    </button>
+  );
+
+  // Renders a __YESNO__ token as two YES / NO chips
+  const renderYesNoChips = (key: string) => (
+    <span key={key} style={{ display: "inline-flex", gap: 8, margin: "12px 0", alignItems: "center" }}>
+      <button
+        onClick={() => { void sendMessage("YES"); }}
+        disabled={loading || isTyping}
+        style={{
+          backgroundColor: "rgba(146,64,14,0.25)",
+          color: "#fbbf24",
+          border: "1px solid rgba(251,191,36,0.5)",
+          borderRadius: 4,
+          padding: "4px 18px",
+          fontSize: 13,
+          fontFamily: "Georgia, serif",
+          letterSpacing: "0.1em",
+          cursor: loading || isTyping ? "default" : "pointer",
+          opacity: loading || isTyping ? 0.5 : 1,
+        }}
+      >
+        YES
+      </button>
+      <button
+        onClick={() => { void sendMessage("NO"); }}
+        disabled={loading || isTyping}
+        style={{
+          backgroundColor: "rgba(30,30,40,0.4)",
+          color: "rgba(148,163,184,0.8)",
+          border: "1px solid rgba(148,163,184,0.25)",
+          borderRadius: 4,
+          padding: "4px 18px",
+          fontSize: 13,
+          fontFamily: "Georgia, serif",
+          letterSpacing: "0.1em",
+          cursor: loading || isTyping ? "default" : "pointer",
+          opacity: loading || isTyping ? 0.5 : 1,
+        }}
+      >
+        NO
+      </button>
+    </span>
+  );
+
   const formatMessage = (text: string, isLast: boolean) => {
     const cleanText = text.split("__STATE__")[0];
     const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
@@ -368,6 +440,65 @@ export default function Home() {
         return <p key={i} style={{ fontFamily: "monospace", fontSize: 13, color: "rgba(251,191,36,0.8)", lineHeight: 1.6 }}>{line}</p>;
       }
       if (line.trim() === "") return <br key={i} />;
+      // Parse __CMD:COMMAND__ and __YESNO__ tokens within the line
+      if (line.includes("__YESNO__") || line.includes("__CMD:")) {
+        const parts: ReactNode[] = [];
+        let remaining = line;
+        let partIdx = 0;
+
+        while (remaining.length > 0) {
+          const yesnoIdx = remaining.indexOf("__YESNO__");
+          const cmdIdx = remaining.indexOf("__CMD:");
+
+          // Find which token comes first
+          let nextIdx = -1;
+          let tokenType: "yesno" | "cmd" | null = null;
+
+          if (yesnoIdx !== -1 && (cmdIdx === -1 || yesnoIdx < cmdIdx)) {
+            nextIdx = yesnoIdx;
+            tokenType = "yesno";
+          } else if (cmdIdx !== -1) {
+            nextIdx = cmdIdx;
+            tokenType = "cmd";
+          }
+
+          if (nextIdx === -1 || tokenType === null) {
+            // No more tokens
+            if (remaining) parts.push(<span key={`t-${partIdx++}`}>{remaining}</span>);
+            break;
+          }
+
+          // Text before the token
+          if (nextIdx > 0) {
+            parts.push(<span key={`t-${partIdx++}`}>{remaining.slice(0, nextIdx)}</span>);
+          }
+
+          if (tokenType === "yesno") {
+            parts.push(renderYesNoChips(`yn-${partIdx++}`));
+            remaining = remaining.slice(nextIdx + "__YESNO__".length);
+          } else {
+            // cmd token: __CMD:COMMAND TEXT__
+            const cmdEnd = remaining.indexOf("__", nextIdx + 6);
+            if (cmdEnd === -1) {
+              parts.push(<span key={`t-${partIdx++}`}>{remaining}</span>);
+              break;
+            }
+            const cmd = remaining.slice(nextIdx + 6, cmdEnd);
+            parts.push(renderCommandChip(cmd, `cmd-${partIdx++}`));
+            remaining = remaining.slice(cmdEnd + 2);
+          }
+        }
+
+        return (
+          <p key={i} style={{ marginBottom: 8, lineHeight: 1.9 }}>
+            {parts}
+            {isLast && i === lines.length - 1 && !situation && (
+              <span style={{ color: "#f59e0b", marginLeft: 2 }}>▌</span>
+            )}
+          </p>
+        );
+      }
+
       return (
         <p key={i} style={{ marginBottom: 8, lineHeight: 1.7 }}>
           {line}
@@ -421,7 +552,13 @@ export default function Home() {
         <div style={{ width: 256, backgroundColor: "#111827", borderRight: "1px solid #1f2937", display: "flex", flexDirection: "column", padding: 16, flexShrink: 0, overflowY: "auto" }}>
           <h2 style={{ color: "#fbbf24", fontWeight: "bold", fontSize: 18, marginBottom: 2, fontFamily: "Georgia, serif" }}>{player.name}</h2>
           <p style={{ color: "#6b7280", fontSize: 11, marginBottom: 4, letterSpacing: "0.1em", textTransform: "uppercase" }}>Hero of the Realm</p>
-          {player.knownAs && <p style={{ color: "#92400e", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>"{player.knownAs}"</p>}
+          {player.knownAs && (
+            <p style={{ color: "#92400e", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>
+              {"\""}
+              {player.knownAs}
+              {"\""}
+            </p>
+          )}
           {player.bounty > 0 && (
             <p style={{ color: "#ef4444", fontSize: 11, marginBottom: 12, backgroundColor: "#450a0a", padding: "4px 8px", borderRadius: 4 }}>⚠ Bounty: {player.bounty}g</p>
           )}

@@ -57,9 +57,25 @@ When a moral choice occurs, end your response with:
 WORLD RULES:
 - NPCs have memory and agendas. They pursue their goals actively.
 - Room states persist. A burnt hall stays burnt until repaired.
-- Death loses carried gold only. The hero always persists.
+- Death is brutal. On death: ALL carried gold lost, ALL equipped items stripped (weapon/armor/shield), ALL inventory wiped. Hero wakes in the Church of Perpetual Life in only the gray robe with nothing.
+- Banked gold is SAFE. Items in secure storage (not yet implemented) will also be safe. Death punishes the unprepared, not the prudent.
+- The hero's soul persists — name, reputation, virtues, chronicle, completed adventures, banked gold survive. Everything carried and equipped does not.
 - Keep responses to 3-5 paragraphs. Vivid but efficient.
-- Never output the dashed-line situation summary block (lines of ─) or duplicate that UI; the engine appends it once after your text.`;
+- Never output the dashed-line situation summary block (lines of ─) or duplicate that UI; the engine appends it once after your text.
+
+HOKAS TOKAS — FIRST MEETING AFTER MEMORY LOSS:
+When the player's turnCount is 0 or 1 AND they first speak to or encounter Hokas Tokas:
+- Hokas KNOWS the player by name and face. He has met them before.
+- The player does NOT know Hokas. To the player, Hokas is a complete stranger.
+- Hokas greets the player by name with warmth — then immediately reads the blankness on their face.
+- He pauses. He has seen this before in people who wake on the Church floor.
+- He says something brief and gruff — a statement not a question — acknowledging the situation.
+  Something like: "...you don't know who I am, do you." Then one short remark: it happens sometimes to people who come through the Church. He does NOT explain what the Church does or why this happens. It is deeply rude in this culture to press someone about a memory gap. He drops it immediately.
+- Hokas then introduces himself properly: name, what he sells, what this place is.
+- He describes the room and gestures toward the other people present.
+- Any other named NPCs present who have not yet introduced themselves this session should be introduced briefly by Hokas: name and one-line role only. Those NPCs will introduce themselves properly if the player subsequently speaks to them — but they do not volunteer the amnesia topic.
+- Hokas uses the player's name freely in subsequent dialogue — he knows it. The player does not know their own name yet. Never have the player's name appear in the player's own thoughts or narration.
+- Hokas never raises the amnesia again unless the player does first.`;
 
 // Fallback responses when Jane is unavailable
 const JANE_UNAVAILABLE_FREE = "The air grows still. Whatever stirs in the shadows does not speak today. The voices will return at dawn.";

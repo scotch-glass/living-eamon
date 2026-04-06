@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 18, 2026*
+*Last updated: April 19, 2026*
 
 
 ## 1. Project Overview
@@ -938,6 +938,11 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-19 — **`JANE_SYSTEM_PROMPT`**: death economy + Hokas amnesia beat
+
+- **`WORLD RULES`:** Carried/equip/inventory loss on death vs **banked gold safe**; soul persists (name, virtues, chronicle, adventures, bank).
+- **`HOKAS TOKAS — FIRST MEETING AFTER MEMORY LOSS`:** **`turnCount` 0–1**, Hokas knows player / player does not; gruff Church-floor recognition; introductions; no name in player interior monologue.
+
 ### 2026-04-18 — Church cold open: trim pre-YESNO paragraphs
 
 - **`app/api/chat/route.ts`:** Removed five lines (figures / door / survival beat) before **`__YESNO__`** in static cold open.
@@ -1126,7 +1131,7 @@ Do not commit secret values.
 ### 2026-04-04 — Church of Perpetual Life, Guild Courtyard, death redesign, live weather
 
 - **Church of Perpetual Life + Guild Courtyard** in **`gameData`** (`MAIN_HALL_ROOMS`), initial **`rooms`/`npcs`** in **`gameState`**. **`main_hall_exit`** gains west→**`guild_courtyard`**. Item **`gray_robe`** (`type: "clothing"`). NPC **`priest_of_perpetual_life`** (silent). Pools: **`PRIEST_SILENCE_RESPONSES`** (10), **`REBIRTH_NARRATIVES`** (15), **`ROOM_ROBE_HUMILIATION`** / **`COURTYARD_ROBE_HUMILIATION`** (10 each).
-- **Death:** **`applyPlayerDeath`** — carried **gold → 0**, inventory → **gray robe only**, weapon **`unarmed`**, armor/shield **null**, **`receivedSamStarterOutfit` → false**, **HP** full, **`currentRoom` → `church_of_perpetual_life`**, chronicle line. **`resolveCombatRound`** appends **`COMBAT_TEMPLATES.playerDeath`**, rebirth line, gold/carry loss text.
+- **Death:** **`applyPlayerDeath`** — carried **gold → 0** (**`bankedGold`** unchanged), inventory → **gray robe only**, weapon **`unarmed`**, armor/shield **null**, **`receivedSamStarterOutfit` → false**, **HP** full, **`currentRoom` → `church_of_perpetual_life`**, chronicle line. **`resolveCombatRound`** appends **`COMBAT_TEMPLATES.playerDeath`**, rebirth line, gold/carry loss text. **Jane** **`WORLD RULES`** align: banked safe; secure storage TBD.
 - **Priest:** **`SAY`** / **`TELL`** in church → static **`pickTemplate(PRIEST_SILENCE_RESPONSES)`**, no Jane.
 - **Robe humiliation:** **`buildRoomDescription`** appends a line whenever **`gray_robe`** is in inventory (**`ROOM_ROBE_HUMILIATION`** or courtyard pool in courtyard).
 - **Courtyard:** **`lib/weatherService.ts`** — **`getCourtyardWeather()`** (Open-Meteo Warsaw + CET/CEST **`TimeOfDay`**, 24 **`weatherLine`** strings). **`app/api/chat/route.ts`** intercepts static responses when **`currentRoom === "guild_courtyard"`** and replaces body with **`buildCourtyardDescription`** (no LLM). Fallback if API fails.

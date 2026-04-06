@@ -1,3 +1,446 @@
+Living Eamon — Claude Context & Rehydration Guide
+
+REHYDRATION INSTRUCTIONS FOR EVERY NEW SESSION
+Before doing any work, fetch and read these files in order:
+
+https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md (this file)
+https://raw.githubusercontent.com/scotch-glass/living-eamon/main/GAME_DESIGN.md
+
+These two documents together contain everything needed to work on Living Eamon without losing context. Read both before writing a single line of code or advice.
+
+
+§1 — Project Identity
+Living Eamon is a persistent, AI-driven text adventure — a spiritual successor to the 1980 classic Eamon. One hero carries across hundreds of adventures and infinite procedurally-regenerated realms. The world is alive, reactive, and builds itself through play. An ancient intelligence named Jane watches every decision and quietly turns the universe into a mirror of the player's soul.
+Repository: github.com/scotch-glass/living-eamon
+Local path: /Users/joshuamcclure/Desktop/living-eamon
+Hosting: Vercel
+Status: Active development — single-player first, multiplayer Phase 3
+
+§2 — Player / Owner Context
+Name: Joshua McClure (goes by Scotch)
+Role: Non-developer founder/designer
+Critical rule: All technical instructions must be delivered as explicit, unambiguous step-by-step instructions OR as precise Cursor AI prompts. No vague guidance. No mixing general advice with explicit steps. If Scotch needs to do something in code, write the exact Cursor prompt he pastes verbatim, or the exact terminal command, or the exact SQL to run — nothing less.
+
+§3 — Tech Stack
+LayerTechnologyFrontendNext.js 16 + React 19 + TypeScriptBackendNext.js API routesDatabaseSupabase (PostgreSQL)AI — NarratorAnthropic Claude Sonnet ("Jane")AI — World/StoryGrok (xAI) — primary LLM for world generation and story arcsAI — ArtGrok Imagine Pro (xAI) — all scene and character image generationHostingVercel
+Important Next.js 16 note: Route protection uses proxy.ts — NOT middleware.ts. This is a Next.js 16 convention change. Never write middleware.ts for route protection in this project.
+Environment variables required:
+ANTHROPIC_API_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_KEY=
+XAI_API_KEY=
+GROK_IMAGINE_BASE_URL=https://api.x.ai/v1/images/generations
+
+§4 — Architecture: Static With State
+The world is pre-written and stateful. Jane only generates content when something genuinely novel occurs. Once Jane writes it, it's saved permanently to Supabase and served to every subsequent player for free.
+Engine decision tree:
+Player input
+  → Static intent? (movement, inventory, stats, look, banking)
+      → Return immediately, zero API cost
+  → World object cache hit? (Supabase)
+      → Return cached description, zero API cost
+  → Dynamic (conversation, magic, moral choice, unexpected)
+      → Call Jane → stream response → save to Supabase
+Cost model:
+
+Movement, inventory, stats: free
+Room descriptions: free (after first generation)
+Cached world objects: free
+NPC conversation, magic, moral choices: ~$0.009/call
+Typical 30-minute session: ~$0.15
+
+
+§5 — Current Development Status (April 2026)
+Most recent combat fix commit: 27a34e4 — bugs A–F resolved
+Completed systems:
+
+Authentication: email/password + Google SSO scaffolding, cookie-based sessions via @supabase/ssr, proxy.ts route protection, server actions for auth, /login and /register pages
+user_id FK column linking players to auth.users
+Jane daily call limit: unlimited in development via NODE_ENV check
+Combat system (A–F bug fixes)
+10-virtue moral system
+Consequence engine (burnt rooms, NPC memory, Sheriff alerts, bounties)
+NPC agenda system
+Living World Database (object descriptions generated once, saved permanently)
+Streaming chat interface with character-by-character animation + Space to skip
+
+Pending / next up:
+
+Persistent enemy HP
+Critical hit system
+Church of Perpetual Life death/respawn redesign (currently deferred)
+Phase 2 systems (see §12 in GAME_DESIGN.md): Stamina, Hunger/Thirst, Encumbrance, Runes
+
+
+§6 — The Eamon Chronicle
+Every significant action the player takes appends a terse log entry to the Chronicle. This is stored in Supabase and serves as:
+
+The persistent soul layer of the hero across infinite realms
+The rehydration context fed to Grok at every chapter start
+The Living Eamon equivalent of The Black Company's annalist logs
+
+The Chronicle records: INVOKE uses, destruction events, Virtue shifts, reagent trades, Order encounters, deaths, Chapter completions, realm transitions.
+
+§7 — Tone & Art Direction: Tolkienian-GrimDark
+The Tone
+Living Eamon uses a unified visual and narrative tone called Tolkienian-GrimDark. This is the specific fusion of:
+
+J.R.R. Tolkien: hand-drawn maps, mythic scope, ancient lore, moral weight in every place and creature, pockets of genuine innocence and beauty
+The Black Company (Glen Cook, 1984): unromantic mercenary survival, persistent consequences, annalist-style narration without heroism — the direct literary ancestor of the Eamon Chronicle
+Heads Will Roll: Reforged (Ren'Py visual novel): scene-setting art + layered character sprites + survival pressure + branching reputation-gated arcs
+
+What Tolkienian-GrimDark means in practice:
+
+There are pockets of Tolkienian innocence (Pastoral Innocent zones — the Shire equivalent)
+There are grimdark frontier zones with full consequence systems (brothels, gore, daemon activity)
+Tone is regional and degrades: high-circle Occult use, mass combat, and daemon pacts corrupt Pastoral zones permanently toward Grimdark
+The narrative voice mirrors the Eamon Chronicle — spare, factual, annalist-style, never melodramatic
+No chosen-one fantasy. No plot armor. Survival and moral choices have permanent weight.
+
+Visual Art Direction
+Scene images:
+Every major scene transition generates one establishing image — like Tolkien and C.S. Lewis illustrating their own books. The image sets the tone; text takes over from there.
+Style: Extremely high definition, gritty, photorealistic grimdark. Warhammer meets Tolkien's visual gravity.
+Maps: Hand-drawn in the style of Tolkien's own cartography — Middle-earth aesthetic with compass roses, illustrated terrain, aged parchment texture.
+Image API: Grok Imagine
+
+Master reference generation: grok-imagine-image-pro ($0.07/image)
+Composited scene renders: grok-imagine-image standard ($0.02/image)
+
+White studio backdrop rule: All master character reference images are generated on clean white background for maximum contrast and sharpest Flux model anchor. Black backgrounds cause edge halos and lighting bleed. White is canon.
+Regional Tone Archetypes
+Three permanent tonal zones, each with distinct master background templates:
+ToneVisual StyleDefault StatePastoral InnocentRolling hills, thatched cottages, halflings, golden light, flower gardens — Shire/HobbitonHigh purityCivilized HumanStone towns, guild halls, market squares, ordered inns — classic Tolkien townMedium purityGrimdark FrontierBrothels, ruined villages, sulfur traces, daemon taint, goreLow purity
+Zones degrade from Pastoral → Civilized → Grimdark through player actions. Destruction is permanent in the Chronicle. Virtue shifts are amplified by zone type.
+
+§8 — Scene Image Architecture (Template Layering)
+Modeled on how Ren'Py visual novels work (confirmed from Heads Will Roll: Reforged source study):
+Background template  (static, generated once, cached forever)
+  + NPC sprites      (archetype masters, 5–8 locked poses each)
+  + Player avatar    (custom master + 12 poses, generated once at Soul Forge)
+  = One Grok Imagine API call ($0.02) → composited scene image
+Background Library: ~15–25 master templates
+
+One base per major location type
+Three tonal variants per type (Pastoral / Civilized / Grimdark)
+Three destruction states per location (pristine / partial / fully ruined)
+Generated once. Cached forever in Supabase Storage. Never regenerated unless realm-wide cataclysm.
+Examples canon: Greenhollow village square, ruined Thornvale, Scarlet Veil interior, dungeon chamber, forest road, battlefield
+
+Standard NPC Library: archetype masters + pose sheets
+
+Recurring types: generic barmaid, goblin raider, halfling farmer, grizzled mercenary, Order inquisitor, tavern patron, etc.
+Each gets one master reference + 5–8 locked poses
+Named major NPCs get full individual masters
+
+Compositing call structure:
+
+Reference 1: player master
+References 2–4: background template + 1–2 standard NPCs in correct poses
+Reference 5: chosen player pose from hero_poses table
+Prompt: full Identity Block + "exact lighting, action, tone, gore level, sulfur traces if INVOKE used"
+Cache by scene hash in Supabase Storage
+
+Cost reality:
+
+Initial library build (all templates + first player master): ~$15–25 one-time
+Average chapter (10–20 scenes): $0.10–$0.50 after caching
+100 chapters: still pennies per player session
+
+
+§9 — The Soul Forge (Avatar Creation System)
+One-time permanent avatar creation at game start (Chapter 0 — "The Awakening"). Generates one canonical master reference image on white background + one locked Identity Block. Both are sacred canon in the Visual Codex. All clothing, armor, gore, blood, poses, and backgrounds layer on top via multi-reference API calls.
+Coherence protocol: master image reference + verbatim Identity Block in every single API call. Drift below 97% triggers re-forge notification.
+Player Flow
+
+Gender selection (Male / Female)
+Archetype gallery (8 options per gender)
+Deep customization (sliders, dropdowns, backstory textarea)
+Live previews (three tonal backgrounds)
+Forge the Legend (Grok ImaginePro master + 12 poses)
+Confirmation + first Chronicle entry
+
+Gender Options
+
+Male
+Female
+(Non-binary and non-human: Phase 2)
+
+Archetypes (8 per gender — same names, different base builds)
+
+The Eternal Wanderer
+The Occult Scholar
+The Iron-Blood Mercenary
+The Fallen Paladin
+The Reagent Hunter
+The Daemon-Scarred
+The Shadow Walker
+The Exiled Noble
+
+Each archetype ships with pre-rendered previews on Pastoral, Civilized, and Grimdark backgrounds + default Virtue bias + 50-word flavor text.
+Customization Parameters
+Shared (all genders):
+
+Height: Male 5'4"–6'10" (2" increments); Female 5'0"–6'4" (2" increments)
+Build: gaunt / wiry / athletic / muscular / heavy / voluptuous (female only) — dropdown + slider intensity
+Skin tone & weathering: fair / olive / dark / ashen / scarred-weathered / sun-burned (6 base tones + weathering intensity slider)
+Hair style: short-cropped, shoulder-length, long-straight, long-wavy, braided, ponytail, bun, shaved/bald (+ gender-specific variants)
+Hair color + graying slider (0–100%)
+Eye color + intensity: steel-gray, ice-blue, emerald, amber, violet, obsidian (+ glow intensity for occult archetypes)
+Facial structure + apparent age 25–50 (jaw, cheekbones, nose, lip fullness)
+Scars & markings: vertical facial scar, chest slash pack, forearm ritual burns, back whip scars, ritual brands, bite marks (up to 5 simultaneous)
+Signature mark (one major permanent feature): missing finger, ritual tattoo, daemon brand, silver streak, eye patch scar, neck brand
+Backstory prompt: optional 100–300 words — Grok folds key phrases into scar placement and expression
+
+Male-only:
+
+Chest/arm/leg hair density (none/light/medium/heavy)
+Abdominal definition (flat/defined/ripped)
+Shoulder breadth slider
+
+Female-only:
+
+Breast size & shape (small/medium/full/athletic)
+Hip-to-waist ratio slider
+Thigh and glute definition
+Neck and collarbone prominence
+
+Master Reference Generation Rules
+
+White studio backdrop (always)
+Minimal clothing: dark leather loincloth (male) or wrap (female) + thin chest/shoulder straps that NEVER intersect scars
+Neutral three-quarter standing pose, arms relaxed
+Generated via grok-imagine-image-pro ($0.07)
+12 standard poses batched immediately after master
+
+12 Standard Poses
+idle, walking, INVOKE casting, combat strike, wounded, sitting, fleeing, brothel negotiation, death, reagent trading, victory stance, gate travel
+Identity Block Template
+Photorealistic [gender] player avatar from Living Eamon – [Archetype Name], exactly [height] tall, [build] build of a battle-hardened survivor, [skin tone] skin with [scar list]. [Hair description]. [Eye description]. [Facial scar description]. [Signature mark]. [Gender-specific body details]. Thin leather straps cross chest and shoulders above all scars without any interaction. Clean white studio backdrop. This is the single persistent hero.
+Supabase Schema
+sqlcreate table if not exists hero_masters (
+  id uuid primary key default uuid_generate_v4(),
+  player_id uuid references auth.users(id) on delete cascade not null,
+  archetype text not null,
+  gender text not null,
+  master_image_url text not null,
+  identity_block text not null,
+  customization_vector jsonb,
+  locked_at timestamptz default now(),
+  unique(player_id)
+);
+
+create table if not exists hero_poses (
+  id uuid primary key default uuid_generate_v4(),
+  master_id uuid references hero_masters(id) on delete cascade not null,
+  pose_name text not null,
+  pose_image_url text not null,
+  created_at timestamptz default now()
+);
+
+alter table hero_masters enable row level security;
+alter table hero_poses enable row level security;
+
+create policy "Users own their master" on hero_masters
+  for all using (auth.uid() = player_id);
+create policy "Users own their poses" on hero_poses
+  for all using (auth.uid() = (select player_id from hero_masters where id = master_id));
+API Routes
+
+GET /api/avatar/archetypes — returns 16 archetypes (8M/8F) with previews and Virtue bias
+POST /api/avatar/preview — low-res composite preview ($0.02, for the Live Preview step)
+POST /api/avatar/forge — full master + 12 poses ($0.91 max) → saves to tables → returns URLs + Identity Block
+
+Frontend Wizard
+
+Route: /forge-avatar
+4-step shadcn/ui wizard:
+
+Step 1: Gender + Archetype gallery grid
+Step 2: Customization sliders/dropdowns + backstory textarea
+Step 3: LivePreviewCanvas (three tonal composites)
+Step 4: Confirmation modal showing master + all 12 poses + "Forge Legend" button
+
+
+New component files: ArchetypeGallery.tsx, CustomizationPanel.tsx, LivePreviewCanvas.tsx, ForgeConfirmationModal.tsx
+
+Integration Points
+
+Called once at new game start, OR on explicit "Soul Evolution" (rare, player-approved)
+Master + Identity Block appended to every Chapter rehydration prompt
+Permanent scars from in-game trauma trigger optional controlled Soul Update (player approval required)
+Ties directly to Chapter Engine, destruction system, and the Eamon Chronicle
+
+
+§10 — Story Engine: The Chapter System
+Structural Model
+Living Eamon uses a programmatic chapter/arc engine modeled on two sources:
+1. Heads Will Roll: Reforged (Ren'Py visual novel)
+The confirmed structural spine. Key properties:
+
+Tight survival pressure — fatigue, hunger, injuries, disease all tracked
+Time-boxed forced events (chapters have timers, not open sandbox)
+Reputation-gated branching: choices only unlock based on accumulated standing
+Shared trunk → major split → multiple route-specific chapters → 30+ possible endings
+No hero fantasy — survival is the mechanic, death is permanent consequence
+Grimdark tone throughout
+
+HWR Reforged arc skeleton (for mutation into Eamon arcs):
+
+Trunk (Chapters 0–3): Camp arrival, forced training, first battle, reputation seeds, time-driven
+Chapter 3 Split (reputation-gated): Mercenary route / Nobility route / French route / Civilian DLC route
+Post-split: 3–6 chapters per route, escalating climaxes, persistent injury carry-forward
+
+Maps to Living Eamon:
+
+HWR fatigue + hunger + wounds → our Stamina/Hunger/Thirst/Encumbrance system
+HWR persistent injury/disease → our polymicrobial disease vectors and gore states
+HWR reputation gates → our Virtue vector + Order hunt probability
+HWR roguelite cross-death meta-progress → our hero Chronicle carrying across infinite realms
+
+2. The Black Company (Glen Cook, 1984)
+The narrative DNA. Key properties:
+
+Mercenary company as persistent identity across campaigns and employers
+Annalist (Croaker) records everything without heroism — spare, factual, permanent
+Moral erosion, shifting alliances, no chosen-one arc
+Long campaigns with escalating consequence
+
+Maps to Living Eamon:
+
+The Annalist + permanent Chronicles → the Eamon Chronicle
+Company's accumulating scars across campaigns → hero carrying every ruined town, Virtue shift, and Order mark
+Long structured campaigns → Chapter arcs with forced events and no sandbox sprawl
+
+The Stag Company
+The Living Eamon-native mercenary arc set. Same DNA as The Black Company — mercenary company chronicle, employer shifts, moral erosion, annalist logging — but no IP conflict. One of many arc sets available once the story engine is live. A formal license inquiry to Glen Cook / Tor/Macmillan is aspirational but not required.
+Chapter Generation Flow
+At every new chapter load:
+
+Pull player's full Chronicle + Virtue vector + current zone tone + reagent stock + destruction scars
+AI receives HWR arc template JSON + player state
+AI mutates template into Eamon chapter:
+
+Replace medieval survival with Stamina/Hunger/Thirst/Encumbrance + polymicrobial disease
+Replace reputation with Virtue + Order hunt probability
+Inject reagent trades, INVOKE risks, sulfur traces, destruction opportunities
+Keep chapter on-rails with time pressure and forced events
+
+
+Mutated ruleset cached in Supabase chapter_rulesets table
+Static engine runs 95% of play — only novel choices trigger Grok delta for next chapter
+
+Arc Seeding
+Joshua or hired writers supply one-line arc seeds. Grok handles 100% of the mutation and regeneration. Example seeds:
+
+"Lowborn footman rises through a reagent war meat grinder — the hero can burn the kingdom with Circle 5 INVOKE"
+"Game of Thrones Season 1 but the hero sacks the capital early and carries the guilt into the next realm"
+"The Stag Company takes a contract from an Order inquisitor against their own reagent network"
+
+Supabase Tables
+sqlcreate table story_arc_templates (
+  id uuid primary key default uuid_generate_v4(),
+  source text default 'heads_will_roll_reforged',
+  arc_name text,
+  base_events jsonb,
+  time_box_days integer,
+  reputation_gates jsonb,
+  transition_rules jsonb,
+  created_at timestamptz default now()
+);
+
+create table chapter_arc_seeds (
+  id uuid primary key default uuid_generate_v4(),
+  player_id uuid references auth.users(id),
+  chapter_number integer,
+  seed_text text,
+  mutated_ruleset jsonb,
+  cached_at timestamptz default now()
+);
+
+create table chapter_rulesets (
+  id uuid primary key default uuid_generate_v4(),
+  player_id uuid references auth.users(id),
+  chapter_number integer,
+  ruleset jsonb,
+  created_at timestamptz default now()
+);
+
+§11 — World Destruction System
+Fully destructible settlements and realms. Destruction is permanent — no resets.
+Destruction states per location: pristine → partial damage → fully ruined (0–100% per building/quarter, tracked in Supabase)
+Visual Codex behavior: auto-switches between pristine and ruined master background templates at damage thresholds.
+Destruction tiers:
+
+Circle 3–4 INVOKE: building-level damage, gore states, sulfur traces, Order witness probability spikes
+Circle 5–6: district-level destruction, NPC displacement, reagent market collapse
+Circle 7–8 rituals / prolonged daemon pacts: realm-level cataclysm — realm marked "dead" in Chronicle, hero carries everything into next procedural realm
+
+Ripple effects: surviving NPCs become refugees or bandits, Order hunt probability spikes, Virtue alignment shifts, reagent markets collapse.
+World-level destruction: infinite realms mean the legend never runs out of canvas. Dead realms are permanent — never regenerated, always accessible in Chronicle as history.
+
+§12 — The Order
+The only authorized Occult practitioners in the world — authorized exclusively to prosecute, punish, and remove unauthorized Occultists. They erase practitioners AND witnesses. Everyone is terrified of them.
+Activation triggers (dormant until Occult is used publicly):
+
+Witnessed INVOKE (sulfur traces, fizzle smells, light flashes in public)
+Reagent stockpiling in quantity
+Possession of runebooks
+High-circle destruction events that attract investigation
+
+Response escalation: investigation → pursuit → disappearance of all witnesses → erasure from the record
+Full Order mechanics are Phase 2 (documented, not yet coded).
+
+§13 — Magic Systems (Summary)
+Full spell tables are in GAME_DESIGN.md §9. Summary here for orientation:
+Guild Magic (CAST command): Legal. No reagents. ~half the power of Circle 1 Occult. Safe anywhere. Spells: BLAST, HEAL, LIGHT, SPEED.
+Occult Magic (INVOKE command): Forbidden everywhere. Requires discovered Words of Power (in-game loot/hints only — no help text) + exact reagents. Eight circles, 64 spells. Circles 1–4 implemented; 5–8 documented for later phases.
+Eight reagents: Black Pearl, Blood Moss, Garlic, Ginseng, Mandrake Root, Nightshade, Spider's Silk, Sulfurous Ash. Cannot be purchased in starting areas. Found as adventure loot, traded in other worlds, or purchased from sources who don't ask questions.
+
+§14 — The Reader's Mirror (Personalization Layer)
+Living Eamon is an infinite personalized novel that writes itself in the style of the player's favorite authors, shaped by behavioral signals.
+Behavioral signals tracked:
+
+Virtue patterns (10-virtue system)
+Combat vs. diplomacy ratios
+Curiosity signals (exploration behavior)
+12 genre dimensions
+Darkness tolerance → three content tiers (Young Adult / Adult / Mature)
+
+External imports (optional): GoodReads RSS, Kindle CSV
+Jane's personalization block: inserted at start of every session
+"What Jane Knows" transparency section: planned for player profile page
+
+§15 — Pricing Tiers
+TierPriceDescriptionLone WandererFreeFull solo play, 10 Jane calls/dayAdventurer$9.99/moMultiplayer, 100 Jane calls/dayWorldshaper$19.99/moUnlimited Jane, pocket realmsEternal Legend$49.99/moImmortal NPC, custom adventures
+No pay-to-win. Virtues, combat, and Jane's moral mirror are identical across all tiers.
+
+§16 — Roadmap
+PhaseFocusPhase 1Core engine, streaming chat, Supabase persistence, character creation, consequence engine, Living World Database — COMPLETEPhase 2Full Beginner's Cave adventure, banking, henchman hiring, Chronicle newspaper, Grok API integration, stamina/hunger/encumbrance, Soul Forge, Scene Image systemPhase 3Occult magic full (all 8 circles), prison adventure, multiplayer shardsPhase 4Hundreds of classic Eamon adventures, player retirement → immortal NPC, Hall of Legends, Jane self-evolution, full Chapter/Arc engine with Story Engine
+
+§17 — Key Design Decisions Log
+April 2026
+
+Tolkienian-GrimDark tone locked. Fusion of Tolkien world-building aesthetic + The Black Company narrative DNA + Heads Will Roll: Reforged structural model. Regional tone system: Pastoral Innocent / Civilized Human / Grimdark Frontier. Zones degrade permanently through player actions.
+Scene image architecture confirmed. Every major scene transition generates one establishing image (Tolkien/Lewis illustrative model). Template layering: background + NPC sprites + custom player avatar composited in one Grok Imagine API call. Modeled on HWR Reforged's Ren'Py architecture (confirmed from source file study).
+Soul Forge designed. One-time permanent avatar creation. Grok Imagine Pro master reference + 12 standard poses. White studio backdrop for all masters. Coherence protocol: master image + verbatim Identity Block in every call. Full customization: 8 archetypes per gender (M/F), extensive body/face/scar parameters.
+Chapter/Arc story engine designed. Programmatic chapter regeneration using HWR Reforged arc templates + Black Company narrative DNA. Grok mutates templates using player Chronicle + Virtue vector at chapter start. The Stag Company is Arc Set #1. Sandbox trap eliminated — every chapter is on-rails with survival pressure and forced events.
+World Destruction System locked. Fully destructible settlements and realms. Permanent in Chronicle. Circle-tier-based escalation. Realm-level cataclysm possible at Circle 7–8.
+AI stack confirmed. Anthropic Claude = Jane (narrator, moral mirror, NPC dialogue). Grok = primary world/story generation LLM. Grok Imagine Pro = all image generation. Image API costs: $0.07/master (pro tier), $0.02/composite scene (standard tier).
+Occult magic system: classic UO Magery rules (8 circles, 64 spells, reagent consumption). INVOKE command. Reagents not purchasable in starting areas. The Order prosecutes practitioners and witnesses. Circles 1–4 implemented; 5–8 documented for later phases.
+Stamina system planned (Phase 2 high priority): third vital stat; full stamina = max natural healing + fast poison recovery; low stamina disables FLEE; very low stops healing; zero drains HP.
+Hunger/thirst planned (Phase 2): separate mechanics; both drain stamina; severe cases drain HP; always available in Main Hall so death only possible in prolonged adventures.
+Weight/encumbrance planned (Phase 2 high priority): every item has weight; carry limit based on Strength; four levels (normal/burdened/overloaded/cannot pick up).
+Runes/runegates planned (Phase 2): Mark (Circle 6) creates rune; Recall (Circle 4) transports solo; Gate Travel (Circle 7) opens moongate; Runebooks = evidence of Occult practice to The Order.
+
+Earlier
+
+Combat bugs A–F fixed (commit 27a34e4)
+Authentication system implemented (email/password, Google SSO scaffolding, @supabase/ssr, proxy.ts, server actions, /login, /register, user_id FK on players)
+Reader's Mirror personalization vision documented
+Ultima Online skill/magic system integration explored (pending QA)
+Jane daily call limit: unlimited in development via NODE_ENV check
 ## 0. Local Development Path
 
 - Mac laptop username: joshuamcclure

@@ -1,8 +1,8 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
-import fs from "fs";
-import path from "path";
 import {
   buildScenePrompt,
   buildScenePromptSanitized,
@@ -22,7 +22,7 @@ const supabaseAdmin = createClient(
 );
 
 // ── Error log writer ────────────────────────────────────────────────────────
-function appendErrorLog(entry: {
+async function appendErrorLog(entry: {
   timestamp: string;
   roomId: string;
   tone: SceneTone;
@@ -32,26 +32,23 @@ function appendErrorLog(entry: {
   errorType: "censored" | "api_error" | "timeout" | "no_data";
   rawError: string;
 }) {
+  // Local visibility
+  console.error("[GROK_IMAGINE_ERROR]", JSON.stringify(entry, null, 2));
+
+  // Persist to Supabase for production visibility
   try {
-    const logPath = path.join(process.cwd(), "GROK_IMAGINE_ERROR_LOG.md");
-    const exists = fs.existsSync(logPath);
-    const header = exists ? "" : "# Grok Imagine Error Log\n\n";
-    const block = [
-      `## ${entry.timestamp}`,
-      `- **Room:** ${entry.roomId}`,
-      `- **Tone:** ${entry.tone} | **State:** ${entry.roomState}`,
-      `- **Attempt:** ${entry.attemptNumber}`,
-      `- **Error type:** ${entry.errorType}`,
-      `- **Raw error:** ${entry.rawError}`,
-      `- **Prompt used:**`,
-      "```",
-      entry.promptUsed,
-      "```",
-      "",
-    ].join("\n");
-    fs.appendFileSync(logPath, header + block, "utf8");
+    await supabaseAdmin.from("grok_imagine_error_log").insert({
+      room_id: entry.roomId,
+      tone: entry.tone,
+      room_state: entry.roomState,
+      attempt_number: entry.attemptNumber,
+      error_type: entry.errorType,
+      raw_error: entry.rawError.slice(0, 2000),
+      prompt_used: entry.promptUsed.slice(0, 4000),
+      created_at: entry.timestamp,
+    });
   } catch {
-    console.error("Could not write to GROK_IMAGINE_ERROR_LOG.md");
+    // Log table may not exist yet — fail silently, console.error above is enough
   }
 }
 
@@ -159,7 +156,7 @@ export async function GET(request: NextRequest) {
     // ── 3. Censorship retry ───────────────────────────────────────────────────
     if (attempt1.censored) {
       const timestamp = new Date().toISOString();
-      appendErrorLog({
+      void appendErrorLog({
         timestamp,
         roomId,
         tone,
@@ -195,7 +192,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Both attempts censored or failed
-      appendErrorLog({
+      void appendErrorLog({
         timestamp: new Date().toISOString(),
         roomId,
         tone,
@@ -216,7 +213,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 4. Non-censorship API error ───────────────────────────────────────────
-    appendErrorLog({
+    void appendErrorLog({
       timestamp: new Date().toISOString(),
       roomId,
       tone,

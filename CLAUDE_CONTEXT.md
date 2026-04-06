@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 11, 2026*
+*Last updated: April 12, 2026*
 
 
 ## 1. Project Overview
@@ -559,7 +559,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Styling: Tailwind v4 (dependency); primary game UI uses inline styles in `app/page.tsx`
 - Database: Supabase (Postgres)
 - AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic). **Guild Courtyard:** when `responseType === "static"` and the player is in **`guild_courtyard`**, **`route.ts`** calls **`getCourtyardWeather()`** (Open-Meteo, Warsaw) and replaces the body with **`buildCourtyardDescription`** (no LLM).
-- Image generation: xAI **`grok-imagine-image`** — batch item art in `scripts/generate-all-art.mjs` (`GROK_API_KEY`); **scene establishing shots** via **`GET /api/scene-image`** (`XAI_API_KEY`, OpenAI SDK pointed at `https://api.x.ai/v1`, Supabase **`scene_image_cache`** + Storage bucket **`scene-images`**). **Scene route:** moderation-shaped failures → log to **`GROK_IMAGINE_ERROR_LOG.md`** (local dev; gitignored) + one retry with **`buildScenePromptSanitized`**; JSON includes **`visualDescription`**, **`error`**, **`retried`**. **ScenePanel:** loading copy from **`SCENE_DATA`**, error UI, 30s fetch abort, apology toast on **`retried`**. 
+- Image generation: xAI **`grok-imagine-image`** — batch item art in `scripts/generate-all-art.mjs` (`GROK_API_KEY`); **scene establishing shots** via **`GET /api/scene-image`** (`export const runtime = "nodejs"`, `XAI_API_KEY`, OpenAI SDK at `https://api.x.ai/v1`, Supabase **`scene_image_cache`** + **`scene-images`** bucket). **Scene route:** moderation-shaped failures → **`console.error`** + insert **`grok_imagine_error_log`** (fire-and-forget **`void appendErrorLog`**); one **`buildScenePromptSanitized`** retry; JSON **`visualDescription`**, **`error`**, **`retried`**. **ScenePanel:** loading copy, errors, 30s abort, apology on **`retried`**. 
 - Deployment: Vercel
 - IDE: Cursor (e.g. MacBook Pro)
 
@@ -598,7 +598,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: auth bootstrap via Supabase user, auto-load player, **`ScenePanel`** (room / engine **`RoomState`** → **`normal` \| `damaged` \| `ruined`**; **`grimdark`** tone for church + pit), chat log, `CommandInput`, sidebar, header sign-out, **JSON vs stream** for `/api/chat` |
 | `app/api/chat/route.ts` | POST: resolves authenticated user's linked player id (prefers `players.user_id` mapping over request body `playerId`), then load/merge player + `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
-| `app/api/scene-image/route.ts` | **GET** — cache → **`buildScenePrompt`** → Grok **`b64_json`** → Storage → DB; **censorship heuristic** → append **`GROK_IMAGINE_ERROR_LOG.md`** + **`buildScenePromptSanitized`** retry → **`retried: true`** on success; JSON **`visualDescription`** / player-facing **`error`**; outer catch returns HTTP 200 with **`url: null`** |
+| `app/api/scene-image/route.ts` | **GET**, **`runtime = "nodejs"`** — cache → Grok → Storage → **`scene_image_cache`**; errors → **`void appendErrorLog`** (structured **`console.error`** + **`grok_imagine_error_log`** insert); sanitized retry; JSON **`visualDescription`** / **`error`**; outer catch HTTP 200 **`url: null`** |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `components/ScenePanel.tsx` | **`ScenePanel`** — **`SCENE_DATA`** loading subtitle, shimmer, **30s** `AbortController` timeout, error panel, crossfade, **`retried`** apology toast; vignette + label when loaded |
@@ -829,7 +829,9 @@ SQL migrations: **`supabase/migrations/`** (e.g. **`received_sam_starter_outfit`
 
 Other tables used: `world_objects`, `room_states`, `npc_states`, `jane_memories`, `chronicle_log` (see `supabase.ts`).
 
-**`scene_image_cache` (scene art API):** Used by **`app/api/scene-image/route.ts`**. Inferred columns: **`room_id`**, **`room_state`**, **`tone`**, **`image_url`**, **`prompt_used`**. **Storage:** public bucket **`scene-images`** for uploaded JPGs. **Apply in Supabase if missing** (no migration in repo yet). **Local log:** **`GROK_IMAGINE_ERROR_LOG.md`** (append-only from the API route; **`.gitignore`** — not for Vercel persistence; use for local diagnosis).
+**`scene_image_cache` (scene art API):** Used by **`app/api/scene-image/route.ts`**. Inferred columns: **`room_id`**, **`room_state`**, **`tone`**, **`image_url`**, **`prompt_used`**. **Storage:** public bucket **`scene-images`**.
+
+**`grok_imagine_error_log`:** Grok Imagine failures from **`scene-image`** route — **`room_id`**, **`tone`**, **`room_state`**, **`attempt_number`**, **`error_type`**, **`raw_error`**, **`prompt_used`**, **`created_at`**. RLS enabled; policy blocks non–service-role access; **service role bypasses RLS** for inserts. Migration: **`supabase/migrations/20260411120000_grok_imagine_error_log.sql`** (run / apply on Supabase project).
 
 **Planned tables (Phase 2):** `player_profiles`, `subscriptions` — see `TECH.md` §3.3.
 
@@ -936,12 +938,15 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-12 — **`grok_imagine_error_log`** + Node route runtime (`scene-image`)
+
+- **`app/api/scene-image/route.ts`:** **`export const runtime = "nodejs"`**; removed **`fs`** / **`path`**; **`appendErrorLog`** is **`async`** — **`console.error`** and Supabase **`grok_imagine_error_log`** insert (truncated fields); call sites use **`void appendErrorLog({...})`**. Migration **`20260411120000_grok_imagine_error_log.sql`** added. Removed gitignored **`GROK_IMAGINE_ERROR_LOG.md`** usage.
+
 ### 2026-04-11 — Scene image robustness (route + panel + **`lib/sceneData`**)
 
 - **`lib/sceneData.ts`** is now the **canonical** scene definitions module (**`buildScenePrompt`**, **`buildScenePromptSanitized`**). **`lib/scenePrompt.ts`** re-exports only.
-- **`app/api/scene-image/route.ts`**: `appendErrorLog` → **`GROK_IMAGINE_ERROR_LOG.md`**; moderation-style Grok errors → one sanitized retry; responses include **`visualDescription`**; structured player errors; Storage upload helper.
+- **`app/api/scene-image/route.ts`**: `appendErrorLog` (later replaced by Supabase **`grok_imagine_error_log`** — see 2026-04-12); moderation-style Grok errors → one sanitized retry; responses include **`visualDescription`**; Storage upload helper.
 - **`components/ScenePanel.tsx`**: loading UI with description, error state, **30s** fetch timeout, apology when **`retried`**.
-- **`.gitignore`:** **`GROK_IMAGINE_ERROR_LOG.md`**.
 
 ### 2026-04-10 — Wire **`ScenePanel`** in **`app/page.tsx`**
 

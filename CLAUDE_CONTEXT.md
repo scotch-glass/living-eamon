@@ -490,6 +490,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/TECH.md
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/GAME_DESIGN.md
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/chat/route.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/scene-image/route.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/api/player/route.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/globals.css
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/app/layout.tsx
@@ -505,6 +506,7 @@ Every time you start a new conversation about this project, do this:
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/uoData.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/weatherService.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/scenePrompt.ts
+   https://raw.githubusercontent.com/scotch-glass/living-eamon/main/lib/sceneData.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next-env.d.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/next.config.ts
    https://raw.githubusercontent.com/scotch-glass/living-eamon/main/postcss.config.mjs
@@ -531,7 +533,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 6, 2026*
+*Last updated: April 8, 2026*
 
 
 ## 1. Project Overview
@@ -556,7 +558,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 - Styling: Tailwind v4 (dependency); primary game UI uses inline styles in `app/page.tsx`
 - Database: Supabase (Postgres)
 - AI narrator: Anthropic Claude (`claude-sonnet-4-20250514`) via `app/api/chat/route.ts`; optional Grok `grok-3` for streaming when `GROK_API_KEY` is set. **Testing:** when `processInput` returns `dynamic` and `player.currentRoom === "main_hall"`, `/api/chat` returns **JSON** `{ response, worldState }` (full Jane text, no stream) instead of chunked `text/plain`. **Critical hits:** when `responseType === "static"` but `staticResponse` includes **`__CRITICAL__`**, the route calls **`streamJane`** with a rewrite prompt (same stream vs **main_hall** JSON rule as dynamic). **Guild Courtyard:** when `responseType === "static"` and the player is in **`guild_courtyard`**, **`route.ts`** calls **`getCourtyardWeather()`** (Open-Meteo, Warsaw) and replaces the body with **`buildCourtyardDescription`** (no LLM).
-- Image generation: xAI `https://api.x.ai/v1/images/generations`, model **`grok-imagine-image`** in `scripts/generate-all-art.mjs`
+- Image generation: xAI **`grok-imagine-image`** — batch item art in `scripts/generate-all-art.mjs` (`GROK_API_KEY`); **scene establishing shots** via **`GET /api/scene-image`** (`XAI_API_KEY`, OpenAI SDK pointed at `https://api.x.ai/v1`, Supabase **`scene_image_cache`** + Storage bucket **`scene-images`**)
 - Deployment: Vercel
 - IDE: Cursor (e.g. MacBook Pro)
 
@@ -588,12 +590,14 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `lib/gameEngine.ts` | `processInput`, **`READ`**, **`ENTER`**, **Main Hall barrels** / **robe ceremony**, **Aldric** (**`TELL Aldric`**, **`TALK Aldric`**, tiered **`TRAIN`**), **`TALK`** else = **`SAY`**, player hit **75% + skill** (max **95%**) + **fumbles**, `buildSituationBlock`, combat, **BEG**, Sam shop, … |
 | `lib/weatherService.ts` | **`getCourtyardWeather()`** — Open-Meteo forecast (Warsaw), WMO code → condition, CET/CEST hour → **`TimeOfDay`**, 24 static **`weatherLine`** strings; fallback if fetch fails |
 | `lib/scenePrompt.ts` | Scene image prompts — **`SceneTone`** / **`SceneState`**, **`SCENE_DATA`**, **`buildScenePrompt()`** for Grok Imagine establishing shots (Tolkienian-GrimDark) |
+| `lib/sceneData.ts` | Re-exports **`buildScenePrompt`**, **`SceneTone`**, **`SceneState`** (and related) from **`scenePrompt.ts`** for stable **`@/lib/sceneData`** import paths |
 | `lib/uoData.ts` | `WEAPON_DATA` (incl. **`weaponSpeed`**), `getDexReactionBonus()`, `isTwoHanded()`, `rollWeaponDamage()` |
 | `lib/supabase.ts` | `browserClient`, `serviceClient`, `savePlayer` (incl. **`received_sam_starter_outfit`**), `loadPlayer`, `createPlayer`, world object cache, room/NPC state, Jane memory, chronicle, `checkAndDecrementJaneCalls` |
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: auth bootstrap via Supabase user, auto-load player, chat log, `CommandInput`, sidebar, header sign-out, **JSON vs stream** handling for `/api/chat` (`application/json` = instant append; else char streaming + `__STATE__`) |
 | `app/api/chat/route.ts` | POST: resolves authenticated user's linked player id (prefers `players.user_id` mapping over request body `playerId`), then load/merge player + `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
+| `app/api/scene-image/route.ts` | **GET** — query `room`, `state`, `tone`; **`scene_image_cache`** lookup → else Grok Imagine **`b64_json`** → upload **`scene-images`** → insert cache; returns `{ url, cached? }` or **`{ url: null }`** on error (HTTP 200) |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
@@ -823,6 +827,8 @@ SQL migrations: **`supabase/migrations/`** (e.g. **`received_sam_starter_outfit`
 
 Other tables used: `world_objects`, `room_states`, `npc_states`, `jane_memories`, `chronicle_log` (see `supabase.ts`).
 
+**`scene_image_cache` (scene art API):** Used by **`app/api/scene-image/route.ts`**. Inferred columns: **`room_id`**, **`room_state`**, **`tone`**, **`image_url`**, **`prompt_used`**. **Storage:** public bucket **`scene-images`** for uploaded JPGs. **Apply in Supabase if missing** (no migration in repo yet).
+
 **Planned tables (Phase 2):** `player_profiles`, `subscriptions` — see `TECH.md` §3.3.
 
 ## 12. Environment Variables
@@ -831,6 +837,7 @@ Other tables used: `world_objects`, `room_states`, `npc_states`, `jane_memories`
 |----------|---------|
 | `ANTHROPIC_API_KEY` | Claude client in `app/api/chat/route.ts` |
 | `GROK_API_KEY` | Optional Grok chat + required for `scripts/generate-all-art.mjs` / `test-plate-chest.mjs` (script reads `.env.local`) |
+| `XAI_API_KEY` | xAI key for **`GET /api/scene-image`** (OpenAI SDK client with base URL `https://api.x.ai/v1`) |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL (`lib/supabase.ts`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (`browserClient`) |
 | `SUPABASE_SERVICE_KEY` | Service role key (`serviceClient`, server routes) |
@@ -866,6 +873,7 @@ Do not commit secret values.
 - [x] New characters: **`0`** gold, **`unarmed`**, **`gray_robe`** only; first Sam **`BUY`** adds complimentary plain outfit (shirt, trousers, belt, shoes) and removes the robe
 - [x] Direction parsing: `extractDirection` uses whole tokens (fixes `STATS` / substring false positives)
 - [x] Batch art script targeting Grok image API (`grok-imagine-image`)
+- [x] **`GET /api/scene-image`** — room scene JPEGs via Grok Imagine, Supabase cache + **`scene-images`** bucket
 - [x] `CLAUDE_CONTEXT.md` + `.cursorrules` maintenance rule
 - [x] **`SAM_INVENTORY`** + static Sam shop in **Main Hall** (`SHOP` / `LIST` / `SAM`, `BUY`); `ITEMS` extended for all Sam weapon keys; `NPCS.sam_slicker.merchant.inventory` driven by `SAM_INVENTORY`
 - [x] **main_hall + dynamic** → JSON Jane response + **client** handles `application/json` vs stream
@@ -924,6 +932,11 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-08 — `GET /api/scene-image` (Grok Imagine + Supabase cache)
+
+- Added **`app/api/scene-image/route.ts`** — cache check on **`scene_image_cache`**, **`buildScenePrompt`**, **`grok-imagine-image`** with **`b64_json`**, upload to Storage bucket **`scene-images`**, insert cache row; graceful **`{ url: null }`** on failure.
+- Added **`lib/sceneData.ts`** re-export barrel for imports matching **`sceneData`** module path. **TypeScript:** optional chaining on **`imageResponse.data?.[0]`** so **`tsc`** passes strict null checks.
 
 ### 2026-04-06 — Scene image prompt module (`lib/scenePrompt.ts`)
 

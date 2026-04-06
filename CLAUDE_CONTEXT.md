@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 15, 2026*
+*Last updated: April 16, 2026*
 
 
 ## 1. Project Overview
@@ -597,7 +597,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `app/layout.tsx` | Root layout |
 | `app/globals.css` | Global CSS |
 | `app/page.tsx` | Client UI: auth bootstrap, **`ScenePanel`**, header (◀/▶ sidebar toggle, **Living Eamon — Current Room**), **Sign out** in sidebar footer beside *she is watching*; `CommandInput`, **JSON vs stream** for `/api/chat` |
-| `app/api/chat/route.ts` | POST: resolves authenticated user's linked player id (prefers `players.user_id` mapping over request body `playerId`), then load/merge player + `processInput`; **`guild_courtyard`** static → **`getCourtyardWeather`** + **`buildCourtyardDescription`**; **`__CRITICAL__`** → **`streamJane`** crit rewrite; Jane stream or **buffered JSON** in `main_hall`+dynamic (and `main_hall`+crit); `completeJaneNonStream`, `savePlayer`, situation append |
+| `app/api/chat/route.ts` | POST: identity + merge + `processInput`; **empty `messages`:** **`turnCount === 0`** → Church **amnesia cold open** (no name / no guild); else **Church rebirth** open; **first user line YES/NO** (`user` count 1) → **skip tutorial** vs **in-world command tutorial** via **`streamJane`**; **`guild_courtyard`** weather; **`__CRITICAL__`** → Jane; **`main_hall`** JSON path when applicable; situation append |
 | `app/api/scene-image/route.ts` | **GET**, **`runtime = "nodejs"`** — cache → Grok → Storage → **`scene_image_cache`**; errors → **`void appendErrorLog`** (structured **`console.error`** + **`grok_imagine_error_log`** insert); sanitized retry; JSON **`visualDescription`** / **`error`**; outer catch HTTP 200 **`url: null`** |
 | `app/api/player/route.ts` | POST create player name; GET load player by id |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
@@ -937,6 +937,12 @@ Do not commit secret values.
 - [ ] Male / female paperdoll art and compositor
 
 ## 16. Session Log
+
+### 2026-04-16 — Opening narrative + YES/NO tutorial branch (`/api/chat`)
+
+- **Empty messages:** First session (**`turnCount === 0`**) → Jane **Church amnesia** cold open (ends with YES/NO); **`turnCount > 0`** → shorter **Church rebirth** open with name.
+- **Follow-up:** Exactly **one** user message, **`turnCount === 0`**, **`YES`/`NO`/`Y`/`N`** → **skip** vs **tutorial** Jane paths (matches client history: assistant cold open + first user line — not `messages.length === 1`).
+- Engine path uses **`lastMessageRaw`** / **`playerInput`** after the branch.
 
 ### 2026-04-15 — New players spawn in **Church of Perpetual Life**
 

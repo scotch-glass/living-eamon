@@ -470,20 +470,149 @@ export async function POST(request: NextRequest) {
 
     // Opening game
     if (!messages || messages.length === 0) {
-      const openingContext = "This is the very start of the game. The player " + state.player.name + " has just arrived at the Main Hall for the first time.\n" +
-        "They have no gold, no weapon, and wear only the guild's thin gray robe — a backless humiliation meant for the newly arrived or the recently reborn.\n" +
-        "Describe the Main Hall vividly using this as your foundation:\n" +
-        MAIN_HALL_ROOMS.main_hall.description + "\n" +
-        "Address the player by their name: " + state.player.name + "\n" +
-        "Introduce Hokas Tokas and Sam Slicker naturally.\n" +
-        "End with jane's one-line observation in lowercase.";
+      const isFirstEverOpen = state.player.turnCount === 0;
 
-      return await streamJane(openingContext, state, [{ role: "user", content: openingContext }], null);
+      if (isFirstEverOpen) {
+        // ── Amnesia cold open — player wakes in Church of Perpetual Life ──
+        // Do NOT address the player by name. Do NOT welcome them.
+        // Do NOT mention the guild or Main Hall yet.
+        // This is a stark, disorienting awakening with no memory.
+        const openingContext = [
+          "SCENE: The Church of Perpetual Life. Cold stone floor. Black candles in concentric rings.",
+          "Silent priests in deep hoods stand motionless at the walls. The air smells of incense and something older.",
+          "",
+          "INSTRUCTION: Write the opening of Living Eamon. This is the player's very first moment of consciousness.",
+          "Do NOT use the player's name. Do NOT welcome them. Do NOT mention any guild.",
+          "Do NOT explain where they are. Do NOT have any NPC speak yet.",
+          "",
+          "Write in second person, present tense. 3-4 paragraphs.",
+          "",
+          "Paragraph 1: Pure sensation. Cold stone under the body. The smell. The silence.",
+          "The weight of existing without knowing who you are. No name comes when you reach for it.",
+          "A body that works but feels borrowed. Not pain — something stranger. Absence.",
+          "",
+          "Paragraph 2: The visual. Slowly taking in the room. The candle rings on the floor.",
+          "The hooded figures. The altar with no symbol. The architecture of a place that has seen",
+          "many people wake on its floor and said nothing about any of them.",
+          "",
+          "Paragraph 3: The first coherent thought. Not panic — a strange calm that itself feels wrong.",
+          "The sense that this is not the first time. Or is it? The feeling slips away before it forms.",
+          "One question surfaces above all others, floating up through the blankness:",
+          "— have I been here before?",
+          "",
+          "Paragraph 4 (short): Present this as an internal fork in the player's mind — not a game menu.",
+          "Write it as a thought, not a prompt. Something like:",
+          "\"Something stirs. A shape in the fog. *Have I been here before?* The question hangs.",
+          "Part of you wants to sit with it — to remember, to understand. Another part knows",
+          "that survival does not wait for memory.\"",
+          "Then end with exactly this line, on its own, as Jane's voice:",
+          "\"— answer your own question. (YES / NO)\"",
+          "",
+          "Jane's lowercase observation at the very end, one sentence only.",
+        ].join("\n");
+
+        return await streamJane(
+          openingContext,
+          state,
+          [{ role: "user", content: openingContext }],
+          null
+        );
+      }
+
+      // ── Returning player / death respawn open ──
+      // Player has played before (turnCount > 0) or died and respawned.
+      const returningContext = [
+        "SCENE: The Church of Perpetual Life. The player " + state.player.name + " has woken here again.",
+        "This is NOT their first time. They remember who they are.",
+        "HP: " + state.player.hp + "/" + state.player.maxHp,
+        "Gold lost on death: all carried gold is gone. Banked gold is safe.",
+        "",
+        "Write 1-2 paragraphs only. Stark and cold. The stone floor again.",
+        "The same candles. The same silence. The priests do not acknowledge them.",
+        "The player knows the drill. End with Jane's one-line observation in lowercase.",
+      ].join("\n");
+
+      return await streamJane(
+        returningContext,
+        state,
+        [{ role: "user", content: returningContext }],
+        null
+      );
     }
 
-    // Get last player message
-    const lastMessage = messages[messages.length - 1];
-    const playerInput = lastMessage ? lastMessage.content : "";
+    // ── YES/NO tutorial branch ───────────────────────────────────────────────
+    // Player has just seen the cold open and answered YES or NO.
+    {
+      const lastForYesNo = messages[messages.length - 1];
+      const yesNoInput = lastForYesNo ? lastForYesNo.content.trim().toUpperCase() : "";
+      const userMessageCount = messages.filter((m: { role: string }) => m.role === "user").length;
+
+      if (
+        state.player.turnCount === 0 &&
+        userMessageCount === 1 &&
+        lastForYesNo?.role === "user" &&
+        (yesNoInput === "YES" || yesNoInput === "NO" ||
+         yesNoInput === "Y" || yesNoInput === "N")
+      ) {
+        const answeredYes =
+          yesNoInput === "YES" || yesNoInput === "Y";
+
+        if (answeredYes) {
+          // Skip tutorial — player knows the game. Move to Church and let them go.
+          const skipContext = [
+            "The player answered YES — they believe they have been here before.",
+            "They are an experienced player who wants to skip the tutorial.",
+            "Write 1 short paragraph only: a flicker of almost-memory that vanishes.",
+            "Something like recognising a smell, or a shape — then nothing.",
+            "Then one sentence: the player stands. They know what to do.",
+            "End with Jane's lowercase observation. Do NOT explain commands. Do NOT mention the Main Hall yet.",
+          ].join("\n");
+
+          return await streamJane(
+            skipContext,
+            state,
+            messages,
+            null
+          );
+        } else {
+          // Tutorial path — player said NO, they want guidance.
+          const tutorialContext = [
+            "The player answered NO — they have no memory, no sense of having been here.",
+            "They are a new player who wants orientation.",
+            "",
+            "Write the tutorial as IN-WORLD experience, not a game manual.",
+            "Use second person. The player's body moves instinctively even as the mind is blank.",
+            "",
+            "Introduce these commands woven into the narrative naturally:",
+            "- LOOK AROUND — describe it as the instinct to take in surroundings",
+            "- EXAMINE SELF — describe it as looking down at your own hands, your own body",
+            "- INVENTORY or I — describe it as patting yourself down, checking what you carry",
+            "- HEALTH or STATS — describe it as a strange inner sense of your own condition",
+            "- GO [direction] or GO [room name] — describe it as the impulse to move",
+            "",
+            "Write this as 3 paragraphs of in-world prose where each command arises naturally",
+            "from what the character does, not as a list. Example style (do not copy verbatim):",
+            "\"Your eyes move without instruction — taking in the room, cataloguing exits.",
+            "LOOK AROUND, something in you understands. Not a thought. A reflex.\"",
+            "",
+            "End the third paragraph with the player standing. The Church door is ahead.",
+            "Beyond it: the Main Hall, and whatever answers wait there.",
+            "End with Jane's lowercase observation, one sentence.",
+          ].join("\n");
+
+          return await streamJane(
+            tutorialContext,
+            state,
+            messages,
+            null
+          );
+        }
+      }
+    }
+
+    // Get last player message (tutorial branch above handles YES/NO at turn 0)
+    const lastMessageRaw = messages[messages.length - 1];
+    const playerInput = lastMessageRaw ? lastMessageRaw.content : "";
 
     // Run through engine
     const engineResult = processInput(playerInput, state);

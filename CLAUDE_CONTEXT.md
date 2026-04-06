@@ -22,7 +22,7 @@ Role: Non-developer founder/designer
 Critical rule: All technical instructions must be delivered as explicit, unambiguous step-by-step instructions OR as precise Cursor AI prompts. No vague guidance. No mixing general advice with explicit steps. If Scotch needs to do something in code, write the exact Cursor prompt he pastes verbatim, or the exact terminal command, or the exact SQL to run — nothing less.
 
 §3 — Tech Stack
-LayerTechnologyFrontendNext.js 16 + React 19 + TypeScriptBackendNext.js API routesDatabaseSupabase (PostgreSQL)AI — NarratorAnthropic Claude Sonnet ("Jane")AI — World/StoryGrok (xAI) — primary LLM for world generation and story arcsAI — ArtGrok Imagine Pro (xAI) — all scene and character image generationHostingVercel
+LayerTechnologyFrontendNext.js 16 + React 19 + TypeScriptBackendNext.js API routesDatabaseSupabase (PostgreSQL)AI — NarratorGrok (xAI) ("Jane")AI — World/StoryGrok (xAI) — primary LLM for world generation and story arcsAI — ArtGrok Imagine Pro (xAI) — all scene and character image generationHostingVercel
 Important Next.js 16 note: Route protection uses proxy.ts — NOT middleware.ts. This is a Next.js 16 convention change. Never write middleware.ts for route protection in this project.
 Environment variables required:
 ANTHROPIC_API_KEY=
@@ -38,10 +38,10 @@ Engine decision tree:
 Player input
   → Static intent? (movement, inventory, stats, look, banking)
       → Return immediately, zero API cost
-  → World object cache hit? (Supabase)
+  → World object DB cache hit? (Supabase)
       → Return cached description, zero API cost
   → Dynamic (conversation, magic, moral choice, unexpected)
-      → Call Jane → stream response → save to Supabase
+      → Call Jane → stream response → save to Supabase (World Cache) 
 Cost model:
 
 Movement, inventory, stats: free
@@ -86,8 +86,8 @@ The Chronicle records: INVOKE uses, destruction events, Virtue shifts, reagent t
 The Tone
 Living Eamon uses a unified visual and narrative tone called Tolkienian-GrimDark. This is the specific fusion of:
 
-J.R.R. Tolkien: hand-drawn maps, mythic scope, ancient lore, moral weight in every place and creature, pockets of genuine innocence and beauty
-The Black Company (Glen Cook, 1984): unromantic mercenary survival, persistent consequences, annalist-style narration without heroism — the direct literary ancestor of the Eamon Chronicle
+J.R.R. Tolkien: hand-drawn maps, mythic scope, ancient lore, moral weight in every place and creature, elves of exquisite beauty and ageless mystery, pockets of genuine innocence and beauty
+The Black Company (Glen Cook, 1984): unromantic mercenary survival, persistent consequences, annalist-style gritty-dark-soldier-humor narration without heroism — the direct literary ancestor of the Eamon Chronicle
 Heads Will Roll: Reforged (Ren'Py visual novel): scene-setting art + layered character sprites + survival pressure + branching reputation-gated arcs
 
 What Tolkienian-GrimDark means in practice:
@@ -134,9 +134,9 @@ Recurring types: generic barmaid, goblin raider, halfling farmer, grizzled merce
 Each gets one master reference + 5–8 locked poses
 Named major NPCs get full individual masters
 
-Compositing call structure:
+Compositing art call structure:
 
-Reference 1: player master
+Reference 1: player character (PC) master
 References 2–4: background template + 1–2 standard NPCs in correct poses
 Reference 5: chosen player pose from hero_poses table
 Prompt: full Identity Block + "exact lighting, action, tone, gore level, sulfur traces if INVOKE used"

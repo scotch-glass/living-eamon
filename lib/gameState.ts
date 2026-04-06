@@ -415,7 +415,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
     player: {
       id: "player_1",
       name: playerName,
-      currentRoom: "main_hall",
+      currentRoom: "church_of_perpetual_life",
       previousRoom: null,
 
       hp: 20,

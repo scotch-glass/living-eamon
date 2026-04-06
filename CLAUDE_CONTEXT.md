@@ -534,7 +534,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 14, 2026*
+*Last updated: April 15, 2026*
 
 
 ## 1. Project Overview
@@ -657,7 +657,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 - `id`: `"player_1"` until replaced by Supabase id in chat route
 - `name`: `playerName` argument (default `"Adventurer"`)
-- `currentRoom`: `"main_hall"`
+- `currentRoom`: `"church_of_perpetual_life"` (new game start; rebirth after death matches)
 - `previousRoom`: `null`
 - `hp` / `maxHp`: `20` / `20`
 - `strength`: `12`, `dexterity`: `10`, `charisma`: `10`, `expertise`: `0`
@@ -938,6 +938,14 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-15 — New players spawn in **Church of Perpetual Life**
+
+- **`createInitialWorldState`:** **`player.currentRoom`** default **`church_of_perpetual_life`** (was **`main_hall`**), aligned with post-death rebirth room.
+
+### 2026-04-14 — Header / sidebar chrome (`app/page.tsx`)
+
+- **Sign out** moved from top bar to sidebar bottom row (flex with *she is watching*). Top bar: bordered **◀ / ▶** toggle with **`title`**, title shows current room (title case from **`player.currentRoom`**).
+
 ### 2026-04-13 — **`/api/chat`** accepts **`XAI_API_KEY`** for Grok Jane
 
 - **`app/api/chat/route.ts`:** **`useGrok`** and the shared **`grok`** OpenAI client use **`process.env.XAI_API_KEY`** or **`process.env.GROK_API_KEY`** so one xAI key can drive both Imagine and **`grok-3`** chat when **`GROK_API_KEY`** is unset.
@@ -1081,7 +1089,7 @@ Do not commit secret values.
 
 ### 2026-04-04 — Destitute new player, Sam first-purchase outfit
 
-- **`createInitialWorldState`:** **`gold: 0`**, **`weapon: unarmed`**, inventory only **`gray_robe`** (matches post-death poverty).
+- **`createInitialWorldState`:** **`gold: 0`**, **`weapon: unarmed`**, inventory only **`gray_robe`**, start in **`church_of_perpetual_life`** (matches post-death poverty / rebirth).
 - **First successful Sam `BUY` in Main Hall:** if **`receivedSamStarterOutfit`** is false, Sam adds **`plain_shirt`**, **`plain_trousers`**, **`plain_belt`**, **`plain_shoes`** to inventory, removes **`gray_robe`**, sets flag true, and appends narration. Flag resets on **`applyPlayerDeath`** so reborn characters can earn the bundle again on next first purchase.
 - **`ITEMS`:** four nondescript clothing entries (no AC; robe humiliation stops once the robe is gone).
 - **`UNEQUIP` weapon:** sheathes to **`unarmed`** (removed old “humble blade” short-sword lock).

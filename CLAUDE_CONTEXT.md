@@ -599,7 +599,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `app/page.tsx` | Client UI: auth, **`ScenePanel`**, header/sidebar chrome, **`formatMessage`** parses **`__YESNO__`** (YES/NO chips) and **`__CMD:COMMAND__`** (amber chips → **`sendMessage(cmd)`**); `CommandInput`, **JSON vs stream** for `/api/chat` |
 | `app/api/chat/route.ts` | **Empty `messages` (session start):** respects **`currentRoom`** from DB — **`turnCount === 0`** + Church → static cold open + **`__YESNO__`**; Church + **`turnCount > 0`** → respawn prose; **other rooms** → **`streamJane`** re-entry prompt (**`MAIN_HALL_ROOMS`** name/desc; JSON buffer if **`main_hall`**). **`savedPlayer.current_room`** fallback **`church_of_perpetual_life`**. YES/NO branch unchanged. Then **`processInput`** + static/dynamic Jane as before |
 | `app/api/scene-image/route.ts` | **GET**, **`runtime = "nodejs"`** — cache → Grok → Storage → **`scene_image_cache`**; errors → **`void appendErrorLog`** (structured **`console.error`** + **`grok_imagine_error_log`** insert); sanitized retry; JSON **`visualDescription`** / **`error`**; outer catch HTTP 200 **`url: null`** |
-| `app/api/player/route.ts` | **POST:** session via **`createServerSupabase`** → **`createPlayer(name, authUser.id)`**; **401** if not signed in. **GET:** load by player **`id`** or **`user_id`** |
+| `app/api/player/route.ts` | **POST:** **`createPlayer(name, authUser?.id)`** (link when session present). **GET:** **`loadPlayerByUserId(id)`** first (bootstrap passes auth UUID), then **`loadPlayer(id)`** |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `components/ScenePanel.tsx` | **`ScenePanel`** — **`SCENE_DATA`** loading subtitle, shimmer, **30s** `AbortController` timeout, error panel, crossfade, **`retried`** apology toast; vignette + label when loaded |
 | `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
@@ -938,10 +938,13 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-20 — **`GET /api/player`**: **`user_id`** before **`id`**
+
+- **`app/api/player/route.ts`:** **GET** calls **`loadPlayerByUserId`** first, then **`loadPlayer`** (matches **`page.tsx`** passing auth UUID). **POST** passes **`authUser?.id`** into **`createPlayer`** without hard **401**.
+
 ### 2026-04-20 — **`createPlayer`** links **`user_id`** at insert (no orphan rows)
 
 - **`lib/supabase.ts`:** **`createPlayer(name, authUserId?)`** — if **`authUserId`**, **`loadPlayerByUserId`**-style select first; else insert with **`user_id`**, **`current_room: church_of_perpetual_life`**, **`turn_count: 0`**.
-- **`app/api/player/route.ts`:** **POST** requires auth; passes **`authUser.id`** into **`createPlayer`**.
 - **`app/api/chat/route.ts`:** New-player path calls **`createPlayer(playerName, authUserId)`**.
 
 ### 2026-04-19 — **`JANE_SYSTEM_PROMPT`**: death economy + Hokas amnesia beat

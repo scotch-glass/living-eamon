@@ -8,8 +8,8 @@ import {
   buildScenePromptSanitized,
   SceneTone,
   SceneState,
-  SCENE_DATA,
 } from "../../../lib/sceneData";
+import { getRoom } from "../../../lib/adventures/registry";
 
 const grok = new OpenAI({
   apiKey: process.env.XAI_API_KEY!,
@@ -112,17 +112,17 @@ export async function GET(request: NextRequest) {
   const roomId = searchParams.get("room") ?? "main_hall";
   const roomState = (searchParams.get("state") ?? "normal") as SceneState;
   const tone = (searchParams.get("tone") ?? "civilized") as SceneTone;
-  const scene = SCENE_DATA[roomId];
-  const visualDescription = scene?.visualDescription ?? null;
+  const visualDescription = getRoom(roomId)?.visualDescription ?? null;
 
   try {
-    // ── 1. Cache check ────────────────────────────────────────────────────────
+    // ── 1. Cache check (soft-delete aware) ──────────────────────────────────
     const { data: cached } = await supabaseAdmin
       .from("scene_image_cache")
       .select("image_url")
       .eq("room_id", roomId)
       .eq("room_state", roomState)
       .eq("tone", tone)
+      .is("deleted_at", null)
       .single();
 
     if (cached?.image_url) {

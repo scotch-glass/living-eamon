@@ -1,12 +1,19 @@
 Living Eamon — Claude Context & Rehydration Guide
 
 REHYDRATION INSTRUCTIONS FOR EVERY NEW SESSION
-Before doing any work, fetch and read these files in order:
+Before doing any work, read these files in order:
 
-https://raw.githubusercontent.com/scotch-glass/living-eamon/main/CLAUDE_CONTEXT.md (this file)
-https://raw.githubusercontent.com/scotch-glass/living-eamon/main/GAME_DESIGN.md
+1. This file (CLAUDE_CONTEXT.md) — project overview, architecture, current status
+2. GAME_DESIGN.md — full game design document
+3. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
+   - User profile (Scotch — non-developer founder)
+   - Feedback rules (image cache safety, CLAUDE_CONTEXT.md updates, etc.)
+   - Project decisions (Aquilonia styling, PD adaptation plan, etc.)
+4. .claude/plans/vast-tumbling-wilkinson.md — active implementation plan for HWRR combat system rewrite (Phases 1-2 complete, Phases 3-6 remaining)
 
-These two documents together contain everything needed to work on Living Eamon without losing context. Read both before writing a single line of code or advice.
+Check the todo list for in-progress tasks from the previous session.
+
+These documents together contain everything needed to work on Living Eamon without losing context. Read them before writing a single line of code or advice.
 
 
 §1 — Project Identity
@@ -58,18 +65,107 @@ Completed systems:
 Authentication: email/password + Google SSO scaffolding, cookie-based sessions via @supabase/ssr, proxy.ts route protection, server actions for auth, /login and /register pages
 user_id FK column linking players to auth.users
 Jane daily call limit: unlimited in development via NODE_ENV check
-Combat system (A–F bug fixes)
+Combat system — HWRR-style body-part targeting IN PROGRESS (Phase 1-2 of 6 complete). See §5.4 below.
 10-virtue moral system
 Consequence engine (burnt rooms, NPC memory, Sheriff alerts, bounties)
 NPC agenda system
 Living World Database (object descriptions generated once, saved permanently)
 Streaming chat interface with character-by-character animation + Space to skip
+HEALTH command — prescripted, 5 severity pools, no Jane call
+Modular adventure system — rooms, NPCs, cold opens, scene data defined per-adventure in lib/adventures/
+Adventure registry — lib/adventures/registry.ts merges all modules, provides getRoom(), getScriptsForRoom()
+NPC scripted interactions — condition-triggered scripts (on_enter, on_response) live in adventure NPC files, not route.ts
+Fog-of-war exit labels — situation block hides destination names for unvisited rooms (visitedRooms on PlayerState)
+Scene image crossfade — two-layer system, fade-to-black on room change, fade-in from black when new image loads
+Scene tone system — per-room sceneTone (pastoral/civilized/aquilonian/grimdark), resolved from room data
+Barmaid selection system — Aldric's drink offer triggers __BARMAID_SELECT__ token, Grok Imagine portraits, player choice stored as barmaidPreference
+Image cache safety — soft-delete (deleted_at), approved flag, scripts/image-cache.sh management tool
+Supabase CLI linked — migrations via Management API (scripts/db-push.sh)
 
-Pending / next up:
+§5.1 — Starting Area: Ostavar (Aquilonian Hub)
+Ostavar is styled after Aquilonia from Robert E. Howard's Hyborian Age — the Conan-universe equivalent of Tolkien's Gondor. Marble colonnades, gilt towers, Frazetta/Brom art style.
 
-Persistent enemy HP
-Critical hit system
-Church of Perpetual Life death/respawn redesign (currently deferred)
+Current rooms (lib/adventures/guild-hall.ts):
+- Church of Perpetual Life (spawn/respawn, grimdark tone, cold open with __YESNO__)
+- Guild Courtyard (training dummies, Sam's Sharps sign, live weather)
+- Sam's Sharps (weapons shop, moved from Main Hall)
+- Main Hall (Hokas bar, Aldric veteran, 3 barmaids — Lira/Mavia/Seraine, notice board)
+- Notice Board (3 adventure postings)
+- Armory (Pip attendant)
+- Guild Vault (Brunt banker)
+
+NPC scripts (lib/adventures/guild-hall-npcs.ts):
+- aldric_drink_offer — on_enter, first Main Hall visit, triggers __BARMAID_SELECT__
+- barmaid_select_response — on_response, handles LIRA/MAVIA/SERAINE choice, stores barmaidPreference
+
+§5.2 — Key Architecture Files
+| File | Purpose |
+|------|---------|
+| lib/roomTypes.ts | Room, AdventureModule, NPCScript, RoomColdOpen interfaces |
+| lib/adventures/registry.ts | Module loader, ALL_ROOMS, getRoom(), getScriptsForRoom() |
+| lib/adventures/guild-hall.ts | All starting area rooms with scene data |
+| lib/adventures/guild-hall-npcs.ts | Aldric/barmaid scripted interactions |
+| lib/sceneData.ts | Tone modifiers, style references, buildScenePrompt() — reads from getRoom() |
+| lib/combatTypes.ts | BodyZone, CombatantState, StrikeResolution, ActiveCombatSession, NPCCombatProfile |
+| lib/combatEngine.ts | 3-roll strike resolution, round resolution, enemy AI, status ticks, combatant builders |
+| lib/gameData.ts | NPCs, Items, SAM_INVENTORY — re-exports Room types from roomTypes.ts |
+| app/api/scene-image/route.ts | Grok Imagine scene generation + cache (soft-delete aware) |
+| app/api/barmaid-image/route.ts | Grok Imagine portrait generation for barmaids |
+| scripts/image-cache.sh | list/approve/delete/recover cached images |
+| scripts/db-push.sh | Run SQL migrations via Supabase Management API |
+
+§5.3 — Supabase Schema Additions (April 10-11 2026)
+- players.visited_rooms text[] — fog-of-war room tracking
+- players.barmaid_preference text — Aldric drink offer choice
+- scene_image_cache.deleted_at timestamptz — soft delete
+- scene_image_cache.approved boolean — protects accepted images from accidental clearing
+
+§5.4 — HWRR Combat System Rewrite (In Progress)
+Replacing flat ATTACK [enemy] with Heads Will Roll Reforged-style body-part targeting.
+Plan file: .claude/plans/vast-tumbling-wilkinson.md
+
+4 target zones: head (1.5x dmg), neck (2.0x), torso (1.0x), limbs (0.8x)
+3-roll attack resolution: Evasion → Shield Block → Armor Penetration (per-zone cover rating)
+Per-zone armor with degradation (durability decreases on hit, pieces break)
+Zone-specific injuries: concussion, damaged_eye (head), severed_artery, crushed_windpipe (neck), pierced_lung, cracked_ribs (torso), broken_arm, broken_leg (limbs)
+Status effects stack with severity (1-3) and duration
+Enemy AI targeting: low-skill enemies favor torso, high-skill target weakest zone
+No stamina system (excluded by design)
+Combat UI: paper doll SVG with clickable zones, combat screen overlay, combat log
+
+COMPLETED:
+- Phase 1: lib/combatTypes.ts — all type definitions (BodyZone, CombatantState, StrikeResolution, ActiveCombatSession, etc.)
+- Phase 1: PlayerState extended — helmet, gorget, bodyArmor, limbArmor, activeCombat fields
+- Phase 1: NPC interface extended — optional combatProfile (agility, weaponSkill, per-zone armor, shield)
+- Phase 1: Item interface extended — zoneSlot, zoneCover, zoneDurability, shieldBlockChance, shieldDurability
+- Phase 1: New armor items — leather_cap, iron_helm, leather_gorget, chain_coif, leather_greaves, chain_greaves
+- Phase 1: Existing armor updated — leather_armor/chain_mail get torso zone data, buckler gets shieldBlockChance
+- Phase 1: Supabase migration — helmet, gorget, body_armor, limb_armor, active_combat columns
+- Phase 1: Save/load updated in supabase.ts and route.ts
+- Phase 2: lib/combatEngine.ts — complete 3-roll resolution engine with:
+  - resolveStrike() — evasion/block/armor/damage/injury per hit
+  - applyStrike() — applies damage + durability loss + injury effects to combatant
+  - tickStatusEffects() — bleed damage, duration decrement
+  - chooseEnemyTargetZone() — AI targeting based on weapon skill
+  - buildCombatantFromPlayer/NPC() — constructs unified CombatantState
+  - deriveZonesFromFlatArmor() — backward compat for NPCs without combatProfile
+  - resolveCombatRound() — full round: tick → initiative → first strike → second strike
+  - initCombatSession() — creates ActiveCombatSession from WorldState
+  - buildRoundNarrative() — assembles combat text from round result
+
+REMAINING:
+- Phase 2: gameEngine.ts ATTACK handler rewrite → STRIKE HEAD/NECK/TORSO/LIMBS + __COMBAT_START__/__COMBAT_END__ tokens
+- Phase 3: Player equipment migration (legacy armor → bodyArmor) + NPC fallback
+- Phase 4: lib/combatZoneNarration.ts — zone-specific narration pools (extends existing combatNarrationPools.ts)
+- Phase 5: EQUIP command for zone armor, sidebar display, inventory display
+- Phase 6: components/CombatScreen.tsx + components/PaperDoll.tsx (SVG clickable zones) + page.tsx combat mode toggle
+
+Pending / next up (non-combat):
+Player creation screen / psychological profile questionnaire (pre-cold-open)
+Variable substitution engine for PD prose placeholders
+Legacy flag system (append-only cross-module persistence)
+Content gate system (player-level opt-in, controls module section visibility)
+First adventure module: Kull — The Shadow Kingdom
 Phase 2 systems (see §12 in GAME_DESIGN.md): Stamina, Hunger/Thirst, Encumbrance, Runes
 
 
@@ -82,20 +178,22 @@ The Living Eamon equivalent of The Black Company's annalist logs
 
 The Chronicle records: INVOKE uses, destruction events, Virtue shifts, reagent trades, Order encounters, deaths, Chapter completions, realm transitions.
 
-§7 — Tone & Art Direction: Tolkienian-GrimDark
+§7 — Tone & Art Direction: Hyborian Sword & Sorcery
 The Tone
-Living Eamon uses a unified visual and narrative tone called Tolkienian-GrimDark. This is the specific fusion of:
+Living Eamon's source material is Robert E. Howard's Hyborian Age (Conan, Kull, Solomon Kane, Bran Mak Morn) and other public-domain sword & sorcery (Clark Ashton Smith, Lord Dunsany). The visual and narrative tone reflects this lineage:
 
-J.R.R. Tolkien: hand-drawn maps, mythic scope, ancient lore, moral weight in every place and creature, elves of exquisite beauty and ageless mystery, pockets of genuine innocence and beauty
-The Black Company (Glen Cook, 1984): unromantic mercenary survival, persistent consequences, annalist-style gritty-dark-soldier-humor narration without heroism — the direct literary ancestor of the Eamon Chronicle
+Robert E. Howard: barbaric grandeur, civilized decadence, lone-genius protagonists against ancient evil, moral weight without moralism
+The Black Company (Glen Cook, 1984): unromantic mercenary survival, persistent consequences, annalist-style gritty-dark-soldier-humor narration — the direct literary ancestor of the Eamon Chronicle
 Heads Will Roll: Reforged (Ren'Py visual novel): scene-setting art + layered character sprites + survival pressure + branching reputation-gated arcs
 
-What Tolkienian-GrimDark means in practice:
+Art style references by tone:
+- aquilonian: Frank Frazetta's Conan paintings — marble palaces, bronze, gilt, silk banners. Brom's palatial interiors.
+- civilized: Frazetta/Brom tavern and fortress interiors. Lived-in, warm, dangerous.
+- pastoral: Frazetta's pastoral backgrounds. Warm, golden, ancient peace.
+- grimdark: Frazetta's darkest work crossed with Brom. Every shadow hides something.
 
-There are pockets of Tolkienian innocence (Pastoral Innocent zones — the Shire equivalent)
-There are grimdark frontier zones with full consequence systems (brothels, gore, daemon activity)
-Tone is regional and degrades: high-circle Occult use, mass combat, and daemon pacts corrupt Pastoral zones permanently toward Grimdark
-The narrative voice mirrors the Eamon Chronicle — spare, factual, annalist-style, never melodramatic
+Tone is regional (per-room sceneTone field) and can degrade: consequence events can shift room tone permanently toward grimdark.
+The narrative voice mirrors the Eamon Chronicle — spare, factual, annalist-style, never melodramatic.
 No chosen-one fantasy. No plot armor. Survival and moral choices have permanent weight.
 
 Visual Art Direction
@@ -422,6 +520,8 @@ PhaseFocusPhase 1Core engine, streaming chat, Supabase persistence, character cr
 §17 — Key Design Decisions Log
 April 2026
 
+- **Expertise field clarification (April 2026):** `expertise` in `PlayerState` was documented in `GAME_DESIGN.md` as "mana renamed for lore" but this is incorrect per the game design intent. In a skill-based system (UO/Eamon), `expertise` is a combat/skill stat, separate from mana. The mana bar graphic is implemented in the sidebar but shows `— / —` until mana is properly designed and added as its own `PlayerState` fields (`currentMana`, `maxMana`). Consider whether `expertise` is needed at all — the UO skill system uses per-skill values (see `WeaponSkills`), not a single expertise score. Flag for review before Phase 2 combat implementation.
+Mana System Design (planned, graphic-only UI implemented April 2026): `expertise` in `PlayerState` is the mana pool; sidebar now shows HP (red) and Mana (blue) in full and collapsed states. When mana mechanics land, add `currentMana: number`; mana bar width becomes `(currentMana / expertise) * 100%`. Guild `CAST` costs no mana. Occult `INVOKE` costs mana by circle (Circle 1 = 4, Circle 2 = 6; see `GAME_DESIGN.md` §9). Mana regenerates over time at rest; stamina affects regen rate.
 Tolkienian-GrimDark tone locked. Fusion of Tolkien world-building aesthetic + The Black Company narrative DNA + Heads Will Roll: Reforged structural model. Regional tone system: Pastoral Innocent / Civilized Human / Grimdark Frontier. Zones degrade permanently through player actions.
 Scene image architecture confirmed. Every major scene transition generates one establishing image (Tolkien/Lewis illustrative model). Template layering: background + NPC sprites + custom player avatar composited in one Grok Imagine API call. Modeled on HWR Reforged's Ren'Py architecture (confirmed from source file study).
 Soul Forge designed. One-time permanent avatar creation. Grok Imagine Pro master reference + 12 standard poses. White studio backdrop for all masters. Coherence protocol: master image + verbatim Identity Block in every call. Full customization: 8 archetypes per gender (M/F), extensive body/face/scar parameters.
@@ -534,7 +634,7 @@ Every time you start a new conversation about this project, do this:
 
 # Living Eamon — Claude Rehydration Document
 *Auto-maintained by Cursor. Updated every time the codebase changes.*
-*Last updated: April 20, 2026*
+*Last updated: April 7, 2026*
 
 
 ## 1. Project Overview
@@ -608,7 +708,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 
 ## 5. Game Architecture
 
-**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs, **`FLEE`**), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM when `responseType === "static"` **unless** the payload contains **`__CRITICAL__`** (player crit — then **`route.ts`** invokes Jane once to rewrite the marked hit line).
+**Tier 1 — Static engine:** Movement (`GO`, single-letter dirs, **`FLEE`**), `LOOK`, `EXAMINE`, `GET`/`DROP`, `STATS`/`INVENTORY`, **`HEALTH`**/**`HP`** (pool-based, no Jane), **`EQUIP`** (weapon/shield/armor; **`WIELD`** is an alias), `EQUIP SHIELD` / `EQUIP ARMOR` / `SHIELD`, `REMOVE`/`UNEQUIP` (shield, armor, or by item name), vault `DEPOSIT`/`WITHDRAW`, **`SHOP` / `LIST` / `SAM` and `BUY` in `main_hall`** (Sam’s `SAM_INVENTORY`), static combat round helper, fireball consequence hook, etc. Implemented in `lib/gameEngine.ts`; **no** LLM when `responseType === "static"` **unless** the payload contains **`__CRITICAL__`** (player crit — then **`route.ts`** invokes Jane once to rewrite the marked hit line).
 
 **Tier 2 — State-modified static:** Room `RoomState` (`normal` \| `burnt` \| `flooded` \| `dark` \| `ransacked`) with `stateModifiers` copy in `gameData.ts`; NPC `disposition` / memory / agenda in `WorldState.npcs`. Applied by engine + `gameState` helpers; still no AI for pure state ticks.
 
@@ -938,6 +1038,48 @@ Do not commit secret values.
 
 ## 16. Session Log
 
+### 2026-04-07 — Header room-name removal + user-bubble suppression + collapse ordering fix
+
+- `app/page.tsx`: Header now displays only `Living Eamon`; room name duplicate removed (scene label remains the canonical location display).
+- `app/page.tsx`: User-role messages are no longer rendered as separate bubbles; only assistant narrative bubbles are displayed in chat.
+- `app/page.tsx`: Right-column ordering tuned (`header: order 0`, `scroll: order 1`, `input: order 2`) with bottom-anchored column layout to improve collapsed-text behavior.
+
+### 2026-04-07 — Chat resize toggle + placeholder mana display
+
+- `app/page.tsx`: Added `chatExpanded` state with `hide text` / `show text` toggle to collapse/expand the scroll area while preserving input-at-bottom layout.
+- `app/page.tsx`: Unified text-area and input widths at `620px`; assistant bubbles now full-width within that column with consistent rounded corners.
+- `app/page.tsx`: Mana visuals now intentionally placeholder (`— / —`, empty full-sidebar bar, empty collapsed mini bar) and stat grid label remains `EXP`.
+
+### 2026-04-07 — Sidebar color/clarity pass + mana HUD visuals
+
+- `app/page.tsx`: Brightened sidebar/header palette (white/amber emphasis), upgraded HP label/value contrast, and increased `WANTED` visibility.
+- `app/page.tsx`: Added mana visualization using `player.expertise` in both full sidebar (blue mana bar) and collapsed rail (mini blue pillar).
+- `app/page.tsx`: Unified user/assistant smoky bubble treatment, brightened situation block text, and boosted Jane direct-voice amber styling.
+
+### 2026-04-07 — Full-viewport scene bleed + frosted sidebar/input pass
+
+- `app/page.tsx`: Scene background now fixed to viewport (`position: fixed`) so art renders behind both sidebar and main content.
+- `app/page.tsx`: Sidebar converted to frosted glass (`rgba(0,0,0,0.55)` + `backdropFilter`), with `minWidth` transition parity for expanded/collapsed widths.
+- `app/page.tsx`: Removed input hint text and tightened bottom input bar spacing with transparent background; header opacity/blur tuned for readability over full-screen scene.
+
+### 2026-04-07 — Layered scene background UI (`app/page.tsx`) + `ScenePanel` full-screen mode
+
+- `app/page.tsx`: Right column converted from stacked layout to layered `position: relative` composition with `ScenePanel` as absolute full-background layer and translucent header/chat/input overlays.
+- `app/page.tsx`: Assistant messages now render in smoky translucent cards; collapsed sidebar rail can be expanded by clicking anywhere; chevrons updated to brighter/heavier `«` / `»`.
+- `components/ScenePanel.tsx`: Added optional `fullScreen` prop; panel container/vignette adapt between legacy panel mode and full-height background mode.
+
+### 2026-04-07 — `app/page.tsx` UI polish: pill input + chevrons + compact sidebar typography
+
+- `app/page.tsx`: Visual-only pass for Grok-style pill command input, integrated circular send button (up-arrow icon), sidebar chevron controls (`«` / `»`), collapsed-rail mini HP indicator, and sans-serif sidebar/header typography refinements.
+- `app/page.tsx`: Added sidebar footer divider hover effect and no-wrap/ellipsis behavior for player/location/reputation text to prevent spillover in narrow layouts.
+- `components/CommandInput.tsx`: Added optional `style` prop passthrough to support page-level visual customization of the input field without changing command logic.
+
+### 2026-04-07 — `app/page.tsx` visual dark-theme pass + collapsible rail
+
+- Visual-only UI polish in `app/page.tsx`: blackened outer/header/scroll/input backgrounds, darker sidebar/section borders, darker HP track and stat cards.
+- Sidebar now always renders when `player` exists, with width transition between full panel and a minimal collapsed rail (`48px`) containing only the expand toggle.
+- Moved collapse control into full sidebar top-right and removed header toggle button; no gameplay/state logic changed.
+
 ### 2026-04-20 — **`GET /api/player`**: **`user_id`** before **`id`**
 
 - **`app/api/player/route.ts`:** **GET** calls **`loadPlayerByUserId`** first, then **`loadPlayer`** (matches **`page.tsx`** passing auth UUID). **POST** passes **`authUser?.id`** into **`createPlayer`** without hard **401**.
@@ -962,7 +1104,7 @@ Do not commit secret values.
 
 ### 2026-04-17 — Static Church open, command chips, white Church scene art
 
-- **`/api/chat`:** Opening + YES/NO + tutorial are **pre-written** **`sendResponse`** (no Jane). Cold open ends with **`__YESNO__`**; tutorial embeds **`__CMD:LOOK AROUND__`**, **`__CMD:I__`**, **`__CMD:HEALTH__`**, **`__CMD:GO NORTH__`**.
+- **`/api/chat`:** Opening + YES/NO + tutorial are **pre-written** **`sendResponse`** (no Jane). Cold open ends with **`__YESNO__`**; tutorial embeds **`__CMD:LOOK AROUND__`**, **`__CMD:I__`**, **`__CMD:HEALTH__`**, **`__CMD:GO EAST__`**.
 - **`app/page.tsx`:** Renders **`__YESNO__`** and **`__CMD:…__`** as clickable chips calling **`sendMessage`**. Fixed **`react/no-unescaped-entities`** on **`knownAs`** quotes.
 - **`lib/sceneData.ts`:** Church **visualDescription** (white marble chamber); **`CHURCH_ATMOSPHERE`** for prompts instead of grimdark modifier for that room.
 

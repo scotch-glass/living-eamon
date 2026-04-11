@@ -7,6 +7,7 @@
 // ============================================================
 
 import { RoomState } from "./gameData";
+import type { ActiveCombatSession } from "./combatTypes";
 
 // ============================================================
 // TYPES
@@ -165,6 +166,8 @@ export interface PlayerState {
   name: string;
   currentRoom: string;
   previousRoom: string | null;
+  /** Rooms the player has physically entered — controls fog-of-war on exit labels. */
+  visitedRooms: string[];
 
   // Core stats
   hp: number;
@@ -183,8 +186,13 @@ export interface PlayerState {
 
   // Equipment
   weapon: string;              // Item id of equipped weapon
-  armor: string | null;        // Item id of equipped armor
+  armor: string | null;        // LEGACY — mapped to bodyArmor on load
   shield: string | null;       // Item id of equipped shield (off-hand)
+  // Per-zone armor slots (HWRR-style)
+  helmet: string | null;       // Head protection
+  gorget: string | null;       // Neck protection
+  bodyArmor: string | null;    // Torso protection
+  limbArmor: string | null;    // Limb protection
   inventory: PlayerInventoryItem[];
 
   // Virtues (tracked silently by Jane)
@@ -230,6 +238,12 @@ export interface PlayerState {
 
   /** Hokas's one-time pity gift (unarmed in Main Hall); reset on death. */
   receivedHokasUnarmedGift: boolean;
+
+  /** Which barmaid the player chose when Aldric offered a drink. null = not yet chosen. */
+  barmaidPreference: string | null;
+
+  /** Active combat session — non-null when in combat. */
+  activeCombat: ActiveCombatSession | null;
 }
 
 // ============================================================
@@ -355,13 +369,43 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         disposition: "neutral",
         memory: [],
         agenda: null,
-        location: "main_hall",
+        location: "sams_sharps",
         isAlive: true,
         combatHp: null,
         customGreeting: null,
       },
       old_mercenary: {
         npcId: "old_mercenary",
+        disposition: "neutral",
+        memory: [],
+        agenda: null,
+        location: "main_hall",
+        isAlive: true,
+        combatHp: null,
+        customGreeting: null,
+      },
+      lira: {
+        npcId: "lira",
+        disposition: "neutral",
+        memory: [],
+        agenda: null,
+        location: "main_hall",
+        isAlive: true,
+        combatHp: null,
+        customGreeting: null,
+      },
+      mavia: {
+        npcId: "mavia",
+        disposition: "friendly",
+        memory: [],
+        agenda: null,
+        location: "main_hall",
+        isAlive: true,
+        combatHp: null,
+        customGreeting: null,
+      },
+      seraine: {
+        npcId: "seraine",
         disposition: "neutral",
         memory: [],
         agenda: null,
@@ -390,16 +434,6 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         combatHp: null,
         customGreeting: null,
       },
-      door_guard: {
-        npcId: "door_guard",
-        disposition: "neutral",
-        memory: [],
-        agenda: null,
-        location: "main_hall_exit",
-        isAlive: true,
-        combatHp: null,
-        customGreeting: null,
-      },
       priest_of_perpetual_life: {
         npcId: "priest_of_perpetual_life",
         disposition: "neutral",
@@ -417,6 +451,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       name: playerName,
       currentRoom: "church_of_perpetual_life",
       previousRoom: null,
+      visitedRooms: ["church_of_perpetual_life"],
 
       hp: 20,
       maxHp: 20,
@@ -433,6 +468,10 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       weapon: "unarmed",
       armor: null,
       shield: null,
+      helmet: null,
+      gorget: null,
+      bodyArmor: null,
+      limbArmor: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
 
       virtues: {
@@ -468,6 +507,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
 
       receivedSamStarterOutfit: false,
       receivedHokasUnarmedGift: false,
+      barmaidPreference: null,
+      activeCombat: null,
     },
 
     activeEvents: [],
@@ -585,12 +626,16 @@ export function movePlayer(
   state: WorldState,
   newRoomId: string
 ): WorldState {
+  const alreadyVisited = state.player.visitedRooms.includes(newRoomId);
   return {
     ...state,
     player: {
       ...state.player,
       previousRoom: state.player.currentRoom,
       currentRoom: newRoomId,
+      visitedRooms: alreadyVisited
+        ? state.player.visitedRooms
+        : [...state.player.visitedRooms, newRoomId],
       turnCount: state.player.turnCount + 1,
     },
     worldTurn: state.worldTurn + 1,
@@ -790,6 +835,11 @@ export function applyPlayerDeath(
       weapon: "unarmed",
       armor: null,
       shield: null,
+      helmet: null,
+      gorget: null,
+      bodyArmor: null,
+      limbArmor: null,
+      activeCombat: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
       receivedSamStarterOutfit: false,
       receivedHokasUnarmedGift: false,
@@ -910,7 +960,7 @@ export function applyFireballConsequences(
       {
         id: "sheriff_alerted",
         description: "The Sheriff has been notified of the Main Hall fire. Guards are asking questions.",
-        affectedRooms: ["main_hall", "main_hall_exit", "notice_board"],
+        affectedRooms: ["main_hall", "guild_courtyard", "notice_board"],
         turnsRemaining: null,
         resolvedBy: "pay_fine_or_serve_prison",
       },

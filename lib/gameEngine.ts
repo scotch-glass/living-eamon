@@ -106,12 +106,12 @@ function equippedWeaponDisplayLabel(weaponId: string): string {
 }
 
 const EXIT_ARROW: Record<string, string> = {
-  north: "N",
-  east: "E",
-  south: "S",
-  west: "W",
-  up: "U",
-  down: "D",
+  north: "North",
+  east: "East",
+  south: "South",
+  west: "West",
+  up: "Up",
+  down: "Down",
 };
 
 /** Order on situation line: N, S, E, W, U, D (matches typical map layout) */
@@ -119,10 +119,11 @@ const SITUATION_EXIT_ORDER = ["north", "south", "east", "west", "up", "down"] as
 
 const EXIT_ORDER = ["north", "east", "south", "west", "up", "down"] as const;
 
-function exitDestinationLabel(roomId: string): string {
+function exitDestinationLabel(roomId: string, visitedRooms: string[]): string {
+  if (!visitedRooms.includes(roomId)) return "?";
   const dest = MAIN_HALL_ROOMS[roomId];
   if (!dest) return roomId.replace(/_/g, " ");
-  if (dest.id === "main_hall_exit") return "Exit";
+  if (dest.id === "guild_courtyard") return "Courtyard";
   return dest.name.replace(/^The\s+/i, "").trim();
 }
 
@@ -136,21 +137,27 @@ export function buildSituationBlock(state: WorldState): string {
     return lines.join("\n");
   }
 
+  const visited = state.player.visitedRooms ?? [];
   const exitParts: string[] = [];
   for (const dir of SITUATION_EXIT_ORDER) {
     const to = room.exits[dir];
     if (!to) continue;
-    const arrow = EXIT_ARROW[dir] ?? dir[0]!.toUpperCase();
-    exitParts.push(`${arrow}→${exitDestinationLabel(to)}`);
+    const arrow = EXIT_ARROW[dir] ?? dir.charAt(0).toUpperCase() + dir.slice(1);
+    exitParts.push(`${arrow}→${exitDestinationLabel(to, visited)}`);
   }
   const exitLine =
     exitParts.length > 0 ? `🧭 ${exitParts.join(" · ")}` : "🧭 —";
 
+  const BARMAID_IDS = new Set(["lira", "mavia", "seraine"]);
+  const chosenBarmaid = state.player.barmaidPreference;
   const npcParts = room.npcs
     .map(id => state.npcs[id])
-    .filter((n): n is NPCStateEntry =>
-      Boolean(n?.isAlive && n.location === room.id)
-    )
+    .filter((n): n is NPCStateEntry => {
+      if (!n?.isAlive || n.location !== room.id) return false;
+      // Hide barmaids from situation block unless she's the chosen one
+      if (BARMAID_IDS.has(n.npcId)) return n.npcId === chosenBarmaid;
+      return true;
+    })
     .map(n => {
       const npcData = NPCS[n.npcId];
       const name = npcData?.name ?? n.npcId;
@@ -358,11 +365,12 @@ export function getCommandAutocompleteSuggestions(
   const filterPartial = (s: string) =>
     !partialLower || s.toLowerCase().startsWith(partialLower) || s.toLowerCase().includes(partialLower);
 
+  const visited = state.player.visitedRooms ?? [];
   const exitSuggestions = (): AutocompleteItem[] =>
     EXIT_ORDER.flatMap(dir => {
       const to = room.exits[dir];
       if (!to) return [];
-      const label = `${dir} (→ ${exitDestinationLabel(to)})`;
+      const label = `${dir} (→ ${exitDestinationLabel(to, visited)})`;
       const cmd = `GO ${dir.toUpperCase()}`;
       return [{ label, insertText: cmd, autoSubmit: true }];
     });
@@ -446,7 +454,7 @@ export function getCommandAutocompleteSuggestions(
     if (full && room.exits[full]) {
       return [
         {
-          label: `${full} (→ ${exitDestinationLabel(room.exits[full]!)})`,
+          label: `${full} (→ ${exitDestinationLabel(room.exits[full]!, visited)})`,
           insertText: letter.toUpperCase(),
           autoSubmit: true,
         },
@@ -852,6 +860,9 @@ export function getCommandAutocompleteSuggestions(
   if (/^(s|st|sta|stat|stats)$/i.test(trimmed)) {
     return [{ label: "STATS", insertText: "STATS", autoSubmit: true }];
   }
+  if (/^(hp|hea|heal|healt|health)$/i.test(trimmed)) {
+    return [{ label: "HEALTH", insertText: "HEALTH", autoSubmit: true }];
+  }
   if (/^(i|in|inv|inve|inven|invent|invento|inventor|inventory)$/i.test(trimmed)) {
     return [{ label: "INVENTORY", insertText: "INVENTORY", autoSubmit: true }];
   }
@@ -908,6 +919,7 @@ MAGIC
 INVENTORY & STATS
   INVENTORY / I      Show what you're carrying
   STATS              Show your character sheet
+  HEALTH / HP        Check your health and active effects
 
 ECONOMY
   SHOP / LIST / SAM   Sam's price list (Main Hall only, static)
@@ -1993,7 +2005,7 @@ export function buildCourtyardDescription(
 
   let description = baseDesc + "\n\n" + weatherLine;
 
-  description += "\n\nExits: west (Church of Perpetual Life), east (Main Hall Entrance).";
+  description += "\n\nExits: west (Church of Perpetual Life), east (Main Hall), north (Sam's Sharps).";
 
   const hasRobe =
     state.player.inventory?.some(
@@ -2035,6 +2047,83 @@ function buildInventoryDescription(player: PlayerState): string {
     return `- ${name}${qty}${statStr}${tagStr}`;
   });
   return `Thou dost carry:\n${lines.join("\n")}\n\nGold on hand: ${player.gold} gp\nBanked gold: ${player.bankedGold} gp`;
+}
+
+// ── HEALTH command pools ──────────────────────────────────────────────────
+
+const HEALTH_FULL = [
+  "You are whole. Nothing hurts. Nothing protests. Unremarkably alive.",
+  "The body reports no complaints. You are intact — which, in this line of work, counts for something.",
+  "Full health. No wounds. The kind of morning that won't last.",
+  "You could take a hit. Maybe two. You are as right as you're going to get.",
+  "Nothing broken. Nothing bleeding. The account is square.",
+];
+
+const HEALTH_FINE = [
+  "Minor wear. A bruise here, a stiffness there. Nothing that slows you down.",
+  "You've taken some rough edges but the important parts are holding.",
+  "Scratched but functional. You've been worse and you'll be worse again.",
+  "The body isn't singing, but it's walking. That's enough for now.",
+  "A little tender in places. Nothing worth reporting to anyone.",
+];
+
+const HEALTH_WOUNDED = [
+  "You are wounded. Not dying — not yet — but something in you is leaking.",
+  "The body is keeping score. You've taken real damage. Time to be careful.",
+  "Half-gone. Hits are starting to mean something. Mind the next one.",
+  "You hurt. Not in a philosophical way — in a practical, this-could-end-you way.",
+  "Wounded and feeling it. The smart play is to find a way to heal before this gets worse.",
+];
+
+const HEALTH_BADLY = [
+  "You are badly wounded. One bad round and this is over.",
+  "The body is running low. Whatever fight brought you here, the next one may finish the job.",
+  "You're more wound than warrior right now. Tread carefully.",
+  "Critical territory. The realm has taken a significant piece of you.",
+  "If the Chronicle were written here, it would not be flattering. You need to heal.",
+];
+
+const HEALTH_CRITICAL = [
+  "You are near death. The Church floor is closer than it has ever been.",
+  "Critical. One unlucky blow ends this. The Priest is probably watching.",
+  "You are hanging on by the thinnest thread the realm can spare you.",
+  "The body is failing. This is the part where you run, hide, or pray.",
+  "Death is not a metaphor right now. It is standing a few feet away, patient.",
+];
+
+function pickHealthLine(pool: string[]): string {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function buildHealthDescription(player: PlayerState): string {
+  const pct = player.maxHp > 0 ? player.hp / player.maxHp : 1;
+
+  let statusLine: string;
+  if (pct >= 1) {
+    statusLine = pickHealthLine(HEALTH_FULL);
+  } else if (pct >= 0.75) {
+    statusLine = pickHealthLine(HEALTH_FINE);
+  } else if (pct >= 0.5) {
+    statusLine = pickHealthLine(HEALTH_WOUNDED);
+  } else if (pct >= 0.25) {
+    statusLine = pickHealthLine(HEALTH_BADLY);
+  } else {
+    statusLine = pickHealthLine(HEALTH_CRITICAL);
+  }
+
+  const hpBar = `HP: ${player.hp} / ${player.maxHp}`;
+
+  // Effects — Phase 2 systems (poison, stamina, hunger) will populate this list.
+  // For now the hook is here and ready.
+  const effects: string[] = [];
+  // e.g. if (player.poisoned) effects.push("Poison: active");
+  // e.g. if (player.stamina < 20) effects.push("Stamina: dangerously low");
+
+  const effectsLine = effects.length > 0
+    ? `\nEffects:\n${effects.map(e => `  ${e}`).join("\n")}`
+    : "\nNo active effects.";
+
+  return `${hpBar}\n\n${statusLine}${effectsLine}`;
 }
 
 function buildStatDescription(player: PlayerState): string {
@@ -2701,6 +2790,16 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     return {
       responseType: "static",
       staticResponse: buildStatDescription(p),
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  if (first === "HEALTH" || first === "HP" || first === "HEALTH CHECK") {
+    return {
+      responseType: "static",
+      staticResponse: buildHealthDescription(p),
       dynamicContext: null,
       newState,
       stateChanged: false,

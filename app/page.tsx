@@ -16,6 +16,79 @@ interface Message {
   content: string;
 }
 
+const BARMAID_IDS = ["lira", "mavia", "seraine"] as const;
+const BARMAID_NAMES: Record<string, string> = {
+  lira: "Lira",
+  mavia: "Mavia",
+  seraine: "Seraine",
+};
+
+function BarmaidPortrait({ barmaidId }: { barmaidId: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetch(`/api/barmaid-image?id=${encodeURIComponent(barmaidId)}`)
+      .then(r => r.json())
+      .then((data: { url: string | null }) => {
+        setUrl(data.url);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [barmaidId]);
+
+  return (
+    <div
+      style={{
+        width: 140,
+        height: 187,
+        borderRadius: 10,
+        overflow: "hidden",
+        backgroundColor: "rgba(30,30,40,0.6)",
+        border: "1px solid rgba(251,191,36,0.2)",
+      }}
+    >
+      {loading && (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            background:
+              "linear-gradient(90deg, rgba(30,30,40,0.4) 25%, rgba(50,50,60,0.4) 50%, rgba(30,30,40,0.4) 75%)",
+            backgroundSize: "200% 100%",
+            animation: "le-shimmer 1.5s infinite",
+          }}
+        />
+      )}
+      {!loading && url && (
+        <img
+          src={url}
+          alt={BARMAID_NAMES[barmaidId] ?? barmaidId}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      )}
+      {!loading && !url && (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "rgba(148,163,184,0.5)",
+            fontSize: 11,
+          }}
+        >
+          {BARMAID_NAMES[barmaidId] ?? "?"}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const CHAR_DELAY = 12;
 
 export default function Home() {
@@ -27,6 +100,7 @@ export default function Home() {
   const [started, setStarted] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [chatExpanded, setChatExpanded] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
@@ -361,43 +435,80 @@ export default function Home() {
   // Renders a __YESNO__ token as two YES / NO chips
   const renderYesNoChips = (key: string) => (
     <span key={key} style={{ display: "inline-flex", gap: 8, margin: "12px 0", alignItems: "center" }}>
-      <button
-        onClick={() => { void sendMessage("YES"); }}
-        disabled={loading || isTyping}
-        style={{
-          backgroundColor: "rgba(146,64,14,0.25)",
-          color: "#fbbf24",
-          border: "1px solid rgba(251,191,36,0.5)",
-          borderRadius: 4,
-          padding: "4px 18px",
-          fontSize: 13,
-          fontFamily: "Georgia, serif",
-          letterSpacing: "0.1em",
-          cursor: loading || isTyping ? "default" : "pointer",
-          opacity: loading || isTyping ? 0.5 : 1,
-        }}
-      >
-        YES
-      </button>
-      <button
-        onClick={() => { void sendMessage("NO"); }}
-        disabled={loading || isTyping}
-        style={{
-          backgroundColor: "rgba(30,30,40,0.4)",
-          color: "rgba(148,163,184,0.8)",
-          border: "1px solid rgba(148,163,184,0.25)",
-          borderRadius: 4,
-          padding: "4px 18px",
-          fontSize: 13,
-          fontFamily: "Georgia, serif",
-          letterSpacing: "0.1em",
-          cursor: loading || isTyping ? "default" : "pointer",
-          opacity: loading || isTyping ? 0.5 : 1,
-        }}
-      >
-        NO
-      </button>
+      {["YES", "NO"].map((label) => (
+        <button
+          key={label}
+          onClick={() => { void sendMessage(label); }}
+          disabled={loading || isTyping}
+          style={{
+            backgroundColor: "rgba(146,64,14,0.25)",
+            color: "#fbbf24",
+            border: "1px solid rgba(251,191,36,0.4)",
+            borderRadius: 4,
+            padding: "4px 18px",
+            fontSize: 13,
+            fontFamily: "Georgia, serif",
+            letterSpacing: "0.1em",
+            cursor: loading || isTyping ? "default" : "pointer",
+            opacity: loading || isTyping ? 0.5 : 1,
+            transition: "background-color 0.15s",
+          }}
+          onMouseEnter={e => { if (!loading && !isTyping) (e.target as HTMLElement).style.backgroundColor = "rgba(146,64,14,0.45)"; }}
+          onMouseLeave={e => { (e.target as HTMLElement).style.backgroundColor = "rgba(146,64,14,0.25)"; }}
+        >
+          {label}
+        </button>
+      ))}
     </span>
+  );
+
+  // Renders a __BARMAID_SELECT__ token as three portrait cards with name chips
+  const renderBarmaidSelect = (key: string) => (
+    <div
+      key={key}
+      style={{
+        display: "flex",
+        gap: 16,
+        justifyContent: "center",
+        margin: "20px 0 12px",
+        flexWrap: "wrap",
+      }}
+    >
+      {BARMAID_IDS.map((id) => (
+        <div
+          key={id}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <BarmaidPortrait barmaidId={id} />
+          <button
+            onClick={() => { void sendMessage(id.toUpperCase()); }}
+            disabled={loading || isTyping}
+            style={{
+              backgroundColor: "rgba(146,64,14,0.25)",
+              color: "#fbbf24",
+              border: "1px solid rgba(251,191,36,0.4)",
+              borderRadius: 4,
+              padding: "4px 18px",
+              fontSize: 13,
+              fontFamily: "Georgia, serif",
+              letterSpacing: "0.1em",
+              cursor: loading || isTyping ? "default" : "pointer",
+              opacity: loading || isTyping ? 0.5 : 1,
+              transition: "background-color 0.15s",
+            }}
+            onMouseEnter={e => { if (!loading && !isTyping) (e.target as HTMLElement).style.backgroundColor = "rgba(146,64,14,0.45)"; }}
+            onMouseLeave={e => { (e.target as HTMLElement).style.backgroundColor = "rgba(146,64,14,0.25)"; }}
+          >
+            {BARMAID_NAMES[id]}
+          </button>
+        </div>
+      ))}
+    </div>
   );
 
   const formatMessage = (text: string, isLast: boolean) => {
@@ -418,11 +529,11 @@ export default function Home() {
               marginBottom: 8,
               marginTop: 4,
               paddingLeft: 12,
-              borderLeft: "3px solid rgba(251, 191, 36, 0.4)",
+              borderLeft: "3px solid rgba(251, 191, 36, 0.7)",
               fontStyle: "italic",
               fontSize: 14,
               lineHeight: 1.65,
-              color: "#fbbf24",
+              color: "#fde68a",
             }}
           >
             <span style={{ opacity: 0.55, marginRight: 6, userSelect: "none" }}>—</span>
@@ -440,6 +551,10 @@ export default function Home() {
         return <p key={i} style={{ fontFamily: "monospace", fontSize: 13, color: "rgba(251,191,36,0.8)", lineHeight: 1.6 }}>{line}</p>;
       }
       if (line.trim() === "") return <br key={i} />;
+      // Barmaid select — full-line token
+      if (line.trim() === "__BARMAID_SELECT__") {
+        return renderBarmaidSelect(`barmaid-${i}`);
+      }
       // Parse __CMD:COMMAND__ and __YESNO__ tokens within the line
       if (line.includes("__YESNO__") || line.includes("__CMD:")) {
         const parts: ReactNode[] = [];
@@ -518,11 +633,11 @@ export default function Home() {
               marginTop: 14,
               marginBottom: 0,
               paddingTop: 10,
-              borderTop: "1px solid rgba(55,65,81,0.6)",
+              borderTop: "1px solid rgba(255,255,255,0.15)",
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
               fontSize: 11,
               lineHeight: 1.5,
-              color: "rgba(148,163,184,0.95)",
+              color: "rgba(255,255,255,0.85)",
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
             }}
@@ -547,140 +662,181 @@ export default function Home() {
     : [];
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#030712", color: "#e5e7eb" }}>
-      {sidebarOpen && player && (
-        <div style={{ width: 256, backgroundColor: "#111827", borderRight: "1px solid #1f2937", display: "flex", flexDirection: "column", padding: 16, flexShrink: 0, overflowY: "auto" }}>
-          <h2 style={{ color: "#fbbf24", fontWeight: "bold", fontSize: 18, marginBottom: 2, fontFamily: "Georgia, serif" }}>{player.name}</h2>
-          <p style={{ color: "#6b7280", fontSize: 11, marginBottom: 4, letterSpacing: "0.1em", textTransform: "uppercase" }}>Hero of the Realm</p>
-          {player.knownAs && (
-            <p style={{ color: "#92400e", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>
-              {"\""}
-              {player.knownAs}
-              {"\""}
-            </p>
-          )}
-          {player.bounty > 0 && (
-            <p style={{ color: "#ef4444", fontSize: 11, marginBottom: 12, backgroundColor: "#450a0a", padding: "4px 8px", borderRadius: 4 }}>⚠ Bounty: {player.bounty}g</p>
-          )}
-
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-              <span style={{ color: "#9ca3af" }}>HP</span>
-              <span style={{ color: "#f87171" }}>{player.hp} / {player.maxHp}</span>
-            </div>
-            <div style={{ width: "100%", backgroundColor: "#1f2937", height: 6, borderRadius: 3 }}>
-              <div style={{ backgroundColor: "#dc2626", height: 6, borderRadius: 3, width: ((player.hp / player.maxHp) * 100) + "%", transition: "width 0.3s" }} />
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, marginBottom: 14 }}>
-            {[["STR", player.strength], ["DEX", player.dexterity], ["CHA", player.charisma], ["EXP", player.expertise]].map(([label, val]) => (
-              <div key={label as string} style={{ backgroundColor: "#1f2937", padding: "6px 8px", borderRadius: 4 }}>
-                <div style={{ color: "#6b7280" }}>{label}</div>
-                <div style={{ color: "#fbbf24", fontWeight: "bold", fontSize: 14 }}>{val}</div>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#000000", color: "#e5e7eb", position: "relative" }}>
+      {player && (
+        <div style={{
+          width: sidebarOpen ? 256 : 48,
+          minWidth: sidebarOpen ? 256 : 48,
+          backgroundColor: "rgba(0,0,0,0.55)",
+          backdropFilter: "blur(12px)",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          flexDirection: "column",
+          flexShrink: 0,
+          overflowY: sidebarOpen ? "auto" : "hidden",
+          overflowX: "hidden",
+          transition: "width 0.2s ease, min-width 0.2s ease",
+          position: "relative",
+          zIndex: 10,
+        }}>
+          {sidebarOpen ? (
+            <div style={{ padding: 16, display: "flex", flexDirection: "column", height: "100%", backgroundColor: "transparent" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  title="Hide panel"
+                  style={{ color: "#888888", fontSize: 18, fontWeight: "bold", background: "none", border: "none", cursor: "pointer", padding: "4px 6px", lineHeight: 1, transition: "color 0.15s" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#cccccc"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#888888"; }}
+                >
+                  «
+                </button>
               </div>
-            ))}
-          </div>
-
-          <div style={{ fontSize: 11, marginBottom: 12 }}>
-            <div style={{ color: "#6b7280", marginBottom: 2 }}>GOLD (carried / banked)</div>
-            <div style={{ color: "#facc15", fontWeight: "bold", fontSize: 15 }}>⚜ {player.gold} / {player.bankedGold}</div>
-          </div>
-
-          <div style={{ fontSize: 11, marginBottom: 12 }}>
-            <div style={{ color: "#6b7280", marginBottom: 2 }}>WEAPON</div>
-            <div style={{ color: "#d1d5db" }}>{ITEMS[player.weapon]?.name ?? player.weapon}</div>
-          </div>
-
-          <div style={{ fontSize: 11, marginBottom: 12 }}>
-            <div style={{ color: "#6b7280", marginBottom: 2 }}>SHIELD</div>
-            {weaponIsTwoHanded ? (
-              <div style={{ color: "#6b7280", fontStyle: "italic", fontSize: 10 }}>— both hands occupied —</div>
-            ) : (
-              <div style={{ color: "#d1d5db" }}>
-                {player.shield ? ITEMS[player.shield]?.name ?? player.shield : "none"}
-              </div>
-            )}
-          </div>
-
-          <div style={{ fontSize: 11, marginBottom: 12 }}>
-            <div style={{ color: "#6b7280", marginBottom: 2 }}>LOCATION</div>
-            <div style={{ color: "#d1d5db" }}>{player.currentRoom.replace(/_/g, " ")}</div>
-          </div>
-
-          <div style={{ fontSize: 11, marginBottom: 12 }}>
-            <div style={{ color: "#6b7280", marginBottom: 2 }}>REPUTATION</div>
-            <div style={{ color: player.reputationScore >= 0 ? "#4ade80" : "#f87171" }}>{player.reputationLevel}</div>
-          </div>
-
-          {topVirtues.length > 0 && (
-            <div style={{ fontSize: 11, marginBottom: 12 }}>
-              <div style={{ color: "#6b7280", marginBottom: 6 }}>VIRTUES</div>
-              {topVirtues.map(([name, val]) => (
-                <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                  <span style={{ color: "#9ca3af" }}>{name}</span>
-                  <span style={{ color: (val as number) > 0 ? "#4ade80" : "#f87171" }}>{(val as number) > 0 ? "+" : ""}{val}</span>
+              <h2 style={{ color: "#fbbf24", fontWeight: "600", fontSize: 15, marginBottom: 2, fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{player.name}</h2>
+              <p style={{ color: "#aaaaaa", fontSize: 11, marginBottom: 4, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>Hero of the Realm</p>
+              {player.knownAs && <p style={{ color: "#92400e", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>"{player.knownAs}"</p>}
+              {player.bounty > 0 && (
+                <p style={{ color: "#ef4444", fontSize: 11, marginBottom: 12, backgroundColor: "#1a0000", padding: "4px 8px", borderRadius: 4 }}>⚠ Bounty: {player.bounty}g</p>
+              )}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                  <span style={{ color: "#ffffff", fontWeight: 600 }}>HP</span>
+                  <span style={{ color: "#ff4444", fontWeight: 600 }}>{player.hp} / {player.maxHp}</span>
                 </div>
-              ))}
+                <div style={{ width: "100%", backgroundColor: "#111111", height: 6, borderRadius: 3 }}>
+                  <div style={{ backgroundColor: "#dc2626", height: 6, borderRadius: 3, width: ((player.hp / player.maxHp) * 100) + "%", transition: "width 0.3s" }} />
+                </div>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ color: "#ffffff", fontWeight: 600 }}>MANA</span>
+                  <span style={{ color: "#60a5fa", fontWeight: 600 }}>— / —</span>
+                </div>
+                <div style={{ width: "100%", backgroundColor: "#111111", height: 6, borderRadius: 3 }}>
+                  <div style={{ backgroundColor: "#3b82f6", height: 6, borderRadius: 3, width: "0%", transition: "width 0.3s" }} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, marginBottom: 14 }}>
+                {[["STR", player.strength], ["DEX", player.dexterity], ["CHA", player.charisma], ["EXP", player.expertise]].map(([label, val]) => (
+                  <div key={label as string} style={{ backgroundColor: "#0d0d0d", padding: "6px 8px", borderRadius: 4, border: "1px solid #1a1a1a" }}>
+                    <div style={{ color: "#aaaaaa", fontSize: 10, letterSpacing: "0.06em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>{label}</div>
+                    <div style={{ color: "#fbbf24", fontWeight: "600", fontSize: 14, fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 12 }}>
+                <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>GOLD (carried / banked)</div>
+                <div style={{ color: "#facc15", fontWeight: "bold", fontSize: 15 }}>⚜ {player.gold} / {player.bankedGold}</div>
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 12 }}>
+                <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>WEAPON</div>
+                <div style={{ color: "#ffffff" }}>{ITEMS[player.weapon]?.name ?? player.weapon}</div>
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 12 }}>
+                <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>SHIELD</div>
+                {weaponIsTwoHanded ? (
+                  <div style={{ color: "#aaaaaa", fontStyle: "italic", fontSize: 10 }}>— both hands occupied —</div>
+                ) : (
+                  <div style={{ color: "#ffffff" }}>
+                    {player.shield ? ITEMS[player.shield]?.name ?? player.shield : "none"}
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 12 }}>
+                <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>LOCATION</div>
+                <div style={{ color: "#ffffff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: 12 }}>{player.currentRoom.replace(/_/g, " ")}</div>
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 12 }}>
+                <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>REPUTATION</div>
+                <div style={{ color: player.reputationScore >= 0 ? "#4ade80" : "#f87171", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: 12 }}>{player.reputationLevel}</div>
+              </div>
+              {topVirtues.length > 0 && (
+                <div style={{ fontSize: 11, marginBottom: 12 }}>
+                  <div style={{ color: "#aaaaaa", marginBottom: 6, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>VIRTUES</div>
+                  {topVirtues.map(([name, val]) => (
+                    <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                      <span style={{ color: "#cccccc" }}>{name}</span>
+                      <span style={{ color: (val as number) > 0 ? "#4ade80" : "#f87171" }}>{(val as number) > 0 ? "+" : ""}{val}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div
+                style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #1e1e1e", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "border-color 0.2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderTopColor = "#3a3a3a"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderTopColor = "#1e1e1e"; }}
+              >
+                <p style={{ color: "#888888", fontSize: 11, fontStyle: "italic", margin: 0 }}>she is watching</p>
+                <form action={logoutAction}>
+                  <button type="submit" style={{ color: "#aaaaaa", fontSize: 11, background: "none", border: "none", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.05em" }}>
+                    Sign out
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 12, width: "100%", cursor: "pointer" }} onClick={() => setSidebarOpen(true)}>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                title="Show panel"
+                style={{ color: "#888888", fontSize: 18, fontWeight: "bold", background: "none", border: "none", cursor: "pointer", padding: "4px 6px", lineHeight: 1, transition: "color 0.15s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#cccccc"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#888888"; }}
+              >
+                »
+              </button>
+              {player && (
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 4 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <span style={{ color: "#ff4444", fontSize: 9, fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontWeight: 600, lineHeight: 1 }}>{player.hp}</span>
+                    <div style={{ width: 4, height: 28, backgroundColor: "#111", borderRadius: 2, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                      <div style={{ width: "100%", height: ((player.hp / player.maxHp) * 100) + "%", backgroundColor: "#ef4444", borderRadius: 2, transition: "height 0.3s" }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <span style={{ color: "#60a5fa", fontSize: 9, fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontWeight: 600, lineHeight: 1 }}>{player.expertise}</span>
+                    <div style={{ width: 4, height: 28, backgroundColor: "#111", borderRadius: 2, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                      <div style={{ width: "100%", height: "0%", backgroundColor: "#3b82f6", borderRadius: 2, transition: "height 0.3s" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-
-          <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ color: "#374151", fontSize: 11, fontStyle: "italic", margin: 0 }}>she is watching</p>
-            <form action={logoutAction}>
-              <button type="submit" style={{ color: "#4b5563", fontSize: 11, background: "none", border: "none", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.05em" }}>
-                Sign out
-              </button>
-            </form>
-          </div>
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <ScenePanel
-        roomId={worldState?.player?.currentRoom ?? "main_hall"}
-        roomState={(() => {
-          const raw = worldState?.rooms?.[worldState?.player?.currentRoom ?? "main_hall"]?.currentState;
-          if (!raw || raw === "normal") return "normal";
-          if (raw === "burnt") return "ruined";
-          return "damaged";
-        })()}
-        tone={(() => {
-          const room = worldState?.player?.currentRoom ?? "main_hall";
-          if (room === "church_of_perpetual_life" || room === "pit") return "grimdark";
-          return "civilized";
-        })()}
-      />
-      <div style={{ borderBottom: "1px solid #1f2937", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <button
-          onClick={() => setSidebarOpen(o => !o)}
-          title={sidebarOpen ? "Hide panel" : "Show panel"}
-          style={{ color: "#6b7280", fontSize: 13, fontFamily: "ui-monospace, monospace", background: "none", border: "1px solid #374151", borderRadius: 4, cursor: "pointer", padding: "2px 6px", lineHeight: 1, letterSpacing: 0 }}
-        >
-          {sidebarOpen ? "◀" : "▶"}
-        </button>
-        <span style={{ color: "#92400e", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", backgroundColor: "transparent" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
+        <ScenePanel
+          roomId={worldState?.player?.currentRoom ?? "church_of_perpetual_life"}
+          roomState={
+            worldState?.rooms?.[worldState?.player?.currentRoom ?? ""]
+              ?.currentState ?? "normal"
+          }
+          tone="auto"
+          fullScreen
+        />
+      </div>
+      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", position: "relative", zIndex: 2, order: 0 }}>
+        <span style={{ color: "#b45309", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           Living Eamon
-          {player?.currentRoom && (
-            <span style={{ color: "#6b7280", fontWeight: "normal" }}>
-              {" — "}
-              {(player.currentRoom.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()))}
-            </span>
-          )}
         </span>
-        {player?.isWanted && <span style={{ color: "#ef4444", fontSize: 11 }}>⚠ WANTED</span>}
+        {player?.isWanted && <span style={{ color: "#ff4444", fontSize: 11, fontWeight: 700 }}>⚠ WANTED</span>}
       </div>
 
-        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "scroll", padding: 24, scrollbarWidth: "thin", scrollbarColor: "#4b5563 #111827", height: 0 }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ flex: chatExpanded ? "1 1 0" : "0 0 12.5vh", height: chatExpanded ? undefined : "12.5vh", marginTop: chatExpanded ? 0 : "auto", overflow: "hidden", padding: "20px 24px", backgroundColor: "transparent", position: "relative", zIndex: 2, transition: "flex-basis 0.3s ease", order: 1 }}>
+          <div ref={scrollContainerRef} style={{ maxWidth: 620, margin: "0 auto", height: "100%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", borderRadius: 16, overflowY: "scroll", scrollbarWidth: "none", display: "flex", flexDirection: "column", padding: "14px 20px", boxSizing: "border-box" }}>
             {messages.map((msg, i) => (
-              <div key={i} style={{ marginBottom: 24, textAlign: msg.role === "user" ? "right" : "left" }}>
-                {msg.role === "user" ? (
-                  <div style={{ display: "inline-block", backgroundColor: "#1f2937", color: "#e5e7eb", padding: "8px 16px", borderRadius: 8, maxWidth: 480, textAlign: "left", fontFamily: "Georgia, serif" }}>
-                    {msg.content}
-                  </div>
-                ) : (
-                  <div style={{ color: "#d1d5db", fontSize: 16, fontFamily: "Georgia, serif" }}>
+              <div key={i} style={{ marginBottom: 16 }}>
+                {msg.role === "user" ? null : (
+                  <div style={{
+                    color: "#f0f0f0",
+                    fontSize: 15,
+                    fontFamily: "Georgia, serif",
+                    textShadow: "0 1px 3px rgba(0,0,0,0.9)",
+                    lineHeight: 1.75,
+                  }}>
                     {formatMessage(msg.content, i === messages.length - 1 && isTyping)}
                   </div>
                 )}
@@ -697,8 +853,30 @@ export default function Home() {
           </div>
         </div>
 
-        <div style={{ borderTop: "1px solid #1f2937", padding: 16, flexShrink: 0 }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 12, alignItems: "flex-start" }}>
+        <div style={{ borderTop: "none", padding: "4px 16px 12px", flexShrink: 0, backgroundColor: "transparent", position: "relative", zIndex: 2, order: 2 }}>
+          <div style={{ maxWidth: 620, margin: "0 auto 6px", display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={() => setChatExpanded(e => !e)}
+              style={{
+                background: "rgba(0,0,0,0.45)",
+                backdropFilter: "blur(6px)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 20,
+                color: "rgba(255,255,255,0.6)",
+                fontSize: 11,
+                fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                letterSpacing: "0.06em",
+                padding: "3px 12px",
+                cursor: "pointer",
+                transition: "color 0.15s, background 0.15s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#ffffff"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.65)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.45)"; }}
+            >
+              {chatExpanded ? "hide text ▲" : "show text ▼"}
+            </button>
+          </div>
+          <div style={{ maxWidth: 620, margin: "0 auto", position: "relative", display: "flex", alignItems: "center" }}>
             <CommandInput
               ref={inputRef}
               worldState={worldState}
@@ -707,18 +885,46 @@ export default function Home() {
               onSubmit={sendMessage}
               disabled={loading || isTyping}
               placeholder="What do you do?"
+              style={{
+                width: "100%",
+                backgroundColor: "#0d0d0d",
+                border: "1px solid #2a2a2a",
+                borderRadius: 9999,
+                padding: "12px 52px 12px 20px",
+                fontSize: 15,
+                fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                color: "#ececec",
+                outline: "none",
+                caretColor: "#fbbf24",
+              }}
             />
             <button
               onClick={() => void sendMessage()}
               disabled={loading || isTyping || !input.trim()}
-              style={{ backgroundColor: "#92400e", color: "#fef3c7", padding: "12px 20px", borderRadius: 6, border: "none", cursor: "pointer", opacity: loading || isTyping || !input.trim() ? 0.5 : 1, fontSize: 16 }}
+              style={{
+                position: "absolute",
+                right: 6,
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                backgroundColor: loading || isTyping || !input.trim() ? "#1a1a1a" : "#fbbf24",
+                border: "none",
+                cursor: loading || isTyping || !input.trim() ? "default" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background-color 0.15s",
+                flexShrink: 0,
+              }}
             >
-              ➤
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={loading || isTyping || !input.trim() ? "#444" : "#000"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
             </button>
           </div>
-          <p style={{ color: "#374151", fontSize: 11, textAlign: "center", marginTop: 8, fontFamily: "Georgia, serif" }}>
-            Press Enter to speak. The realm listens. (Space to skip animation)
-          </p>
         </div>
       </div>
     </div>

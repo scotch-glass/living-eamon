@@ -15,6 +15,8 @@ import {
   normalizeWeaponSkills,
 } from "../../../lib/gameState";
 import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
+import { getRoom, getScriptsForRoom } from "../../../lib/adventures/registry";
+import { getBarmaidResponseLines } from "../../../lib/adventures/guild-hall-npcs";
 import {
   savePlayer,
   loadPlayer,
@@ -243,8 +245,15 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     bounty: state.player.bounty,
     isWanted: state.player.isWanted,
     turnCount: state.player.turnCount,
+    visitedRooms: state.player.visitedRooms ?? [],
     receivedSamStarterOutfit: state.player.receivedSamStarterOutfit,
     receivedHokasUnarmedGift: state.player.receivedHokasUnarmedGift,
+    barmaidPreference: state.player.barmaidPreference ?? null,
+    helmet: state.player.helmet ?? null,
+    gorget: state.player.gorget ?? null,
+    bodyArmor: state.player.bodyArmor ?? null,
+    limbArmor: state.player.limbArmor ?? null,
+    activeCombat: state.player.activeCombat ?? null,
     weaponSkills: state.player.weaponSkills,
   };
 }
@@ -314,6 +323,9 @@ export async function POST(request: NextRequest) {
             bounty: savedPlayer.bounty,
             isWanted: savedPlayer.is_wanted,
             turnCount: savedPlayer.turn_count,
+            visitedRooms:
+              (savedPlayer as { visited_rooms?: string[] }).visited_rooms ??
+              [savedPlayer.current_room ?? "church_of_perpetual_life"],
             knownSpells:
               (savedPlayer as { known_spells?: string[] }).known_spells ??
               ["BLAST", "HEAL", "LIGHT", "SPEED"],
@@ -325,6 +337,21 @@ export async function POST(request: NextRequest) {
             receivedHokasUnarmedGift:
               (savedPlayer as { received_hokas_unarmed_gift?: boolean })
                 .received_hokas_unarmed_gift ?? false,
+            barmaidPreference:
+              (savedPlayer as { barmaid_preference?: string | null })
+                .barmaid_preference ?? null,
+            helmet:
+              (savedPlayer as { helmet?: string | null }).helmet ?? null,
+            gorget:
+              (savedPlayer as { gorget?: string | null }).gorget ?? null,
+            bodyArmor:
+              (savedPlayer as { body_armor?: string | null }).body_armor ??
+              savedPlayer.armor ?? null,
+            limbArmor:
+              (savedPlayer as { limb_armor?: string | null }).limb_armor ?? null,
+            activeCombat:
+              (savedPlayer as { active_combat?: unknown }).active_combat as
+                import("../../../lib/combatTypes").ActiveCombatSession | null ?? null,
             weaponSkills: normalizeWeaponSkills(
               (savedPlayer as { weapon_skills?: Record<string, number> | null })
                 .weapon_skills ?? undefined
@@ -492,57 +519,16 @@ export async function POST(request: NextRequest) {
       const currentRoom = state.player.currentRoom;
       const isFirstEver = state.player.turnCount === 0;
 
-      // ── Brand new player — cold open in Church of Perpetual Life ─────────────
-      if (isFirstEver && currentRoom === "church_of_perpetual_life") {
-        const coldOpen = [
-          "White.",
-          "",
-          "That is the first thing. Not darkness — white. A white so complete and sourceless it takes several seconds to understand that your eyes are open. There is no lamp, no window, no torch. The light simply exists, emanating from everywhere equally, pressing against every surface with cold indifference.",
-          "",
-          "The floor beneath your cheek is marble. You know the word for it without knowing how you know. It is perfectly smooth, neither warm nor cold in the way stone should be cold — it is something else. Something that has been this temperature for longer than temperature is supposed to last.",
-          "",
-          "You sit up.",
-          "",
-          "The room is vast. White walls rise to a white vaulted ceiling that may or may not have an apex — the light makes it impossible to tell where the stone ends and the air begins. A white altar stands at the far end bearing nothing: no symbol, no scripture, no offering, no shadow. The angles of this room are not quite sharp, not quite rounded. Like something that was thought into existence by something that had seen rooms, but never stood inside one.",
-          "",
-          "There are figures at the walls.",
-          "",
-          "White robes. White hands folded at the waist. Faces the color of old paper — flat gray eyes that do not move, do not track, do not blink at a rate you can catch. They are not looking at you. They may not be capable of looking. They stand with the absolute stillness of things that do not need to breathe between moments.",
-          "",
-          "You become aware, slowly, that you are also wearing a robe. Gray. Thin as an apology. It feels borrowed. Everything feels borrowed.",
-          "",
-          "You reach for your name.",
-          "",
-          "The place where it should be is smooth and unbroken — like the floor, like the walls, like the altar. You press at it. Nothing gives. There is no pain in the absence. That is the strangest part. There is simply nothing there, the way a room has nothing in a corner that has always been empty.",
-          "",
-          "You look at your hands. They are yours. You are certain of this and uncertain of almost everything else.",
-          "",
-          "A thought surfaces from somewhere beneath the blankness — not a memory, more like the outline of one:",
-          "",
-          "*...have I been here before?*",
-          "",
-          "__YESNO__",
-        ].join("\n");
-
+      // ── Brand new player — serve the room's newGame cold open (if it has one) ─
+      const sessionRoom = getRoom(currentRoom);
+      if (isFirstEver && sessionRoom?.coldOpen?.newGame) {
+        const coldOpen = sessionRoom.coldOpen.newGame.join("\n");
         return sendResponse(coldOpen, state);
       }
 
-      // ── Death respawn — player has died and woken in the Church ──────────────
-      if (currentRoom === "church_of_perpetual_life" && !isFirstEver) {
-        const respawnOpen = [
-          "Stone again.",
-          "",
-          "The same white. The same sourceless cold light pressing against every surface with its total indifference. The same figures at the walls — white robes, gray eyes, hands folded, utterly still.",
-          "",
-          "You open your eyes and you know exactly where you are. You have been here before. You remember how this ends: you stand up, you walk out the door, you start again.",
-          "",
-          "What you had is gone. Carried gold. Everything you were wearing. Everything in your pack. The banked gold waits untouched. What is locked away safely waits. Everything else is gone, as completely as if it never existed.",
-          "",
-          "The figures do not acknowledge you. They never do.",
-          "",
-          "You stand.",
-        ].join("\n");
-
+      // ── Death respawn / session resume — serve respawn cold open if available ─
+      if (!isFirstEver && sessionRoom?.coldOpen?.respawn) {
+        const respawnOpen = sessionRoom.coldOpen.respawn.join("\n");
         return sendResponse(respawnOpen, state);
       }
 
@@ -589,42 +575,50 @@ export async function POST(request: NextRequest) {
 
       if (isYesNo) {
         const answeredYes = answerRaw === "YES" || answerRaw === "Y";
+        const yesNoRoom = getRoom(state.player.currentRoom);
 
-        if (answeredYes) {
-          const skipText = [
-            "A flicker. Not quite a memory — more like the ghost of one. The smell of this place. The weight of the air. Something in the muscle of your hand that knows, without being told, how to make a fist.",
-            "",
-            "You have been here before.",
-            "",
-            "You stand. Your legs find the floor without hesitation. Whatever you have lost, your body remembers the rest. The door ahead leads out. Beyond it: noise, firelight, the smell of ale and iron.",
-            "",
-            "You know what to do.",
-          ].join("\n");
-
-          return sendResponse(skipText, state);
+        if (answeredYes && yesNoRoom?.coldOpen?.yesResponse) {
+          return sendResponse(yesNoRoom.coldOpen.yesResponse.join("\n"), state);
         }
 
-        const tutorialText = [
-          "Nothing. The fog holds.",
-          "",
-          "You stand anyway — slowly, testing each joint — and take stock of what your body knows even when your mind does not.",
-          "",
-          "Your eyes move before you decide to move them, cataloguing the room, finding the exits. __CMD:LOOK AROUND__ — something in you understands. Not a thought. A reflex. North wall. One door. Light under it. Warmth.",
-          "",
-          "You look down at yourself. A gray robe, thin as an apology. You pat your sides without thinking — __CMD:I__ — and find nothing. No coin. No blade. No anything. Whatever you had, you do not have it now.",
-          "",
-          "The body knows things the mind does not. You can feel your own condition without searching for it — a quiet inner census, like a sailor checking the ship before leaving port. __CMD:HEALTH__ will show you what the realm knows about your physical state. What it reports now: intact. Whole. Unremarkably alive.",
-          "",
-          "You take a step toward the door. Then another. __CMD:GO NORTH__ — your feet already know.",
-          "",
-          "Beyond this room is a place called the Main Hall. Beyond that: everything else.",
-          "",
-          "Whatever answers exist about who you are — they are not in here. The figures at the walls will not tell you. The light will not answer.",
-          "",
-          "You push open the door.",
-        ].join("\n");
+        if (!answeredYes && yesNoRoom?.coldOpen?.noResponse) {
+          return sendResponse(yesNoRoom.coldOpen.noResponse.join("\n"), state);
+        }
+      }
+    }
 
-        return sendResponse(tutorialText, state);
+    // ── NPC on_response scripts (data-driven from adventure modules) ────────
+    {
+      const lastMsg = messages[messages.length - 1];
+      const pick = lastMsg?.content?.trim().toUpperCase() ?? "";
+      const responseScripts = getScriptsForRoom(state.player.currentRoom, "on_response");
+
+      for (const script of responseScripts) {
+        // Check valid inputs
+        if (script.validInputs && !script.validInputs.includes(pick)) continue;
+
+        // Check player state conditions
+        const cond = script.condition.playerState;
+        if (cond) {
+          if (cond.barmaidPreference !== undefined && state.player.barmaidPreference !== cond.barmaidPreference) continue;
+        }
+
+        // Script matches — build response
+        const stateUpdates = script.stateUpdate ? script.stateUpdate(pick) : {};
+        const newState = {
+          ...state,
+          player: { ...state.player, ...stateUpdates },
+        };
+
+        // Use custom line builder if available (e.g. barmaid selection), otherwise use static lines
+        let responseLines: string[];
+        if (script.id === "barmaid_select_response") {
+          responseLines = getBarmaidResponseLines(pick);
+        } else {
+          responseLines = script.lines;
+        }
+
+        return sendResponse(responseLines.join("\n"), newState);
       }
     }
 
@@ -648,7 +642,29 @@ export async function POST(request: NextRequest) {
         return sendResponse(fullDesc, engineResult.newState);
       }
 
-      const staticText = engineResult.staticResponse;
+      let staticText = engineResult.staticResponse;
+
+      // ── NPC on_enter scripts (data-driven from adventure modules) ──────────
+      {
+        const enterScripts = getScriptsForRoom(
+          engineResult.newState.player.currentRoom,
+          "on_enter"
+        );
+        for (const script of enterScripts) {
+          const cond = script.condition.playerState;
+          const p = engineResult.newState.player;
+          let match = true;
+          if (cond) {
+            if (cond.barmaidPreference !== undefined && p.barmaidPreference !== cond.barmaidPreference) match = false;
+            if (cond.previousRoomNotNull && p.previousRoom === null) match = false;
+            if (cond.turnCountMax !== undefined && p.turnCount > cond.turnCountMax) match = false;
+          }
+          if (match) {
+            staticText = staticText + "\n" + script.lines.join("\n");
+            break; // only one on_enter script per room entry
+          }
+        }
+      }
 
       if (staticText.includes("__CRITICAL__")) {
         const critContext =

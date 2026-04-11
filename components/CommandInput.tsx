@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type CSSProperties,
 } from "react";
 import type { WorldState } from "../lib/gameState";
 import {
@@ -28,6 +29,7 @@ type Props = {
   onSubmit: (command?: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  style?: CSSProperties;
 };
 
 function inputTextColor(raw: string): string {
@@ -42,7 +44,7 @@ function inputTextColor(raw: string): string {
 }
 
 const CommandInput = forwardRef<CommandInputHandle, Props>(function CommandInput(
-  { worldState, value, onChange, onSubmit, disabled, placeholder },
+  { worldState, value, onChange, onSubmit, disabled, placeholder, style },
   ref
 ) {
   const innerRef = useRef<HTMLInputElement>(null);
@@ -158,6 +160,7 @@ const CommandInput = forwardRef<CommandInputHandle, Props>(function CommandInput
           fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
           fontSize: 15,
           opacity: disabled ? 0.5 : 1,
+          ...style,
         }}
       />
       {showList && (

@@ -7,29 +7,16 @@
 // ============================================================
 
 import type { NPCBodyType } from "./npcBodyType";
+import type { Room } from "./roomTypes";
+import type { BodyZone, NPCCombatProfile } from "./combatTypes";
+import { ALL_ROOMS } from "./adventures/registry";
 
 export type { NPCBodyType };
 
-export type RoomState = "normal" | "burnt" | "flooded" | "dark" | "ransacked";
-
-export interface RoomStateModifier {
-  description: string;       // Replaces or appends to base description
-  npcMoodShift?: string;     // How NPCs react differently in this state
-  dangerLevel?: number;      // 0-3, affects random encounters
-}
-
-export interface Room {
-  id: string;
-  name: string;
-  description: string;       // Base static description
-  exits: Record<string, string>; // direction -> room id
-  stateModifiers: Partial<Record<RoomState, RoomStateModifier>>;
-  npcs: string[];            // NPC ids present in this room
-  items: string[];           // Item ids present by default
-  /** Fixed features the player can examine (engine / Jane object keys) */
-  examinableObjects?: { id: string; label: string }[];
-  isAdventureEntrance?: string; // Adventure id if this room leads to one
-}
+// Room types now live in lib/roomTypes.ts — re-exported here for
+// backwards compatibility so the game engine and other files don't
+// need to change their import paths.
+export type { Room, RoomState, RoomStateModifier, SceneTone, RoomColdOpen, AdventureModule } from "./roomTypes";
 
 export interface NPC {
   id: string;
@@ -41,6 +28,10 @@ export interface NPC {
   /** Combat narration; omit for humanoid (default) */
   bodyType?: NPCBodyType;
   stats: { hp: number; armor: number; damage: string };
+  /** HWRR-style per-zone armor + AI targeting. Auto-derived from flat armor if absent. */
+  combatProfile?: NPCCombatProfile;
+  /** Grok Imagine portrait prompt — used for character image generation. */
+  portraitPrompt?: string;
   merchant?: {
     inventory: string[];     // Item ids for sale
     haggleModifier: number;  // -1 easy to haggle, +1 hard
@@ -55,8 +46,15 @@ export interface Item {
   value: number;             // Gold value
   stats?: {
     damage?: string;         // e.g. "1d6+2"
-    armorClass?: number;
+    armorClass?: number;     // LEGACY flat AC — still used by old armor
     healAmount?: number;
+    // Per-zone armor stats (HWRR-style)
+    zoneSlot?: BodyZone;     // Which body zone this armor covers
+    zoneCover?: number;      // 0-100, % chance to block
+    zoneDurability?: number; // Starting durability
+    // Shield stats
+    shieldBlockChance?: number;  // 0-100
+    shieldDurability?: number;
   };
   isCarryable: boolean;
 }
@@ -120,164 +118,10 @@ export const SAM_INVENTORY: SamShopRow[] = [
 // ROOMS — MAIN HALL
 // ============================================================
 
-export const MAIN_HALL_ROOMS: Record<string, Room> = {
-  main_hall: {
-    id: "main_hall",
-    name: "The Main Hall",
-    description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. In a shadowy corner, Sam Slicker spreads his wares across black velvet. Notice boards paper the eastern wall — three Guild postings hang there now, each one an open contract waiting for a fool brave enough to take it. Head east to read them. Near the south wall sit two barrels. A hand-lettered sign on the first reads: CLOTHES FOR THE POOR. A brass plate on the second reads: USED GOWNS ONLY — DO NOT PUT FOOD IN HERE.`,
-    exits: {
-      north: "armory",
-      east: "notice_board",
-      south: "main_hall_exit",
-      down: "guild_vault",
-    },
-    stateModifiers: {
-      burnt: {
-        description: `The Main Hall is a sorry sight. Scorch marks blacken the oak beams overhead, and the smell of char has replaced the usual warm woodsmoke. Several tables are reduced to cinders. Hokas Tokas shoots daggers with his eyes at anyone who enters, his normally jovial manner replaced with barely contained fury. The other adventurers sit in uncomfortable silence.`,
-        npcMoodShift: "Hokas is furious and barely civil. He will not serve drinks until repairs are paid for (50 gold).",
-        dangerLevel: 0,
-      },
-      ransacked: {
-        description: `The Main Hall has been torn apart. Tables overturned, bottles smashed, tapestries ripped from the walls. Whatever came through here was looking for something — or simply wanted to cause chaos. Hokas tends to a black eye behind the bar.`,
-        npcMoodShift: "Hokas is shaken and will share information freely — he wants whoever did this found.",
-        dangerLevel: 1,
-      },
-      dark: {
-        description: `The fire has gone out and no one has bothered to relight it. The Main Hall sits in an uncomfortable gloom, faces lit only by candles guttering in drafts from somewhere. Shapes move in corners. The usual noise is muted, as if everyone is listening for something.`,
-        npcMoodShift: "Everyone is uneasy. Sam Slicker is nowhere to be seen.",
-        dangerLevel: 1,
-      },
-    },
-    npcs: ["hokas_tokas", "sam_slicker", "old_mercenary"],
-    items: ["notice_board_key"],
-    examinableObjects: [
-      { id: "notice_board", label: "Notice board" },
-      { id: "charity_barrel", label: "Barrel 1 — Clothes for the Poor" },
-      { id: "gown_barrel", label: "Barrel 2 — Used Gowns Only" },
-      { id: "sams_display", label: "Sam's display" },
-      { id: "great_fireplace", label: "The great fireplace" },
-    ],
-  },
+// Rooms are now defined in lib/adventures/ modules and merged by the registry.
+// MAIN_HALL_ROOMS is kept as the engine-facing alias for all registered rooms.
+export const MAIN_HALL_ROOMS: Record<string, import("./roomTypes").Room> = ALL_ROOMS;
 
-  armory: {
-    id: "armory",
-    name: "The Guild Armory",
-    description: `A long narrow room lined with weapon racks and armor stands. The Guild maintains a basic selection of equipment for members who need to gear up quickly. A bored-looking attendant sits at a small desk near the door, occasionally polishing a helmet that doesn't need polishing.`,
-    exits: { south: "main_hall" },
-    stateModifiers: {},
-    npcs: ["armory_attendant"],
-    items: ["short_sword", "leather_armor", "torch", "rope"],
-    examinableObjects: [
-      { id: "weapon_racks", label: "Weapon racks" },
-      { id: "armor_stands", label: "Armor stands" },
-      { id: "armory_desk", label: "The attendant's desk" },
-    ],
-  },
-
-  notice_board: {
-    id: "notice_board",
-    name: "The Notice Board",
-    description: `A wall covered floor-to-ceiling in pinned notices. Most are routine — bounty postings, escort contracts, wanted posters for people who are almost certainly dead. Three notices stand out, posted on official Guild parchment with the seal of the Free Adventurers:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  GUILD POSTINGS — OPEN
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[1] THE BEGINNER'S CAVE
-    Goblin infestation, north of the city.
-    Bounty paid on goblin ears. Novice difficulty.
-    → Type: ENTER THE BEGINNER'S CAVE
-
-[2] THE THIEVES GUILD
-    Social infiltration of the criminal underworld.
-    Moderate difficulty. Wit over strength.
-    → Type: ENTER THE THIEVES GUILD
-
-[3] THE HAUNTED MANOR
-    Something is wrong at the Blackwood estate.
-    Moderate to deadly. Not for the faint of heart.
-    → Type: ENTER THE HAUNTED MANOR
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
-    exits: { west: "main_hall" },
-    stateModifiers: {},
-    npcs: [],
-    items: [],
-    examinableObjects: [
-      { id: "beginners_cave_notice", label: "Beginner's Cave notice" },
-      { id: "thieves_guild_notice", label: "Thieves Guild notice" },
-      { id: "haunted_manor_notice", label: "Haunted Manor notice" },
-      { id: "treasure_maps", label: "Dubious treasure maps" },
-      { id: "wanted_posters", label: "Wanted posters" },
-    ],
-  },
-
-  main_hall_exit: {
-    id: "main_hall_exit",
-    name: "The Guild Entrance",
-    description: `Heavy oak doors bound with iron lead out to the cobblestoned street beyond. Through the small window beside the door, you can see the city going about its business — merchants, beggars, city guards, and the occasional flash of a robe that suggests a wizard. The door is always unlocked. The Guild never closes.`,
-    exits: { north: "main_hall", west: "guild_courtyard" },
-    stateModifiers: {},
-    npcs: ["door_guard"],
-    items: [],
-    examinableObjects: [
-      { id: "oak_doors", label: "The oak doors" },
-      { id: "street_window", label: "The street window" },
-    ],
-  },
-
-  guild_courtyard: {
-    id: "guild_courtyard",
-    name: "The Guild Courtyard",
-    description:
-      "A cobblestoned courtyard open to the sky, caught between the Church of Perpetual Life to the west and the Main Hall entrance to the east.",
-    exits: {
-      east: "main_hall_exit",
-      west: "church_of_perpetual_life",
-    },
-    stateModifiers: {},
-    npcs: [],
-    items: [],
-    examinableObjects: [
-      { id: "cobblestones", label: "The cobblestones" },
-      { id: "church_door", label: "The church door" },
-      { id: "main_hall_entrance", label: "The Main Hall entrance" },
-    ],
-  },
-
-  church_of_perpetual_life: {
-    id: "church_of_perpetual_life",
-    name: "The Church of Perpetual Life",
-    description:
-      "Everything here is white. The walls are white. The floor is cold white stone, smooth and faintly warm from some source you cannot identify. The priests move through the silence in white robes, their pale faces carrying no expression you can read. There is no art. There are no windows. There is nothing to look at except the altar — a plain white stone block — and the rack of gray robes near the door, ready for the next arrival. The silence is complete. Even your footsteps seem reluctant to disturb it.",
-    exits: {
-      east: "guild_courtyard",
-    },
-    stateModifiers: {},
-    npcs: ["priest_of_perpetual_life"],
-    items: [],
-    examinableObjects: [
-      { id: "white_altar", label: "The altar" },
-      { id: "robe_rack", label: "The robe rack" },
-      { id: "stone_floor", label: "The stone floor" },
-    ],
-  },
-
-  guild_vault: {
-    id: "guild_vault",
-    name: "The Guild Vault",
-    description: `A low-ceilinged stone room beneath the Main Hall. Iron strongboxes line the walls, each bearing a personal lock. A heavyset dwarf named Brunt manages the vault with meticulous suspicion. This is where adventurers bank their gold between adventures — death in the field only takes what you carry.`,
-    exits: { up: "main_hall" },
-    stateModifiers: {},
-    npcs: ["brunt_the_banker"],
-    items: [],
-    examinableObjects: [
-      { id: "iron_strongboxes", label: "Iron strongboxes" },
-      { id: "vault_counter", label: "Brunt's counter" },
-    ],
-  },
-};
 
 // ============================================================
 // NPCS
@@ -323,6 +167,48 @@ export const NPCS: Record<string, NPC> = {
     stats: { hp: 60, armor: 3, damage: "1d8+2" },
   },
 
+  lira: {
+    id: "lira",
+    name: "Lira",
+    description:
+      "A small, tightly built young woman with pale skin, honey-blonde hair that falls past her shoulders, narrow shoulders, a flat stomach, and long lean legs. She moves between the tables with a dancer's economy — no wasted step, no wasted motion. She is small and athletic, with the quiet confidence of someone who could outrun anything in this room.",
+    greeting: `Lira sets a tankard down without spilling a drop, already moving to the next table. She catches your eye on the way past and gives a quick half-smile — there and gone. "Need something?"`,
+    personality:
+      "Lira is impish, quick-witted, and full of bouncy energy — she teases the adventurers she serves, steals bites off their plates, and laughs too loud for her size. She is fearless in a way that has nothing to do with fighting. She warms up fast and says exactly what she's thinking, often before she's finished thinking it.",
+    isHostile: false,
+    stats: { hp: 12, armor: 0, damage: "1d3" },
+    portraitPrompt:
+      "Portrait of a very petite, very short young Aquilonian barmaid — she is noticeably small, barely five feet tall, with a tiny delicate frame. Pale skin, honey-blonde hair past her shoulders, impish grin. Toned but diminutive. Carrying a tankard that looks large in her small hands. Wearing a laced bodice tavern dress with flowing skirt. Warm amber tavern lighting, stone interior behind her. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  mavia: {
+    id: "mavia",
+    name: "Mavia",
+    description:
+      "A full-figured woman with pale skin, golden-blonde curling hair that falls past her shoulders, and a wide, easy smile. She carries tankards on a tray balanced against one hip, moving with a comfortable, unhurried sway. Her bodice is laced snug and her skirts are practical but flattering. She is voluptuous and entirely at ease with it — the kind of woman who makes a room feel warmer just by being in it.",
+    greeting: `Mavia leans one hip against the table edge and sets down two tankards she wasn't asked to bring. "You look thirsty. And hungry. And like you haven't slept in a week." She smiles. "I can fix at least two of those."`,
+    personality:
+      "Mavia is warm, maternal, and flirtatious without being cheap. She genuinely cares about the people she serves and remembers their names and their stories. She is the emotional center of the Main Hall — everyone talks to Mavia. She speaks in warm, unhurried Universal Common.",
+    isHostile: false,
+    stats: { hp: 12, armor: 0, damage: "1d3" },
+    portraitPrompt:
+      "Portrait of a voluptuous Aquilonian barmaid with pale skin, golden-blonde curling hair past her shoulders, generous hourglass figure, warm inviting smile. Carrying a tray of tankards against one hip. Wearing a laced bodice tavern dress with flowing skirt. Warm amber tavern lighting, stone interior behind her. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  seraine: {
+    id: "seraine",
+    name: "Seraine",
+    description:
+      "A tall, slender woman with pale skin, ash-blonde hair that falls past her shoulders, narrow hips, and an elegant bearing. Her features are fine and angular. She carries herself with a quiet grace, unhurried and self-possessed. She has a gentle, knowing smile that suggests she finds the world privately amusing.",
+    greeting: `Seraine arrives at your table and sets a drink down with easy precision. She meets your eyes and smiles — a small, unhurried thing. "There you are. Let me know if you need anything else."`,
+    personality:
+      "Seraine is gentle, poised, and quietly warm. She speaks softly and what she says is thoughtful. She has an elegant bearing but it makes people feel at ease rather than judged. There is a mystery about her past but she wears it lightly. She speaks in warm, measured Universal Common.",
+    isHostile: false,
+    stats: { hp: 15, armor: 0, damage: "1d4+1" },
+    portraitPrompt:
+      "Portrait of a tall slender Aquilonian barmaid with pale skin, ash-blonde hair past her shoulders, fine angular features, gentle knowing smile, elegant bearing. Very narrow hips, straight waist-to-hip line, minimal curves, long lean tubular silhouette like a runway model. Wearing a laced bodice tavern dress with flowing skirt. Warm amber tavern lighting, stone interior behind her. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
   brunt_the_banker: {
     id: "brunt_the_banker",
     name: "Brunt",
@@ -345,16 +231,6 @@ export const NPCS: Record<string, NPC> = {
       inventory: ["short_sword", "leather_armor", "buckler", "torch", "rope", "rations"],
       haggleModifier: -1,
     },
-  },
-
-  door_guard: {
-    id: "door_guard",
-    name: "Door Guard",
-    description: "A large person in Guild livery who manages foot traffic in and out of the hall.",
-    greeting: `"In or out. Make up your mind."`,
-    personality: "The door guard is efficient, humorless, and not interested in conversation. They know nothing useful and will say so.",
-    isHostile: false,
-    stats: { hp: 30, armor: 4, damage: "1d8" },
   },
 
   priest_of_perpetual_life: {
@@ -966,7 +842,7 @@ export const ITEMS: Record<string, Item> = {
     description: "Boiled leather armor that provides basic protection without slowing you down.",
     type: "armor",
     value: 20,
-    stats: { armorClass: 2 },
+    stats: { armorClass: 2, zoneSlot: "torso", zoneCover: 40, zoneDurability: 30 },
     isCarryable: true,
   },
   chain_mail: {
@@ -975,7 +851,7 @@ export const ITEMS: Record<string, Item> = {
     description: "Interlocking iron rings that stop blades and arrows alike. Heavy, but worth it.",
     type: "armor",
     value: 60,
-    stats: { armorClass: 4 },
+    stats: { armorClass: 4, zoneSlot: "torso", zoneCover: 65, zoneDurability: 50 },
     isCarryable: true,
   },
   buckler: {
@@ -984,7 +860,7 @@ export const ITEMS: Record<string, Item> = {
     description: "A small steel buckler, light enough to parry and turn a blade without tiring the arm.",
     type: "armor",
     value: 30,
-    stats: { armorClass: 1 },
+    stats: { armorClass: 1, shieldBlockChance: 25, shieldDurability: 20 },
     isCarryable: true,
   },
   torch: {
@@ -1061,6 +937,62 @@ export const ITEMS: Record<string, Item> = {
     type: "treasure",
     value: 150,
     isCarryable: false,
+  },
+
+  // ── Per-Zone Armor (HWRR-style) ────────────────────────────
+  leather_cap: {
+    id: "leather_cap",
+    name: "Leather Cap",
+    description: "A hardened leather skullcap. Won't stop a mace, but it's better than nothing.",
+    type: "armor",
+    value: 12,
+    stats: { zoneSlot: "head", zoneCover: 30, zoneDurability: 15 },
+    isCarryable: true,
+  },
+  iron_helm: {
+    id: "iron_helm",
+    name: "Iron Helm",
+    description: "A dented iron helm with a nasal guard. Solid protection for the skull.",
+    type: "armor",
+    value: 40,
+    stats: { zoneSlot: "head", zoneCover: 55, zoneDurability: 35 },
+    isCarryable: true,
+  },
+  leather_gorget: {
+    id: "leather_gorget",
+    name: "Leather Gorget",
+    description: "A stiff leather collar that protects the throat. Not fashionable. Functional.",
+    type: "armor",
+    value: 10,
+    stats: { zoneSlot: "neck", zoneCover: 25, zoneDurability: 12 },
+    isCarryable: true,
+  },
+  chain_coif: {
+    id: "chain_coif",
+    name: "Chain Coif",
+    description: "A hood of interlocking iron rings that drapes over the neck and shoulders.",
+    type: "armor",
+    value: 35,
+    stats: { zoneSlot: "neck", zoneCover: 45, zoneDurability: 25 },
+    isCarryable: true,
+  },
+  leather_greaves: {
+    id: "leather_greaves",
+    name: "Leather Greaves",
+    description: "Hardened leather guards for the arms and shins. Scarred by previous owners.",
+    type: "armor",
+    value: 15,
+    stats: { zoneSlot: "limbs", zoneCover: 35, zoneDurability: 20 },
+    isCarryable: true,
+  },
+  chain_greaves: {
+    id: "chain_greaves",
+    name: "Chain Greaves",
+    description: "Chainmail sleeves and leg guards. Heavy but effective against slashing attacks.",
+    type: "armor",
+    value: 45,
+    stats: { zoneSlot: "limbs", zoneCover: 55, zoneDurability: 40 },
+    isCarryable: true,
   },
 };
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SCENE_DATA } from "../lib/sceneData";
+import { getRoom } from "../lib/adventures/registry";
 
 interface ScenePanelProps {
   roomId: string;
   roomState?: string;
   tone?: string;
+  fullScreen?: boolean;
 }
 
 type PanelStatus = "loading" | "loaded" | "retrying" | "error";
@@ -23,20 +24,26 @@ export default function ScenePanel({
   roomId,
   roomState = "normal",
   tone = "civilized",
+  fullScreen = false,
 }: ScenePanelProps) {
-  const [displayUrl, setDisplayUrl] = useState<string | null>(null);
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+  const [fgUrl, setFgUrl] = useState<string | null>(null);
+  const [fgOpacity, setFgOpacity] = useState(0);
   const [status, setStatus] = useState<PanelStatus>("loading");
-  const [opacity, setOpacity] = useState(1);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showApology, setShowApology] = useState(false);
 
   const prevRoomRef = useRef<string | null>(null);
   const prevStateRef = useRef<string | null>(null);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Visual description for the loading state — from sceneData or API response
-  const localDescription = SCENE_DATA[roomId]?.visualDescription ?? null;
-  const displayName = SCENE_DATA[roomId]?.displayName
+  // Pull room data from the registry for loading state + tone resolution
+  const _room = getRoom(roomId);
+  const localDescription = _room?.visualDescription ?? null;
+  const displayName = _room?.name
     ?? roomId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  // Resolve tone: "auto" reads from room data, otherwise use the prop
+  const resolvedTone = tone === "auto" ? (_room?.sceneTone ?? "civilized") : tone;
 
   useEffect(() => {
     if (
@@ -51,6 +58,11 @@ export default function ScenePanel({
 
     if (!roomId) return;
 
+    // ── Immediately fade to black when leaving a room ────────────────────
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    setFgUrl(null);
+    setFgOpacity(0);
+    setBgUrl(null);       // clears the old image → shows black background
     setStatus("loading");
     setErrorMessage(null);
     setShowApology(false);
@@ -59,7 +71,7 @@ export default function ScenePanel({
     const timeout = setTimeout(() => controller.abort(), 30_000);
 
     fetch(
-      `/api/scene-image?room=${encodeURIComponent(roomId)}&state=${encodeURIComponent(roomState)}&tone=${encodeURIComponent(tone)}`,
+      `/api/scene-image?room=${encodeURIComponent(roomId)}&state=${encodeURIComponent(roomState)}&tone=${encodeURIComponent(resolvedTone)}`,
       { signal: controller.signal }
     )
       .then((r) => r.json())
@@ -68,7 +80,6 @@ export default function ScenePanel({
 
         if (data.retried) {
           setShowApology(true);
-          // Hide apology after 4 seconds
           setTimeout(() => setShowApology(false), 4000);
         }
 
@@ -80,18 +91,19 @@ export default function ScenePanel({
 
         const img = new Image();
         img.onload = () => {
-          if (displayUrl) {
-            setOpacity(0);
-            setTimeout(() => {
-              setDisplayUrl(data.url);
-              setOpacity(1);
+          if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+          // Fade in from black: place image at opacity 0, then transition to 1
+          setFgUrl(data.url);
+          setFgOpacity(0);
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            setFgOpacity(1);
+            transitionTimerRef.current = setTimeout(() => {
+              setBgUrl(data.url);
+              setFgUrl(null);
+              setFgOpacity(0);
               setStatus("loaded");
-            }, 400);
-          } else {
-            setDisplayUrl(data.url);
-            setOpacity(1);
-            setStatus("loaded");
-          }
+            }, 1200);
+          }));
         };
         img.onerror = () => {
           setErrorMessage("The vision formed but could not be shown.");
@@ -112,9 +124,10 @@ export default function ScenePanel({
     return () => {
       clearTimeout(timeout);
       controller.abort();
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, roomState, tone]);
+  }, [roomId, roomState, resolvedTone]);
 
   const roomDisplayName = displayName;
 
@@ -134,12 +147,12 @@ export default function ScenePanel({
         style={{
           position: "relative",
           width: "100%",
-          height: "33vh",
-          minHeight: 180,
-          maxHeight: 400,
+          height: fullScreen ? "100%" : "33vh",
+          minHeight: fullScreen ? "100%" : 180,
+          maxHeight: fullScreen ? "none" : 400,
           backgroundColor: "#0a0a0f",
           overflow: "hidden",
-          flexShrink: 0,
+          flexShrink: fullScreen ? 1 : 0,
         }}
       >
         {/* ── Loading state ─────────────────────────────────────────────── */}
@@ -261,10 +274,10 @@ export default function ScenePanel({
           </div>
         )}
 
-        {/* ── Scene image ───────────────────────────────────────────────── */}
-        {displayUrl && (
+        {/* ── Scene images: bottom (stable) + top (crossfading in) ────── */}
+        {bgUrl && (
           <img
-            src={displayUrl}
+            src={bgUrl}
             alt={roomDisplayName}
             draggable={false}
             style={{
@@ -274,8 +287,24 @@ export default function ScenePanel({
               height: "100%",
               objectFit: "cover",
               objectPosition: "center",
-              opacity,
-              transition: "opacity 400ms ease-in-out",
+              opacity: 1,
+            }}
+          />
+        )}
+        {fgUrl && (
+          <img
+            src={fgUrl}
+            alt={roomDisplayName}
+            draggable={false}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              opacity: fgOpacity,
+              transition: "opacity 1200ms ease-in-out",
             }}
           />
         )}
@@ -310,21 +339,23 @@ export default function ScenePanel({
           </div>
         )}
 
-        {/* ── Bottom vignette ───────────────────────────────────────────── */}
+        {/* Bottom vignette — subtle in fullScreen, fades to black otherwise */}
         <div
           style={{
             position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            height: "45%",
-            background: "linear-gradient(to bottom, transparent, #030712)",
+            height: fullScreen ? "20%" : "45%",
+            background: fullScreen
+              ? "linear-gradient(to bottom, transparent, rgba(0,0,0,0.3))"
+              : "linear-gradient(to bottom, transparent, #030712)",
             pointerEvents: "none",
           }}
         />
 
         {/* ── Room name pill ────────────────────────────────────────────── */}
-        {status === "loaded" && displayUrl && (
+        {status === "loaded" && bgUrl && (
           <span
             style={{
               position: "absolute",

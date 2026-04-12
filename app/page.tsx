@@ -11,6 +11,7 @@ import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
 import ScenePanel from "../components/ScenePanel";
+import { getRoom } from "../lib/adventures/registry";
 
 interface Message {
   role: "user" | "assistant";
@@ -111,6 +112,7 @@ export default function Home() {
   const displayedRef = useRef("");
   const skipTypingRef = useRef(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const chatOuterRef = useRef<HTMLDivElement>(null);
   const userScrolledRef = useRef(false);
 
   const messageCount = messages.length;
@@ -701,6 +703,29 @@ export default function Home() {
     sendMessage(cmd);
   };
 
+  // When collapsed: scroll inner container to bottom so latest text is visible
+  useEffect(() => {
+    if (!chatExpanded) {
+      const inner = scrollContainerRef.current;
+      if (inner) inner.scrollTop = inner.scrollHeight;
+    }
+  }, [chatExpanded, messages]);
+
+  // Forward wheel events from outer (overflow:hidden) wrapper to inner scroll container when collapsed
+  useEffect(() => {
+    const outer = chatOuterRef.current;
+    if (!outer) return;
+    const handler = (e: WheelEvent) => {
+      if (chatExpanded) return;
+      const inner = scrollContainerRef.current;
+      if (!inner) return;
+      inner.scrollTop += e.deltaY;
+      e.preventDefault();
+    };
+    outer.addEventListener("wheel", handler, { passive: false });
+    return () => outer.removeEventListener("wheel", handler);
+  }, [chatExpanded]);
+
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#000000", color: "#e5e7eb", position: "relative" }}>
       {/* Combat overlay */}
@@ -883,15 +908,23 @@ export default function Home() {
           fullScreen
         />
       </div>
-      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", position: "relative", zIndex: 2, order: 0 }}>
+      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", position: "relative", zIndex: 2, order: 0 }}>
         <span style={{ color: "#b45309", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           Living Eamon
         </span>
-        {player?.isWanted && <span style={{ color: "#ff4444", fontSize: 11, fontWeight: 700 }}>⚠ WANTED</span>}
+        {player && (
+          <>
+            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>—</span>
+            <span style={{ color: "rgba(229,231,235,0.5)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>
+              {getRoom(player.currentRoom)?.name ?? player.currentRoom.replace(/_/g, " ")}
+            </span>
+          </>
+        )}
+        {player?.isWanted && <span style={{ color: "#ff4444", fontSize: 11, fontWeight: 700, marginLeft: "auto" }}>⚠ WANTED</span>}
       </div>
 
-        <div style={{ flex: chatExpanded ? "1 1 0" : "0 0 12.5vh", height: chatExpanded ? undefined : "12.5vh", marginTop: chatExpanded ? 0 : "auto", overflow: "hidden", padding: "20px 24px", backgroundColor: "transparent", position: "relative", zIndex: 2, transition: "flex-basis 0.3s ease", order: 1 }}>
-          <div ref={scrollContainerRef} style={{ maxWidth: 620, margin: "0 auto", height: "100%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", borderRadius: 16, overflowY: "scroll", scrollbarWidth: "none", display: "flex", flexDirection: "column", padding: "14px 20px", boxSizing: "border-box" }}>
+        <div ref={chatOuterRef} style={{ flex: chatExpanded ? "1 1 0" : "0 0 16vh", height: chatExpanded ? undefined : "16vh", marginTop: chatExpanded ? 0 : "auto", overflow: "hidden", padding: chatExpanded ? "20px 24px" : "4px 24px 0", backgroundColor: "transparent", position: "relative", zIndex: 2, transition: "flex-basis 0.3s ease", order: 1 }}>
+          <div ref={scrollContainerRef} style={{ maxWidth: 620, margin: "0 auto", height: "100%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", borderRadius: 16, overflowY: "scroll", scrollbarWidth: "none", display: "flex", flexDirection: "column", padding: chatExpanded ? "14px 20px" : "6px 20px 0", boxSizing: "border-box" }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: 16 }}>
                 {msg.role === "user" ? null : (

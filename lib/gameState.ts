@@ -182,7 +182,7 @@ export interface PlayerState {
 
   // Economy
   gold: number;                // Gold currently carried (lost on death)
-  bankedGold: number;          // Gold in the vault (never lost)
+  bankedGold: number;          // Gold in the Guild Bank (never lost)
 
   // Equipment
   weapon: string;              // Item id of equipped weapon
@@ -360,6 +360,16 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         recovery: null,
         revealedItems: [],
       },
+      mage_school: {
+        roomId: "mage_school",
+        currentState: "normal",
+        previousState: "normal",
+        causedBy: null,
+        causeDescription: null,
+        turnsInState: 0,
+        recovery: null,
+        revealedItems: [],
+      },
     },
 
     npcs: {
@@ -449,6 +459,26 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
         memory: [],
         agenda: null,
         location: "church_of_perpetual_life",
+        isAlive: true,
+        combatHp: null,
+        customGreeting: null,
+      },
+      training_dummy: {
+        npcId: "training_dummy",
+        disposition: "neutral",
+        memory: [],
+        agenda: null,
+        location: "guild_courtyard",
+        isAlive: true,
+        combatHp: null,
+        customGreeting: null,
+      },
+      zim_the_wizard: {
+        npcId: "zim_the_wizard",
+        disposition: "friendly",
+        memory: [],
+        agenda: null,
+        location: "mage_school",
         isAlive: true,
         combatHp: null,
         customGreeting: null,

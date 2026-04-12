@@ -2,6 +2,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { pregenerateSprites } from "../../../lib/spritePregenerate";
+
+// Trigger sprite pre-generation on first module load (server startup)
+pregenerateSprites();
 import {
   processInput,
   buildSituationBlock,
@@ -370,8 +374,12 @@ export async function POST(request: NextRequest) {
           },
         };
 
-        // Client holds the live session; DB load can lag behind async savePlayer. Merge so BUY/inventory persists turn-to-turn.
+        // Client holds the live session; DB load can lag behind async savePlayer.
+        // Merge so BUY/inventory persists turn-to-turn.
+        // SKIP merge on session start (empty messages) — DB is the source of truth on refresh.
+        const isSessionStart = !messages || messages.length === 0;
         if (
+          !isSessionStart &&
           worldState &&
           typeof worldState === "object" &&
           worldState.player &&
@@ -421,7 +429,7 @@ export async function POST(request: NextRequest) {
       return cleaned + "\n\n" + buildSituationBlock(newState);
     };
 
-    const sendResponse = (text: string, newState: WorldState) => {
+    const sendResponse = (text: string, newState: WorldState, conversationNpcId?: string | null) => {
       // Save player to Supabase asynchronously
       if (resolvedPlayerId) {
         persistPlayer(newState).catch(console.error);
@@ -430,6 +438,7 @@ export async function POST(request: NextRequest) {
       const fullResponse = appendSituation(text, newState) + "\n\n__STATE__" + JSON.stringify({
         ...newState,
         playerId: resolvedPlayerId,
+        conversationNpcId: conversationNpcId ?? null,
       });
 
       return new Response(
@@ -449,7 +458,8 @@ export async function POST(request: NextRequest) {
       history: { role: string; content: string }[],
       echoPrefix?: string | null,
       /** When true and room is main_hall: return JSON instead of SSE-style stream (testing). */
-      asBufferedJson?: boolean
+      asBufferedJson?: boolean,
+      conversationNpcId?: string | null
     ) => {
       // Check Jane allocation
       if (resolvedPlayerId) {
@@ -494,6 +504,10 @@ export async function POST(request: NextRequest) {
 
       const readable = new ReadableStream({
         async start(controller) {
+          // Emit NPC token first so client can prefetch sprite
+          if (conversationNpcId) {
+            controller.enqueue(encoder.encode(`__NPC__${conversationNpcId}__`));
+          }
           if (echoPrefix) {
             controller.enqueue(encoder.encode(echoPrefix + "\n\n"));
           }
@@ -512,6 +526,7 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...newState,
             playerId: resolvedPlayerId,
+            conversationNpcId: conversationNpcId ?? null,
           })));
           controller.close();
         },
@@ -625,10 +640,24 @@ export async function POST(request: NextRequest) {
 
         // Use custom line builder if available, otherwise use static lines
         let responseLines: string[];
+        let responseNpcId: string | null = null;
         if (script.id === "barmaid_select_response") {
-          responseLines = getBarmaidResponseLines(pick);
+          const isFirstMeeting = state.player.remembersOwnName && !state.player.barmaidPreference;
+          const barmaidResult = getBarmaidResponseLines(pick, isFirstMeeting);
+          responseLines = barmaidResult.lines;
+          responseNpcId = barmaidResult.barmaidNpcId;
         } else if (script.id === "aldric_training_response") {
-          responseLines = getAldricTrainingLines(pick, state.player.name);
+          const trainingResult = getAldricTrainingLines(pick, state.player.name, state.player.weapon);
+          responseLines = trainingResult.lines;
+          responseNpcId = "old_mercenary";
+          // Give weapon if unarmed
+          if (trainingResult.giveWeapon) {
+            const inv = [...newState.player.inventory, { itemId: "short_sword", quantity: 1 }];
+            newState = {
+              ...newState,
+              player: { ...newState.player, weapon: "short_sword", inventory: inv },
+            };
+          }
           // YES moves player to courtyard
           if (pick === "YES") {
             newState = {
@@ -661,7 +690,9 @@ export async function POST(request: NextRequest) {
           responseLines = script.lines;
         }
 
-        return sendResponse(responseLines.join("\n"), newState);
+        // Prepend NPC token for sprite prefetch
+        const npcTokenPrefix = responseNpcId ? `__NPC__${responseNpcId}__` : "";
+        return sendResponse(npcTokenPrefix + responseLines.join("\n"), newState, responseNpcId);
       }
     }
 
@@ -760,7 +791,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return sendResponse(staticText, engineResult.newState);
+      // Prepend NPC token so client can prefetch sprite while text streams
+      const npcPrefix = engineResult.conversationNpcId
+        ? `__NPC__${engineResult.conversationNpcId}__`
+        : "";
+      return sendResponse(npcPrefix + staticText, engineResult.newState, engineResult.conversationNpcId);
     }
 
     // Check world object cache for examine actions
@@ -853,7 +888,8 @@ export async function POST(request: NextRequest) {
       engineResult.newState,
       messages,
       engineResult.echoPrefix ?? null,
-      bufferMainHallDynamic
+      bufferMainHallDynamic,
+      engineResult.conversationNpcId
     );
 
   } catch (error) {

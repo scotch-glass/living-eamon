@@ -11,6 +11,7 @@ import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
 import ScenePanel from "../components/ScenePanel";
+import NPCSprite from "../components/NPCSprite";
 import { getRoom } from "../lib/adventures/registry";
 
 interface Message {
@@ -105,6 +106,7 @@ export default function Home() {
   const [chatExpanded, setChatExpanded] = useState(true);
   const [inCombat, setInCombat] = useState(false);
   const [combatLog, setCombatLog] = useState<string[]>([]);
+  const [conversationNpcId, setConversationNpcId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
@@ -244,9 +246,10 @@ export default function Home() {
         response: string;
         worldState: WorldState & { playerId?: string | null };
       };
-      const ws = data.worldState;
+      const ws = data.worldState as WorldState & { playerId?: string | null; conversationNpcId?: string | null };
       setWorldState(ws);
       if (ws.playerId) setPlayerId(ws.playerId);
+      setConversationNpcId(ws.conversationNpcId ?? null);
       const nowInCombat = ws.player?.activeCombat != null;
       setInCombat(nowInCombat);
       if (nowInCombat) {
@@ -275,6 +278,13 @@ export default function Home() {
 
       rawBuffer += decoder.decode(value, { stream: true });
 
+      // Detect __NPC__npcId__ token early to prefetch sprite while text streams
+      const npcMatch = rawBuffer.match(/^__NPC__([a-z_]+)__/);
+      if (npcMatch && npcMatch[1]) {
+        setConversationNpcId(npcMatch[1]);
+        rawBuffer = rawBuffer.slice(npcMatch[0].length);
+      }
+
       const stateIdx = rawBuffer.indexOf("__STATE__");
       const visibleText = stateIdx >= 0 ? rawBuffer.slice(0, stateIdx) : rawBuffer;
 
@@ -292,6 +302,7 @@ export default function Home() {
             const newState = JSON.parse(stateJson.trim());
             setWorldState(newState);
             if (newState.playerId) setPlayerId(newState.playerId);
+            setConversationNpcId(newState.conversationNpcId ?? null);
 
             // Combat mode: derive from state
             const nowInCombat = newState.player?.activeCombat != null;
@@ -543,7 +554,8 @@ export default function Home() {
   const formatMessage = (text: string, isLast: boolean) => {
     const cleanText = text.split("__STATE__")[0]
       .replace(/__COMBAT_START__/g, "")
-      .replace(/__COMBAT_END__/g, "");
+      .replace(/__COMBAT_END__/g, "")
+      .replace(/__NPC__[a-z_]+__/g, "");
     const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
     const sitIdx = cleanText.indexOf(needle);
     const narrative = sitIdx === -1 ? cleanText : cleanText.slice(0, sitIdx).trimEnd();
@@ -728,6 +740,9 @@ export default function Home() {
 
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#000000", color: "#e5e7eb", position: "relative" }}>
+      {/* NPC conversation sprite */}
+      {!inCombat && <NPCSprite npcId={conversationNpcId} />}
+
       {/* Combat overlay */}
       {inCombat && player?.activeCombat && (
         <CombatScreen

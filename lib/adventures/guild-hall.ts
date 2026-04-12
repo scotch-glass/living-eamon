@@ -7,7 +7,7 @@
 // This is not a standalone adventure — it is the persistent
 // hub that all adventures connect back to. It contains the
 // Church of Perpetual Life (spawn/respawn), the Main Hall,
-// the Guild Vault, the Armory, and the Courtyard.
+// the Guild Bank, the Armory, and the Courtyard.
 //
 // WRITERS: Add new starting-area rooms here.
 // Each room owns its own description, scene data, exits,
@@ -181,12 +181,12 @@ const rooms: Record<string, Room> = {
     id: "main_hall",
     name: "The Main Hall",
     description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. Barmaids weave between the tables carrying tankards and platters — Lira, quick and light on her feet; Mavia, drawing every eye she passes; Seraine, tall and unhurried. In a corner booth, Aldric the Veteran nurses an ale alone, watching the room with the quiet patience of a man who has survived everything. Notice boards paper the eastern wall — three Guild postings hang there now, each one an open contract waiting for a fool brave enough to take it. Head east to read them. Near the south wall sit two barrels. A hand-lettered sign on the first reads: CLOTHES FOR THE POOR. A brass plate on the second reads: USED GOWNS ONLY — DO NOT PUT FOOD IN HERE.`,
-    look: "A vast warm hall that smells of woodsmoke and roasted meat. Adventurers crowd the scarred oak tables. Hokas Tokas tends bar, barmaids weave between tables, and Aldric the Veteran sits alone in his corner booth. A notice board covers the east wall. Two barrels sit near the south wall — one for charity clothes, one for used gowns.",
+    look: "A vast warm hall that smells of woodsmoke and roasted meat. Adventurers crowd the scarred oak tables. Hokas Tokas tends bar, barmaids weave between tables, and Aldric the Veteran sits alone in his corner booth. The courtyard lies west, the notice board east, the armory north, and the bank below.",
     glance: "The Main Hall. Warm, loud, crowded. Hokas behind the bar, Aldric in his corner.",
     exits: {
       north: "armory",
       east: "notice_board",
-      south: "guild_courtyard",
+      west: "guild_courtyard",
       down: "guild_vault",
     },
     stateModifiers: {
@@ -276,7 +276,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     exits: { south: "main_hall" },
     stateModifiers: {},
     npcs: ["armory_attendant"],
-    items: ["short_sword", "leather_armor", "torch", "rope"],
+    items: [],
     examinableObjects: [
       { id: "weapon_racks", label: "Weapon racks" },
       { id: "armor_stands", label: "Armor stands" },
@@ -287,13 +287,13 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     sceneTone: "aquilonian",
   },
 
-  // ── Guild Vault ─────────────────────────────────────────────
+  // ── Guild Bank ──────────────────────────────────────────────
   guild_vault: {
     id: "guild_vault",
-    name: "The Guild Vault",
-    description: `A low-ceilinged stone room beneath the Main Hall. Iron strongboxes line the walls, each bearing a personal lock. A heavyset dwarf named Brunt manages the vault with meticulous suspicion. This is where adventurers bank their gold between adventures — death in the field only takes what you carry.`,
+    name: "The Guild Bank",
+    description: `A low-ceilinged stone room beneath the Main Hall. Iron strongboxes line the walls, each bearing a personal lock. A heavyset dwarf named Brunt manages the bank with meticulous suspicion. This is where adventurers bank their gold between adventures — death in the field only takes what you carry.`,
     look: "A low stone room beneath the hall. Iron strongboxes line the walls. Brunt the dwarf manages deposits and withdrawals. Bank your gold here — death only takes what you carry.",
-    glance: "The vault. Strongboxes and stone. Brunt watches you from behind his counter.",
+    glance: "The Guild Bank. Strongboxes and stone. Brunt watches you from behind his counter.",
     exits: { up: "main_hall" },
     stateModifiers: {},
     npcs: ["brunt_the_banker"],
@@ -332,6 +332,108 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     sceneTone: "aquilonian",
   },
 };
+
+// ── Brunt the Banker — Tier-based greeting pools ────────────
+// Brunt's reaction when you enter the Guild Bank depends on how
+// much gold you have banked. 4 tiers, 20 responses each.
+
+export const BRUNT_GREETINGS: Record<string, string[]> = {
+  poor: [
+    `"Ah. You." He doesn't open the ledger.`,
+    `He glances at your box number and almost smiles. Almost.`,
+    `"Back again. Bold of you."`,
+    `He looks up. Looks back down. The silence says everything.`,
+    `"I'd ask your business but I suspect it would be brief."`,
+    `He breathes through his nose. Loudly.`,
+    `"The box is where you left it. So is everything in it. Which is to say."`,
+    `"You know where the door is. You also know where the bank is. Pick one."`,
+    `He taps the counter once. Waits. Does not tap again.`,
+    `"I've seen fuller coin purses on dead men."`,
+    `"Name." He already knows it. This is a power move.`,
+    `He sets the ledger down with slightly more force than necessary.`,
+    `"Deposits go in the box. Withdrawals come out. At present, I see no reason for either."`,
+    `"Still here? I assumed you were passing through."`,
+    `He stares at a point six inches above your head. Professional disinterest.`,
+    `"The bank is for savings. You'd need savings first."`,
+    `"Come back when you have something to deposit. Or don't. Either way."`,
+    `He doesn't look up. You get the sense this is normal for accounts like yours.`,
+    `"I remember you. I wish that were a compliment."`,
+    `"If it helps, you're not the worst account I manage. Close, though."`,
+  ],
+  modest: [
+    `"You're alive. That's already better than your last visit suggested."`,
+    `He opens the ledger without complaint. A promotion of sorts.`,
+    `"Hm. You've been busy. Somewhat."`,
+    `"I see you've discovered the concept of not dying. Well done."`,
+    `He pulls your box without being asked. Progress.`,
+    `"Business?" One word. But a respectful word.`,
+    `"Your account is... functional. I've said worse."`,
+    `He gives a single nod. The dwarvish equivalent of a standing ovation.`,
+    `"You're building something. Slowly. But building."`,
+    `"I don't need to check the ledger for you anymore. That means something."`,
+    `He sets your box on the counter with what might be care.`,
+    `"Still breathing, still banking. The system works."`,
+    `"You're in the middle of the book now. Not the front. Not the back. Middle is fine."`,
+    `He acknowledges you with a grunt. A warm grunt, by Brunt standards.`,
+    `"I see you've been working. The numbers agree."`,
+    `"Your box has moved past the 'embarrassing' section of the bank. Congratulations."`,
+    `"Consistent deposits. I notice these things. I notice everything."`,
+    `He slides the ledger toward you without being asked. Trust.`,
+    `"The account is in order. As it should be."`,
+    `"You're doing better than most. That's not a compliment — most do terribly."`,
+  ],
+  solid: [
+    `"Good day." Two words. From Brunt, that's practically a hug.`,
+    `He nods. Actually nods. Something is different about today.`,
+    `"Your box is getting heavy. I approve of heavy."`,
+    `He brings your box to the counter before you ask. First time for everything.`,
+    `"I was just thinking about your account. That has never happened before."`,
+    `"Solid account. I've moved you to a reinforced box. Don't read into it."`,
+    `He pours you a thimble of something brown. Doesn't explain.`,
+    `"You'll want a second box soon. I've set one aside. No reason."`,
+    `"The hinges on your box are complaining. That's the sound of success."`,
+    `He almost makes eye contact. A milestone.`,
+    `"I've upgraded your lock. Better security for better clients. You qualify now."`,
+    `"Your balance is... respectable." He says this like it physically hurts him.`,
+    `"I may have mentioned your account to the other bank keepers. Favorably."`,
+    `He brushes a speck of dust off your box before setting it down. Tenderness.`,
+    `"You're in the top quarter of accounts now. Act accordingly."`,
+    `"When you come in, I stop what I'm doing. That's new."`,
+    `"Your ledger entry takes two lines now. I had to adjust the columns."`,
+    `He retrieves your box with both hands. Reverently.`,
+    `"I've stopped assuming each visit is your last. High praise."`,
+    `"If something happens to you out there — and I hope it doesn't — your account would be worth fighting over."`,
+  ],
+  distinguished: [
+    `Brunt stands when you enter. He has never stood for anyone.`,
+    `"Ah. My favorite account." He freezes. Clears his throat. Pretends he didn't say that.`,
+    `"I took the liberty of polishing your box. The gold deserves better than dust."`,
+    `He produces a chair. You didn't know there was a chair down here.`,
+    `"I've been thinking about your portfolio. At night. This concerns me."`,
+    `"Your account has its own page in the ledger now. Most get a line. You get a page."`,
+    `He pours two thimbles. Keeps one. Raises it in your direction. Says nothing.`,
+    `"I've reinforced the wall behind your box. Precautionary. Don't ask what it cost me."`,
+    `"If the Guild ever falls — and it won't — I would carry your box out personally."`,
+    `"I've stopped counting your balance in gold and started counting it in weight. Kilograms."`,
+    `He places a small cloth on the counter before setting your box down. Like a jeweler.`,
+    `"You've exceeded every account I've managed in forty years of bank keeping. I'm not emotional about this. My eyes are dusty."`,
+    `"I had a dream about your account. It was... satisfying. We will never speak of this."`,
+    `He greets you at the stairs before you reach the counter. Unprecedented.`,
+    `"I've moved your holdings to the back room. The secure one. The one with the traps."`,
+    `"Your name is in the ledger of distinction. There are three names in it. Two are dead kings."`,
+    `He offers you a handshake. His grip could crush stone. He is gentle.`,
+    `"I find myself... looking forward to your visits. This is deeply uncomfortable for me."`,
+    `"If you need anything — and I mean anything — from this bank, you need only ask. I have never said that to a living person."`,
+    `"You've earned something I give to no one." He pauses. "Benefit of the doubt."`,
+  ],
+};
+
+export function getBruntTier(bankedGold: number): string {
+  if (bankedGold <= 10) return "poor";
+  if (bankedGold <= 50) return "modest";
+  if (bankedGold <= 1000) return "solid";
+  return "distinguished";
+}
 
 export const GUILD_HALL: AdventureModule = {
   id: "guild_hall",

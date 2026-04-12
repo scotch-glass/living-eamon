@@ -92,7 +92,7 @@ Current rooms (lib/adventures/guild-hall.ts):
 - Main Hall (Hokas bar, Aldric veteran, 3 barmaids — Lira/Mavia/Seraine, notice board, members chest)
 - Notice Board (3 adventure postings)
 - Armory (Pip attendant)
-- Guild Vault (Brunt banker)
+- Guild Bank (Brunt banker)
 - Pots & Bobbles / Mage School (south of courtyard, Zim wizard, potions, reagents, identification, magic training)
   - Larger inside than outside (subtle magical architecture)
   - Sells: healing potions, stamina/fatigue brews, antidotes, bandages, tourniquets, poisons, mana potions
@@ -890,7 +890,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | `main_hall_exit` | The Guild Entrance | north→`main_hall`, west→`guild_courtyard` | door_guard | _(none)_ | _(none)_ |
 | `guild_courtyard` | The Guild Courtyard | east→`main_hall_exit`, west→`church_of_perpetual_life` | _(none)_ | _(none)_ | _(none)_ — live weather via **`route.ts`** + **`buildCourtyardDescription`** |
 | `church_of_perpetual_life` | The Church of Perpetual Life | east→`guild_courtyard` | priest_of_perpetual_life | _(none)_ | _(none)_ |
-| `guild_vault` | The Guild Vault | up→`main_hall` | brunt_the_banker | _(none)_ | _(none)_ |
+| `guild_vault` | The Guild Bank | up→`main_hall` | brunt_the_banker | _(none)_ | _(none)_ |
 
 **`createInitialWorldState.rooms` keys:** `main_hall`, `armory`, `notice_board`, `guild_vault`, **`guild_courtyard`**, **`church_of_perpetual_life`** (not `main_hall_exit`). `door_guard` NPC state uses `location: "main_hall_exit"`.
 

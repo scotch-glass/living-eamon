@@ -37,6 +37,7 @@ import {
 } from "./gameData";
 
 import { ALL_ROOMS as MAIN_HALL_ROOMS } from "./adventures/registry";
+import { BRUNT_GREETINGS, getBruntTier } from "./adventures/guild-hall";
 
 import {
   WorldState,
@@ -99,6 +100,8 @@ export interface EngineResult {
   examineObjectKey?: string | null;
   hasCritical?: boolean;
   criticalContext?: string | null;
+  /** NPC id the hero is actively conversing with (shows sprite). */
+  conversationNpcId?: string | null;
 }
 
 // ============================================================
@@ -113,6 +116,21 @@ function equippedWeaponDisplayLabel(weaponId: string): string {
   if (weaponId === "unarmed") return "Unarmed";
   return ITEMS[weaponId]?.name ?? weaponId;
 }
+
+/** Shop greetings — appended to room description when player enters a shop room. */
+const SHOP_ROOM_GREETINGS: Record<string, string> = {
+  sams_sharps: `Sam glances up. "Welcome. Would you like to __CMD:SHOP__?"`,
+  armory: `Pip straightens up. "Welcome. Would you like to __CMD:SHOP__?"`,
+  mage_school: `Zim looks up from his books. "Welcome. Would you like to __CMD:SHOP__?"`,
+};
+
+/** NPC id for each shop/service room — shown as sprite when entering. */
+const SHOP_ROOM_NPC: Record<string, string> = {
+  sams_sharps: "sam_slicker",
+  armory: "armory_attendant",
+  mage_school: "zim_the_wizard",
+  guild_vault: "brunt_the_banker",
+};
 
 const EXIT_ARROW: Record<string, string> = {
   north: "North",
@@ -165,6 +183,8 @@ export function buildSituationBlock(state: WorldState): string {
       if (!n?.isAlive || n.location !== room.id) return false;
       // Hide barmaids from situation block unless she's the chosen one
       if (BARMAID_IDS.has(n.npcId)) return n.npcId === chosenBarmaid;
+      // Hide training dummies from situation block — they're furniture
+      if (NPCS[n.npcId]?.isTrainingDummy) return false;
       return true;
     })
     .map(n => {
@@ -316,7 +336,8 @@ function tryHokasUnarmedPity(
   const disp = hokasState.disposition ?? "neutral";
   if (disp === "furious" || disp === "hostile") return null;
 
-  const newInventory = grantHokasUnarmedGiftInventory(p.inventory);
+  const newInventory = grantHokasUnarmedGiftInventory(p.inventory)
+    .filter(e => e.itemId !== "gray_robe"); // gown returned to barrel
   const after: WorldState = {
     ...newState,
     player: {
@@ -328,11 +349,11 @@ function tryHokasUnarmedPity(
   };
 
   const body =
-    `Hokas is wiping a mug when thou drawest near. He looks up — then looks away almost at once, fixing on the bottles, the counter, the fire, anywhere but thy face or thy empty hands. The silver bells in his beard give one soft chime, as if embarrassed for thee.\n\n` +
-    `"Aye," he says to the woodgrain. "We've all stood where thou standest. None of us care to name the hour."\n\n` +
-    `Still without meeting thine eyes, he reaches below the bar and sets out a folded pile — shirt, trousers, belt, and shoes, all ragged but whole. Beside it he lays a short sword: notched, loose in the grip, honest scrap metal.\n\n` +
-    `"'Tis not guild issue. Cast-offs from the back. Take them. Go dressed. Go armed. Come back when thou hast a story worth the telling."\n\n` +
-    `Thou hast the ragged garments and a Cast-Off Short Sword. The sword is equipped.`;
+    `Hokas is wiping a mug when you draw near. He looks up — then looks away almost at once, fixing on the bottles, the counter, the fire, anywhere but your face or your empty hands. The silver bells in his beard give one soft chime, as if embarrassed for you.\n\n` +
+    `"Aye," he says to the woodgrain. "We've all stood where you stand. None of us care to name the hour."\n\n` +
+    `Still without meeting your eyes, he reaches below the bar and sets out a folded pile — shirt, trousers, belt, and shoes, all ragged but whole. Beside it he lays a short sword: notched, loose in the grip, honest scrap metal.\n\n` +
+    `"Not guild issue. Cast-offs from the back. Take them. Go dressed. Go armed. Come back when you have a story worth the telling."\n\n` +
+    `You gratefully change into the ragged clothes and carry the sword in your belt, ready for use. The gray church gown goes into the return barrel with a shudder you do not try to suppress.`;
 
   return {
     responseType: "static",
@@ -341,6 +362,7 @@ function tryHokasUnarmedPity(
     newState: after,
     stateChanged: true,
     echoPrefix: opts?.echoPrefix ?? null,
+    conversationNpcId: "hokas_tokas",
   };
 }
 
@@ -938,66 +960,50 @@ export function getCommandAutocompleteSuggestions(
 const FIRE_IN_CAST = ["fireball", "fire ball", "flame", "ignite", "burn the hall", "set fire", "torch the"];
 
 const HELP_TEXT = `MOVEMENT
-  GO [direction]     GO NORTH, GO SOUTH, GO EAST, GO WEST, GO UP, GO DOWN
-  N / S / E / W      Shorthand directions
+  GO [direction]       GO NORTH
+  N / S / E / W        shorthand directions
 
 OBSERVATION
-  LOOK               Quick scan of the room (semiverbose)
-  EXAMINE ROOM       Thorough look — full detail, takes more time (verbose)
-  EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
-  SEARCH             Same as EXAMINE ROOM — search the area carefully
-  SEARCH [target]    Same as EXAMINE [target]
+  LOOK                 quick scan of the room
+  EXAMINE ROOM         thorough look, full detail
+  EXAMINE [target]     EXAMINE HOKAS
+  SEARCH               same as EXAMINE ROOM
 
 INTERACTION
-  READ               Read notices, signs, or posted contracts
-  GET [item]         GET SWORD, GET TORCH
-  GET ALL            Take everything visible in the room
-  DROP [item]        DROP SWORD
-  EQUIP [item]       Weapon, shield, or armor from inventory (auto-detects slot)
-  WIELD [item]       Alias for EQUIP [item] (either works)
-  EQUIP SHIELD [item]  EQUIP SHIELD BUCKLER  |  SHIELD BUCKLER
-  EQUIP ARMOR [item]   Torso armor from inventory
-  EQUIP HELMET [item]  Head protection (leather cap, iron helm)
-  EQUIP GORGET [item]  Neck protection (leather gorget, chain coif)
-  EQUIP GREAVES [item] Limb protection (leather greaves, chain greaves)
-  REMOVE SHIELD      Lower thy shield
-  REMOVE ARMOR       Doff all armor at once
-  REMOVE HELMET      Doff head armor only
-  REMOVE GORGET      Doff neck armor only
-  REMOVE GREAVES     Doff limb armor only
-  UNEQUIP [item]     Sheathe weapon or remove any equipped item by name
+  READ                 read notices or signs
+  GET [item]           GET SWORD
+  GET ALL              take everything visible
+  DROP [item]          DROP SWORD
+  EQUIP [item]         EQUIP LONG SWORD
+  REMOVE [slot]        REMOVE SHIELD, REMOVE HELMET, REMOVE ARMOR
+  UNEQUIP [item]       UNEQUIP BUCKLER
 
 COMBAT
-  ATTACK [enemy]     Engage a hostile foe (starts combat)
-  STRIKE [zone]      STRIKE HEAD, STRIKE NECK, STRIKE TORSO, STRIKE LIMBS
-                     Target a body zone during combat (HWRR system)
-  FLEE               Escape through a random exit (enemy stays wounded)
-  BEG [name]         When you have nothing, BEG helps.
-                     BEG SAM — Sam may spare a rusty blade.
-                     BEG HOKAS — Hokas may part with a knife.
-                     Use it to survive until you can do better.
+  ATTACK [enemy]       ATTACK GOBLIN
+  STRIKE [zone]        STRIKE HEAD, STRIKE NECK, STRIKE TORSO, STRIKE LIMBS
+  FLEE                 escape through a random exit
+  BEG [name]           BEG SAM, BEG HOKAS
 
-SPEECH (MUD conventions)
-  SAY [text]         SAY Hello everyone!  (speaks to whole room)
-  TALK [text]        Same as SAY (alias)
-  TELL [name] [text] TELL HOKAS What news?  (speaks to one NPC)
-  TELL Aldric [topic]  Static tutorial: survival, combat, training, skills, adventures, world, magic, secrets, order
+SPEECH
+  SAY [text]           SAY Hello everyone!
+  TELL [name] [text]   TELL HOKAS What news?
+  TELL Aldric [topic]  survival, combat, training, skills, adventures, world, magic, secrets
 
 MAGIC
-  CAST [spell]       CAST BLAST, CAST HEAL, CAST LIGHT, CAST SPEED
-  INVOKE [ritual]    INVOKE ...  (occult — discovered through play)
-  PRAY [TO deity]    PRAY TO MYSTRA  (divine — discovered through play)
+  CAST [spell]         CAST HEAL
+  INVOKE [ritual]      occult — discovered through play
+  PRAY [TO deity]      divine — discovered through play
 
 INVENTORY & STATS
-  INVENTORY / I      Show what you're carrying
-  STATS              Show your character sheet
-  HEALTH / HP        Check your health and active effects
+  INVENTORY / I        show what you carry
+  STATS                character sheet
+  HEALTH / HP          health and active effects
 
 ECONOMY
-  SHOP / LIST / SAM   Sam's price list (Sam's Sharps or Main Hall)
-  BUY [item]         In Main Hall: static Sam's shop; elsewhere merchant (Jane)
-  SELL [item]        SELL DAGGER
-  DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Vault)
+  SHOP                 show merchant wares
+  BUY [item]           BUY SHORT SWORD
+  SELL [item]          SELL DAGGER
+  DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Bank)
   WITHDRAW [amount]  WITHDRAW 10
 
 TRAINING (Main Hall, Aldric the Veteran)
@@ -1600,6 +1606,17 @@ function tryResolveNameAloneExamine(
 
   for (const n of presentNPCsInRoom(room, newState)) {
     if (lower === n.firstName.toLowerCase() || lower === n.name.toLowerCase()) {
+      // Training dummy: return static description, don't call Jane
+      const npcDef = NPCS[n.id];
+      if (npcDef?.isTrainingDummy) {
+        return {
+          responseType: "static",
+          staticResponse: npcDef.description,
+          dynamicContext: null,
+          newState: newState,
+          stateChanged: false,
+        };
+      }
       if (n.id === "hokas_tokas") {
         const pit = tryHokasUnarmedPity(newState, room, newState.player);
         if (pit) return pit;
@@ -1632,7 +1649,7 @@ function runBanking(
   if (player.currentRoom !== "guild_vault") {
     return {
       responseType: "static",
-      staticResponse: "The vault is below the Main Hall. Head down to bank thy gold.",
+      staticResponse: "The Guild Bank is below the Main Hall. Head down to bank your gold.",
       dynamicContext: null,
       newState,
       stateChanged: false,
@@ -1647,20 +1664,22 @@ function runBanking(
     if (amount > player.gold) {
       return {
         responseType: "static",
-        staticResponse: `Thou dost not have ${amount} gold to deposit. Thou carriest only ${player.gold}.`,
+        staticResponse: `You don't have ${amount} gold to deposit. You carry only ${player.gold}.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "brunt_the_banker",
       };
     }
     let s = updatePlayerGold(newState, -amount);
     s = { ...s, player: { ...s.player, bankedGold: s.player.bankedGold + amount } };
     return {
       responseType: "static",
-      staticResponse: `Brunt records the deposit without looking up. ${amount} gold secured in thy vault account. Carried gold: ${s.player.gold}. Banked: ${s.player.bankedGold}.`,
+      staticResponse: `Brunt records the deposit without looking up. ${amount} gold secured. Carried: ${s.player.gold} gp. Banked: ${s.player.bankedGold} gp.`,
       dynamicContext: null,
       newState: s,
       stateChanged: true,
+      conversationNpcId: "brunt_the_banker",
     };
   }
 
@@ -1668,29 +1687,32 @@ function runBanking(
     if (amount > player.bankedGold) {
       return {
         responseType: "static",
-        staticResponse: `Thou hast only ${player.bankedGold} gold banked.`,
+        staticResponse: `You only have ${player.bankedGold} gold banked.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "brunt_the_banker",
       };
     }
     let s = updatePlayerGold(newState, amount);
     s = { ...s, player: { ...s.player, bankedGold: s.player.bankedGold - amount } };
     return {
       responseType: "static",
-      staticResponse: `Brunt counts out ${amount} gold coins and slides them across the counter. Carried gold: ${s.player.gold}. Banked: ${s.player.bankedGold}.`,
+      staticResponse: `Brunt counts out ${amount} gold coins and slides them across the counter. Carried: ${s.player.gold} gp. Banked: ${s.player.bankedGold} gp.`,
       dynamicContext: null,
       newState: s,
       stateChanged: true,
+      conversationNpcId: "brunt_the_banker",
     };
   }
 
   return {
     responseType: "static",
-    staticResponse: `Brunt looks up. "Deposit or withdraw. State the amount."`,
+    staticResponse: `Brunt looks up. "Deposit or withdraw. State the amount."\n\n__CMD:DEPOSIT__ __CMD:WITHDRAW__`,
     dynamicContext: null,
     newState,
     stateChanged: false,
+    conversationNpcId: "brunt_the_banker",
   };
 }
 
@@ -2563,7 +2585,7 @@ function buildSamShopListing(player: PlayerState): string {
     "ONE-HANDED WEAPONS",
     ...oneHanded.map(formatSamShopWeaponLine),
     "",
-    "TWO-HANDED WEAPONS [2H]",
+    "TWO-HANDED WEAPONS",
     ...twoHanded.map(formatSamShopWeaponLine),
     "",
     "ARMOR & SHIELDS",
@@ -2873,6 +2895,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
           dynamicContext: null,
           newState,
           stateChanged: false,
+          conversationNpcId: "old_mercenary",
         };
       }
       const topic = matchAldricTopic(topicMsg);
@@ -2883,6 +2906,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
           dynamicContext: null,
           newState,
           stateChanged: false,
+          conversationNpcId: "old_mercenary",
         };
       }
       return {
@@ -2893,6 +2917,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "old_mercenary",
       };
     }
 
@@ -2929,6 +2954,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
   : ""}Respond primarily in character as ${npcData?.name}. Universal Common for dialogue.`,
       newState,
       stateChanged: false,
+      conversationNpcId: parsed.npcId,
     };
   }
 
@@ -3176,16 +3202,27 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
   }
 
   if (first === "SHOP" || first === "SAM" || first === "LIST") {
-    if (p.currentRoom !== "main_hall" && p.currentRoom !== "sams_sharps") {
-      return samShopWrongRoomResult(newState);
+    if (p.currentRoom === "main_hall" || p.currentRoom === "sams_sharps") {
+      return {
+        responseType: "static",
+        staticResponse: buildSamShopListing(p),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+        conversationNpcId: "sam_slicker",
+      };
     }
-    return {
-      responseType: "static",
-      staticResponse: buildSamShopListing(p),
-      dynamicContext: null,
-      newState,
-      stateChanged: false,
-    };
+    if (p.currentRoom === "armory") {
+      // Trigger armory listing via BUY handler (no arg = listing)
+    }
+    if (p.currentRoom === "mage_school") {
+      // Trigger Zim listing via BUY handler (no arg = listing)
+    }
+    // Generic SHOP in any shop room — fall through to BUY with no args
+    if (SHOP_ROOM_NPC[p.currentRoom]) {
+      return processInput("BUY", newState);
+    }
+    return samShopWrongRoomResult(newState);
   }
 
   // ── USE KEY / UNLOCK CHEST / OPEN CHEST ──
@@ -3378,12 +3415,21 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     }
     const alreadyVisited = newState.player.visitedRooms.includes(destinationId);
     newState = movePlayer(newState, destinationId);
+    const roomDesc = buildRoomDescription(newState, destinationId, alreadyVisited ? "nonverbose" : "semiverbose");
+    let roomGreeting = SHOP_ROOM_GREETINGS[destinationId] ?? "";
+    // Brunt gets a dynamic greeting based on banked gold
+    if (destinationId === "guild_vault") {
+      const tier = getBruntTier(newState.player.bankedGold);
+      const pool = BRUNT_GREETINGS[tier] ?? BRUNT_GREETINGS.poor;
+      roomGreeting = pickTemplate(pool) + `\n\n__CMD:DEPOSIT__ __CMD:WITHDRAW__`;
+    }
     return {
       responseType: "static",
-      staticResponse: buildRoomDescription(newState, destinationId, alreadyVisited ? "nonverbose" : "semiverbose"),
+      staticResponse: roomGreeting ? roomDesc + "\n\n" + roomGreeting : roomDesc,
       dynamicContext: null,
       newState,
       stateChanged: true,
+      conversationNpcId: SHOP_ROOM_NPC[destinationId] ?? null,
     };
   }
 
@@ -3951,6 +3997,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
+        conversationNpcId: "sam_slicker",
       };
     }
 
@@ -3997,6 +4044,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
+        conversationNpcId: "hokas_tokas",
       };
     }
 
@@ -4334,6 +4382,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "armory_attendant",
       };
     }
     // Pots & Bobbles — Zim's static shop listing
@@ -4361,6 +4410,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "zim_the_wizard",
       };
     }
     return {
@@ -4476,12 +4526,15 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
     }
     const alreadyVisitedAdv = newState.player.visitedRooms.includes(destinationId);
     newState = movePlayer(newState, destinationId);
+    const advRoomDesc = buildRoomDescription(newState, destinationId, alreadyVisitedAdv ? "nonverbose" : "semiverbose");
+    const advShopGreeting = SHOP_ROOM_GREETINGS[destinationId];
     return {
       responseType: "static",
-      staticResponse: buildRoomDescription(newState, destinationId, alreadyVisitedAdv ? "nonverbose" : "semiverbose"),
+      staticResponse: advShopGreeting ? advRoomDesc + "\n\n" + advShopGreeting : advRoomDesc,
       dynamicContext: null,
       newState,
       stateChanged: true,
+      conversationNpcId: SHOP_ROOM_NPC[destinationId] ?? null,
     };
   }
 

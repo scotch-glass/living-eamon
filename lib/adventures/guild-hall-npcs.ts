@@ -70,19 +70,11 @@ export function getAldricWelcomeLines(playerName: string, hasRobe: boolean): str
   return [
     ...nameReveal,
     "",
-    `Aldric leans back. "I can see your situation, ${playerName}. Last you left the Hall, thou were in a furious rush and armed for slaughter. I'm guessing ye lost, and lost badly. That's all I know about ye."`,
+    `Aldric leans back. "I can see your situation, ${playerName}. Last you left the Hall, you were in a furious rush and armed for slaughter. I'm guessing you lost, and lost badly. That's all I know about you."`,
     "",
-    `He taps the table with his wooden hand. "Now — what would you like to remember first?"`,
+    `He pauses. "But first — which one of these lovely women should bring us a proper drink?" He nods toward the bar, where three women work the room.`,
     "",
-    `__CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__`,
-    `__CMD:TELL Aldric training__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric world__`,
-    `__CMD:TELL Aldric magic__ __CMD:TELL Aldric secrets__`,
-    "",
-    `"And if you forget any of this again — ask yourself for __CMD:HELP__. It all comes back."`,
-    "",
-    `He drains half his tankard in one pull. "Would you like to remember how to fight? I can take you out to the courtyard and we can knock the rust off."`,
-    "",
-    "__YESNO__",
+    "__BARMAID_SELECT__",
   ];
 }
 
@@ -93,48 +85,62 @@ const ALDRIC_TRAINING_RESPONSE: NPCScript = {
   npcId: "old_mercenary",
   condition: {
     room: "main_hall",
-    playerState: {
-      barmaidPreference: null,
-    },
   },
   trigger: "on_response",
   validInputs: ["YES", "NO"],
-  lines: [], // built dynamically
+  lines: [],
   stateUpdate: () => ({}),
 };
 
 /**
  * Build response for the combat training YES/NO.
  */
-export function getAldricTrainingLines(input: string, playerName: string): string[] {
+export function getAldricTrainingLines(input: string, playerName: string, weapon: string): { lines: string[]; giveWeapon: boolean } {
   if (input === "YES") {
-    return [
-      `Aldric stands. It's the first time you've seen him move — he's bigger than you expected. The wooden hand clicks against the table edge.`,
-      "",
-      `"Good. Follow me."`,
-      "",
-      `He leads you south through the Main Hall doors and into the courtyard. Weathered wooden training dummies stand in a row along the far wall. Aldric walks to one and slaps it on the shoulder like an old friend.`,
-      "",
-      `"${playerName}, meet Dufus." He gestures at the dummy. Someone has carved the name DUFUS into its forehead in rough letters. "Dufus has been here longer than I have. He doesn't hit back, he doesn't complain, and he doesn't judge. Perfect training partner."`,
-      "",
-      `"Get yourself a weapon first — __CMD:BEG SAM__ if you have to, no shame in it — then come back here and __CMD:ATTACK DUFUS__. Strike different body parts. __CMD:STRIKE HEAD__, __CMD:STRIKE NECK__, __CMD:STRIKE TORSO__, __CMD:STRIKE LIMBS__. Smaller targets are harder to hit but do more damage when they land."`,
-      "",
-      `"Dufus will teach you the basics. After that, you'll want real enemies." He nods toward the Main Hall. "Three contracts on the notice board when you're ready."`,
-      "",
-      `Aldric walks back inside, leaving you in the courtyard.`,
-    ];
+    const unarmed = weapon === "unarmed";
+    const weaponGift = unarmed
+      ? [
+          "",
+          `Aldric looks at your empty hands. He sighs — not unkindly — and reaches behind the dummy where a short sword leans against the wall. It's well-used, the leather grip dark with old sweat, but the edge is sound.`,
+          "",
+          `"Can't have you punching the dummy barehanded. Take this. It's nobody's anymore."`,
+          "",
+          `You have a Well-Used Short Sword. It is equipped.`,
+        ]
+      : [];
+
+    return {
+      lines: [
+        `Aldric stands. It's the first time you've seen him move — he's bigger than you expected. The wooden hand clicks against the table edge.`,
+        "",
+        `"Good. Follow me."`,
+        "",
+        `He leads you west through the Main Hall doors and into the courtyard. Weathered wooden training dummies stand in a row along the far wall. Aldric walks to one and slaps it on the shoulder like an old friend.`,
+        "",
+        `"${playerName}, meet Dufus." He gestures at the dummy. Someone has carved the name DUFUS into its forehead in rough letters. "Dufus has been here longer than I have. He doesn't hit back, he doesn't complain, and he doesn't judge. Perfect training partner."`,
+        ...weaponGift,
+        "",
+        `"Now — __CMD:ATTACK DUFUS__. Strike different body parts. __CMD:STRIKE HEAD__, __CMD:STRIKE NECK__, __CMD:STRIKE TORSO__, __CMD:STRIKE LIMBS__. Smaller targets are harder to hit but do more damage when they land."`,
+        "",
+        `"Dufus will teach you the basics. After that, you'll want real enemies." He nods toward the Main Hall. "Three contracts on the notice board when you're ready."`,
+        "",
+        `Aldric walks back inside, leaving you in the courtyard.`,
+      ],
+      giveWeapon: unarmed,
+    };
   }
 
   // NO
-  return [
-    `Aldric shrugs. "Suit yourself. The dummy isn't going anywhere." He drains his tankard.`,
-    "",
-    `"When you're ready, head south to the courtyard. Dufus will be waiting. He always is."`,
-    "",
-    `"Now — which one of these lovely women should bring the next round?" He nods toward the bar.`,
-    "",
-    "__BARMAID_SELECT__",
-  ];
+  return {
+    lines: [
+      `Aldric shrugs. "Suit yourself. The dummy isn't going anywhere." He drains his tankard.`,
+      "",
+      `"When you're ready, head south to the courtyard. Dufus will be waiting. He always is."`,
+      "",
+      `He settles back into his corner booth.`,
+    ],
+    giveWeapon: false,
+  };
 }
 
 // ── Barmaid selection (fires after training choice) ─────────
@@ -168,24 +174,55 @@ const BARMAID_SELECT_RESPONSE: NPCScript = {
 /**
  * Build the response lines for a barmaid selection.
  * Called by route.ts when the script matches.
+ * Returns lines + the chosen barmaid NPC id for sprite display.
  */
-export function getBarmaidResponseLines(input: string): string[] {
+export function getBarmaidResponseLines(input: string, isFirstMeeting: boolean): { lines: string[]; barmaidNpcId: string } {
   const chosen = input.toLowerCase();
   const barmaid = NPCS[chosen];
-  if (!barmaid) return [`Someone brings two tankards to the table.`];
+  if (!barmaid) return { lines: [`Someone brings two tankards to the table.`], barmaidNpcId: chosen };
 
   const arrivalFn = BARMAID_ARRIVALS[chosen];
   const arrival = arrivalFn
     ? arrivalFn(barmaid.name)
     : `${barmaid.name} brings two tankards to the table.`;
 
-  return [
+  const baseLines = [
     `Aldric raises two fingers toward the bar. ${barmaid.name} catches the signal.`,
     "",
     arrival,
-    "",
-    `Aldric lifts his drink. "Good choice." He settles back into his corner booth.`,
   ];
+
+  if (isFirstMeeting) {
+    // First meeting: barmaid arrives, then Aldric launches into the tutorial
+    return {
+      lines: [
+        ...baseLines,
+        "",
+        `Aldric lifts his drink. "Good. Now — what would you like to remember first?"`,
+        "",
+        `__CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__`,
+        `__CMD:TELL Aldric training__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric world__`,
+        `__CMD:TELL Aldric magic__ __CMD:TELL Aldric secrets__`,
+        "",
+        `"And if you forget any of this again — ask yourself for __CMD:HELP__. It all comes back."`,
+        "",
+        `He drains half his tankard in one pull. "Would you like to remember how to fight? I can take you out to the courtyard and we can knock the rust off."`,
+        "",
+        "__YESNO__",
+      ],
+      barmaidNpcId: chosen,
+    };
+  }
+
+  // Subsequent visits: just the barmaid arrival
+  return {
+    lines: [
+      ...baseLines,
+      "",
+      `Aldric lifts his drink. "Good choice." He settles back into his corner booth.`,
+    ],
+    barmaidNpcId: chosen,
+  };
 }
 
 // ── Zim's Introduction (first visit to Pots & Bobbles) ──────
@@ -340,20 +377,8 @@ export function getZimHealResponseLines(input: string, gold: number): string[] {
 
 // ── Sam's Shop Greeting (every entry to Sam's Sharps) ───────
 
-const SAM_SHOP_GREETING: NPCScript = {
-  id: "sam_shop_greeting",
-  npcId: "sam_slicker",
-  condition: {
-    room: "sams_sharps",
-  },
-  trigger: "on_enter",
-  lines: [
-    "",
-    `Sam glances up. "Buying or browsing?"`,
-    "",
-    `__CMD:SHOP__`,
-  ],
-};
+// Sam's greeting removed from on_enter to prevent it appending to every command response.
+// Sam's greeting is in his NPC data. The SHOP command shows his wares.
 
 // ── All Guild Hall NPC scripts ───────────────────────────────
 
@@ -363,5 +388,4 @@ export const GUILD_HALL_NPC_SCRIPTS: NPCScript[] = [
   BARMAID_SELECT_RESPONSE,
   ZIM_WELCOME,
   ZIM_HEAL_RESPONSE,
-  SAM_SHOP_GREETING,
 ];

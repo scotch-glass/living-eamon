@@ -106,6 +106,24 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - barmaid_select_response — on_response, handles LIRA/MAVIA/SERAINE choice, stores barmaidPreference
 - zim_welcome — on_enter Pots & Bobbles when metZim=false, foot-in-mouth intro, spell curriculum + HEAL discount YES/NO
 - zim_heal_response — on_response, YES+gold teaches HEAL, YES+broke gives reagent/identification speech
+- Shop room greetings — entering Sam's/Armory/Pots & Bobbles shows "Welcome. Would you like to SHOP?" chip + NPC sprite
+- Brunt banking greetings — 4 tiers (poor 0-10, modest 11-50, solid 51-1000, distinguished 1001+), 20 responses each, in guild-hall.ts
+- Aldric training YES + unarmed — gives well-used short sword before Dufus intro
+
+§5.7 — NPC Sprite System
+- AI background removal via rembg (Python CLI) — subprocess call from Node.js
+- Sprites pre-generated on server startup via lib/spritePregenerate.ts (checks cache, generates missing)
+- API route: /api/npc-image?id=npcId — generates 3:4 portrait, runs rembg, uploads transparent PNG to Supabase Storage
+- Sprites appear during active conversation only — triggered by conversationNpcId on EngineResult
+- __NPC__npcId__ token emitted at start of response for early sprite prefetch
+- spritePrompt on all hub NPCs: Hokas, Sam, Aldric, Lira, Mavia, Seraine, Brunt, Pip, Zim
+- Sprite container: fixed position, left edge overlaps text bubble by ~10px, feet anchored to bottom
+- Cached in scene_image_cache with room_id = sprite_{npcId}
+
+§5.8 — Session Persistence Fix
+- On page refresh (empty messages), chat API skips client state merge — DB is source of truth
+- Prevents fresh createInitialWorldState() from overwriting saved player data
+- Within a session, client state is merged normally for turn-to-turn continuity
 
 §5.2 — Key Architecture Files
 | File | Purpose |
@@ -118,6 +136,10 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 | lib/combatTypes.ts | BodyZone, CombatantState, StrikeResolution, ActiveCombatSession, NPCCombatProfile |
 | lib/combatEngine.ts | 3-roll strike resolution, round resolution, enemy AI, status ticks, combatant builders |
 | lib/combatZoneNarration.ts | Zone-specific narration pools, buildZoneStrikeNarrative(), injury/crit narration |
+| lib/imageProcessing.ts | AI background removal via rembg (Python subprocess) for transparent sprite PNGs |
+| lib/spritePregenerate.ts | Server-startup sprite pre-generation — checks cache, generates missing NPC sprites |
+| app/api/npc-image/route.ts | Generates NPC sprites — Grok Imagine 3:4 → rembg → Supabase Storage cache |
+| components/NPCSprite.tsx | Conversation sprite display — fixed position, bottom-anchored, fade in/out |
 | components/CombatScreen.tsx | Full-screen combat overlay — PaperDoll, log, strike/flee buttons |
 | components/PaperDoll.tsx | SVG clickable body zones — color-coded by armor/wounds/selection |
 | lib/gameData.ts | NPCs, Items, SAM_INVENTORY — re-exports Room types from roomTypes.ts |

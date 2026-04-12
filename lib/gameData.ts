@@ -9,7 +9,6 @@
 import type { NPCBodyType } from "./npcBodyType";
 import type { Room } from "./roomTypes";
 import type { BodyZone, NPCCombatProfile } from "./combatTypes";
-import { ALL_ROOMS } from "./adventures/registry";
 
 export type { NPCBodyType };
 
@@ -21,10 +20,15 @@ export type { Room, RoomState, RoomStateModifier, SceneTone, RoomColdOpen, Adven
 export interface NPC {
   id: string;
   name: string;
+  /** Verbose — full physical/personality description for EXAMINE. */
   description: string;
+  /** Nonverbose — brief note for room presence lists. */
+  glance?: string;
   greeting: string;          // Static first greeting — no API needed
   personality: string;       // Injected into Jane when dynamic convo needed
   isHostile: boolean;
+  /** Training dummy: attackable but neutral, doesn't fight back, grants limited skill XP. */
+  isTrainingDummy?: boolean;
   /** Combat narration; omit for humanoid (default) */
   bodyType?: NPCBodyType;
   stats: { hp: number; armor: number; damage: string };
@@ -41,7 +45,10 @@ export interface NPC {
 export interface Item {
   id: string;
   name: string;
+  /** Verbose — full description for EXAMINE. */
   description: string;
+  /** Nonverbose — short phrase for inventory lists. */
+  glance?: string;
   type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key";
   value: number;             // Gold value
   stats?: {
@@ -52,6 +59,9 @@ export interface Item {
     zoneSlot?: BodyZone;     // Which body zone this armor covers
     zoneCover?: number;      // 0-100, % chance to block
     zoneDurability?: number; // Starting durability
+    dexPenalty?: number;     // Reduces wearer's effective agility on foot (heavier = higher)
+    mountedDexPenalty?: number; // Reduced penalty when mounted (plate becomes viable on horseback)
+    customFit?: boolean;     // Cannot be looted or traded — must be commissioned
     // Shield stats
     shieldBlockChance?: number;  // 0-100
     shieldDurability?: number;
@@ -119,8 +129,8 @@ export const SAM_INVENTORY: SamShopRow[] = [
 // ============================================================
 
 // Rooms are now defined in lib/adventures/ modules and merged by the registry.
-// MAIN_HALL_ROOMS is kept as the engine-facing alias for all registered rooms.
-export const MAIN_HALL_ROOMS: Record<string, import("./roomTypes").Room> = ALL_ROOMS;
+// MAIN_HALL_ROOMS moved to adventures/registry.ts to break circular dependency.
+// Import directly: import { ALL_ROOMS as MAIN_HALL_ROOMS } from "./adventures/registry";
 
 
 // ============================================================
@@ -132,7 +142,8 @@ export const NPCS: Record<string, NPC> = {
     id: "hokas_tokas",
     name: "Hokas Tokas",
     description: "A rotund, cheerful man whose braided beard is threaded with small silver bells that chime when he moves. His eyes are sharp despite his jovial manner — he's seen thirty years of adventurers come and go.",
-    greeting: `"Welcome, welcome!" The silver bells in his beard chime as Hokas spreads his arms in greeting. "What'll it be, friend? Ale, information, or both? Both is the popular choice, I find."`,
+    glance: "The innkeeper, silver bells in his beard.",
+    greeting: `The silver bells in Hokas's beard chime as he looks up. Something flickers behind his eyes — recognition, concern — but he smooths it over with professional ease.\n\n"Ah. There you are. Sit, sit. What'll it be — ale, information, or both? Both is the popular choice."`,
     personality: "Hokas is warm, generous, and deeply fond of adventurers — he was one himself, long ago. He knows every rumor in the city. He responds in Universal Common, always cheerful unless the hall has been damaged, in which case he is barely civil until repairs are paid for.",
     isHostile: false,
     stats: { hp: 40, armor: 2, damage: "1d4" },
@@ -146,7 +157,8 @@ export const NPCS: Record<string, NPC> = {
     id: "sam_slicker",
     name: "Sam Slicker",
     description: "A thin man in a patched leather coat who always seems to be examining something with one eye closed. His weapons are of questionable provenance but undeniable quality.",
-    greeting: `Sam glances up from a dagger he's been examining, his smile sharp as the blade. "Fresh blood. Good. I've got things that need buying, and you look like someone who needs things." He spreads his hands over the velvet. "What's your pleasure?"`,
+    glance: "The arms dealer, one eye on a blade.",
+    greeting: `Sam glances up from a dagger he's been examining. His eyes narrow for half a second — he knows you, but he's not going to make a thing of it.\n\n"Back again." He spreads his hands over the velvet. "I've got things that need buying, and you look like someone who needs things. What's your pleasure?"`,
     personality: "Sam is a morally flexible weapons dealer who speaks in Universal Common with a slightly oily charm. He will haggle, he will hint at illegal goods if the player seems trustworthy, and he always knows more than he lets on. He never breaks character as a merchant.",
     isHostile: false,
     stats: { hp: 25, armor: 1, damage: "1d6+2" },
@@ -161,8 +173,9 @@ export const NPCS: Record<string, NPC> = {
     name: "Aldric the Veteran",
     description:
       "A weathered man with a grey beard and a prosthetic left hand carved from dark wood. He carries himself like someone who has survived things he refuses to discuss. His eyes miss nothing.",
-    greeting: `Aldric glances over as you enter. He takes in the whole situation in about two seconds.\n\n"Sit down," he says. Not unkindly. "There are things you should know before you get yourself killed."\n\nHe nods at the chair across from him. "Ask me anything. I've been here long enough."`,
-    personality: `Aldric the Veteran is a retired adventurer who genuinely wants new players to survive. He is warm but direct, never condescending. He is the Main Hall's living tutorial — he knows the rules, the secrets, the dangers, and the shortcuts. He notices the gray robe immediately and points toward the charity barrel without drama. He recommends buying him an ale for deeper conversation. He offers formal weapon training in the courtyard for gold. When both parties have ale he is more forthcoming. He speaks in plain Universal Common. He is the most reliably useful person in the Main Hall. He proactively offers his topic list whenever a player seems lost or new.`,
+    glance: "The old mercenary, nursing his ale in the corner.",
+    greeting: `Aldric glances over as you enter. He takes in the whole situation — the gown, the empty hands, the look on your face — in about two seconds. Something heavy passes behind his eyes, but he doesn't say what.\n\n"Sit down," he says. Not unkindly. "You look like you could use some answers. Ask me anything. I've been here long enough."`,
+    personality: `Aldric the Veteran is the most talkative and forthcoming NPC in the Guild Hall. He is a retired adventurer who genuinely cares whether the hero survives. He speaks more than anyone else in the room — freely, warmly, and at length. He is direct but never condescending. He buys the hero drinks without being asked. He knows the hero from before the amnesia and is quietly heartbroken about the memory loss but covers it with gruff practicality. He knows the rules, the secrets, the dangers, and the shortcuts. He speaks in plain Universal Common. He proactively offers information, advice, and his topic list whenever the player seems lost. He trains weapon skills in the courtyard for gold. He fondly calls the training dummy "Dufus." He is the most reliably useful person in the Main Hall.`,
     isHostile: false,
     stats: { hp: 60, armor: 3, damage: "1d8+2" },
   },
@@ -172,6 +185,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Lira",
     description:
       "A small, tightly built young woman with pale skin, honey-blonde hair that falls past her shoulders, narrow shoulders, a flat stomach, and long lean legs. She moves between the tables with a dancer's economy — no wasted step, no wasted motion. She is small and athletic, with the quiet confidence of someone who could outrun anything in this room.",
+    glance: "A petite blonde barmaid, quick on her feet.",
     greeting: `Lira sets a tankard down without spilling a drop, already moving to the next table. She catches your eye on the way past and gives a quick half-smile — there and gone. "Need something?"`,
     personality:
       "Lira is impish, quick-witted, and full of bouncy energy — she teases the adventurers she serves, steals bites off their plates, and laughs too loud for her size. She is fearless in a way that has nothing to do with fighting. She warms up fast and says exactly what she's thinking, often before she's finished thinking it.",
@@ -186,6 +200,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Mavia",
     description:
       "A full-figured woman with pale skin, golden-blonde curling hair that falls past her shoulders, and a wide, easy smile. She carries tankards on a tray balanced against one hip, moving with a comfortable, unhurried sway. Her bodice is laced snug and her skirts are practical but flattering. She is voluptuous and entirely at ease with it — the kind of woman who makes a room feel warmer just by being in it.",
+    glance: "A golden-haired barmaid with a warm smile and a tray of tankards.",
     greeting: `Mavia leans one hip against the table edge and sets down two tankards she wasn't asked to bring. "You look thirsty. And hungry. And like you haven't slept in a week." She smiles. "I can fix at least two of those."`,
     personality:
       "Mavia is warm, maternal, and flirtatious without being cheap. She genuinely cares about the people she serves and remembers their names and their stories. She is the emotional center of the Main Hall — everyone talks to Mavia. She speaks in warm, unhurried Universal Common.",
@@ -200,6 +215,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Seraine",
     description:
       "A tall, slender woman with pale skin, ash-blonde hair that falls past her shoulders, narrow hips, and an elegant bearing. Her features are fine and angular. She carries herself with a quiet grace, unhurried and self-possessed. She has a gentle, knowing smile that suggests she finds the world privately amusing.",
+    glance: "A tall, elegant barmaid moving through the room unhurried.",
     greeting: `Seraine arrives at your table and sets a drink down with easy precision. She meets your eyes and smiles — a small, unhurried thing. "There you are. Let me know if you need anything else."`,
     personality:
       "Seraine is gentle, poised, and quietly warm. She speaks softly and what she says is thoughtful. She has an elegant bearing but it makes people feel at ease rather than judged. There is a mystery about her past but she wears it lightly. She speaks in warm, measured Universal Common.",
@@ -213,6 +229,7 @@ export const NPCS: Record<string, NPC> = {
     id: "brunt_the_banker",
     name: "Brunt",
     description: "A dwarf of few words and maximum suspicion. His handshake could crush stone.",
+    glance: "The dwarf banker, eyes on his ledger.",
     greeting: `"Name. Account number. Business." He doesn't look up from his ledger.`,
     personality: "Brunt is a dwarf banker of absolute honesty and zero warmth. He handles all banking transactions — deposits, withdrawals, account creation. He speaks in clipped Universal Common. He cannot be bribed, charmed, or intimidated. He has seen it all.",
     isHostile: false,
@@ -223,6 +240,7 @@ export const NPCS: Record<string, NPC> = {
     id: "armory_attendant",
     name: "Pip",
     description: "A young guild apprentice assigned to armory duty as punishment for something they won't discuss.",
+    glance: "The apprentice, polishing something that doesn't need it.",
     greeting: `Pip sets down the helmet they were polishing and stands up straight. "Guild members get the standard rate. Non-members pay double. You look like a member. Probably."`,
     personality: "Pip is young, slightly nervous, and desperately wants to be an adventurer themselves. They will chatter about the available adventures and offer genuine if naive advice. Speaks in Universal Common with occasional modern slip-ups they immediately correct.",
     isHostile: false,
@@ -238,12 +256,62 @@ export const NPCS: Record<string, NPC> = {
     name: "Priest of Perpetual Life",
     description:
       "Pale, unhurried, dressed in white. Their eyes are open and aware but carry no warmth and no hostility. Simply present.",
+    glance: "A silent figure in white.",
     greeting:
       "Someone in white turns toward you and raises one finger slowly to their lips.",
     personality:
       "Completely silent. Never speaks. Never hostile. Never warm. Responds to all attempts at conversation with a varied silent gesture. Do not generate dialogue for this NPC under any circumstances.",
     isHostile: false,
     stats: { hp: 999, armor: 10, damage: "0" },
+  },
+
+  zim_the_wizard: {
+    id: "zim_the_wizard",
+    name: "Zim",
+    description:
+      "A tall, gangly young man who gives the impression of a heron that learned to read. His robes are covered in ink stains, scorch marks, and what might be mustard. His eyes are bright and move constantly — tracking things you can't see. His fingers are long and never still, tapping, sketching invisible diagrams in the air, adjusting spectacles that keep sliding down his nose. He is simultaneously the most knowledgeable person you've met and the least capable of not saying the wrong thing.",
+    glance: "The gangly young wizard, nose in three books at once.",
+    greeting: `Zim looks up from his books, adjusts his spectacles, and opens his mouth. Then closes it. Then opens it again.\n\n"Oh," he says. "Oh, you're — yes. Hello. Welcome to Pots and Bobbles. Potions, scrolls, identification services, magical training — I do all of it. Well, most of it. The advanced summoning is on hold because of the incident. Never mind the incident."\n\nHe hops off his stool. "What do you need?"`,
+    personality:
+      `Zim is a young wizard who runs Pots & Bobbles — the Guild's mage school and magical supply shop. He is brilliant, awkward, and pathologically incapable of filtering his thoughts before they exit his mouth. He has autistic hyperfocus on magical topics and will lecture at length about anything arcane without noticing whether anyone is listening. He is overly helpful to the point of being exhausting — he genuinely wants the hero to succeed and will give unsolicited advice, warnings, and tangential trivia. He has high-energy ADD — he starts sentences, abandons them, picks up new ones, circles back. He speaks in rapid Universal Common with occasional technical terms he forgets to explain. He recognizes the hero from before the amnesia and feels terrible about the memory loss. He crosses himself (shoulder-shoulder, forehead, heart, kiss) when mentioning dark forces. He sells potions, buys herbs and curiosities, identifies magical items for a fee, and trains magic for gold. He warns about cursed items and corrupted artifacts. He refers to adventuring as "out in the field."`,
+    isHostile: false,
+    stats: { hp: 30, armor: 0, damage: "1d6" },
+    merchant: {
+      inventory: [
+        "healing_potion", "greater_healing_potion",
+        "stamina_brew", "fatigue_brew",
+        "antidote", "strong_antidote",
+        "bandage", "tourniquet",
+        "unreliable_poison", "strong_poison",
+        "mana_potion",
+      ],
+      haggleModifier: -1,
+    },
+  },
+
+  training_dummy: {
+    id: "training_dummy",
+    name: "Dufus",
+    description:
+      "A man-shaped wooden post wrapped in old rope and stuffed burlap. Generations of sword cuts have chipped away at its torso. Someone has carved the name DUFUS into its forehead in rough, deep letters — the oldest mark on it. Below that, a crude charcoal face has been drawn and redrawn so many times the features have blurred into a permanent expression of resigned disappointment. Dried straw leaks from a gash where the neck meets the shoulder. It has been repaired so many times that very little of the original wood remains.",
+    glance: "Dufus the training dummy. DUFUS carved into its forehead.",
+    greeting: "Dufus says nothing. He has heard it all before.",
+    personality: "It is a wooden post named Dufus. It does not speak. It does not move. It takes the hit.",
+    isHostile: false,
+    isTrainingDummy: true,
+    stats: { hp: 50, armor: 0, damage: "0" },
+    combatProfile: {
+      agility: 0,
+      weaponSkill: 0,
+      zones: {
+        head: { cover: 0, durability: 0 },
+        neck: { cover: 0, durability: 0 },
+        torso: { cover: 0, durability: 0 },
+        limbs: { cover: 0, durability: 0 },
+      },
+      shieldBlockChance: 0,
+      shieldDurability: 0,
+    },
   },
 };
 
@@ -343,40 +411,31 @@ export const ALDRIC_OPENING_LINES: string[] = [
 
 export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
   survival: [
-    `"First things first," Aldric says. "If you're wearing that gray robe, go to the charity barrel by the south wall. Take the clothes. The robe tears off — that's normal, it's designed to — and goes in the gown barrel. Then you're dressed.\n\nSecond: if you have no weapon, say BEG SAM. Sam will give you a rusty short sword. Say BEG HOKAS and he'll give you a butcher knife. Either works for now.\n\nThird: bank your gold before you go anywhere dangerous. GO DOWN to the vault. Talk to Brunt. DEPOSIT every coin you're not willing to lose. What's in your pockets dies with you; what's in the vault doesn't.\n\nFourth: read the notice board. Go east from here. Three contracts posted on Guild parchment — the Beginner's Cave, the Thieves Guild, the Haunted Manor. Each one tells you exactly how to enter. Start with the Cave."\n\nHe taps the table. "That's the short version."`,
-    `"Die once and you'll learn this the hard way," Aldric mutters. "Barrel for clothes. BEG for steel. Vault for gold.\n\nFourth: read the notice board. Go east from here. Three contracts posted on Guild parchment — the Beginner's Cave, the Thieves Guild, the Haunted Manor. Each one tells you exactly how to enter. Start with the Cave."\n\nThe Church brings you back — it does not bring back your purse."\n\nHe points toward the south wall without looking. "Charity barrel. Gown barrel. Not complicated. Staying broke and naked is optional."`,
+    `"First things first," Aldric says.\n\n"If you're wearing that gray robe — " he gestures at the south wall " — charity barrel. Take the clothes. The robe tears off, that's normal. Goes in the gown barrel next to it."\n\n"Second: weapon. If you're empty-handed, say __CMD:BEG SAM__ — he'll give you a rusty sword — or __CMD:BEG HOKAS__ for a butcher knife. Either kills."\n\n"Third: __CMD:GO DOWN__ to the vault. Talk to Brunt. __CMD:DEPOSIT__ every coin you don't want to lose. What's in your pockets dies with you. What's in the vault doesn't."\n\n"Fourth: notice board. __CMD:GO EAST__ from here. Three contracts posted — start with the Cave."\n\nHe taps the table. "Also — there's a row of iron chests along the wall. Your key opens one of them. __CMD:USE KEY__. Might be something useful inside."\n\nAnything else? __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__ __CMD:TELL Aldric training__`,
   ],
   combat: [
-    `"Fighting here isn't theatre," Aldric says. "You ATTACK with what you're wielding. Initiative is rolled each round — weapon speed and your reflexes matter. If you connect, damage comes from the weapon, your strength, and a little battlefield sense we call expertise.\n\nYour base chance to land a hit is about three in four — not a guarantee. Every point in the weapon skill you're actually using nudges that up a little, up to a ceiling. The other side's still trying to kill you; misses and bad luck happen. Occasionally you'll fumble like a recruit.\n\nArmor and shields eat raw damage before it touches your hide. Sometimes they eat all of it. Sometimes not enough.\n\nCritical hits happen — not often, but when they do you'll know. If it's going badly, FLEE picks a random exit and runs. Your enemy remembers how hurt it was; walking away doesn't heal them."`,
-    `"The guild tracks skill per weapon discipline — Swordsmanship, Mace Fighting, Fencing, Archery, and the rest," Aldric says. "Better weapon skill, better odds to connect, within reason. Unarmed against something armed is a bad idea; you won't swing empty hands like a ballad hero — get a blade first."\n\nAldric knocks wood with his prosthetic. "FLEE is not shame. Dead is shame."`,
+    `"Fighting's changed since you forgot," Aldric says. He leans forward.\n\n"You start a fight with __CMD:ATTACK DUFUS__ — or whatever you're fighting. That locks you in. From there, you pick a body part to hit every round:"\n\n__CMD:STRIKE TORSO__ __CMD:STRIKE LIMBS__ __CMD:STRIKE HEAD__ __CMD:STRIKE NECK__\n\n"Torso's the easy shot — big target, hard to miss. Limbs are a little harder. Head is genuinely difficult. Neck?" He draws a finger across his throat. "Double damage. But you'll miss more than you hit unless you're very good or very lucky."\n\n"Every round: you pick a zone, they pick a zone. Initiative decides who swings first. Three things can stop your strike — they dodge it, their shield catches it, or their armor turns it. If it gets through all three, it lands."\n\nHe flexes his wooden hand. "Injuries happen. Head shots cause concussions. Neck hits sever arteries. Break a man's leg and he can't flee. Break his arm and he can't swing straight."\n\n"If it goes badly: __CMD:FLEE__. No shame in living."\n\nMore? __CMD:TELL Aldric training__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric survival__`,
   ],
   training: [
-    `"Right here in the Main Hall," Aldric says, "say TRAIN and the skill you want: SWORDSMANSHIP, MACE, FENCING, ARCHERY, ARMOR, SHIELD, STEALTH, LOCKPICKING, MAGERY — I charge by how good you already are in that track.\n\nSkill 0 to 19: twenty-five gold, Basic lesson, I put five points in. Twenty to forty-nine: a hundred gold, Journeyman, ten points. Fifty to ninety-nine: three hundred gold, Advanced, fifteen points. One hundred to one hundred ninety-nine: seven hundred fifty gold, Master, twenty points. Two hundred or more in that skill — I've got nothing left to teach you there; find a better master."\n\n"If your total across all nine skills is riding the seven-hundred cap, something else dips a point to make room — that's the guild's bookkeeping."\n\nHe almost smiles. "Bare TRAIN with no skill name shows you the table and where you stand. When the weather's fine I spar in the courtyard — paid drills are at my table."`,
-    `"Same hall, same command: TRAIN <skill>," Aldric says. "Costs and gains step up as you climb — Basic through Master — then I'm done with that discipline.\n\n"No gold? Land hits in real fights. Your weapon skill ticks up a point when you earn it. Slower than my lessons. Cheaper."`,
+    `"Two ways to get better with a weapon," Aldric says.\n\n"First way: hit things. Every time you land a real hit, your weapon skill ticks up one point. Slow. Cheap. Effective."\n\n"Second way: pay me." He almost smiles. "Say __CMD:TRAIN__ and the skill you want — SWORDSMANSHIP, MACE, FENCING, ARCHERY, and so on. I charge by how good you already are:"\n\n"Skill 0–19: twenty-five gold, I put five points in. 20–49: a hundred gold, ten points. 50–99: three hundred, fifteen points. 100–199: seven-fifty, twenty points. Past two hundred? Find a better teacher."\n\n"Total skill across all nine tracks caps at seven hundred. Push past it and something else drops a point to make room."\n\n"No gold at all? Go south to the courtyard. __CMD:ATTACK DUFUS__. The training dummy teaches basics for free — up to twenty-five points in whatever you're swinging. After that you need real enemies or real gold."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric adventures__`,
   ],
   skills: [
-    `"Nine tracks," Aldric says, ticking them on his fingers. "Swordsmanship, Mace Fighting, Fencing, Archery, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery — the guild logs all of it.\n\nTotal across everything caps at seven hundred. Push past that and something else has to give; usually your lowest skill drops a point so the new growth has somewhere to go. The cap is merciless but fair."\n\nHe meets your eyes. "STATS shows your sheet. TRAIN with me is tiered — what you pay and how much I move the needle depends on your current level in that skill. Fighting moves numbers slowly, one point at a time, when you connect."`,
-    `"Think of seven hundred as the maximum attention your body can hold," Aldric says. "Overflow doesn't vanish — it shoves another skill down a notch. Watch your totals if you're juggling magery with steel."\n\n"Decay only happens at the cap, and only to make room. Nothing rots while you're under the ceiling."`,
+    `"Nine tracks," Aldric says, ticking them off. "Swordsmanship, Mace Fighting, Fencing, Archery, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery."\n\n"Your weapon skill does two things in a fight. First — dexterous fighters are harder to hit, and your dexterity helps you land hits too. Skill doesn't change that. What skill does is increase your chance of a critical hit — a rare, ugly thing — and it's what I train for gold."\n\n"Here's the important part: armor makes you slower. Every piece of steel you strap on costs you agility. Leather costs a little. Chain costs more. Plate?" He shakes his head. "Plate is for men on horses, not men in caves."\n\n"A fast fighter in no armor who knows how to move — that's the hardest thing to kill in a dungeon. A slow fighter in full chain gets hit by everything but shrugs most of it off. Different path, same survival. Pick one."\n\n"__CMD:STATS__ shows your sheet. __CMD:INVENTORY__ shows your gear."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__ __CMD:TELL Aldric adventures__`,
   ],
   adventures: [
-    `"Go east from this hall to the notice-board room," Aldric says. "Three contracts on Guild parchment right now — the Beginner's Cave, the Thieves Guild, the Haunted Manor. Beginner's Cave for people who still flinch at rats. Thieves Guild if you fancy knives in the dark — harder. Haunted Manor if you've said goodbye to everyone you love."\n\n"READ the board in that room. ENTER THE BEGINNER'S CAVE — or the others — when you're ready. Word match matters; spell it like the posting."\n\nHe leans in. "Start easy unless you enjoy being a cautionary tale."`,
-    `"Same board, same door east of here," Aldric says. "The parchment lists names and difficulties — novice, moderate, deadly — believe the labels. ENTER pulls you into the adventure proper once the engine recognizes what you typed."\n\n"If you're fresh from the Church, do not skip straight to the Manor. I am not joking."`,
+    `"Go east from this hall to the notice-board room," Aldric says. "__CMD:GO EAST__. Three contracts on Guild parchment:"\n\n"The Beginner's Cave — goblin infestation north of the city. Novice difficulty. Start here."\n\n"The Thieves Guild — social infiltration. Moderate. Not for the clumsy."\n\n"The Haunted Manor — if you've said goodbye to everyone you love."\n\n"__CMD:READ__ the board in that room for the full postings. When you're ready, the posting tells you the exact command — ENTER THE BEGINNER'S CAVE, and so on. Spell it like the posting says."\n\nHe leans in. "Start with the Cave unless you enjoy being a cautionary tale."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__`,
   ],
   world: [
-    `"You're in the Guild of Free Adventurers — Main Hall for company, Notice Board for work, Vault downstairs for money, Courtyard for air and weather," Aldric says. "Hokas runs the bar; buy food and drink from him. Sam sells steel on the velvet — sharp tongue, sharper prices."\n\n"The Church of Perpetual Life brings you back when you die. West from the hall's exit, through the courtyard. You'll learn that path whether you want to or not."\n\nHe pauses. "The city outside is a conversation for another day."`,
-    `"Guild first. Everything else second," Aldric says. "Brunt in the vault doesn't chat — he banks. Door guard doesn't gossip. Priests don't speak at all, which is its own kind of theology."\n\n"Treat Hokas well. He remembers."`,
+    `"You're in the Guild of Free Adventurers," Aldric says. "This is where everything starts and everything returns to."\n\n"Main Hall — company, drink, me. __CMD:GO EAST__ for the notice board. __CMD:GO NORTH__ for the armory — Pip's got basic gear. __CMD:GO DOWN__ for the vault — Brunt banks your gold. __CMD:GO SOUTH__ for the courtyard — fresh air, Sam's weapon shop to the north of it, and Dufus the training dummy."\n\n"The Church of Perpetual Life is west from the courtyard. You came from there. You'll go back. It brings you back when you die — stripped of everything except what's in the vault."\n\n"Hokas runs the bar here. Buy food from him — it heals. Treat him well; he remembers."\n\n"The city outside Ostavar is a conversation for another day."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__`,
   ],
   magic: [
-    `"Guild-sanctioned magic is CAST — BLAST, HEAL, LIGHT, SPEED once you know them," Aldric says. "That's the safe, documented kind. PRAY reaches gods whose names you earn in play; don't embarrass yourself with empty invocations."\n\n"What you must not shout about in here is INVOKE — occult, rare, and none of my business in public."\n\nHe spreads his hands. "Stay inside CAST until you know what you're doing."`,
-    `"Magery as a skill exists," Aldric says, "but the spells you can actually CAST are listed on your character. Don't assume every syllable you invent will work."\n\n"If it isn't guild curriculum, assume it will get you stared at — or worse."`,
+    `"Guild-sanctioned magic is __CMD:CAST__ — BLAST, HEAL, LIGHT, SPEED — once you know them," Aldric says. "That's the safe, documented kind."\n\n"PRAY reaches gods whose names you earn in play. Don't embarrass yourself with empty invocations — learn a name first, then pray to it."\n\n"What you must not shout about in here is INVOKE." His voice drops. "Occult. Rare. Not my business in public."\n\nHe spreads his hands. "Stay inside CAST until you know what you're doing."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric secrets__ __CMD:TELL Aldric world__`,
   ],
   secrets: [
-    `"Secrets cost wetware and wheat," Aldric says mildly, raising his empty tankard. "Buy me an ale from Hokas, sit like you mean it, and ask again. Some answers are too long for a free sentence."\n\n*You might: BUY ALE from Hokas, then TELL Aldric secrets again.*`,
-    `"I'm not a library with a broken lock," Aldric says. "I'm a person who charges admission in barley and hops. Ale first. Then we talk about the things that don't go on the board."\n\n*You might: purchase an ale and return.*`,
+    `"Secrets cost wetware and wheat," Aldric says mildly, raising his empty tankard. "Buy me an ale from Hokas, sit like you mean it, and ask again. Some answers are too long for a free sentence."\n\nYou might: __CMD:BUY ALE__ from Hokas, then __CMD:TELL Aldric secrets__ again.`,
   ],
   order: [
     `Aldric's voice drops until you're leaning in. "The Order — lower case when you speak it aloud. They don't recruit from shouting."\n\n"If you need them, you'll be pointed. Until then, practice looking like you belong here and nowhere else."\n\nHe sits back, volume normal. "That's all you get without clearance."`,
-    `"Whispered business," Aldric breathes. "Not for the hall at full voice. If you don't know whether you should be asking, you shouldn't."\n\nHe taps his nose. "Patience. Proof. Then someone finds you."`,
   ],
 };
 
@@ -389,6 +448,7 @@ export const ITEMS: Record<string, Item> = {
     id: "short_sword",
     name: "Short Sword",
     description: "A reliable blade, well-balanced and easy to carry. The choice of sensible adventurers everywhere.",
+    glance: "A reliable blade.",
     type: "weapon",
     value: 15,
     stats: { damage: "1d6" },
@@ -399,6 +459,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Rusty Short Sword",
     description:
       "A short sword that has seen better decades. The blade is pitted with rust and the edge is uneven, but it is heavier than a fist and that is the point.",
+    glance: "A pitted, rusty blade. Better than fists.",
     type: "weapon",
     value: 1,
     stats: { damage: "1d4" },
@@ -409,6 +470,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Butcher Knife",
     description:
       "A heavy-bladed kitchen knife, well-used and not recently cleaned. It was made for cutting meat and it will do that regardless of what kind of meat is in front of it.",
+    glance: "A heavy kitchen knife. Not recently cleaned.",
     type: "weapon",
     value: 2,
     stats: { damage: "2-14" },
@@ -842,7 +904,7 @@ export const ITEMS: Record<string, Item> = {
     description: "Boiled leather armor that provides basic protection without slowing you down.",
     type: "armor",
     value: 20,
-    stats: { armorClass: 2, zoneSlot: "torso", zoneCover: 40, zoneDurability: 30 },
+    stats: { armorClass: 2, zoneSlot: "torso", zoneCover: 40, zoneDurability: 30, dexPenalty: 2 },
     isCarryable: true,
   },
   chain_mail: {
@@ -851,7 +913,7 @@ export const ITEMS: Record<string, Item> = {
     description: "Interlocking iron rings that stop blades and arrows alike. Heavy, but worth it.",
     type: "armor",
     value: 60,
-    stats: { armorClass: 4, zoneSlot: "torso", zoneCover: 65, zoneDurability: 50 },
+    stats: { armorClass: 4, zoneSlot: "torso", zoneCover: 65, zoneDurability: 50, dexPenalty: 5 },
     isCarryable: true,
   },
   buckler: {
@@ -860,7 +922,7 @@ export const ITEMS: Record<string, Item> = {
     description: "A small steel buckler, light enough to parry and turn a blade without tiring the arm.",
     type: "armor",
     value: 30,
-    stats: { armorClass: 1, shieldBlockChance: 25, shieldDurability: 20 },
+    stats: { armorClass: 1, shieldBlockChance: 25, shieldDurability: 20, dexPenalty: 1 },
     isCarryable: true,
   },
   torch: {
@@ -886,6 +948,16 @@ export const ITEMS: Record<string, Item> = {
     type: "consumable",
     value: 3,
     stats: { healAmount: 2 },
+    isCarryable: true,
+  },
+  members_note: {
+    id: "members_note",
+    name: "Hastily Scrawled Note",
+    description:
+      `A torn scrap of parchment in rushed, unsteady handwriting:\n\n"String of bad luck lately. Bank is empty. My friends have all disappeared. I'm going to fight that bastard Ishmael again and try to find out what he did to everyone to make them forget everything. Apologies to YOU, future me, if I failed."`,
+    glance: "A desperate note from a previous occupant of this locker.",
+    type: "key",
+    value: 0,
     isCarryable: true,
   },
   ale: {
@@ -914,6 +986,174 @@ export const ITEMS: Record<string, Item> = {
     value: 5,
     isCarryable: false,
   },
+  // ── Potions & Consumables (Pots & Bobbles) ───────────────
+  healing_potion: {
+    id: "healing_potion",
+    name: "Healing Potion",
+    description: "A small glass vial of deep red liquid. It tastes like copper and warmth. Restores a moderate amount of health.",
+    glance: "A red vial. Heals wounds.",
+    type: "consumable",
+    value: 25,
+    stats: { healAmount: 15 },
+    isCarryable: true,
+  },
+  greater_healing_potion: {
+    id: "greater_healing_potion",
+    name: "Greater Healing Potion",
+    description: "A larger flask of brilliant scarlet liquid that seems to pulse faintly. Restores a significant amount of health.",
+    glance: "A pulsing scarlet flask. Serious healing.",
+    type: "consumable",
+    value: 60,
+    stats: { healAmount: 35 },
+    isCarryable: true,
+  },
+  mana_potion: {
+    id: "mana_potion",
+    name: "Mana Potion",
+    description: "An iridescent blue liquid in a crystal vial. It hums when you hold it. Restores magical energy.",
+    glance: "A humming blue vial. Restores mana.",
+    type: "consumable",
+    value: 30,
+    isCarryable: true,
+  },
+  stamina_brew: {
+    id: "stamina_brew",
+    name: "Stamina Brew",
+    description: "A murky brown liquid that smells like wet bark and tastes worse. Instantly restores stamina and clears fatigue.",
+    glance: "A foul brown brew. Restores stamina.",
+    type: "consumable",
+    value: 20,
+    isCarryable: true,
+  },
+  fatigue_brew: {
+    id: "fatigue_brew",
+    name: "Fatigue Recovery Brew",
+    description: "A thick green draught. One swallow and the exhaustion lifts like a curtain. Expensive because the ingredients are rare.",
+    glance: "A thick green draught. Clears deep exhaustion.",
+    type: "consumable",
+    value: 40,
+    isCarryable: true,
+  },
+  antidote: {
+    id: "antidote",
+    name: "Antidote",
+    description: "A chalky white suspension that neutralizes mild poisons. Tastes like crushed limestone and regret.",
+    glance: "A white vial. Cures mild poisoning.",
+    type: "consumable",
+    value: 10,
+    isCarryable: true,
+  },
+  strong_antidote: {
+    id: "strong_antidote",
+    name: "Strong Antidote",
+    description: "A vivid yellow potion that can neutralize even serious toxins. Burns going down.",
+    glance: "A yellow vial. Cures serious poisoning.",
+    type: "consumable",
+    value: 30,
+    isCarryable: true,
+  },
+  bandage: {
+    id: "bandage",
+    name: "Bandage",
+    description: "Clean linen strips. Stops light bleeding when applied to a wound.",
+    glance: "Clean linen. Stops bleeding.",
+    type: "consumable",
+    value: 5,
+    isCarryable: true,
+  },
+  tourniquet: {
+    id: "tourniquet",
+    name: "Tourniquet",
+    description: "A thick leather strap with a tightening mechanism. Stops even severe bleeding immediately. Painful but effective.",
+    glance: "A leather strap. Stops severe bleeding.",
+    type: "consumable",
+    value: 15,
+    isCarryable: true,
+  },
+  unreliable_poison: {
+    id: "unreliable_poison",
+    name: "Unreliable Poison",
+    description: "A small bottle of yellowish liquid. Apply to a blade for weak poison damage over 3 rounds. The 'unreliable' part is honest.",
+    glance: "A weak blade poison. 3 charges.",
+    type: "consumable",
+    value: 20,
+    isCarryable: true,
+  },
+  strong_poison: {
+    id: "strong_poison",
+    name: "Strong Homebrew Poison",
+    description: "A dark bottle with a cork sealed in wax. Serious poison damage over 3 rounds. Don't get it on your hands.",
+    glance: "A potent blade poison. 3 charges.",
+    type: "consumable",
+    value: 50,
+    isCarryable: true,
+  },
+
+  // ── Herbs & Reagents (found in the field, sold to Zim) ──
+  mandrake_root: {
+    id: "mandrake_root",
+    name: "Mandrake Root",
+    description: "A gnarled root shaped uncomfortably like a screaming human figure. Used in healing potions and certain rituals best not described in polite company. Zim at Pots & Bobbles buys these.",
+    glance: "A gnarled root. Valuable to alchemists.",
+    type: "treasure",
+    value: 8,
+    isCarryable: true,
+  },
+  black_pearl: {
+    id: "black_pearl",
+    name: "Black Pearl",
+    description: "A smooth, dark pearl that seems to absorb light rather than reflect it. Essential reagent for protective wards and certain dark invocations. Rare and valuable.",
+    glance: "A dark pearl that drinks the light.",
+    type: "treasure",
+    value: 25,
+    isCarryable: true,
+  },
+  nightshade: {
+    id: "nightshade",
+    name: "Nightshade",
+    description: "A sprig of dark berries. Beautiful and lethal in equal measure. The base ingredient for most poisons. Handle with care.",
+    glance: "Dark berries. Beautiful and lethal.",
+    type: "treasure",
+    value: 6,
+    isCarryable: true,
+  },
+  ginseng: {
+    id: "ginseng",
+    name: "Ginseng Root",
+    description: "A pale, forked root with a woody smell. Used in stamina brews and fatigue remedies. Grows in shaded forest floors.",
+    glance: "A pale forked root. Used in stamina brews.",
+    type: "treasure",
+    value: 5,
+    isCarryable: true,
+  },
+  blood_moss: {
+    id: "blood_moss",
+    name: "Blood Moss",
+    description: "A deep crimson moss that grows only where blood has been spilled on stone. Used in coagulants and healing draughts. Zim pays well for it.",
+    glance: "Crimson moss. Grows where blood was spilled.",
+    type: "treasure",
+    value: 10,
+    isCarryable: true,
+  },
+  spider_silk: {
+    id: "spider_silk",
+    name: "Spider Silk",
+    description: "A coil of impossibly thin, impossibly strong thread harvested from giant cave spiders. Used in antidotes and protective enchantments.",
+    glance: "Impossibly thin thread. Used in antidotes.",
+    type: "treasure",
+    value: 12,
+    isCarryable: true,
+  },
+  mysterious_bauble: {
+    id: "mysterious_bauble",
+    name: "Mysterious Bauble",
+    description: "A small glass sphere with something moving inside it. You can't tell what. Zim might know.",
+    glance: "A glass sphere with something inside.",
+    type: "treasure",
+    value: 15,
+    isCarryable: true,
+  },
+
   notice_board_key: {
     id: "notice_board_key",
     name: "Guild Member's Key",
@@ -946,7 +1186,7 @@ export const ITEMS: Record<string, Item> = {
     description: "A hardened leather skullcap. Won't stop a mace, but it's better than nothing.",
     type: "armor",
     value: 12,
-    stats: { zoneSlot: "head", zoneCover: 30, zoneDurability: 15 },
+    stats: { zoneSlot: "head", zoneCover: 30, zoneDurability: 15, dexPenalty: 1 },
     isCarryable: true,
   },
   iron_helm: {
@@ -955,7 +1195,7 @@ export const ITEMS: Record<string, Item> = {
     description: "A dented iron helm with a nasal guard. Solid protection for the skull.",
     type: "armor",
     value: 40,
-    stats: { zoneSlot: "head", zoneCover: 55, zoneDurability: 35 },
+    stats: { zoneSlot: "head", zoneCover: 55, zoneDurability: 35, dexPenalty: 3 },
     isCarryable: true,
   },
   leather_gorget: {
@@ -964,7 +1204,7 @@ export const ITEMS: Record<string, Item> = {
     description: "A stiff leather collar that protects the throat. Not fashionable. Functional.",
     type: "armor",
     value: 10,
-    stats: { zoneSlot: "neck", zoneCover: 25, zoneDurability: 12 },
+    stats: { zoneSlot: "neck", zoneCover: 25, zoneDurability: 12, dexPenalty: 1 },
     isCarryable: true,
   },
   chain_coif: {
@@ -973,7 +1213,7 @@ export const ITEMS: Record<string, Item> = {
     description: "A hood of interlocking iron rings that drapes over the neck and shoulders.",
     type: "armor",
     value: 35,
-    stats: { zoneSlot: "neck", zoneCover: 45, zoneDurability: 25 },
+    stats: { zoneSlot: "neck", zoneCover: 45, zoneDurability: 25, dexPenalty: 2 },
     isCarryable: true,
   },
   leather_greaves: {
@@ -982,7 +1222,7 @@ export const ITEMS: Record<string, Item> = {
     description: "Hardened leather guards for the arms and shins. Scarred by previous owners.",
     type: "armor",
     value: 15,
-    stats: { zoneSlot: "limbs", zoneCover: 35, zoneDurability: 20 },
+    stats: { zoneSlot: "limbs", zoneCover: 35, zoneDurability: 20, dexPenalty: 1 },
     isCarryable: true,
   },
   chain_greaves: {
@@ -991,7 +1231,48 @@ export const ITEMS: Record<string, Item> = {
     description: "Chainmail sleeves and leg guards. Heavy but effective against slashing attacks.",
     type: "armor",
     value: 45,
-    stats: { zoneSlot: "limbs", zoneCover: 55, zoneDurability: 40 },
+    stats: { zoneSlot: "limbs", zoneCover: 55, zoneDurability: 40, dexPenalty: 3 },
+    isCarryable: true,
+  },
+
+  // ── Plate Armor (custom-fit, mounted combat) ──────────────
+  // On foot: crippling dex penalty. Mounted: comparable to chain.
+  // Cost = 100 good swords. Cannot be looted or traded.
+
+  plate_helm: {
+    id: "plate_helm",
+    name: "Plate Helm",
+    description: "A full-faced steel helm with a riveted visor. Custom-forged to fit one head. On foot you can barely see; on horseback it is a steel skull.",
+    type: "armor",
+    value: 1250,
+    stats: { zoneSlot: "head", zoneCover: 85, zoneDurability: 60, dexPenalty: 8, mountedDexPenalty: 3, customFit: true },
+    isCarryable: true,
+  },
+  plate_gorget: {
+    id: "plate_gorget",
+    name: "Plate Gorget",
+    description: "Articulated steel plates that encase the throat and collar. You cannot turn your head quickly, but nothing short of a war hammer is getting through.",
+    type: "armor",
+    value: 1000,
+    stats: { zoneSlot: "neck", zoneCover: 75, zoneDurability: 50, dexPenalty: 6, mountedDexPenalty: 2, customFit: true },
+    isCarryable: true,
+  },
+  plate_cuirass: {
+    id: "plate_cuirass",
+    name: "Plate Cuirass",
+    description: "A breastplate and backplate of hammered Aquilonian steel, fitted to one torso. The weight is tremendous. Kings wear this to war; no one wears it anywhere else.",
+    type: "armor",
+    value: 1500,
+    stats: { zoneSlot: "torso", zoneCover: 90, zoneDurability: 80, dexPenalty: 12, mountedDexPenalty: 5, customFit: true },
+    isCarryable: true,
+  },
+  plate_greaves: {
+    id: "plate_greaves",
+    name: "Plate Greaves",
+    description: "Steel cuisses, jambes, and sollerets. Your legs become pillars of metal. Walking is labor; riding is empire.",
+    type: "armor",
+    value: 1250,
+    stats: { zoneSlot: "limbs", zoneCover: 80, zoneDurability: 60, dexPenalty: 10, mountedDexPenalty: 3, customFit: true },
     isCarryable: true,
   },
 };
@@ -1373,6 +1654,18 @@ export const ADVENTURES: Record<string, Adventure> = {
         personality: "Cowardly. Will flee if reduced below half HP unless cornered.",
         isHostile: true,
         stats: { hp: 8, armor: 0, damage: "1d4" },
+        combatProfile: {
+          agility: 35,
+          weaponSkill: 15,
+          zones: {
+            head: { cover: 0, durability: 0 },
+            neck: { cover: 0, durability: 0 },
+            torso: { cover: 0, durability: 0 },
+            limbs: { cover: 0, durability: 0 },
+          },
+          shieldBlockChance: 0,
+          shieldDurability: 0,
+        },
       },
       {
         id: "goblin_warrior",
@@ -1382,6 +1675,18 @@ export const ADVENTURES: Record<string, Adventure> = {
         personality: "Aggressive but not clever. Fights until dead.",
         isHostile: true,
         stats: { hp: 12, armor: 1, damage: "1d6" },
+        combatProfile: {
+          agility: 20,
+          weaponSkill: 25,
+          zones: {
+            head: { cover: 0, durability: 0 },
+            neck: { cover: 0, durability: 0 },
+            torso: { cover: 15, durability: 8 },
+            limbs: { cover: 0, durability: 0 },
+          },
+          shieldBlockChance: 0,
+          shieldDurability: 0,
+        },
       },
       {
         id: "goblin_warrior_2",
@@ -1391,6 +1696,18 @@ export const ADVENTURES: Record<string, Adventure> = {
         personality: "Fights alongside its companion. Flees if companion dies.",
         isHostile: true,
         stats: { hp: 12, armor: 1, damage: "1d6" },
+        combatProfile: {
+          agility: 20,
+          weaponSkill: 25,
+          zones: {
+            head: { cover: 0, durability: 0 },
+            neck: { cover: 0, durability: 0 },
+            torso: { cover: 15, durability: 8 },
+            limbs: { cover: 0, durability: 0 },
+          },
+          shieldBlockChance: 0,
+          shieldDurability: 0,
+        },
       },
       {
         id: "goblin_shaman",
@@ -1400,6 +1717,18 @@ export const ADVENTURES: Record<string, Adventure> = {
         personality: "Casts minor curses (-1 to player rolls) and heals other goblins. Cowardly, stays at range.",
         isHostile: true,
         stats: { hp: 10, armor: 0, damage: "1d4+curse" },
+        combatProfile: {
+          agility: 30,
+          weaponSkill: 10,
+          zones: {
+            head: { cover: 0, durability: 0 },
+            neck: { cover: 0, durability: 0 },
+            torso: { cover: 0, durability: 0 },
+            limbs: { cover: 0, durability: 0 },
+          },
+          shieldBlockChance: 0,
+          shieldDurability: 0,
+        },
       },
       {
         id: "goblin_lone",
@@ -1418,6 +1747,18 @@ export const ADVENTURES: Record<string, Adventure> = {
         personality: "The Goblin King is intelligent and will attempt to negotiate before fighting. He will offer a share of the treasure if the player agrees to leave. This is a significant moral choice moment — killing him is easier but choosing negotiation shows Mercy and Justice.",
         isHostile: false,
         stats: { hp: 30, armor: 3, damage: "1d8+2" },
+        combatProfile: {
+          agility: 25,
+          weaponSkill: 45,
+          zones: {
+            head: { cover: 20, durability: 10 },
+            neck: { cover: 10, durability: 5 },
+            torso: { cover: 35, durability: 20 },
+            limbs: { cover: 15, durability: 12 },
+          },
+          shieldBlockChance: 15,
+          shieldDurability: 10,
+        },
       },
     ],
     loot: ["goblin_ear", "cave_treasure", "goblin_crown"],

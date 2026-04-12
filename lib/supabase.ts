@@ -43,7 +43,7 @@ export async function savePlayer(player: Record<string, unknown>) {
     gold: player.gold,
     banked_gold: player.bankedGold,
     weapon: player.weapon,
-    armor: player.armor,
+    armor: player.bodyArmor ?? player.armor ?? null,
     shield: player.shield,
     inventory: player.inventory,
     virtues: player.virtues,
@@ -63,6 +63,9 @@ export async function savePlayer(player: Record<string, unknown>) {
     body_armor: player.bodyArmor ?? null,
     limb_armor: player.limbArmor ?? null,
     active_combat: player.activeCombat ?? null,
+    mounted: Boolean(player.mounted),
+    remembers_own_name: Boolean(player.remembersOwnName),
+    met_zim: Boolean(player.metZim),
     received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
     received_hokas_unarmed_gift: Boolean(player.receivedHokasUnarmedGift),
     weapon_skills: player.weaponSkills ?? {},
@@ -77,7 +80,8 @@ export async function savePlayer(player: Record<string, unknown>) {
     .from("players")
     .upsert(row, { onConflict: "id" });
 
-  if (error) console.error("Error saving player:", error);
+  if (error) console.error("Error saving player:", error, "id:", row.id, "room:", row.current_room);
+  else console.log("[save] player", row.id, "room:", row.current_room, "turn:", row.turn_count);
   return !error;
 }
 

@@ -28,6 +28,8 @@ const rooms: Record<string, Room> = {
     name: "The Church of Perpetual Life",
     description:
       "Everything here is white. The walls are white. The floor is cold white stone, smooth and faintly warm from some source you cannot identify. The priests move through the silence in white robes, their pale faces carrying no expression you can read. There is no art. There are no windows. There is nothing to look at except the altar — a plain white stone block — and the rack of gray robes near the door, ready for the next arrival. The silence is complete. Even your footsteps seem reluctant to disturb it.",
+    look: "A white stone chamber, featureless and cold. Priests drift through the silence. A plain altar stands at the center. Gray robes hang by the door. The only exit is east.",
+    glance: "The white stone church. Silent priests, cold altar, gray robes by the door.",
     exits: { east: "guild_courtyard" },
     stateModifiers: {},
     npcs: ["priest_of_perpetual_life"],
@@ -126,23 +128,28 @@ const rooms: Record<string, Room> = {
     id: "guild_courtyard",
     name: "The Guild Courtyard",
     description:
-      "A broad courtyard open to the sky. The Church of Perpetual Life stands to the west, its white walls featureless and cold. The Main Hall entrance is to the east, warm light and noise spilling through its open doors. To the north, a narrow shopfront — Sam's Sharps — has a wooden sign above the door bearing nothing but a painted sword and shield.",
+      "A broad courtyard open to the sky. The Church of Perpetual Life stands to the west, its white walls featureless and cold. The Main Hall entrance is to the east, warm light and noise spilling through its open doors. To the north, a narrow shopfront — Sam's Sharps — has a wooden sign above the door bearing a painted sword crossed over a shield. To the south, a modest stone doorway is set into the courtyard wall. Above it, a wooden sign bears a painted red potion bottle — nothing else, no words. A faint hum comes from beyond the doorway. Not a sound, exactly. More like a vibration you feel with your soul.",
+    look: "An open courtyard under the sky. Church to the west, Main Hall to the east, Sam's shop to the north. To the south, a doorway with a red potion bottle sign hums faintly.",
+    glance: "The courtyard. Church west, Main Hall east, Sam's north, potion shop south.",
     exits: {
       east: "main_hall",
       west: "church_of_perpetual_life",
       north: "sams_sharps",
+      south: "mage_school",
     },
     stateModifiers: {},
-    npcs: [],
+    npcs: ["training_dummy"],
     items: [],
     examinableObjects: [
       { id: "cobblestones", label: "The cobblestones" },
       { id: "church_door", label: "The church door" },
       { id: "main_hall_entrance", label: "The Main Hall entrance" },
-      { id: "sams_sign", label: "Sam's Sharps sign" },
+      { id: "sams_sign", label: "Sam's sign (sword and shield)" },
+      { id: "potion_sign", label: "The potion bottle sign" },
+      { id: "training_dummies", label: "The training dummies" },
     ],
     visualDescription:
-      "A broad sunlit marble-flagged courtyard enclosed by colonnaded walls of pale stone. Weathered wooden training dummies stand in a row along one wall. A stone fountain in the centre. A guild banner hangs from an arched iron gate. To the north, a narrow shopfront doorway with a small wooden sign above it showing ONLY a painted image of a sword crossed over a shield — no words, no text, no letters, just the sword-and-shield image. Warm afternoon sun, blue sky. No people visible. Aquilonian grandeur.",
+      "A broad sunlit marble-flagged courtyard enclosed by colonnaded walls of pale stone. Weathered wooden training dummies stand in a row along one wall. A stone fountain in the centre. A guild banner hangs from an arched iron gate. To the north, a narrow shopfront doorway with a small wooden sign above it showing ONLY a painted image of a sword crossed over a shield — no words, no text, no letters. To the south, a modest stone doorway with a small wooden sign above it showing ONLY a painted image of a red potion bottle — no words, no text, no letters, just the red bottle image. Warm afternoon sun, blue sky. No people visible. No text anywhere on any sign. Aquilonian grandeur.",
     sceneTone: "aquilonian",
   },
 
@@ -152,6 +159,8 @@ const rooms: Record<string, Room> = {
     name: "Sam's Sharps",
     description:
       "A narrow shopfront that smells of oil, leather, and steel. A few swords and an axe hang from iron hooks on the stone wall behind the counter. A heavy wooden cabinet with iron hinges displays daggers and short blades on dark velvet. Shields lean in a small stack by the door. Behind the counter, Sam Slicker sits on a tall stool, one eye closed, examining the edge of something with a jeweler's loupe. A hand-painted sign behind him reads: ALL SALES FINAL. NO REFUNDS. NO EXCEPTIONS. ESPECIALLY YOU.",
+    look: "A narrow weapon shop smelling of oil and steel. Blades hang on the wall, shields by the door. Sam Slicker sits behind the counter. A sign reads: NO REFUNDS.",
+    glance: "Sam's weapon shop. Steel on the walls, Sam behind the counter.",
     exits: { south: "guild_courtyard" },
     stateModifiers: {},
     npcs: ["sam_slicker"],
@@ -172,6 +181,8 @@ const rooms: Record<string, Room> = {
     id: "main_hall",
     name: "The Main Hall",
     description: `The Main Hall of the Guild of Free Adventurers is a vast, warm chamber that smells of woodsmoke, roasted meat, and the particular mustiness of people who spend more time in dungeons than in baths. Scarred oak tables fill the center of the room, surrounded by mismatched chairs occupied by adventurers in various states of celebration or despair. A massive stone fireplace dominates the far wall, its mantle crowded with trophies — a troll's skull, a dragon scale the size of a shield, and what appears to be a mummified hand of uncertain origin. Behind the bar stands Hokas Tokas, the innkeeper, his silver-belled beard catching the firelight. Barmaids weave between the tables carrying tankards and platters — Lira, quick and light on her feet; Mavia, drawing every eye she passes; Seraine, tall and unhurried. In a corner booth, Aldric the Veteran nurses an ale alone, watching the room with the quiet patience of a man who has survived everything. Notice boards paper the eastern wall — three Guild postings hang there now, each one an open contract waiting for a fool brave enough to take it. Head east to read them. Near the south wall sit two barrels. A hand-lettered sign on the first reads: CLOTHES FOR THE POOR. A brass plate on the second reads: USED GOWNS ONLY — DO NOT PUT FOOD IN HERE.`,
+    look: "A vast warm hall that smells of woodsmoke and roasted meat. Adventurers crowd the scarred oak tables. Hokas Tokas tends bar, barmaids weave between tables, and Aldric the Veteran sits alone in his corner booth. A notice board covers the east wall. Two barrels sit near the south wall — one for charity clothes, one for used gowns.",
+    glance: "The Main Hall. Warm, loud, crowded. Hokas behind the bar, Aldric in his corner.",
     exits: {
       north: "armory",
       east: "notice_board",
@@ -203,6 +214,7 @@ const rooms: Record<string, Room> = {
       { id: "gown_barrel", label: "Barrel 2 — Used Gowns Only" },
       { id: "great_fireplace", label: "The great fireplace" },
       { id: "the_bar", label: "The bar" },
+      { id: "members_chest", label: "A row of small iron chests" },
     ],
     visualDescription:
       "A vast warm hall of pale Aquilonian marble with high vaulted ceilings supported by fluted columns. Long oak tables with tankards, plates, and candles — a place of food and drink, not combat. A long wooden bar along one wall with barrels and bottles behind it. A notice board covered in pinned parchment in one corner. A massive stone fireplace with a bright, friendly crackling fire casting warm orange light across the room. Iron-and-bronze chandeliers overhead. Empty room — no people, no figures, no statues, no carvings of humans. Only architecture, furniture, firelight, and warmth.",
@@ -236,6 +248,8 @@ const rooms: Record<string, Room> = {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
+    look: "A wall of pinned notices. Three stand out on official Guild parchment — the Beginner's Cave, the Thieves Guild, and the Haunted Manor. Each has entry instructions.",
+    glance: "The notice board. Three Guild postings pinned on official parchment.",
     exits: { west: "main_hall" },
     stateModifiers: {},
     npcs: [],
@@ -257,6 +271,8 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     id: "armory",
     name: "The Guild Armory",
     description: `A long narrow room lined with weapon racks and armor stands. The Guild maintains a basic selection of equipment for members who need to gear up quickly. A bored-looking attendant sits at a small desk near the door, occasionally polishing a helmet that doesn't need polishing.`,
+    look: "A narrow room lined with weapon racks and armor stands. A young attendant named Pip sits at a desk near the door. Basic equipment is available for Guild members.",
+    glance: "The armory. Racks of weapons, stands of armor, the attendant at his desk.",
     exits: { south: "main_hall" },
     stateModifiers: {},
     npcs: ["armory_attendant"],
@@ -276,6 +292,8 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     id: "guild_vault",
     name: "The Guild Vault",
     description: `A low-ceilinged stone room beneath the Main Hall. Iron strongboxes line the walls, each bearing a personal lock. A heavyset dwarf named Brunt manages the vault with meticulous suspicion. This is where adventurers bank their gold between adventures — death in the field only takes what you carry.`,
+    look: "A low stone room beneath the hall. Iron strongboxes line the walls. Brunt the dwarf manages deposits and withdrawals. Bank your gold here — death only takes what you carry.",
+    glance: "The vault. Strongboxes and stone. Brunt watches you from behind his counter.",
     exits: { up: "main_hall" },
     stateModifiers: {},
     npcs: ["brunt_the_banker"],
@@ -286,6 +304,31 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     ],
     visualDescription:
       "A low vaulted cellar of heavy Aquilonian stonework, the walls thick and windowless. A single iron-banded door guards the entrance. A scarred oak counter sits before rows of iron strongboxes lining the far wall, each padlocked and marked with a brass numeral. Ledgers tower in unstable columns behind the counter. A single bronze oil lamp provides the only light. The smell is dust, old coin, and cold stone.",
+    sceneTone: "aquilonian",
+  },
+
+  // ── Pots & Bobbles (Mage School) ─────────────────────────────
+  mage_school: {
+    id: "mage_school",
+    name: "Pots & Bobbles",
+    description:
+      `The doorway from the courtyard was narrow. The room behind it is not. Pots & Bobbles opens into a space that should not fit inside the building you entered — a high-vaulted chamber of dark stone and polished wood that stretches far deeper and wider than the modest exterior suggests. The air hums. Not a sound — a vibration you feel in your sternum and behind your eyes, as though the building itself is quietly breathing.\n\nShelves line the walls from floor to distant ceiling, crammed with bottles, jars, bound scrolls, and objects that defy casual description. Some glow faintly. One appears to be a jar of preserved lightning. Another contains something that is definitely looking back at you.\n\nA long glass-topped counter displays potions in neat rows — healing draughts, stamina brews, antidotes in colour-coded bottles, and a few items with handwritten labels that say only DO NOT TOUCH. Behind the counter, a tall, gangly young wizard sits on a stool that's too short for him, simultaneously reading three books and scratching notes in a fourth.\n\nA hand-lettered sign on the wall reads: IDENTIFICATION SERVICES · MAGICAL TRAINING · POTIONS & REAGENTS · WE BUY HERBS AND CURIOSITIES.`,
+    look:
+      "A chamber much larger inside than out. Shelves of potions, scrolls, and strange objects. A glass counter displays healing draughts and antidotes. A gangly young wizard named Zim sits behind it, reading three books at once. The air hums.",
+    glance: "Pots & Bobbles. Potions, scrolls, and Zim behind the counter.",
+    exits: { north: "guild_courtyard" },
+    stateModifiers: {},
+    npcs: ["zim_the_wizard"],
+    items: [],
+    examinableObjects: [
+      { id: "potion_display", label: "The potion display" },
+      { id: "scroll_shelves", label: "The scroll shelves" },
+      { id: "strange_jars", label: "The strange jars" },
+      { id: "zim_books", label: "Zim's books" },
+      { id: "identification_sign", label: "The services sign" },
+    ],
+    visualDescription:
+      "An impossibly large chamber of dark polished stone and warm wood, far deeper than the exterior suggests. Floor-to-ceiling shelves crammed with glass bottles, leather-bound scrolls, and mysterious objects — some faintly glowing. A long glass-topped counter with neat rows of colourful potions. Bronze astrolabes and crystal spheres on high shelves. Warm amber light from no visible source. Dust motes suspended in air that hums with unseen energy. Ancient Aquilonian architecture crossed with an alchemist's workshop. No people visible.",
     sceneTone: "aquilonian",
   },
 };

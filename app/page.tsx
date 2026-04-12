@@ -6,6 +6,7 @@ import { WorldState, createInitialWorldState } from "../lib/gameState";
 import { ITEMS } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
+import CombatScreen from "../components/CombatScreen";
 import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
@@ -101,6 +102,8 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [chatExpanded, setChatExpanded] = useState(true);
+  const [inCombat, setInCombat] = useState(false);
+  const [combatLog, setCombatLog] = useState<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
@@ -242,6 +245,14 @@ export default function Home() {
       const ws = data.worldState;
       setWorldState(ws);
       if (ws.playerId) setPlayerId(ws.playerId);
+      const nowInCombat = ws.player?.activeCombat != null;
+      setInCombat(nowInCombat);
+      if (nowInCombat) {
+        const clean = data.response.replace(/__COMBAT_START__|__COMBAT_END__/g, "").trim();
+        if (clean) setCombatLog(prev => [...prev, clean].slice(-20));
+      } else {
+        setCombatLog([]);
+      }
       setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
       return;
     }
@@ -279,6 +290,22 @@ export default function Home() {
             const newState = JSON.parse(stateJson.trim());
             setWorldState(newState);
             if (newState.playerId) setPlayerId(newState.playerId);
+
+            // Combat mode: derive from state
+            const nowInCombat = newState.player?.activeCombat != null;
+            setInCombat(nowInCombat);
+
+            // Update combat log with the visible text (strip tokens)
+            const cleanText = visibleText
+              .replace(/__COMBAT_START__/g, "")
+              .replace(/__COMBAT_END__/g, "")
+              .trim();
+            if (nowInCombat && cleanText) {
+              setCombatLog(prev => [...prev, cleanText].slice(-20));
+            }
+            if (!nowInCombat) {
+              setCombatLog([]);
+            }
           }
         } catch { /* keep existing */ }
         break;
@@ -512,7 +539,9 @@ export default function Home() {
   );
 
   const formatMessage = (text: string, isLast: boolean) => {
-    const cleanText = text.split("__STATE__")[0];
+    const cleanText = text.split("__STATE__")[0]
+      .replace(/__COMBAT_START__/g, "")
+      .replace(/__COMBAT_END__/g, "");
     const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
     const sitIdx = cleanText.indexOf(needle);
     const narrative = sitIdx === -1 ? cleanText : cleanText.slice(0, sitIdx).trimEnd();
@@ -661,8 +690,30 @@ export default function Home() {
         .slice(0, 5)
     : [];
 
+  // Sync inCombat from worldState on rehydration
+  useEffect(() => {
+    if (worldState?.player?.activeCombat) {
+      setInCombat(true);
+    }
+  }, [worldState?.player?.activeCombat]);
+
+  const sendCombatCommand = (cmd: string) => {
+    sendMessage(cmd);
+  };
+
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#000000", color: "#e5e7eb", position: "relative" }}>
+      {/* Combat overlay */}
+      {inCombat && player?.activeCombat && (
+        <CombatScreen
+          session={player.activeCombat}
+          playerHp={player.hp}
+          playerMaxHp={player.maxHp}
+          combatLog={combatLog}
+          loading={loading || isTyping}
+          onCommand={sendCombatCommand}
+        />
+      )}
       {player && (
         <div style={{
           width: sidebarOpen ? 256 : 48,
@@ -741,6 +792,20 @@ export default function Home() {
                     {player.shield ? ITEMS[player.shield]?.name ?? player.shield : "none"}
                   </div>
                 )}
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 12 }}>
+                <div style={{ color: "#aaaaaa", marginBottom: 4, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>ARMOR</div>
+                {([
+                  ["Head", player.helmet],
+                  ["Neck", player.gorget],
+                  ["Body", player.bodyArmor],
+                  ["Limbs", player.limbArmor],
+                ] as [string, string | null][]).map(([label, itemId]) => (
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                    <span style={{ color: "#777777", fontSize: 10 }}>{label}</span>
+                    <span style={{ color: itemId ? "#ffffff" : "#444444", fontSize: 10, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "70%" }}>{itemId ? (ITEMS[itemId]?.name ?? itemId) : "—"}</span>
+                  </div>
+                ))}
               </div>
               <div style={{ fontSize: 11, marginBottom: 12 }}>
                 <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 10, letterSpacing: "0.08em", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>LOCATION</div>

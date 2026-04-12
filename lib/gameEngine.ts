@@ -6,7 +6,6 @@
 // ============================================================
 
 import {
-  MAIN_HALL_ROOMS,
   NPCS,
   ITEMS,
   ADVENTURES,
@@ -36,6 +35,8 @@ import {
   Room,
   NPC,
 } from "./gameData";
+
+import { ALL_ROOMS as MAIN_HALL_ROOMS } from "./adventures/registry";
 
 import {
   WorldState,
@@ -71,6 +72,14 @@ import {
   getDexReactionBonus,
   getWeaponSkillKey,
 } from "./uoData";
+
+import type { BodyZone, ActiveCombatSession } from "./combatTypes";
+import { BODY_ZONES } from "./combatTypes";
+import {
+  initCombatSession,
+  resolveCombatRound as resolveHWRRRound,
+  buildRoundNarrative,
+} from "./combatEngine";
 
 // ============================================================
 // TYPES
@@ -547,7 +556,31 @@ export function getCommandAutocompleteSuggestions(
       .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
-  if (/^equip\s+/i.test(trimmed) && !/^equip\s+shield/i.test(trimmed) && !/^equip\s+armor/i.test(trimmed)) {
+  if (/^equip\s+helmet\s*/i.test(trimmed)) {
+    return state.player.inventory
+      .filter(e => e.quantity > 0 && isBodyArmorSlotItem(e.itemId) && ITEMS[e.itemId]?.stats?.zoneSlot === "head")
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({ label: it.name, insertText: `EQUIP HELMET ${it.name}`, autoSubmit: true }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^equip\s+gorget\s*/i.test(trimmed)) {
+    return state.player.inventory
+      .filter(e => e.quantity > 0 && isBodyArmorSlotItem(e.itemId) && ITEMS[e.itemId]?.stats?.zoneSlot === "neck")
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({ label: it.name, insertText: `EQUIP GORGET ${it.name}`, autoSubmit: true }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^equip\s+greaves\s*/i.test(trimmed)) {
+    return state.player.inventory
+      .filter(e => e.quantity > 0 && isBodyArmorSlotItem(e.itemId) && ITEMS[e.itemId]?.stats?.zoneSlot === "limbs")
+      .map(e => ITEMS[e.itemId]!)
+      .map(it => ({ label: it.name, insertText: `EQUIP GREAVES ${it.name}`, autoSubmit: true }))
+      .filter(x => filterPartial(x.insertText) || filterPartial(x.label));
+  }
+
+  if (/^equip\s+/i.test(trimmed) && !/^equip\s+(shield|armor|helmet|gorget|greaves)/i.test(trimmed)) {
     return invEquippableSuggestions("EQUIP").filter(x => filterPartial(x.insertText) || filterPartial(x.label));
   }
 
@@ -601,6 +634,31 @@ export function getCommandAutocompleteSuggestions(
     return suggestions.filter(
       x => !partialLower || x.insertText.toLowerCase().includes(partialLower) || x.label.toLowerCase().includes(partialLower)
     );
+  }
+
+  // In combat: STRIKE zone suggestions take priority
+  if (state.player.activeCombat) {
+    if (/^(s|st|str|stri|strik|strike)$/i.test(trimmed)) {
+      return BODY_ZONES.map(z => ({
+        label: `STRIKE ${z.toUpperCase()}`,
+        insertText: `STRIKE ${z.toUpperCase()}`,
+        autoSubmit: true,
+      }));
+    }
+    if (/^strike\s+/i.test(trimmed)) {
+      return BODY_ZONES
+        .map(z => ({
+          label: z.toUpperCase(),
+          insertText: `STRIKE ${z.toUpperCase()}`,
+          autoSubmit: true,
+        }))
+        .filter(x => filterPartial(x.label));
+    }
+    if (/^(fl|fle|flee)$/i.test(trimmed)) {
+      return [{ label: "FLEE", insertText: "FLEE", autoSubmit: true }];
+    }
+    // Block other autocomplete while in combat
+    return [];
   }
 
   // ATTACK
@@ -883,22 +941,36 @@ const HELP_TEXT = `MOVEMENT
   GO [direction]     GO NORTH, GO SOUTH, GO EAST, GO WEST, GO UP, GO DOWN
   N / S / E / W      Shorthand directions
 
-INTERACTION
+OBSERVATION
+  LOOK               Quick scan of the room (semiverbose)
+  EXAMINE ROOM       Thorough look — full detail, takes more time (verbose)
   EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
+  SEARCH             Same as EXAMINE ROOM — search the area carefully
+  SEARCH [target]    Same as EXAMINE [target]
+
+INTERACTION
   READ               Read notices, signs, or posted contracts
   GET [item]         GET SWORD, GET TORCH
   GET ALL            Take everything visible in the room
   DROP [item]        DROP SWORD
-  EQUIP [item]       Weapon, shield, or armor from inventory (primary)
+  EQUIP [item]       Weapon, shield, or armor from inventory (auto-detects slot)
   WIELD [item]       Alias for EQUIP [item] (either works)
   EQUIP SHIELD [item]  EQUIP SHIELD BUCKLER  |  SHIELD BUCKLER
-  EQUIP ARMOR [item]   Body armor from inventory
+  EQUIP ARMOR [item]   Torso armor from inventory
+  EQUIP HELMET [item]  Head protection (leather cap, iron helm)
+  EQUIP GORGET [item]  Neck protection (leather gorget, chain coif)
+  EQUIP GREAVES [item] Limb protection (leather greaves, chain greaves)
   REMOVE SHIELD      Lower thy shield
-  REMOVE ARMOR       Doff body armor
-  UNEQUIP [item]     Sheathe weapon or remove shield/armor by name
+  REMOVE ARMOR       Doff all armor at once
+  REMOVE HELMET      Doff head armor only
+  REMOVE GORGET      Doff neck armor only
+  REMOVE GREAVES     Doff limb armor only
+  UNEQUIP [item]     Sheathe weapon or remove any equipped item by name
 
 COMBAT
-  ATTACK [enemy]     ATTACK GOBLIN, ATTACK GUARD
+  ATTACK [enemy]     Engage a hostile foe (starts combat)
+  STRIKE [zone]      STRIKE HEAD, STRIKE NECK, STRIKE TORSO, STRIKE LIMBS
+                     Target a body zone during combat (HWRR system)
   FLEE               Escape through a random exit (enemy stays wounded)
   BEG [name]         When you have nothing, BEG helps.
                      BEG SAM — Sam may spare a rusty blade.
@@ -922,7 +994,7 @@ INVENTORY & STATS
   HEALTH / HP        Check your health and active effects
 
 ECONOMY
-  SHOP / LIST / SAM   Sam's price list (Main Hall only, static)
+  SHOP / LIST / SAM   Sam's price list (Sam's Sharps or Main Hall)
   BUY [item]         In Main Hall: static Sam's shop; elsewhere merchant (Jane)
   SELL [item]        SELL DAGGER
   DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Vault)
@@ -1016,16 +1088,34 @@ function matchShieldFromPhrase(phraseLower: string, player: PlayerState): string
 
 /** Body armor slot (not buckler). */
 function isBodyArmorSlotItem(itemId: string): boolean {
-  return itemId === "leather_armor" || itemId === "chain_mail";
+  const item = ITEMS[itemId];
+  return Boolean(item?.type === "armor" && item.stats?.zoneSlot);
 }
 
-function matchArmorFromPhrase(phraseLower: string, player: PlayerState): string | null {
+/** Map BodyZone to the PlayerState field that holds the equipped item id. */
+const ZONE_TO_PLAYER_FIELD: Record<BodyZone, "helmet" | "gorget" | "bodyArmor" | "limbArmor"> = {
+  head: "helmet",
+  neck: "gorget",
+  torso: "bodyArmor",
+  limbs: "limbArmor",
+};
+
+/** Human-readable zone slot name for narration. */
+const ZONE_SLOT_LABEL: Record<BodyZone, string> = {
+  head: "head",
+  neck: "neck",
+  torso: "body",
+  limbs: "limbs",
+};
+
+function matchArmorFromPhrase(phraseLower: string, player: PlayerState, filterZone?: BodyZone): string | null {
   let best: { id: string; len: number } | null = null;
   for (const entry of player.inventory) {
     if (entry.quantity <= 0) continue;
     if (!isBodyArmorSlotItem(entry.itemId)) continue;
     const it = ITEMS[entry.itemId];
     if (!it) continue;
+    if (filterZone && it.stats?.zoneSlot !== filterZone) continue;
     const nl = it.name.toLowerCase();
     if (nl.includes(phraseLower) || phraseLower.includes(nl)) {
       const len = nl.length;
@@ -1033,6 +1123,47 @@ function matchArmorFromPhrase(phraseLower: string, player: PlayerState): string 
     }
   }
   return best?.id ?? null;
+}
+
+/** Zone-specific equip: EQUIP HELMET [item], EQUIP GORGET [item], EQUIP GREAVES [item]. */
+function runEquipZoneArmor(state: WorldState, phraseLower: string, zone: BodyZone, slotLabel: string): EngineResult {
+  const p = state.player;
+  if (!phraseLower.trim()) {
+    // No argument — list available items for this zone
+    const available = p.inventory
+      .filter(e => e.quantity > 0 && isBodyArmorSlotItem(e.itemId))
+      .map(e => ITEMS[e.itemId])
+      .filter((it): it is NonNullable<typeof it> => Boolean(it?.stats?.zoneSlot === zone));
+    if (available.length === 0) {
+      return {
+        responseType: "static",
+        staticResponse: `Thou hast no ${slotLabel} armor in thy pack.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const list = available.map(it => it.name).join(", ");
+    return {
+      responseType: "static",
+      staticResponse: `Available ${slotLabel} armor: ${list}`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const itemId = matchArmorFromPhrase(phraseLower, p, zone);
+  if (!itemId) {
+    return {
+      responseType: "static",
+      staticResponse: `Thou dost not carry ${slotLabel} armor by that name.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  // Delegate to the main equip function (it already handles zone routing)
+  return runEquipArmor(state, ITEMS[itemId]!.name.toLowerCase());
 }
 
 function runWieldWeapon(state: WorldState, phraseLower: string): EngineResult {
@@ -1148,7 +1279,29 @@ function runEquipArmor(state: WorldState, phraseLower: string): EngineResult {
     };
   }
   const item = ITEMS[itemId]!;
-  if (p.armor === itemId) {
+  const zone = item.stats?.zoneSlot;
+  if (!zone) {
+    // Legacy armor without zoneSlot — default to torso
+    if (p.bodyArmor === itemId) {
+      return {
+        responseType: "static",
+        staticResponse: `${item.name} is already equipped.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    return {
+      responseType: "static",
+      staticResponse: `${item.name} equipped (body armor).`,
+      dynamicContext: null,
+      newState: { ...state, player: { ...p, armor: itemId, bodyArmor: itemId } },
+      stateChanged: true,
+    };
+  }
+
+  const field = ZONE_TO_PLAYER_FIELD[zone];
+  if (p[field] === itemId) {
     return {
       responseType: "static",
       staticResponse: `${item.name} is already equipped.`,
@@ -1157,11 +1310,13 @@ function runEquipArmor(state: WorldState, phraseLower: string): EngineResult {
       stateChanged: false,
     };
   }
+  // Sync legacy armor field when equipping torso piece
+  const armorSync = zone === "torso" ? { armor: itemId } : {};
   return {
     responseType: "static",
-    staticResponse: `${item.name} equipped.`,
+    staticResponse: `${item.name} equipped (${ZONE_SLOT_LABEL[zone]}).`,
     dynamicContext: null,
-    newState: { ...state, player: { ...p, armor: itemId } },
+    newState: { ...state, player: { ...p, [field]: itemId, ...armorSync } },
     stateChanged: true,
   };
 }
@@ -1191,7 +1346,22 @@ const SHEATHED_WEAPON = "unarmed";
 
 function runRemoveArmor(state: WorldState): EngineResult {
   const p = state.player;
-  if (!p.armor) {
+  // Collect all equipped zone armor
+  const equipped: { field: string; itemId: string; label: string }[] = [];
+  for (const [zone, field] of Object.entries(ZONE_TO_PLAYER_FIELD)) {
+    const itemId = p[field as keyof PlayerState] as string | null;
+    if (itemId) {
+      const it = ITEMS[itemId];
+      equipped.push({ field, itemId, label: it?.name ?? itemId });
+    }
+  }
+  // Also check legacy armor field as fallback
+  if (equipped.length === 0 && p.armor) {
+    const it = ITEMS[p.armor];
+    equipped.push({ field: "armor", itemId: p.armor, label: it?.name ?? p.armor });
+  }
+
+  if (equipped.length === 0) {
     return {
       responseType: "static",
       staticResponse: "Thou art not wearing armor.",
@@ -1200,11 +1370,46 @@ function runRemoveArmor(state: WorldState): EngineResult {
       stateChanged: false,
     };
   }
+
+  // Remove all zone armor
+  const updates: Partial<PlayerState> = {
+    armor: null,
+    helmet: null,
+    gorget: null,
+    bodyArmor: null,
+    limbArmor: null,
+  };
+  const removed = equipped.map(e => e.label).join(", ");
   return {
     responseType: "static",
-    staticResponse: "Thou doffest thy armor.",
+    staticResponse: `Thou doffest: ${removed}.`,
     dynamicContext: null,
-    newState: { ...state, player: { ...p, armor: null } },
+    newState: { ...state, player: { ...p, ...updates } },
+    stateChanged: true,
+  };
+}
+
+/** Remove armor from a specific body zone. */
+function runRemoveZoneArmor(state: WorldState, zone: BodyZone, slotLabel: string): EngineResult {
+  const p = state.player;
+  const field = ZONE_TO_PLAYER_FIELD[zone];
+  const itemId = p[field] as string | null;
+  if (!itemId) {
+    return {
+      responseType: "static",
+      staticResponse: `Thou art not wearing a ${slotLabel}.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const it = ITEMS[itemId];
+  const armorSync = zone === "torso" ? { armor: null } : {};
+  return {
+    responseType: "static",
+    staticResponse: `Thou doffest the ${it?.name ?? itemId}.`,
+    dynamicContext: null,
+    newState: { ...state, player: { ...p, [field]: null, ...armorSync } },
     stateChanged: true,
   };
 }
@@ -1231,8 +1436,31 @@ function runUnequipByPhrase(state: WorldState, phraseLower: string): EngineResul
   if (p.shield && phraseMatchesEquippedItem(norm, p.shield)) {
     return runRemoveShield(state);
   }
+  // Check all zone armor slots
+  for (const [zone, field] of Object.entries(ZONE_TO_PLAYER_FIELD)) {
+    const itemId = p[field as keyof PlayerState] as string | null;
+    if (itemId && phraseMatchesEquippedItem(norm, itemId)) {
+      const it = ITEMS[itemId];
+      const armorSync = zone === "torso" ? { armor: null } : {};
+      return {
+        responseType: "static",
+        staticResponse: `Thou doffest the ${it?.name ?? itemId}.`,
+        dynamicContext: null,
+        newState: { ...state, player: { ...p, [field]: null, ...armorSync } },
+        stateChanged: true,
+      };
+    }
+  }
+  // Legacy armor fallback
   if (p.armor && phraseMatchesEquippedItem(norm, p.armor)) {
-    return runRemoveArmor(state);
+    const it = ITEMS[p.armor];
+    return {
+      responseType: "static",
+      staticResponse: `Thou doffest the ${it?.name ?? p.armor}.`,
+      dynamicContext: null,
+      newState: { ...state, player: { ...p, armor: null, bodyArmor: null } },
+      stateChanged: true,
+    };
   }
   if (p.weapon && p.weapon !== "unarmed" && phraseMatchesEquippedItem(norm, p.weapon)) {
     const item = ITEMS[p.weapon]!;
@@ -1950,7 +2178,13 @@ export function resolveCombatRound(
 // STATIC RESPONSE BUILDERS
 // ============================================================
 
-function buildRoomDescription(state: WorldState, roomId: string): string {
+type Verbosity = "verbose" | "semiverbose" | "nonverbose";
+
+function buildRoomDescription(
+  state: WorldState,
+  roomId: string,
+  verbosity: Verbosity = "semiverbose"
+): string {
   const room = getRoom(roomId);
   if (!room) return "You find yourself in a place that defies description.";
 
@@ -1959,35 +2193,49 @@ function buildRoomDescription(state: WorldState, roomId: string): string {
 
   let description = "";
 
+  // State-modified rooms always show full description (state changes are notable)
   if (currentRoomState !== "normal" && room.stateModifiers[currentRoomState]) {
     description = room.stateModifiers[currentRoomState]!.description;
+  } else if (verbosity === "nonverbose" && room.glance) {
+    description = room.glance;
+  } else if (verbosity === "semiverbose" && room.look) {
+    description = room.look;
   } else {
+    // Verbose, or fallback when look/glance not defined
     description = room.description;
   }
 
-  // List NPCs present
+  // NPCs present — always shown (needed for orientation)
   const presentNpcs = room.npcs
     .map(id => state.npcs[id])
     .filter(npc => npc?.isAlive && npc.location === roomId);
 
   if (presentNpcs.length > 0) {
-    const npcNames = presentNpcs.map(npc => NPCS[npc.npcId]?.name ?? npc.npcId).join(", ");
-    description += `\n\nPresent here: ${npcNames}.`;
+    if (verbosity === "nonverbose") {
+      const npcNames = presentNpcs.map(npc => NPCS[npc.npcId]?.name ?? npc.npcId).join(", ");
+      description += `\n\n${npcNames}.`;
+    } else {
+      const npcNames = presentNpcs.map(npc => NPCS[npc.npcId]?.name ?? npc.npcId).join(", ");
+      description += `\n\nPresent here: ${npcNames}.`;
+    }
   }
 
-// Exits
+  // Exits — always shown
   const exitList = Object.keys(room.exits).join(", ");
   description += `\n\nExits: ${exitList}.`;
 
-  const player = state.player;
-  const hasRobe =
-    player.inventory?.some(e => e.itemId === "gray_robe") || false;
-  if (hasRobe) {
-    const pool =
-      roomId === "guild_courtyard"
-        ? COURTYARD_ROBE_HUMILIATION
-        : ROOM_ROBE_HUMILIATION;
-    description += "\n\n" + pickTemplate(pool);
+  // Robe humiliation — only on semiverbose and verbose (skip nonverbose)
+  if (verbosity !== "nonverbose") {
+    const player = state.player;
+    const hasRobe =
+      player.inventory?.some(e => e.itemId === "gray_robe") || false;
+    if (hasRobe) {
+      const pool =
+        roomId === "guild_courtyard"
+          ? COURTYARD_ROBE_HUMILIATION
+          : ROOM_ROBE_HUMILIATION;
+      description += "\n\n" + pickTemplate(pool);
+    }
   }
 
   return description;
@@ -2022,9 +2270,17 @@ function buildInventoryDescription(player: PlayerState): string {
   if (player.inventory.length === 0) {
     return "Thou carriest nothing but thy wits — and those are looking thin.";
   }
+  // Build set of all equipped zone armor item ids
+  const equippedZoneArmor = new Set<string>();
+  for (const field of Object.values(ZONE_TO_PLAYER_FIELD)) {
+    const itemId = player[field] as string | null;
+    if (itemId) equippedZoneArmor.add(itemId);
+  }
+
   const lines = player.inventory.map(entry => {
     const item = ITEMS[entry.itemId];
     const name = item?.name ?? entry.itemId;
+    const glanceNote = item?.glance ? ` — ${item.glance}` : "";
     const qty = ` (x${entry.quantity})`;
 
     const statBits: string[] = [];
@@ -2033,18 +2289,24 @@ function buildInventoryDescription(player: PlayerState): string {
       if (dmg) statBits.push(`[dmg: ${dmg}]`);
       if (isTwoHanded(entry.itemId)) statBits.push("[2H]");
     } else if (item?.type === "armor") {
-      const ac = entry.itemId === "buckler" ? 1 : item.stats?.armorClass;
-      if (ac !== undefined && ac !== null) statBits.push(`[AC: ${ac}]`);
+      if (item.stats?.zoneCover != null) {
+        statBits.push(`[${item.stats.zoneSlot ?? "body"}: ${item.stats.zoneCover}% cover]`);
+      } else if (item.stats?.shieldBlockChance != null) {
+        statBits.push(`[block: ${item.stats.shieldBlockChance}%]`);
+      } else {
+        const ac = item.stats?.armorClass;
+        if (ac != null) statBits.push(`[AC: ${ac}]`);
+      }
     }
     const statStr = statBits.length > 0 ? ` ${statBits.join(" ")}` : "";
 
     const equipTags: string[] = [];
     if (entry.itemId === player.weapon) equipTags.push("(wielded)");
     if (entry.itemId === player.shield) equipTags.push("(shield equipped)");
-    if (entry.itemId === player.armor) equipTags.push("(armor equipped)");
+    if (equippedZoneArmor.has(entry.itemId)) equipTags.push("(worn)");
     const tagStr = equipTags.length > 0 ? ` ${equipTags.join(" ")}` : "";
 
-    return `- ${name}${qty}${statStr}${tagStr}`;
+    return `- ${name}${glanceNote}${qty}${statStr}${tagStr}`;
   });
   return `Thou dost carry:\n${lines.join("\n")}\n\nGold on hand: ${player.gold} gp\nBanked gold: ${player.bankedGold} gp`;
 }
@@ -2132,9 +2394,26 @@ function buildStatDescription(player: PlayerState): string {
     .map(([k, v]) => `  ${k}: ${v > 0 ? "+" : ""}${v}`)
     .join("\n");
 
-  const armorAC = player.armor ? (ITEMS[player.armor]?.stats?.armorClass ?? 0) : 0;
-  const shieldAC = player.shield ? (ITEMS[player.shield]?.stats?.armorClass ?? 0) : 0;
-  const totalAC = armorAC + shieldAC;
+  // Zone armor display
+  const zoneArmorLines: string[] = [];
+  const zoneLabels: Record<BodyZone, string> = { head: "Head", neck: "Neck", torso: "Torso", limbs: "Limbs" };
+  for (const zone of BODY_ZONES) {
+    const field = ZONE_TO_PLAYER_FIELD[zone];
+    const itemId = player[field] as string | null;
+    if (itemId) {
+      const it = ITEMS[itemId];
+      const cover = it?.stats?.zoneCover ?? 0;
+      const dur = it?.stats?.zoneDurability ?? 0;
+      zoneArmorLines.push(`  ${zoneLabels[zone]}: ${it?.name ?? itemId} [${cover}% cover, ${dur} dur]`);
+    } else {
+      zoneArmorLines.push(`  ${zoneLabels[zone]}: —`);
+    }
+  }
+  const shieldItem = player.shield ? ITEMS[player.shield] : null;
+  const shieldLine = shieldItem
+    ? `${shieldItem.name} [block: ${shieldItem.stats?.shieldBlockChance ?? 0}%, dur: ${shieldItem.stats?.shieldDurability ?? 0}]`
+    : "None";
+
   const strPct = Math.round(Math.min(20, Math.max(0, ((player.strength - 10) / 40) * 100)));
   const tacPct = Math.round(Math.min(20, (player.expertise / 50) * 20));
   const ws = normalizeWeaponSkills(player.weaponSkills);
@@ -2159,9 +2438,9 @@ Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
 Weapon: ${player.weapon === "unarmed"
     ? "Unarmed"
     : (ITEMS[player.weapon]?.name ?? player.weapon)} [spd: ${wSpeed}]
-Armor: ${player.armor ? `${ITEMS[player.armor]?.name ?? player.armor} [AC: ${armorAC}]` : "None"}
-Shield: ${player.shield ? `${ITEMS[player.shield]?.name ?? player.shield} [AC: ${shieldAC}]` : "None"}
-Total AC: ${totalAC}
+Armor:
+${zoneArmorLines.join("\n")}
+Shield: ${shieldLine}
 ─────────────────────────
 Hit% vs avg enemy: ${hitVsAvg}%
 STR damage bonus: +${strPct}%
@@ -2196,6 +2475,51 @@ function buildNPCGreeting(state: WorldState, npcId: string): string {
   return npcData.greeting;
 }
 
+/** NPCs who can trigger the name-revelation moment. */
+const NAME_REVELATION_NPCS = new Set(["hokas_tokas", "sam_slicker", "old_mercenary"]);
+
+/**
+ * If the hero hasn't remembered their own name yet, and this NPC is one who
+ * would say it, append the name-revelation scene and set the flag.
+ * Returns { text, newState } with the revelation appended if triggered.
+ */
+function maybeRevealName(
+  responseText: string,
+  state: WorldState,
+  npcId: string
+): { text: string; newState: WorldState; revealed: boolean } {
+  if (state.player.remembersOwnName) return { text: responseText, newState: state, revealed: false };
+  if (!NAME_REVELATION_NPCS.has(npcId)) return { text: responseText, newState: state, revealed: false };
+
+  const p = state.player;
+  const npcName = NPCS[npcId]?.name ?? "They";
+  const hasRobe = p.inventory.some(e => e.itemId === "gray_robe" && e.quantity > 0);
+
+  let revelation: string;
+  if (hasRobe) {
+    revelation =
+      `\n\n${npcName} pauses. "...${p.name}." The name lands like something dropped from a height.\n\n` +
+      `You stare. "${p.name}?" The word feels strange in your mouth. Familiar, but from a long way off.\n\n` +
+      `${npcName} gestures at the gray gown you're wearing. You look down. There, stitched into the hem in small neat letters: ${p.name}.\n\n` +
+      `Your name. You know your name. Everything else is fog — but that, at least, is solid ground.`;
+  } else {
+    revelation =
+      `\n\n${npcName} pauses. "...${p.name}." The name lands like something dropped from a height.\n\n` +
+      `You stare. "${p.name}?" The word feels strange in your mouth. Familiar, but from a long way off.\n\n` +
+      `"I know you," ${npcName} says carefully. "From before. I don't know the details — just the name, and that I've seen you around here before. Many times." A beat of silence. "You don't remember, do you."\n\n` +
+      `Your name. You know your name. Everything else is fog — but that, at least, is solid ground.`;
+  }
+
+  return {
+    text: responseText + revelation,
+    newState: {
+      ...state,
+      player: { ...p, remembersOwnName: true },
+    },
+    revealed: true,
+  };
+}
+
 // ============================================================
 // SAM SLICKER STATIC SHOP (main_hall only, Tier 1)
 // ============================================================
@@ -2225,11 +2549,8 @@ function partitionSamInventory(): {
 function formatSamShopWeaponLine(row: SamShopRow): string {
   const wd = WEAPON_DATA[row.key];
   const name = row.displayName;
-  const dotCount = Math.max(8, 28 - name.length);
-  const left = `${name} ${".".repeat(dotCount)}`;
-  const mid = ` ${row.price} gp`;
-  const tail = wd ? `   [${wd.skill}, ${wd.damage}]` : "";
-  return `${left}${mid}${tail}`;
+  const stats = wd ? ` [${wd.skill}, ${wd.damage}]` : "";
+  return `__CMD:BUY ${name.toUpperCase()}__ ${name} | ${row.price} gp${stats}`;
 }
 
 function buildSamShopListing(player: PlayerState): string {
@@ -2248,15 +2569,15 @@ function buildSamShopListing(player: PlayerState): string {
     "ARMOR & SHIELDS",
     ...armor.map(row => {
       const name = row.displayName;
-      const dotCount = Math.max(8, 28 - name.length);
-      const ac = ITEMS[row.key]?.stats?.armorClass;
-      const acSeg = ac !== undefined && ac !== null ? `  [AC: ${ac}]` : "";
-      return `${name} ${".".repeat(dotCount)} ${row.price} gp${acSeg}`;
+      const item = ITEMS[row.key];
+      const cover = item?.stats?.zoneCover;
+      const coverSeg = cover != null ? ` [${item?.stats?.zoneSlot ?? "body"}: ${cover}% cover]` : "";
+      const block = item?.stats?.shieldBlockChance;
+      const blockSeg = block != null ? ` [block: ${block}%]` : "";
+      return `__CMD:BUY ${name.toUpperCase()}__ ${name} | ${row.price} gp${coverSeg}${blockSeg}`;
     }),
     "",
     `Your gold: ${player.gold} gp`,
-    "─────────────────────────────",
-    "To buy: BUY <item name>",
   ];
   return lines.join("\n");
 }
@@ -2317,7 +2638,7 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
   if (!row) {
     return {
       responseType: "static",
-      staticResponse: "Sam doesn't carry that. Type SHOP to see his wares.",
+      staticResponse: "Sam doesn't carry that. Type __CMD:SHOP__ to see his wares.",
       dynamicContext: null,
       newState: state,
       stateChanged: false,
@@ -2375,7 +2696,7 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
 function samShopWrongRoomResult(state: WorldState): EngineResult {
   return {
     responseType: "static",
-    staticResponse: "Sam keeps his wares in the Main Hall. Go there to browse or buy.",
+    staticResponse: "Sam keeps his wares at Sam's Sharps, north from the courtyard. Go there to browse or buy.",
     dynamicContext: null,
     newState: state,
     stateChanged: false,
@@ -2400,12 +2721,12 @@ export function processInput(
       },
     };
   }
-  if (!newState.player.knownSpells?.length) {
+  if (!newState.player.knownSpells) {
     newState = {
       ...newState,
       player: {
         ...newState.player,
-        knownSpells: ["BLAST", "HEAL", "LIGHT", "SPEED"],
+        knownSpells: [],
         knownDeities: newState.player.knownDeities ?? [],
       },
     };
@@ -2423,6 +2744,19 @@ export function processInput(
       .filter((n): n is NPCStateEntry => Boolean(n?.isAlive && n.location === p.currentRoom))
       .map(n => NPCS[n.npcId]?.name ?? n.npcId)
       .join(", ") || "none";
+
+  // ── Combat-mode guard: only combat commands allowed while in combat ──
+  const COMBAT_ALLOWED_COMMANDS = new Set(["STRIKE", "FLEE", "HEALTH", "HELP"]);
+  if (p.activeCombat && !COMBAT_ALLOWED_COMMANDS.has(first)) {
+    const enemy = p.activeCombat.enemyName;
+    return {
+      responseType: "static",
+      staticResponse: `You are locked in combat with ${enemy}! STRIKE HEAD · STRIKE NECK · STRIKE TORSO · STRIKE LIMBS — or FLEE.`,
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
 
   if (
     p.currentRoom === "church_of_perpetual_life" &&
@@ -2763,6 +3097,31 @@ This is a severe virtue moment — Honor is at stake.`,
       };
     }
 
+    const spellName = rest.toUpperCase();
+    const known = p.knownSpells?.length ? p.knownSpells.join(", ") : "none";
+
+    // No argument or no spells known — same response
+    if (!spellName || !p.knownSpells?.length) {
+      return {
+        responseType: "static",
+        staticResponse: `Cast what? Your known spells: ${known}.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    // Player knows spells but not this one
+    if (!p.knownSpells.includes(spellName)) {
+      return {
+        responseType: "static",
+        staticResponse: `You haven't learned ${spellName}. Your known spells: ${known}.`,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
     return {
       responseType: "dynamic",
       staticResponse: null,
@@ -2817,7 +3176,7 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
   }
 
   if (first === "SHOP" || first === "SAM" || first === "LIST") {
-    if (p.currentRoom !== "main_hall") {
+    if (p.currentRoom !== "main_hall" && p.currentRoom !== "sams_sharps") {
       return samShopWrongRoomResult(newState);
     }
     return {
@@ -2829,11 +3188,64 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     };
   }
 
+  // ── USE KEY / UNLOCK CHEST / OPEN CHEST ──
+  if (first === "USE" || first === "UNLOCK" || first === "OPEN") {
+    const rest = lower.replace(/^(use|unlock|open)\s+/, "").trim();
+    const isChestAction = rest.includes("key") || rest.includes("chest") || rest.includes("locker");
+    if (isChestAction && p.currentRoom === "main_hall") {
+      const hasKey = p.inventory.some(e => e.itemId === "notice_board_key" && e.quantity > 0);
+      if (!hasKey) {
+        return {
+          responseType: "static",
+          staticResponse: "The iron chests along the wall are locked. Each bears a different personal lock. You would need a key.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      // Check if already opened (note already in inventory)
+      const alreadyOpened = p.inventory.some(e => e.itemId === "members_note" && e.quantity > 0);
+      if (alreadyOpened) {
+        return {
+          responseType: "static",
+          staticResponse: "You have already opened the chest that matches your key. It is empty now.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      // Open the chest — grant 10 gold, short sword, and the note
+      let afterOpen = updatePlayerGold(newState, 10);
+      const hasShortSword = afterOpen.player.inventory.some(e => e.itemId === "short_sword");
+      const newInv = [
+        ...afterOpen.player.inventory,
+        ...(!hasShortSword ? [{ itemId: "short_sword", quantity: 1 }] : []),
+        { itemId: "members_note", quantity: 1 },
+      ];
+      afterOpen = {
+        ...afterOpen,
+        player: { ...afterOpen.player, inventory: newInv },
+      };
+      return {
+        responseType: "static",
+        staticResponse:
+          `You try the Guild Member's Key on the iron chests along the wall. The third one clicks open.\n\n` +
+          `Inside: 10 gold coins, a short sword in reasonable condition, and a folded scrap of parchment.\n\n` +
+          `You take everything.\n\n` +
+          `The note reads, in hastily scrawled ink:\n\n` +
+          `"String of bad luck lately. Bank is empty. My friends have all disappeared. I'm going to fight that bastard Ishmael again and try to find out what he did to everyone to make them forget everything. Apologies to YOU, future me, if I failed."`,
+        dynamicContext: null,
+        newState: afterOpen,
+        stateChanged: true,
+      };
+    }
+  }
+
   if (first === "READ") {
     if (p.currentRoom === "notice_board") {
       return {
         responseType: "static",
-        staticResponse: buildRoomDescription(newState, "notice_board"),
+        staticResponse: buildRoomDescription(newState, "notice_board", "verbose"),
         dynamicContext: null,
         newState,
         stateChanged: false,
@@ -2855,7 +3267,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     if (!rest || rest === "around" || rest === "room") {
       return {
         responseType: "static",
-        staticResponse: buildRoomDescription(newState, p.currentRoom),
+        staticResponse: buildRoomDescription(newState, p.currentRoom, "semiverbose"),
         dynamicContext: null,
         newState,
         stateChanged: false,
@@ -2891,8 +3303,22 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     return buildExamineEngineResult(trimmed, newState, currentRoom);
   }
 
-  if (first === "EXAMINE" || first === "EX") {
-    const body = trimmed.replace(/^(examine|ex)\s+/i, "").trim();
+  if (first === "SEARCH") {
+    const searchBody = trimmed.slice(6).trim().toLowerCase();
+    if (!searchBody || searchBody === "room" || searchBody === "around" || searchBody === "area") {
+      return {
+        responseType: "static",
+        staticResponse: buildRoomDescription(newState, p.currentRoom, "verbose"),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    // SEARCH [target] = same as EXAMINE [target], fall through below
+  }
+
+  if (first === "EXAMINE" || first === "EX" || first === "SEARCH") {
+    const body = trimmed.replace(/^(examine|ex|search)\s+/i, "").trim();
     if (!body) {
       return {
         responseType: "static",
@@ -2903,6 +3329,16 @@ Describe what they find to read, or tell them there is nothing to read here.`,
       };
     }
     const bl = body.toLowerCase();
+    // EXAMINE ROOM / EXAMINE AROUND = verbose room description
+    if (bl === "room" || bl === "around" || bl === "area" || bl === "surroundings") {
+      return {
+        responseType: "static",
+        staticResponse: buildRoomDescription(newState, p.currentRoom, "verbose"),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
     if (isNoticeExamineCommand(bl)) {
       return buildExamineEngineResult(`examine notice board`, newState, currentRoom, "notice_board");
     }
@@ -2940,10 +3376,11 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         stateChanged: false,
       };
     }
+    const alreadyVisited = newState.player.visitedRooms.includes(destinationId);
     newState = movePlayer(newState, destinationId);
     return {
       responseType: "static",
-      staticResponse: buildRoomDescription(newState, destinationId),
+      staticResponse: buildRoomDescription(newState, destinationId, alreadyVisited ? "nonverbose" : "semiverbose"),
       dynamicContext: null,
       newState,
       stateChanged: true,
@@ -3344,12 +3781,24 @@ Describe what they find to read, or tell them there is nothing to read here.`,
   if (first === "EQUIP") {
     const afterEquip = trimmed.slice(5).trim();
     const afterLower = afterEquip.toLowerCase();
-    if (afterLower.startsWith("shield ")) {
-      const phrase = afterEquip.slice(7).trim().toLowerCase();
+    if (afterLower.startsWith("shield ") || afterLower === "shield") {
+      const phrase = afterEquip.slice(6).trim().toLowerCase();
       return runEquipShield(newState, phrase);
     }
-    if (afterLower.startsWith("armor ")) {
+    if (afterLower.startsWith("helmet ") || afterLower === "helmet") {
       const phrase = afterEquip.slice(6).trim().toLowerCase();
+      return runEquipZoneArmor(newState, phrase, "head", "head");
+    }
+    if (afterLower.startsWith("gorget ") || afterLower === "gorget") {
+      const phrase = afterEquip.slice(6).trim().toLowerCase();
+      return runEquipZoneArmor(newState, phrase, "neck", "neck");
+    }
+    if (afterLower.startsWith("greaves ") || afterLower === "greaves") {
+      const phrase = afterEquip.slice(7).trim().toLowerCase();
+      return runEquipZoneArmor(newState, phrase, "limbs", "limb");
+    }
+    if (afterLower.startsWith("armor ") || afterLower === "armor") {
+      const phrase = afterEquip.slice(5).trim().toLowerCase();
       return runEquipArmor(newState, phrase);
     }
     return runEquipItemFromPhrase(newState, afterEquip);
@@ -3368,12 +3817,22 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     if (t1 === "armor") {
       return runRemoveArmor(newState);
     }
+    // Per-zone removal
+    if (t1 === "helmet" || t1 === "helm") {
+      return runRemoveZoneArmor(newState, "head", "helmet");
+    }
+    if (t1 === "gorget") {
+      return runRemoveZoneArmor(newState, "neck", "gorget");
+    }
+    if (t1 === "greaves") {
+      return runRemoveZoneArmor(newState, "limbs", "greaves");
+    }
     const phrase = tokens.slice(1).join(" ").trim();
     if (!phrase) {
       return {
         responseType: "static",
         staticResponse:
-          "Remove or unequip what? Try REMOVE SHIELD, REMOVE ARMOR, or UNEQUIP [item].",
+          "Remove or unequip what? Try REMOVE SHIELD, REMOVE ARMOR, REMOVE HELMET, REMOVE GORGET, REMOVE GREAVES, or UNEQUIP [item].",
         dynamicContext: null,
         newState,
         stateChanged: false,
@@ -3402,16 +3861,49 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         stateChanged: false,
       };
     }
+
+    // Check for broken_leg preventing escape
+    const session = p.activeCombat;
+    if (session) {
+      const hasLegInjury = session.playerCombatant.activeEffects.some(
+        e => e.type === "broken_leg"
+      );
+      if (hasLegInjury) {
+        return {
+          responseType: "static",
+          staticResponse: "Your broken leg buckles beneath you. You cannot flee!",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+    }
+
     const [fleeDir, fleeDest] =
       exits[Math.floor(Math.random() * exits.length)]!;
+    const wasInCombat = p.activeCombat;
+
     newState = movePlayer(newState, fleeDest);
+
+    // Clear combat session on flee
+    if (wasInCombat) {
+      newState = {
+        ...newState,
+        player: { ...newState.player, activeCombat: null },
+      };
+    }
+
     const destRoom = getRoom(fleeDest);
     const destName = destRoom?.name ?? fleeDest.replace(/_/g, " ");
+    const fleePrefix = wasInCombat
+      ? `You disengage from ${wasInCombat.enemyName} and `
+      : "You ";
     return {
       responseType: "static",
       staticResponse:
-        `You bolt for the ${fleeDir} exit, crashing into ${destName}.\n\n` +
-        buildRoomDescription(newState, fleeDest),
+        `${fleePrefix}bolt for the ${fleeDir} exit, crashing into ${destName}.\n` +
+        (wasInCombat ? "__COMBAT_END__\n\n" : "\n") +
+        buildRoomDescription(newState, fleeDest, "nonverbose"),
       dynamicContext: null,
       newState,
       stateChanged: true,
@@ -3426,14 +3918,14 @@ Describe what they find to read, or tell them there is nothing to read here.`,
 
     if (
       isSamTarget &&
-      p.currentRoom === "main_hall" &&
+      (p.currentRoom === "main_hall" || p.currentRoom === "sams_sharps") &&
       p.weapon === "unarmed"
     ) {
       const newInventory = [
         ...p.inventory,
         { itemId: "rusty_shortsword", quantity: 1 },
       ];
-      const afterGift: WorldState = {
+      let afterGift: WorldState = {
         ...newState,
         player: {
           ...newState.player,
@@ -3442,16 +3934,20 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         },
       };
 
+      let samResponse =
+        `Sam looks at you for a long moment — the empty hands, the whole situation. He's seen this before.\n\n` +
+        `He reaches under the counter and produces a short sword so rusty it looks like it was ` +
+        `recovered from a riverbed. He sets it on the counter without ceremony.\n\n` +
+        `"Don't thank me. Kill something with it and buy a real one."\n\n` +
+        `You have the Rusty Short Sword. It is equipped.`;
+
+      const reveal = maybeRevealName(samResponse, afterGift, "sam_slicker");
+      samResponse = reveal.text;
+      afterGift = reveal.newState;
+
       return {
         responseType: "static",
-        staticResponse:
-          `Sam looks at you for a long moment — the robe, the empty hands, the whole situation.\n\n` +
-          `He reaches under the counter and produces a short sword so rusty it looks like it was ` +
-          `recovered from a riverbed. He sets it on the bar without ceremony.\n\n` +
-          `"Don't thank me. Kill something with it and buy a real one."\n\n` +
-          `You have the Rusty Short Sword. It is equipped.` +
-          "\n\n" +
-          pickTemplate(BARREL_NPC_HINTS),
+        staticResponse: samResponse + "\n\n" + pickTemplate(BARREL_NPC_HINTS),
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
@@ -3470,7 +3966,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         ...p.inventory,
         { itemId: "butcher_knife", quantity: 1 },
       ];
-      const afterGift: WorldState = {
+      let afterGift: WorldState = {
         ...newState,
         player: {
           ...newState.player,
@@ -3479,20 +3975,25 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         },
       };
 
+      let hokasResponse =
+        `Hokas looks at you for a long moment — the empty hands,` +
+        ` the general situation. Something soft and worried crosses his face, but he` +
+        ` buries it fast.\n\n` +
+        `He disappears behind the bar and comes back with a large knife,` +
+        ` the kind used for breaking down a side of beef. He sets it on` +
+        ` the bar with a solid thunk.\n\n` +
+        `"I don't need it anymore," he says. "Don't tell me what you do` +
+        ` with it. Don't bring it back." He goes back to polishing a` +
+        ` glass that doesn't need polishing.\n\n` +
+        `You have the Butcher Knife. It is equipped.`;
+
+      const reveal = maybeRevealName(hokasResponse, afterGift, "hokas_tokas");
+      hokasResponse = reveal.text;
+      afterGift = reveal.newState;
+
       return {
         responseType: "static",
-        staticResponse:
-          `Hokas looks at you for a long moment — the robe, the empty hands,` +
-          ` the general situation.\n\n` +
-          `He disappears behind the bar and comes back with a large knife,` +
-          ` the kind used for breaking down a side of beef. He sets it on` +
-          ` the bar with a solid thunk.\n\n` +
-          `"I don't need it anymore," he says. "Don't tell me what you do` +
-          ` with it. Don't bring it back." He goes back to polishing a` +
-          ` glass that doesn't need polishing.\n\n` +
-          `You have the Butcher Knife. It is equipped.` +
-          "\n\n" +
-          pickTemplate(BARREL_NPC_HINTS),
+        staticResponse: hokasResponse + "\n\n" + pickTemplate(BARREL_NPC_HINTS),
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
@@ -3524,7 +4025,169 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     };
   }
 
+  // ── STRIKE [zone] — HWRR body-part targeting (active combat only) ──
+  if (first === "STRIKE") {
+    const session = p.activeCombat;
+    if (!session) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou art not in combat. Use ATTACK [enemy] to engage a foe.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const zoneArg = (tokens[1] ?? "").toLowerCase() as BodyZone;
+    if (!BODY_ZONES.includes(zoneArg)) {
+      return {
+        responseType: "static",
+        staticResponse: "Strike where? STRIKE HEAD, STRIKE NECK, STRIKE TORSO, or STRIKE LIMBS.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    // Resolve one HWRR combat round
+    const roundResult = resolveHWRRRound(session, zoneArg);
+    const narrative = buildRoundNarrative(roundResult);
+
+    // Update session with new combatant states
+    let updatedSession: ActiveCombatSession = {
+      ...session,
+      roundNumber: roundResult.roundNumber,
+      playerCombatant: roundResult.updatedPlayer,
+      enemyCombatant: roundResult.updatedEnemy,
+      combatLog: [...session.combatLog, narrative].slice(-20),
+      finished: roundResult.combatOver,
+      playerWon: roundResult.combatOver ? roundResult.playerWon : null,
+    };
+
+    let finalState = newState;
+
+    // Training dummy: grant weapon skill XP per strike (capped at 25)
+    const isDummy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
+    const DUMMY_SKILL_CAP = 25;
+    if (isDummy && roundResult.playerStrike && roundResult.playerStrike.damageDealt > 0) {
+      const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
+      const currentSkill = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
+      if (currentSkill < DUMMY_SKILL_CAP) {
+        const skillUp = updateWeaponSkill(finalState, weaponSkillKey, 1);
+        finalState = skillUp.newState;
+      }
+    }
+
+    if (roundResult.combatOver) {
+      if (isDummy && roundResult.playerWon) {
+        // Training dummy: reset HP, don't kill, end session
+        finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
+        const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
+        const skillVal = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
+        const capNote = skillVal >= DUMMY_SKILL_CAP
+          ? `\n\nThe dummy has nothing more to teach you. Your ${SKILL_NAMES[weaponSkillKey]} has outgrown wooden targets.`
+          : `\n\n${SKILL_NAMES[weaponSkillKey]}: ${skillVal}/${DUMMY_SKILL_CAP} (dummy training cap)`;
+        return {
+          responseType: "static",
+          staticResponse: narrative + "\n\nThe dummy splinters apart — but someone will patch it back together by morning." + capNote + "\n__COMBAT_END__",
+          dynamicContext: null,
+          newState: {
+            ...finalState,
+            player: { ...finalState.player, activeCombat: null },
+          },
+          stateChanged: true,
+        };
+      }
+
+      if (roundResult.playerWon) {
+        // Mark NPC dead, clear combat HP, award virtue + expertise
+        finalState = {
+          ...finalState,
+          npcs: {
+            ...finalState.npcs,
+            [session.enemyNpcId]: {
+              ...finalState.npcs[session.enemyNpcId]!,
+              isAlive: false,
+            },
+          },
+        };
+        finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
+        finalState = updateVirtue(finalState, "Valor", 1);
+        finalState = addToChronicle(
+          finalState,
+          `${p.name} defeated ${session.enemyName}.`,
+          false
+        );
+        finalState = {
+          ...finalState,
+          player: {
+            ...finalState.player,
+            expertise: finalState.player.expertise + 1,
+          },
+        };
+      } else if (roundResult.playerDied) {
+        // Player death — apply death penalty, respawn
+        const { newState: afterDeath, lostGold } = applyPlayerDeath(
+          finalState,
+          session.enemyName
+        );
+        finalState = afterDeath;
+        const deathSuffix = `\n\n${fillTemplate(
+          pickTemplate(COMBAT_TEMPLATES.playerDeath),
+          { enemy: session.enemyName }
+        )}\n\n${pickTemplate(REBIRTH_NARRATIVES)}\n\nYou lost ${lostGold} gold and everything you carried.`;
+        return {
+          responseType: "static",
+          staticResponse: narrative + deathSuffix + "\n__COMBAT_END__",
+          dynamicContext: null,
+          newState: {
+            ...finalState,
+            player: { ...finalState.player, activeCombat: null },
+          },
+          stateChanged: true,
+        };
+      }
+
+      // Combat over (player won) — clear session
+      return {
+        responseType: "static",
+        staticResponse: narrative + "\n__COMBAT_END__",
+        dynamicContext: null,
+        newState: {
+          ...finalState,
+          player: { ...finalState.player, activeCombat: null },
+        },
+        stateChanged: true,
+      };
+    }
+
+    // Combat continues — persist updated HP on NPC and updated session on player
+    finalState = setNPCCombatHp(finalState, session.enemyNpcId, roundResult.updatedEnemy.hp);
+    // Sync player HP from combatant state back to PlayerState
+    finalState = updatePlayerHP(finalState, roundResult.updatedPlayer.hp - finalState.player.hp);
+
+    return {
+      responseType: "static",
+      staticResponse: narrative,
+      dynamicContext: null,
+      newState: {
+        ...finalState,
+        player: { ...finalState.player, activeCombat: updatedSession },
+      },
+      stateChanged: true,
+    };
+  }
+
   if (first === "ATTACK") {
+    // If already in combat, redirect to STRIKE
+    if (p.activeCombat) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou art already engaged! Use STRIKE HEAD, STRIKE NECK, STRIKE TORSO, or STRIKE LIMBS.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
     if (p.weapon === "unarmed") {
       return {
         responseType: "static",
@@ -3583,7 +4246,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         stateChanged: false,
       };
     }
-    if (!npcData.isHostile) {
+    if (!npcData.isHostile && !npcData.isTrainingDummy) {
       return {
         responseType: "static",
         staticResponse: `${npcData.name} is not thy foe here. To strike unprovoked would be a grave act.`,
@@ -3592,40 +4255,36 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         stateChanged: false,
       };
     }
-    const currentEnemyHp =
-      newState.npcs[target.id]?.combatHp ?? npcData.stats.hp;
-    const combat = resolveCombatRound(
-      newState,
-      target.id,
-      currentEnemyHp,
-      {
-        name: npcData.name,
-        damage: npcData.stats.damage,
-        armor: npcData.stats.armor,
-      },
-      npcData.bodyType
-    );
-    let finalState = combat.newState;
-    if (combat.playerWon) {
-      finalState = {
-        ...finalState,
-        npcs: {
-          ...finalState.npcs,
-          [target.id]: {
-            ...finalState.npcs[target.id]!,
-            isAlive: false,
-          },
-        },
+
+    // Initialize HWRR combat session
+    const session = initCombatSession(newState, target.id);
+    if (!session) {
+      return {
+        responseType: "static",
+        staticResponse: "Something prevents thee from engaging that foe.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
       };
-      finalState = setNPCCombatHp(finalState, target.id, null);
-    } else if (combat.combatOver) {
-      finalState = setNPCCombatHp(finalState, target.id, null);
-    } else {
-      finalState = setNPCCombatHp(finalState, target.id, combat.enemyHp);
     }
+
+    // Store session and set NPC combat HP
+    let finalState = setNPCCombatHp(newState, target.id, session.enemyCombatant.hp);
+    finalState = {
+      ...finalState,
+      player: { ...finalState.player, activeCombat: session },
+    };
+
+    const weaponName = ITEMS[p.weapon]?.name ?? p.weapon;
+    const engageNarrative =
+      `You draw your ${weaponName} and engage ${npcData.name}!\n\n` +
+      `${npcData.name}: ${session.enemyCombatant.hp}/${session.enemyCombatant.maxHp} HP\n` +
+      `Choose your target: STRIKE HEAD · STRIKE NECK · STRIKE TORSO · STRIKE LIMBS\n` +
+      `__COMBAT_START__`;
+
     return {
       responseType: "static",
-      staticResponse: combat.narrative,
+      staticResponse: engageNarrative,
       dynamicContext: null,
       newState: finalState,
       stateChanged: true,
@@ -3634,7 +4293,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
 
   if (first === "BUY") {
     const buyRest = trimmed.slice(3).trim();
-    if (p.currentRoom === "main_hall") {
+    if (p.currentRoom === "main_hall" || p.currentRoom === "sams_sharps") {
       if (!buyRest) {
         return {
           responseType: "static",
@@ -3645,6 +4304,64 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         };
       }
       return runSamPurchase(newState, buyRest);
+    }
+    // Armory — Pip's static shop listing
+    if (p.currentRoom === "armory" && !buyRest) {
+      const pip = NPCS["armory_attendant"];
+      const pipItems = pip?.merchant?.inventory ?? [];
+      const lines = [
+        "╔══════════════════════════════════════╗",
+        "║        GUILD ARMORY — PIP            ║",
+        "╚══════════════════════════════════════╝",
+        "",
+        ...pipItems.map(iid => {
+          const item = ITEMS[iid];
+          if (!item) return iid;
+          const cover = item.stats?.zoneCover;
+          const coverSeg = cover != null ? ` [${item.stats?.zoneSlot ?? "body"}: ${cover}% cover]` : "";
+          const block = item.stats?.shieldBlockChance;
+          const blockSeg = block != null ? ` [block: ${block}%]` : "";
+          const dmg = WEAPON_DATA[iid]?.damage ?? item.stats?.damage;
+          const dmgSeg = dmg ? ` [dmg: ${dmg}]` : "";
+          return `__CMD:BUY ${item.name.toUpperCase()}__ ${item.name} | ${item.value} gp${dmgSeg}${coverSeg}${blockSeg}`;
+        }),
+        "",
+        `Your gold: ${p.gold} gp`,
+      ];
+      return {
+        responseType: "static",
+        staticResponse: lines.join("\n"),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    // Pots & Bobbles — Zim's static shop listing
+    if (p.currentRoom === "mage_school" && !buyRest) {
+      const zim = NPCS["zim_the_wizard"];
+      const zimItems = zim?.merchant?.inventory ?? [];
+      const lines = [
+        "╔══════════════════════════════════════╗",
+        "║      POTS & BOBBLES — ZIM            ║",
+        "╚══════════════════════════════════════╝",
+        "",
+        ...zimItems.map(iid => {
+          const item = ITEMS[iid];
+          if (!item) return iid;
+          const heal = item.stats?.healAmount;
+          const healSeg = heal != null ? ` [heals: ${heal}]` : "";
+          return `__CMD:BUY ${item.name.toUpperCase()}__ ${item.name} | ${item.value} gp${healSeg}`;
+        }),
+        "",
+        `Your gold: ${p.gold} gp`,
+      ];
+      return {
+        responseType: "static",
+        staticResponse: lines.join("\n"),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
     }
     return {
       responseType: "dynamic",
@@ -3757,10 +4474,11 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
         stateChanged: false,
       };
     }
+    const alreadyVisitedAdv = newState.player.visitedRooms.includes(destinationId);
     newState = movePlayer(newState, destinationId);
     return {
       responseType: "static",
-      staticResponse: buildRoomDescription(newState, destinationId),
+      staticResponse: buildRoomDescription(newState, destinationId, alreadyVisitedAdv ? "nonverbose" : "semiverbose"),
       dynamicContext: null,
       newState,
       stateChanged: true,

@@ -14,9 +14,9 @@ import {
   WorldState,
   normalizeWeaponSkills,
 } from "../../../lib/gameState";
-import { NPCS, ITEMS, MAIN_HALL_ROOMS } from "../../../lib/gameData";
-import { getRoom, getScriptsForRoom } from "../../../lib/adventures/registry";
-import { getBarmaidResponseLines } from "../../../lib/adventures/guild-hall-npcs";
+import { NPCS, ITEMS } from "../../../lib/gameData";
+import { ALL_ROOMS as MAIN_HALL_ROOMS, getRoom, getScriptsForRoom } from "../../../lib/adventures/registry";
+import { getBarmaidResponseLines, getAldricWelcomeLines, getAldricTrainingLines, getZimWelcomeLines, getZimHealResponseLines } from "../../../lib/adventures/guild-hall-npcs";
 import {
   savePlayer,
   loadPlayer,
@@ -254,6 +254,9 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     bodyArmor: state.player.bodyArmor ?? null,
     limbArmor: state.player.limbArmor ?? null,
     activeCombat: state.player.activeCombat ?? null,
+    mounted: state.player.mounted ?? false,
+    remembersOwnName: state.player.remembersOwnName ?? false,
+    metZim: state.player.metZim ?? false,
     weaponSkills: state.player.weaponSkills,
   };
 }
@@ -327,8 +330,7 @@ export async function POST(request: NextRequest) {
               (savedPlayer as { visited_rooms?: string[] }).visited_rooms ??
               [savedPlayer.current_room ?? "church_of_perpetual_life"],
             knownSpells:
-              (savedPlayer as { known_spells?: string[] }).known_spells ??
-              ["BLAST", "HEAL", "LIGHT", "SPEED"],
+              (savedPlayer as { known_spells?: string[] }).known_spells ?? [],
             knownDeities:
               (savedPlayer as { known_deities?: string[] }).known_deities ?? [],
             receivedSamStarterOutfit:
@@ -352,6 +354,15 @@ export async function POST(request: NextRequest) {
             activeCombat:
               (savedPlayer as { active_combat?: unknown }).active_combat as
                 import("../../../lib/combatTypes").ActiveCombatSession | null ?? null,
+            mounted: Boolean(
+              (savedPlayer as { mounted?: boolean }).mounted
+            ),
+            remembersOwnName: Boolean(
+              (savedPlayer as { remembers_own_name?: boolean }).remembers_own_name
+            ),
+            metZim: Boolean(
+              (savedPlayer as { met_zim?: boolean }).met_zim
+            ),
             weaponSkills: normalizeWeaponSkills(
               (savedPlayer as { weapon_skills?: Record<string, number> | null })
                 .weapon_skills ?? undefined
@@ -601,19 +612,51 @@ export async function POST(request: NextRequest) {
         const cond = script.condition.playerState;
         if (cond) {
           if (cond.barmaidPreference !== undefined && state.player.barmaidPreference !== cond.barmaidPreference) continue;
+          if (cond.remembersOwnName !== undefined && state.player.remembersOwnName !== cond.remembersOwnName) continue;
+          if (cond.metZim !== undefined && state.player.metZim !== cond.metZim) continue;
         }
 
         // Script matches — build response
         const stateUpdates = script.stateUpdate ? script.stateUpdate(pick) : {};
-        const newState = {
+        let newState = {
           ...state,
           player: { ...state.player, ...stateUpdates },
         };
 
-        // Use custom line builder if available (e.g. barmaid selection), otherwise use static lines
+        // Use custom line builder if available, otherwise use static lines
         let responseLines: string[];
         if (script.id === "barmaid_select_response") {
           responseLines = getBarmaidResponseLines(pick);
+        } else if (script.id === "aldric_training_response") {
+          responseLines = getAldricTrainingLines(pick, state.player.name);
+          // YES moves player to courtyard
+          if (pick === "YES") {
+            newState = {
+              ...newState,
+              player: {
+                ...newState.player,
+                currentRoom: "guild_courtyard",
+                previousRoom: "main_hall",
+                visitedRooms: newState.player.visitedRooms.includes("guild_courtyard")
+                  ? newState.player.visitedRooms
+                  : [...newState.player.visitedRooms, "guild_courtyard"],
+              },
+            };
+          }
+        } else if (script.id === "zim_heal_response") {
+          responseLines = getZimHealResponseLines(pick, state.player.gold);
+          // If YES and has gold, deduct 100 gold and add HEAL spell
+          if (pick === "YES" && state.player.gold >= 100) {
+            const knownSpells = newState.player.knownSpells ?? [];
+            newState = {
+              ...newState,
+              player: {
+                ...newState.player,
+                gold: newState.player.gold - 100,
+                knownSpells: knownSpells.includes("HEAL") ? knownSpells : [...knownSpells, "HEAL"],
+              },
+            };
+          }
         } else {
           responseLines = script.lines;
         }
@@ -627,7 +670,7 @@ export async function POST(request: NextRequest) {
     const playerInput = lastMessageRaw ? lastMessageRaw.content : "";
 
     // Run through engine
-    const engineResult = processInput(playerInput, state);
+    let engineResult = processInput(playerInput, state);
 
     // STATIC — no API call unless narrative contains __CRITICAL__ (Jane rewrites crit line)
     if (engineResult.responseType === "static" && engineResult.staticResponse !== null) {
@@ -658,9 +701,41 @@ export async function POST(request: NextRequest) {
             if (cond.barmaidPreference !== undefined && p.barmaidPreference !== cond.barmaidPreference) match = false;
             if (cond.previousRoomNotNull && p.previousRoom === null) match = false;
             if (cond.turnCountMax !== undefined && p.turnCount > cond.turnCountMax) match = false;
+            if (cond.remembersOwnName !== undefined && p.remembersOwnName !== cond.remembersOwnName) match = false;
+            if (cond.metZim !== undefined && p.metZim !== cond.metZim) match = false;
           }
           if (match) {
-            staticText = staticText + "\n" + script.lines.join("\n");
+            // Dynamic line builders for specific scripts
+            let scriptLines: string[];
+            if (script.id === "aldric_welcome") {
+              const hasRobe = engineResult.newState.player.inventory.some(
+                (e: { itemId: string; quantity: number }) => e.itemId === "gray_robe" && e.quantity > 0
+              );
+              scriptLines = [
+                ...script.lines,
+                ...getAldricWelcomeLines(engineResult.newState.player.name, hasRobe),
+              ];
+            } else if (script.id === "zim_welcome") {
+              scriptLines = [
+                ...script.lines,
+                ...getZimWelcomeLines(engineResult.newState.player.name),
+              ];
+            } else {
+              scriptLines = script.lines;
+            }
+            staticText = staticText + "\n" + scriptLines.join("\n");
+
+            // Apply state updates from the script
+            if (script.stateUpdate) {
+              const updates = script.stateUpdate("");
+              engineResult = {
+                ...engineResult,
+                newState: {
+                  ...engineResult.newState,
+                  player: { ...engineResult.newState.player, ...updates },
+                },
+              };
+            }
             break; // only one on_enter script per room entry
           }
         }

@@ -19,11 +19,13 @@ import type {
 import {
   BODY_ZONES,
   ZONE_DAMAGE_MULTIPLIER,
+  ZONE_EVASION_PENALTY,
   ZONE_INJURY_TABLE,
   createEmptyBodyArmorMap,
 } from "./combatTypes";
 import { rollWeaponDamage, getDexReactionBonus, getWeaponSkillKey, WEAPON_DATA } from "./uoData";
 import { getWeaponCategory, type WeaponCategory, type WoundTier } from "./combatNarrationPools";
+import { buildZoneStrikeNarrative } from "./combatZoneNarration";
 import type { WorldState } from "./gameState";
 import { NPCS, ITEMS } from "./gameData";
 
@@ -38,12 +40,19 @@ function clamp(val: number, min: number, max: number): number {
 }
 
 // ── Evasion (Roll 1) ────────────────────────────────────────
+// Defender agility increases evasion (0.8x).
+// Attacker agility reduces evasion (0.4x) — dexterous fighters hit more often.
+// Both are already reduced by armor dex penalties via buildCombatantFrom*.
 
 function calculateEvasionChance(
   defender: CombatantState,
   attacker: CombatantState
 ): number {
-  let base = defender.agility * 0.3;
+  // Defender's effective agility drives evasion
+  let base = defender.agility * 0.8;
+
+  // Attacker's agility makes them harder to evade
+  base -= attacker.agility * 0.4;
 
   // Injuries reduce evasion
   for (const e of defender.activeEffects) {
@@ -184,8 +193,9 @@ export function resolveStrike(
     narrative: "",
   };
 
-  // ── Roll 1: Evasion ──
-  const evasionChance = calculateEvasionChance(defender, attacker);
+  // ── Roll 1: Evasion (+ zone accuracy penalty) ──
+  const baseEvasion = calculateEvasionChance(defender, attacker);
+  const evasionChance = clamp(baseEvasion + ZONE_EVASION_PENALTY[targetZone], 0, 95);
   if (Math.random() * 100 < evasionChance) {
     return {
       ...baseMiss,
@@ -402,7 +412,9 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
   const p = state.player;
   const zones = createEmptyBodyArmorMap();
 
-  // Populate zone armor from equipment
+  // Populate zone armor from equipment and sum dex penalties
+  const isMounted = p.mounted ?? false;
+  let totalDexPenalty = 0;
   const slotMap: { slot: keyof typeof p; zone: BodyZone }[] = [
     { slot: "helmet", zone: "head" },
     { slot: "gorget", zone: "neck" },
@@ -421,12 +433,20 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
           maxDurability: item.stats.zoneDurability,
         };
       }
+      // Use mountedDexPenalty when on horseback, full dexPenalty on foot
+      const penalty = isMounted && item?.stats?.mountedDexPenalty != null
+        ? item.stats.mountedDexPenalty
+        : item?.stats?.dexPenalty ?? 0;
+      totalDexPenalty += penalty;
     }
   }
 
   // Shield
   const shieldItem = p.shield ? ITEMS[p.shield] : null;
+  totalDexPenalty += shieldItem?.stats?.dexPenalty ?? 0;
+
   const skillKey = getWeaponSkillKey(p.weapon);
+  const effectiveAgility = Math.max(0, p.dexterity - totalDexPenalty);
 
   return {
     id: p.id,
@@ -443,7 +463,7 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
     weaponSkillValue: p.weaponSkills[skillKey] ?? 0,
     dexterity: p.dexterity,
     strength: p.strength,
-    agility: p.dexterity, // Player uses dexterity as agility
+    agility: effectiveAgility, // Dexterity minus cumulative armor penalties
   };
 }
 
@@ -647,6 +667,8 @@ export function initCombatSession(
 
 export function buildRoundNarrative(result: CombatRoundResult): string {
   const parts: string[] = [];
+  const playerName = result.updatedPlayer.name;
+  const enemyName = result.updatedEnemy.name;
 
   if (result.statusTickNarrative) {
     parts.push(result.statusTickNarrative);
@@ -654,15 +676,31 @@ export function buildRoundNarrative(result: CombatRoundResult): string {
 
   parts.push(result.initiativeNarrative);
 
-  const first = result.playerGoesFirst ? result.playerStrike : result.enemyStrike;
-  const second = result.playerGoesFirst ? result.enemyStrike : result.playerStrike;
+  // Build zone-aware narrative for each strike
+  const playerWeaponName = ITEMS[result.updatedPlayer.weaponId]?.name ?? "weapon";
+  const playerWeaponCat = getWeaponCategory(result.updatedPlayer.weaponId);
+  const enemyWeaponCat: WeaponCategory = "slash"; // NPCs default to slash
 
-  if (first) parts.push("", first.narrative);
-  if (second) parts.push("", second.narrative);
+  function strikeNarrative(strike: StrikeResolution, isPlayerAttacking: boolean): string {
+    const attName = isPlayerAttacking ? playerName : enemyName;
+    const defName = isPlayerAttacking ? enemyName : playerName;
+    const defMaxHp = isPlayerAttacking ? result.updatedEnemy.maxHp : result.updatedPlayer.maxHp;
+    const wCat = isPlayerAttacking ? playerWeaponCat : enemyWeaponCat;
+    const wName = isPlayerAttacking ? playerWeaponName : "weapon";
+    return buildZoneStrikeNarrative(strike, attName, defName, wName, wCat, defMaxHp, isPlayerAttacking);
+  }
+
+  if (result.playerGoesFirst) {
+    if (result.playerStrike) parts.push("", strikeNarrative(result.playerStrike, true));
+    if (result.enemyStrike) parts.push("", strikeNarrative(result.enemyStrike, false));
+  } else {
+    if (result.enemyStrike) parts.push("", strikeNarrative(result.enemyStrike, false));
+    if (result.playerStrike) parts.push("", strikeNarrative(result.playerStrike, true));
+  }
 
   if (result.combatOver) {
     if (result.playerWon) {
-      parts.push("", `${result.updatedEnemy.name} falls.`);
+      parts.push("", `${enemyName} falls.`);
     } else if (result.playerDied) {
       parts.push("", "Everything goes dark.");
     }
@@ -670,7 +708,7 @@ export function buildRoundNarrative(result: CombatRoundResult): string {
     // Show HP status
     parts.push(
       "",
-      `You: ${result.updatedPlayer.hp}/${result.updatedPlayer.maxHp} HP · ${result.updatedEnemy.name}: ${result.updatedEnemy.hp}/${result.updatedEnemy.maxHp} HP`
+      `You: ${result.updatedPlayer.hp}/${result.updatedPlayer.maxHp} HP · ${enemyName}: ${result.updatedEnemy.hp}/${result.updatedEnemy.maxHp} HP`
     );
   }
 

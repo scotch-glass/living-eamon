@@ -32,7 +32,12 @@ export interface RoomColdOpen {
 export interface Room {
   id: string;
   name: string;
+  /** Verbose — full detailed description. Shown via EXAMINE ROOM / SEARCH only. */
   description: string;
+  /** Semiverbose — 2-4 sentences for LOOK and first visit. Orientation. */
+  look?: string;
+  /** Nonverbose — 1-2 sentences for revisits, fleeing, passing through. */
+  glance?: string;
   exits: Record<string, string>;
   stateModifiers: Partial<Record<RoomState, RoomStateModifier>>;
   npcs: string[];
@@ -66,6 +71,8 @@ export interface NPCScriptCondition {
     barmaidPreference?: null | string;  // null = not yet chosen
     turnCountMax?: number;              // turnCount <= this value
     previousRoomNotNull?: boolean;      // player came from somewhere
+    remembersOwnName?: boolean;         // false = hasn't remembered yet
+    metZim?: boolean;                    // false = hasn't visited Pots & Bobbles yet
   };
 }
 

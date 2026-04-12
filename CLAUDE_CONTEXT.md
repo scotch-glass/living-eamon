@@ -9,7 +9,7 @@ Before doing any work, read these files in order:
    - User profile (Scotch — non-developer founder)
    - Feedback rules (image cache safety, CLAUDE_CONTEXT.md updates, etc.)
    - Project decisions (Aquilonia styling, PD adaptation plan, etc.)
-4. .claude/plans/vast-tumbling-wilkinson.md — active implementation plan for HWRR combat system rewrite (Phases 1-2 complete, Phases 3-6 remaining)
+4. §5.4 below — HWRR combat system status (Phases 1-2 complete, Phases 3-6 remaining)
 
 Check the todo list for in-progress tasks from the previous session.
 
@@ -65,7 +65,7 @@ Completed systems:
 Authentication: email/password + Google SSO scaffolding, cookie-based sessions via @supabase/ssr, proxy.ts route protection, server actions for auth, /login and /register pages
 user_id FK column linking players to auth.users
 Jane daily call limit: unlimited in development via NODE_ENV check
-Combat system — HWRR-style body-part targeting IN PROGRESS (Phase 1-2 of 6 complete). See §5.4 below.
+Combat system — HWRR-style body-part targeting COMPLETE (all 6 phases). See §5.4 below.
 10-virtue moral system
 Consequence engine (burnt rooms, NPC memory, Sheriff alerts, bounties)
 NPC agenda system
@@ -87,16 +87,25 @@ Ostavar is styled after Aquilonia from Robert E. Howard's Hyborian Age — the C
 
 Current rooms (lib/adventures/guild-hall.ts):
 - Church of Perpetual Life (spawn/respawn, grimdark tone, cold open with __YESNO__)
-- Guild Courtyard (training dummies, Sam's Sharps sign, live weather)
+- Guild Courtyard (Dufus training dummy, Sam's sign=sword+shield, Pots & Bobbles sign=red potion bottle, live weather)
 - Sam's Sharps (weapons shop, moved from Main Hall)
-- Main Hall (Hokas bar, Aldric veteran, 3 barmaids — Lira/Mavia/Seraine, notice board)
+- Main Hall (Hokas bar, Aldric veteran, 3 barmaids — Lira/Mavia/Seraine, notice board, members chest)
 - Notice Board (3 adventure postings)
 - Armory (Pip attendant)
 - Guild Vault (Brunt banker)
+- Pots & Bobbles / Mage School (south of courtyard, Zim wizard, potions, reagents, identification, magic training)
+  - Larger inside than outside (subtle magical architecture)
+  - Sells: healing potions, stamina/fatigue brews, antidotes, bandages, tourniquets, poisons, mana potions
+  - Buys: herbs and reagents (mandrake, ginseng, nightshade, black pearl, blood moss, spider silk, mysterious baubles)
+  - Services: magical item identification (small fee), magic training (HEAL = 100g discounted)
+  - Zim warns about cursed/corrupted items, crosses himself (shoulder-shoulder-forehead-heart-kiss)
 
 NPC scripts (lib/adventures/guild-hall-npcs.ts):
-- aldric_drink_offer — on_enter, first Main Hall visit, triggers __BARMAID_SELECT__
+- aldric_welcome — on_enter Main Hall when remembersOwnName=false, name reveal + tutorial chips + combat training YES/NO
+- aldric_training_response — on_response YES moves to courtyard + Dufus intro, NO proceeds to barmaid select
 - barmaid_select_response — on_response, handles LIRA/MAVIA/SERAINE choice, stores barmaidPreference
+- zim_welcome — on_enter Pots & Bobbles when metZim=false, foot-in-mouth intro, spell curriculum + HEAL discount YES/NO
+- zim_heal_response — on_response, YES+gold teaches HEAL, YES+broke gives reagent/identification speech
 
 §5.2 — Key Architecture Files
 | File | Purpose |
@@ -108,6 +117,9 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 | lib/sceneData.ts | Tone modifiers, style references, buildScenePrompt() — reads from getRoom() |
 | lib/combatTypes.ts | BodyZone, CombatantState, StrikeResolution, ActiveCombatSession, NPCCombatProfile |
 | lib/combatEngine.ts | 3-roll strike resolution, round resolution, enemy AI, status ticks, combatant builders |
+| lib/combatZoneNarration.ts | Zone-specific narration pools, buildZoneStrikeNarrative(), injury/crit narration |
+| components/CombatScreen.tsx | Full-screen combat overlay — PaperDoll, log, strike/flee buttons |
+| components/PaperDoll.tsx | SVG clickable body zones — color-coded by armor/wounds/selection |
 | lib/gameData.ts | NPCs, Items, SAM_INVENTORY — re-exports Room types from roomTypes.ts |
 | app/api/scene-image/route.ts | Grok Imagine scene generation + cache (soft-delete aware) |
 | app/api/barmaid-image/route.ts | Grok Imagine portrait generation for barmaids |
@@ -122,10 +134,16 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 
 §5.4 — HWRR Combat System Rewrite (In Progress)
 Replacing flat ATTACK [enemy] with Heads Will Roll Reforged-style body-part targeting.
-Plan file: .claude/plans/vast-tumbling-wilkinson.md
+Status tracked in §5.4 below (plan file archived).
 
 4 target zones: head (1.5x dmg), neck (2.0x), torso (1.0x), limbs (0.8x)
-3-roll attack resolution: Evasion → Shield Block → Armor Penetration (per-zone cover rating)
+3-roll attack resolution: Evasion (+ zone accuracy penalty) → Shield Block → Armor Penetration (per-zone cover rating)
+Zone evasion penalties (HWRR-faithful): torso +0, limbs +10, head +30, neck +50 — smaller targets are harder to hit
+Evasion formula: (defender.agility × 0.8) − (attacker.agility × 0.4) + zone penalty + injury mods, capped 0-95%
+Armor dex penalties: each armor piece has dexPenalty (leather 1-2, chain 3-5, plate 6-12, buckler 1) — cumulative, subtracted from agility
+Mounted state: player.mounted boolean — plate armor uses mountedDexPenalty when mounted (plate on horseback ≈ chain on foot)
+Plate armor: 4 pieces (plate_helm/gorget/cuirass/greaves), 5000 gp total, customFit=true, on-foot dexPenalty=36 total (crippling), mounted=13 (viable)
+Unarmored barbarian archetype: high DEX + no armor = full agility → high evasion + high accuracy (Conan-faithful)
 Per-zone armor with degradation (durability decreases on hit, pieces break)
 Zone-specific injuries: concussion, damaged_eye (head), severed_artery, crushed_windpipe (neck), pierced_lung, cracked_ribs (torso), broken_arm, broken_leg (limbs)
 Status effects stack with severity (1-3) and duration
@@ -152,13 +170,100 @@ COMPLETED:
   - resolveCombatRound() — full round: tick → initiative → first strike → second strike
   - initCombatSession() — creates ActiveCombatSession from WorldState
   - buildRoundNarrative() — assembles combat text from round result
+- Phase 2: gameEngine.ts ATTACK handler rewrite:
+  - ATTACK [enemy] now initiates HWRR combat → stores ActiveCombatSession on player.activeCombat, emits __COMBAT_START__
+  - STRIKE HEAD/NECK/TORSO/LIMBS → resolves one HWRR round per command, syncs HP/injuries/armor durability
+  - __COMBAT_END__ emitted on victory, death, or flee
+  - Combat-mode guard blocks non-combat commands while activeCombat is set (STRIKE/FLEE/HEALTH/HELP only)
+  - FLEE checks for broken_leg injury preventing escape, clears activeCombat on success
+  - Autocomplete shows STRIKE zone targets when in combat, blocks other suggestions
+  - HELP text updated with STRIKE documentation
 
-REMAINING:
-- Phase 2: gameEngine.ts ATTACK handler rewrite → STRIKE HEAD/NECK/TORSO/LIMBS + __COMBAT_START__/__COMBAT_END__ tokens
-- Phase 3: Player equipment migration (legacy armor → bodyArmor) + NPC fallback
-- Phase 4: lib/combatZoneNarration.ts — zone-specific narration pools (extends existing combatNarrationPools.ts)
-- Phase 5: EQUIP command for zone armor, sidebar display, inventory display
-- Phase 6: components/CombatScreen.tsx + components/PaperDoll.tsx (SVG clickable zones) + page.tsx combat mode toggle
+- Phase 3: Player equipment migration + NPC fallback:
+  - EQUIP ARMOR routes items to correct zone slot based on zoneSlot field (helmet/gorget/bodyArmor/limbArmor)
+  - isBodyArmorSlotItem() now matches any item with type=armor + zoneSlot (not hardcoded ids)
+  - REMOVE ARMOR doffs all zone armor at once, UNEQUIP [item] removes specific zone piece
+  - Inventory display: shows zone coverage % instead of flat AC, "(worn)" tag for equipped zone pieces
+  - Stats display: per-zone armor breakdown (Head/Neck/Torso/Limbs with cover% and durability)
+  - Shield display: shows block% and durability instead of flat AC
+  - All goblin NPCs + Goblin King now have explicit combatProfile (agility, weaponSkill, per-zone armor)
+  - Legacy armor field auto-synced: save derives armor from bodyArmor; load falls back armor→bodyArmor
+  - Old resolveCombatRound() still exists in gameEngine.ts as dead code (safe to remove later)
+
+- Phase 4: lib/combatZoneNarration.ts — zone-specific combat narration:
+  - Zone-aware narration pools: evasion, shield block, armor stop, hit (player→enemy + enemy→player)
+  - Per-zone evasion flavors (ducking head strikes vs sidestepping torso blows)
+  - Shield/armor block + broken variants per zone
+  - Player hit pool: zone × weapon category × wound tier (4×4×3 = 48 pool combos)
+  - Enemy hit pool: zone × wound tier (4×3 = 12 pool combos)
+  - Injury narration for all 9 StatusEffectTypes (bleed, concussion, damaged_eye, etc.)
+  - Critical hit zone-specific prefixes
+  - buildZoneStrikeNarrative() assembles full narrative from StrikeResolution
+  - getZoneWoundTier() derives wound tier from damage/maxHp ratio
+  - buildRoundNarrative() in combatEngine.ts now uses zone narration instead of simple strings
+  - Template vars: {attacker}, {defender}, {weapon}, {enemy}, {damage}, {zone}
+
+- Phase 5: Zone-specific equipment commands + sidebar display:
+  - EQUIP HELMET/GORGET/GREAVES [item] — zone-filtered equip commands with autocomplete
+  - REMOVE HELMET/GORGET/GREAVES — per-zone armor removal (REMOVE ARMOR still doffs all)
+  - runEquipZoneArmor() filters inventory by target zone; lists available if no argument
+  - runRemoveZoneArmor() removes a single zone slot
+  - matchArmorFromPhrase() now accepts optional filterZone parameter
+  - Autocomplete for all three zone-specific EQUIP commands (filters by zoneSlot)
+  - HELP text expanded with all zone equip/remove commands
+  - Sidebar (app/page.tsx): ARMOR section shows Head/Neck/Body/Limbs with equipped item or "—"
+
+- Phase 6: Combat UI — CombatScreen overlay + PaperDoll + page.tsx combat mode:
+  - components/PaperDoll.tsx: SVG front-facing body with 4 clickable zones (head/neck/torso/limbs)
+    - Zone colors: blue=armored, gray=exposed, orange/red=wounded, amber=selected
+    - Click to select target zone, disabled when waiting for response
+  - components/CombatScreen.tsx: full-screen glassmorphism overlay during combat
+    - Left: PaperDoll + player HP bar + player status effects
+    - Center: enemy HP bar + enemy status effects + scrollable combat log
+    - Bottom: zone selector buttons with difficulty hints + STRIKE/FLEE buttons
+    - Round counter header
+  - app/page.tsx combat mode integration:
+    - inCombat state derived from worldState.player.activeCombat !== null
+    - __COMBAT_START__/__COMBAT_END__ tokens stripped from display text
+    - combatLog state accumulates round narratives (last 20)
+    - CombatScreen rendered as fixed overlay (z-index 50) when inCombat
+    - CombatScreen onCommand wired to sendMessage() for STRIKE/FLEE
+    - Rehydration sync: sets inCombat on page load if activeCombat exists
+
+HWRR COMBAT SYSTEM REWRITE — ALL 6 PHASES COMPLETE.
+
+§5.5 — Three-Tier Description Verbosity System
+Rooms, items, and NPCs support three verbosity levels:
+- Verbose: EXAMINE ROOM / SEARCH — full room.description. Thorough examination, takes time. Rewards attention.
+- Semiverbose: LOOK / first visit — room.look (2-4 sentences). Orientation, what matters, where exits are.
+- Nonverbose: Revisit/flee/pass-through — room.glance (1-2 sentences). No robe humiliation.
+Exception: Church cold open uses the coldOpen system (bypasses buildRoomDescription) for full verbose on first spawn.
+New fields: Room.look (semiverbose), Room.glance (nonverbose), Item.glance, NPC.glance — all optional, fall back gracefully.
+Commands: LOOK = semiverbose. EXAMINE ROOM / SEARCH / SEARCH ROOM = verbose. EXAMINE [target] / SEARCH [target] = examine specific object.
+buildRoomDescription() accepts Verbosity param. Movement checks visitedRooms before movePlayer().
+Inventory display appends item.glance after item name when present.
+All 7 guild-hall rooms have look + glance strings. All hub NPCs have glance strings. Key starter items have glance.
+
+§5.6 — Amnesia & Name-Revelation System
+The hero has lost their memory. NPCs in the hub recognize the hero but notice the amnesia and try not to mention it.
+- Hokas, Sam, Aldric: greetings show subtle recognition without confronting the memory loss
+- player.remembersOwnName (boolean, default false): first BEG interaction with Hokas/Sam/Aldric triggers name-revelation
+- Name revelation: NPC says the hero's name → hero is startled → NPC explains:
+  - If wearing gray robe: points to the name stitched into the gown hem
+  - If not wearing robe: "I know you from before... just the name and that I've seen you around"
+- After revelation: remembersOwnName = true, subsequent interactions are normal
+- maybeRevealName() helper in gameEngine.ts — wraps any NPC response with the revelation scene
+- Sam's BEG works in both main_hall and sams_sharps
+- Aldric's Welcome Flow (replaces old drink offer):
+  - on_enter in main_hall when remembersOwnName=false: buys drink, says name, reveals identity
+  - Explains situation: "Last you left, thou were armed for slaughter. I'm guessing ye lost."
+  - Offers command tutorial via __CMD chips (survival, combat, adventures, etc.)
+  - "Ask yourself for HELP if you forget" chip
+  - Asks "Would you like to remember how to fight?" → __YESNO__
+  - YES: moves to courtyard, introduces training dummy as "Dufus"
+  - NO: proceeds to barmaid selection
+- Training dummy renamed to "Dufus" — DUFUS carved into forehead
+- Aldric personality: most talkative/forthcoming NPC, knows hero from before, covers heartbreak with gruff practicality
 
 Pending / next up (non-combat):
 Player creation screen / psychological profile questionnaire (pre-cold-open)

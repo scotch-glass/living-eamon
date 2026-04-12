@@ -19,6 +19,14 @@ export const ZONE_DAMAGE_MULTIPLIER: Record<BodyZone, number> = {
   limbs: 0.8,
 };
 
+/** Evasion penalty per zone (HWRR-style). Smaller zones are harder to hit. */
+export const ZONE_EVASION_PENALTY: Record<BodyZone, number> = {
+  torso: 0,
+  limbs: 10,
+  head: 30,
+  neck: 50,
+};
+
 // ── Status Effects ──────────────────────────────────────────
 
 export type StatusEffectType =

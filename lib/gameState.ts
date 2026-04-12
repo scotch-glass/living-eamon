@@ -244,6 +244,15 @@ export interface PlayerState {
 
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
+
+  /** Whether the player is currently mounted. Affects armor dex penalties. */
+  mounted: boolean;
+
+  /** False until an NPC first says the hero's name. Triggers name-revelation moment. */
+  remembersOwnName: boolean;
+
+  /** False until first visit to Pots & Bobbles. Zim's intro fires once. */
+  metZim: boolean;
 }
 
 // ============================================================
@@ -502,13 +511,16 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       turnCount: 0,
       lastAction: null,
 
-      knownSpells: ["BLAST", "HEAL", "LIGHT", "SPEED"],
+      knownSpells: [],
       knownDeities: [],
 
       receivedSamStarterOutfit: false,
       receivedHokasUnarmedGift: false,
       barmaidPreference: null,
       activeCombat: null,
+      mounted: false,
+      remembersOwnName: false,
+      metZim: false,
     },
 
     activeEvents: [],
@@ -840,6 +852,9 @@ export function applyPlayerDeath(
       bodyArmor: null,
       limbArmor: null,
       activeCombat: null,
+      mounted: false,
+      remembersOwnName: false,
+      metZim: false,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
       receivedSamStarterOutfit: false,
       receivedHokasUnarmedGift: false,

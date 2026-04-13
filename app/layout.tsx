@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Linear_B, Cedarville_Cursive } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -9,6 +9,18 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const linearB = Noto_Sans_Linear_B({
+  variable: "--font-linear-b",
+  weight: "400",
+  subsets: ["linear-b"],
+});
+
+const cedarville = Cedarville_Cursive({
+  variable: "--font-cedarville",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -25,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${linearB.variable} ${cedarville.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

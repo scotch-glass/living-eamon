@@ -4397,9 +4397,9 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         ...zimItems.map(iid => {
           const item = ITEMS[iid];
           if (!item) return iid;
-          const heal = item.stats?.healAmount;
-          const healSeg = heal != null ? ` [heals: ${heal}]` : "";
-          return `__CMD:BUY ${item.name.toUpperCase()}__ ${item.name} | ${item.value} gp${healSeg}`;
+          const desc = item.shortDescription ?? "";
+          const readMore = item.alchemicalDescription ? ` __ITEM:${item.id}__` : "";
+          return `__CMD:BUY ${item.name.toUpperCase()}__ | ${item.value} gp · ${desc}${readMore}`;
         }),
         "",
         `Your gold: ${p.gold} gp`,

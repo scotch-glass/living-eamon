@@ -110,6 +110,18 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - Brunt banking greetings — 4 tiers (poor 0-10, modest 11-50, solid 51-1000, distinguished 1001+), 20 responses each, in guild-hall.ts
 - Aldric training YES + unarmed — gives well-used short sword before Dufus intro
 
+§5.9 — Item Detail Popups (Acheronic Codex)
+- Item interface gained: shortDescription (chip row), alchemicalDescription (popup), bookPagePrompt (Grok prompt for background)
+- All 11 Zim shop items have all three fields written (Acheronic alchemical lore framing)
+- Background images pregenerated on server startup via lib/spritePregenerate.ts (parallel to NPC sprites)
+- API route: /api/item-image?id=itemId — Grok Imagine 4:3 alchemical book page, NO background removal (full art)
+- Cached as scene_image_cache rows with room_id = itemBg_{itemId}, tone = "alchemical"
+- components/ItemDetailPopup.tsx — modal with Linear B name (decorative), Latin name caps, Cedarville Cursive description on book-page background
+- toLinearB() — phonetic CV-syllable approximation of Latin name → Linear B glyphs (decorative only, not real transliteration)
+- Shop chip format: __CMD:BUY ITEM__ | price · short desc · __ITEM:itemId__ (read more link)
+- __ITEM:itemId__ token parsed in formatMessage and rendered as "📖 read more" button
+- Fonts loaded via next/font/google: Noto Sans Linear B, Cedarville Cursive (CSS vars --font-linear-b, --font-cedarville)
+
 §5.7 — NPC Sprite System
 - AI background removal via rembg (Python CLI) — subprocess call from Node.js
 - Sprites pre-generated on server startup via lib/spritePregenerate.ts (checks cache, generates missing)
@@ -140,6 +152,8 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 | lib/spritePregenerate.ts | Server-startup sprite pre-generation — checks cache, generates missing NPC sprites |
 | app/api/npc-image/route.ts | Generates NPC sprites — Grok Imagine 3:4 → rembg → Supabase Storage cache |
 | components/NPCSprite.tsx | Conversation sprite display — fixed position, bottom-anchored, fade in/out |
+| components/ItemDetailPopup.tsx | Alchemical book-page modal — Linear B + Cedarville Cursive on Grok-generated parchment |
+| app/api/item-image/route.ts | Generates alchemical book page backgrounds for items — Grok Imagine 4:3, no BG removal |
 | components/CombatScreen.tsx | Full-screen combat overlay — PaperDoll, log, strike/flee buttons |
 | components/PaperDoll.tsx | SVG clickable body zones — color-coded by armor/wounds/selection |
 | lib/gameData.ts | NPCs, Items, SAM_INVENTORY — re-exports Room types from roomTypes.ts |

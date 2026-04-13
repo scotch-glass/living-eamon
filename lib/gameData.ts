@@ -51,6 +51,12 @@ export interface Item {
   description: string;
   /** Nonverbose — short phrase for inventory lists. */
   glance?: string;
+  /** One-line shop chip description (e.g. "Restores moderate health."). */
+  shortDescription?: string;
+  /** Acheronic codex entry — short alchemical flavor for shop popup. */
+  alchemicalDescription?: string;
+  /** Grok Imagine prompt for the alchemical-book-page background image. */
+  bookPagePrompt?: string;
   type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key";
   value: number;             // Gold value
   stats?: {
@@ -279,9 +285,9 @@ export const NPCS: Record<string, NPC> = {
     id: "zim_the_wizard",
     name: "Zim",
     description:
-      "A tall, gangly young man who gives the impression of a heron that learned to read. His robes are covered in ink stains, scorch marks, and what might be mustard. His eyes are bright and move constantly — tracking things you can't see. His fingers are long and never still, tapping, sketching invisible diagrams in the air, adjusting spectacles that keep sliding down his nose. He is simultaneously the most knowledgeable person you've met and the least capable of not saying the wrong thing.",
-    glance: "The gangly young wizard, nose in three books at once.",
-    spritePrompt: "Full-body character illustration of a tall young wizard with a lean build. Wearing ink-stained dark robes with scorch marks. Crooked spectacles. Bright eyes. Holding an open book in one hand, other hand gesturing. Standing pose, slightly hunched forward, facing left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
+      "A tall, slim young man in a dark blue wizard's robe that falls to his ankles. The robe has many pockets — some bulging with vials, others with folded notes. A wide leather belt cinched at the waist holds pouches, a small mortar, and what appears to be a compass that points in no particular direction. His spectacles are slightly crooked. His eyes are bright and attentive — the eyes of someone who genuinely wants to help and knows exactly how. He looks young and healthy, with the focused energy of a person who has read every book in this room and remembers all of them.",
+    glance: "The young wizard in dark blue robes, bright-eyed and eager.",
+    spritePrompt: "Full-body character illustration of a young male wizard, tall and slim but healthy-looking. Wearing a dark blue wizard's robe that falls to his ankles, with many small pockets visible. A wide brown leather utility belt at the waist with pouches and small tools. Slightly crooked spectacles. Bright intelligent eyes, friendly helpful expression, slight smile. Holding an open book in one hand. Clean-shaven, short brown hair. Standing upright, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Zim looks up from his books, adjusts his spectacles, and opens his mouth. Then closes it. Then opens it again.\n\n"Oh," he says. "Oh, you're — yes. Hello. Welcome to Pots and Bobbles. Potions, scrolls, identification services, magical training — I do all of it. Well, most of it. The advanced summoning is on hold because of the incident. Never mind the incident."\n\nHe hops off his stool. "What do you need?"`,
     personality:
       `Zim is a young wizard who runs Pots & Bobbles — the Guild's mage school and magical supply shop. He is brilliant, awkward, and pathologically incapable of filtering his thoughts before they exit his mouth. He has autistic hyperfocus on magical topics and will lecture at length about anything arcane without noticing whether anyone is listening. He is overly helpful to the point of being exhausting — he genuinely wants the hero to succeed and will give unsolicited advice, warnings, and tangential trivia. He has high-energy ADD — he starts sentences, abandons them, picks up new ones, circles back. He speaks in rapid Universal Common with occasional technical terms he forgets to explain. He recognizes the hero from before the amnesia and feels terrible about the memory loss. He crosses himself (shoulder-shoulder, forehead, heart, kiss) when mentioning dark forces. He sells potions, buys herbs and curiosities, identifies magical items for a fee, and trains magic for gold. He warns about cursed items and corrupted artifacts. He refers to adventuring as "out in the field."`,
@@ -1004,6 +1010,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Healing Potion",
     description: "A small glass vial of deep red liquid. It tastes like copper and warmth. Restores a moderate amount of health.",
     glance: "A red vial. Heals wounds.",
+    shortDescription: "Restores moderate health.",
+    alchemicalDescription: "Of the simplest healing tincture: distil one part mandrake root with three parts blood-moss in a copper alembic at moonrise. The flesh remembers what it was, and so returns. Acheronic surgeons carried it in war.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a small glass vial filled with deep red liquid, beside a sprig of mandrake root and a clump of dark moss. Small marginalia of arcane symbols and Greek letters. Sepia and rust tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 25,
     stats: { healAmount: 15 },
@@ -1014,6 +1023,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Greater Healing Potion",
     description: "A larger flask of brilliant scarlet liquid that seems to pulse faintly. Restores a significant amount of health.",
     glance: "A pulsing scarlet flask. Serious healing.",
+    shortDescription: "Restores significant health.",
+    alchemicalDescription: "The greater draught requires a black pearl ground to powder and the heart-blood of a freshly-killed beast. The result pulses in the vial as if remembering its first heartbeat. A staple of the Acheronic war-priests, used to revive wounded sorcerers mid-battle.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a tall glass flask of brilliant scarlet liquid, beside a small black pearl and a copper alembic. Marginalia of arcane symbols. Sepia and rust tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 60,
     stats: { healAmount: 35 },
@@ -1024,6 +1036,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Mana Potion",
     description: "An iridescent blue liquid in a crystal vial. It hums when you hold it. Restores magical energy.",
     glance: "A humming blue vial. Restores mana.",
+    shortDescription: "Restores magical energy.",
+    alchemicalDescription: "The blue draught is distilled lightning, caught in a crystal vessel under a storm and tempered with seven drops of moon-wine. To drink it is to remember, briefly, what the soul knew before it was bound to flesh. The Acheronic mages drank it without ceremony.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a crystal vial filled with iridescent blue liquid, surrounded by stylized lightning bolts and a crescent moon. Marginalia of arcane symbols. Sepia and rust tones with hints of indigo. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 30,
     isCarryable: true,
@@ -1033,6 +1048,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Stamina Brew",
     description: "A murky brown liquid that smells like wet bark and tastes worse. Instantly restores stamina and clears fatigue.",
     glance: "A foul brown brew. Restores stamina.",
+    shortDescription: "Restores stamina, clears fatigue.",
+    alchemicalDescription: "Bark of black willow, ginseng root, and the marrow of a running beast — boiled to a slow paste and strained through linen. The body forgets it is tired. The Acheronic legions marched on it for forty days at a time.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a wooden cup of brown liquid, beside a strip of black willow bark and a forked ginseng root. Marginalia of arcane symbols. Sepia and earthy brown tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 20,
     isCarryable: true,
@@ -1042,6 +1060,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Fatigue Recovery Brew",
     description: "A thick green draught. One swallow and the exhaustion lifts like a curtain. Expensive because the ingredients are rare.",
     glance: "A thick green draught. Clears deep exhaustion.",
+    shortDescription: "Clears deep exhaustion in one swallow.",
+    alchemicalDescription: "When the simple stamina brew fails, this remains. The greater draught requires moon-grown moss, the breath of a sleeping mountain, and ginseng aged seven winters. Acheronic generals carried a single vial each, for the moment a battle would not end.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a tall vial of thick green draught, beside a tuft of pale moss and a withered ginseng root. Marginalia of arcane symbols. Sepia and verdant green tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 40,
     isCarryable: true,
@@ -1051,6 +1072,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Antidote",
     description: "A chalky white suspension that neutralizes mild poisons. Tastes like crushed limestone and regret.",
     glance: "A white vial. Cures mild poisoning.",
+    shortDescription: "Cures mild poisoning.",
+    alchemicalDescription: "Powdered limestone, ash of nightshade burned to nothing, and milk of the white spider. The poison that wishes to remain in the blood is reasoned with, then escorted out. Acheronic banquet-tasters drank it before every meal.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a small vial of chalky white liquid, beside a piece of limestone and a stylized white spider. Marginalia of arcane symbols. Sepia and bone-white tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 10,
     isCarryable: true,
@@ -1060,6 +1084,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Strong Antidote",
     description: "A vivid yellow potion that can neutralize even serious toxins. Burns going down.",
     glance: "A yellow vial. Cures serious poisoning.",
+    shortDescription: "Cures serious poisoning.",
+    alchemicalDescription: "Saffron of the southern hills, distilled in a copper still under sunlight only, with one drop of the venom it is meant to oppose. The poison teaches the body its own shape, and the body refuses it. Drink with steady hands; it burns the throat clean.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a vial of brilliant yellow potion, beside saffron threads and a copper distillation still. Marginalia of arcane symbols. Sepia and golden-yellow tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 30,
     isCarryable: true,
@@ -1069,6 +1096,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Bandage",
     description: "Clean linen strips. Stops light bleeding when applied to a wound.",
     glance: "Clean linen. Stops bleeding.",
+    shortDescription: "Stops light bleeding.",
+    alchemicalDescription: "Linen woven on a frame of birch and washed seven times in salt water. Pressed firmly to a wound, it remembers the shape of the body and refuses the blood passage. The Acheronic surgeons carried bundles of it sewn into their cloaks.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a roll of clean linen bandage, neatly folded, beside a small wooden cross of birch and a salt crystal. Marginalia of arcane symbols. Sepia and pale linen tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 5,
     isCarryable: true,
@@ -1078,6 +1108,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Tourniquet",
     description: "A thick leather strap with a tightening mechanism. Stops even severe bleeding immediately. Painful but effective.",
     glance: "A leather strap. Stops severe bleeding.",
+    shortDescription: "Stops severe bleeding immediately.",
+    alchemicalDescription: "A strap of cured ox-leather and a small iron windlass. Tighten it above the wound and turn the rod until the blood remembers it must stay within. It hurts. It works. Acheronic field-surgeons fitted them above severed limbs without ceremony.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a leather tourniquet strap with a small iron windlass rod, coiled neatly. Marginalia of arcane symbols. Sepia and dark leather tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 15,
     isCarryable: true,
@@ -1087,6 +1120,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Unreliable Poison",
     description: "A small bottle of yellowish liquid. Apply to a blade for weak poison damage over 3 rounds. The 'unreliable' part is honest.",
     glance: "A weak blade poison. 3 charges.",
+    shortDescription: "Weak blade poison. 3 charges.",
+    alchemicalDescription: "Crushed nightshade berries, fermented spider silk, and a pinch of grave-soil. Smear it on the edge of a blade and pray the cut goes deep. The Acheronic assassins called it 'the wager' — sometimes it killed, sometimes it did nothing at all.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a small dark bottle of yellowish poison, beside a sprig of nightshade berries and a curl of spider silk. Marginalia of arcane symbols. Sepia and sickly yellow-green tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 20,
     isCarryable: true,
@@ -1096,6 +1132,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Strong Homebrew Poison",
     description: "A dark bottle with a cork sealed in wax. Serious poison damage over 3 rounds. Don't get it on your hands.",
     glance: "A potent blade poison. 3 charges.",
+    shortDescription: "Potent blade poison. 3 charges.",
+    alchemicalDescription: "A patient distillation of nightshade, viper-marrow, and the resin of a black tree that grows in only one valley. Three coats on a blade and the wound becomes a long, slow argument the body cannot win. Acheronic court-poisoners signed their work with this.",
+    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a black bottle with wax-sealed cork, beside a coiled viper and a drop of black resin. Marginalia of arcane symbols. Sepia and deep black-purple tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
     type: "consumable",
     value: 50,
     isCarryable: true,

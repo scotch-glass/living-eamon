@@ -12,6 +12,7 @@ import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
 import ScenePanel from "../components/ScenePanel";
 import NPCSprite from "../components/NPCSprite";
+import ItemDetailPopup from "../components/ItemDetailPopup";
 import { getRoom } from "../lib/adventures/registry";
 
 interface Message {
@@ -107,6 +108,7 @@ export default function Home() {
   const [inCombat, setInCombat] = useState(false);
   const [combatLog, setCombatLog] = useState<string[]>([]);
   const [conversationNpcId, setConversationNpcId] = useState<string | null>(null);
+  const [itemPopupId, setItemPopupId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
@@ -472,6 +474,30 @@ export default function Home() {
     </button>
   );
 
+  // Renders a __ITEM:itemId__ token as a "read more" link that opens the alchemical popup
+  const renderItemLink = (itemId: string, key: string) => (
+    <button
+      key={key}
+      onClick={() => setItemPopupId(itemId)}
+      style={{
+        display: "inline-block",
+        background: "transparent",
+        color: "#a8845c",
+        border: "none",
+        borderBottom: "1px dotted #a8845c",
+        padding: "0 2px",
+        fontSize: 11,
+        fontFamily: "Georgia, serif",
+        fontStyle: "italic",
+        cursor: "pointer",
+        margin: "0 4px",
+        verticalAlign: "middle",
+      }}
+    >
+      📖 read more
+    </button>
+  );
+
   // Renders a __YESNO__ token as two YES / NO chips
   const renderYesNoChips = (key: string) => (
     <span key={key} style={{ display: "inline-flex", gap: 8, margin: "12px 0", alignItems: "center" }}>
@@ -556,6 +582,7 @@ export default function Home() {
       .replace(/__COMBAT_START__/g, "")
       .replace(/__COMBAT_END__/g, "")
       .replace(/__NPC__[a-z_]+__/g, "");
+    // Note: __ITEM:__ tokens preserved here — the line parser handles them as chips
     const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
     const sitIdx = cleanText.indexOf(needle);
     const narrative = sitIdx === -1 ? cleanText : cleanText.slice(0, sitIdx).trimEnd();
@@ -598,8 +625,8 @@ export default function Home() {
       if (line.trim() === "__BARMAID_SELECT__") {
         return renderBarmaidSelect(`barmaid-${i}`);
       }
-      // Parse __CMD:COMMAND__ and __YESNO__ tokens within the line
-      if (line.includes("__YESNO__") || line.includes("__CMD:")) {
+      // Parse __CMD:COMMAND__, __YESNO__, and __ITEM:itemId__ tokens within the line
+      if (line.includes("__YESNO__") || line.includes("__CMD:") || line.includes("__ITEM:")) {
         const parts: ReactNode[] = [];
         let remaining = line;
         let partIdx = 0;
@@ -607,21 +634,23 @@ export default function Home() {
         while (remaining.length > 0) {
           const yesnoIdx = remaining.indexOf("__YESNO__");
           const cmdIdx = remaining.indexOf("__CMD:");
+          const itemIdx = remaining.indexOf("__ITEM:");
 
           // Find which token comes first
           let nextIdx = -1;
-          let tokenType: "yesno" | "cmd" | null = null;
+          let tokenType: "yesno" | "cmd" | "item" | null = null;
 
-          if (yesnoIdx !== -1 && (cmdIdx === -1 || yesnoIdx < cmdIdx)) {
-            nextIdx = yesnoIdx;
-            tokenType = "yesno";
-          } else if (cmdIdx !== -1) {
-            nextIdx = cmdIdx;
-            tokenType = "cmd";
+          const candidates: Array<[number, "yesno" | "cmd" | "item"]> = [];
+          if (yesnoIdx !== -1) candidates.push([yesnoIdx, "yesno"]);
+          if (cmdIdx !== -1) candidates.push([cmdIdx, "cmd"]);
+          if (itemIdx !== -1) candidates.push([itemIdx, "item"]);
+          candidates.sort((a, b) => a[0] - b[0]);
+          if (candidates.length > 0) {
+            nextIdx = candidates[0]![0];
+            tokenType = candidates[0]![1];
           }
 
           if (nextIdx === -1 || tokenType === null) {
-            // No more tokens
             if (remaining) parts.push(<span key={`t-${partIdx++}`}>{remaining}</span>);
             break;
           }
@@ -634,8 +663,7 @@ export default function Home() {
           if (tokenType === "yesno") {
             parts.push(renderYesNoChips(`yn-${partIdx++}`));
             remaining = remaining.slice(nextIdx + "__YESNO__".length);
-          } else {
-            // cmd token: __CMD:COMMAND TEXT__
+          } else if (tokenType === "cmd") {
             const cmdEnd = remaining.indexOf("__", nextIdx + 6);
             if (cmdEnd === -1) {
               parts.push(<span key={`t-${partIdx++}`}>{remaining}</span>);
@@ -644,6 +672,16 @@ export default function Home() {
             const cmd = remaining.slice(nextIdx + 6, cmdEnd);
             parts.push(renderCommandChip(cmd, `cmd-${partIdx++}`));
             remaining = remaining.slice(cmdEnd + 2);
+          } else {
+            // item token: __ITEM:itemId__
+            const itemEnd = remaining.indexOf("__", nextIdx + 7);
+            if (itemEnd === -1) {
+              parts.push(<span key={`t-${partIdx++}`}>{remaining}</span>);
+              break;
+            }
+            const itemId = remaining.slice(nextIdx + 7, itemEnd);
+            parts.push(renderItemLink(itemId, `item-${partIdx++}`));
+            remaining = remaining.slice(itemEnd + 2);
           }
         }
 
@@ -742,6 +780,10 @@ export default function Home() {
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#000000", color: "#e5e7eb", position: "relative" }}>
       {/* NPC conversation sprite */}
       {!inCombat && <NPCSprite npcId={conversationNpcId} />}
+
+      {/* Item detail popup (alchemical book page) */}
+      <ItemDetailPopup item={itemPopupId ? ITEMS[itemPopupId] ?? null : null} onClose={() => setItemPopupId(null)} />
+
 
       {/* Combat overlay */}
       {inCombat && player?.activeCombat && (

@@ -225,6 +225,7 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
 
 function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
   return {
+    barrelStock: state.barrelStock,
     id: state.player.id,
     name: state.player.name,
     hp: state.player.hp,
@@ -232,7 +233,8 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     strength: state.player.strength,
     dexterity: state.player.dexterity,
     charisma: state.player.charisma,
-    expertise: state.player.expertise,
+    maxMana: state.player.maxMana,
+    currentMana: state.player.currentMana,
     gold: state.player.gold,
     bankedGold: state.player.bankedGold,
     weapon: state.player.weapon,
@@ -258,6 +260,9 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     bodyArmor: state.player.bodyArmor ?? null,
     limbArmor: state.player.limbArmor ?? null,
     activeCombat: state.player.activeCombat ?? null,
+    activeEffects: state.player.activeEffects ?? [],
+    weaponPoisonCharges: state.player.weaponPoisonCharges ?? 0,
+    weaponPoisonSeverity: state.player.weaponPoisonSeverity ?? 0,
     mounted: state.player.mounted ?? false,
     remembersOwnName: state.player.remembersOwnName ?? false,
     metZim: state.player.metZim ?? false,
@@ -313,7 +318,16 @@ export async function POST(request: NextRequest) {
                   ? (savedPlayer as { agility: number }).agility
                   : 10,
             charisma: savedPlayer.charisma,
-            expertise: savedPlayer.expertise,
+            maxMana:
+              typeof (savedPlayer as { max_mana?: number }).max_mana === "number"
+                ? (savedPlayer as { max_mana: number }).max_mana
+                : (savedPlayer.expertise ?? 10),
+            currentMana:
+              typeof (savedPlayer as { current_mana?: number }).current_mana === "number"
+                ? (savedPlayer as { current_mana: number }).current_mana
+                : (typeof (savedPlayer as { max_mana?: number }).max_mana === "number"
+                    ? (savedPlayer as { max_mana: number }).max_mana
+                    : (savedPlayer.expertise ?? 10)),
             gold: savedPlayer.gold,
             bankedGold: savedPlayer.banked_gold,
             weapon: savedPlayer.weapon,
@@ -358,6 +372,13 @@ export async function POST(request: NextRequest) {
             activeCombat:
               (savedPlayer as { active_combat?: unknown }).active_combat as
                 import("../../../lib/combatTypes").ActiveCombatSession | null ?? null,
+            activeEffects:
+              (savedPlayer as { active_effects?: unknown }).active_effects as
+                import("../../../lib/combatTypes").ActiveStatusEffect[] ?? [],
+            weaponPoisonCharges:
+              (savedPlayer as { weapon_poison_charges?: number }).weapon_poison_charges ?? 0,
+            weaponPoisonSeverity:
+              (savedPlayer as { weapon_poison_severity?: number }).weapon_poison_severity ?? 0,
             mounted: Boolean(
               (savedPlayer as { mounted?: boolean }).mounted
             ),
@@ -372,6 +393,13 @@ export async function POST(request: NextRequest) {
                 .weapon_skills ?? undefined
             ),
           },
+          barrelStock:
+            (savedPlayer as { barrel_stock?: { gowns?: number; charityClothes?: number } }).barrel_stock
+              ? {
+                  gowns: (savedPlayer as { barrel_stock: { gowns?: number } }).barrel_stock.gowns ?? 20,
+                  charityClothes: (savedPlayer as { barrel_stock: { charityClothes?: number } }).barrel_stock.charityClothes ?? 10,
+                }
+              : initial.barrelStock,
         };
 
         // Client holds the live session; DB load can lag behind async savePlayer.
@@ -429,27 +457,28 @@ export async function POST(request: NextRequest) {
       return cleaned + "\n\n" + buildSituationBlock(newState);
     };
 
+    /**
+     * Send a prescripted (static engine) response as JSON. The client
+     * renders JSON responses instantly (no character-by-character
+     * streaming), with a fade-in animation. Only Jane's dynamic
+     * content uses the ReadableStream text/plain path.
+     */
     const sendResponse = (text: string, newState: WorldState, conversationNpcId?: string | null) => {
       // Save player to Supabase asynchronously
       if (resolvedPlayerId) {
         persistPlayer(newState).catch(console.error);
       }
 
-      const fullResponse = appendSituation(text, newState) + "\n\n__STATE__" + JSON.stringify({
-        ...newState,
-        playerId: resolvedPlayerId,
-        conversationNpcId: conversationNpcId ?? null,
-      });
+      const responseText = appendSituation(text, newState);
 
-      return new Response(
-        new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(fullResponse));
-            controller.close();
-          },
-        }),
-        { headers: { "Content-Type": "text/plain; charset=utf-8", "X-Accel-Buffering": "no" } }
-      );
+      return Response.json({
+        response: responseText,
+        worldState: {
+          ...newState,
+          playerId: resolvedPlayerId,
+          conversationNpcId: conversationNpcId ?? null,
+        },
+      });
     };
 
     const streamJane = async (

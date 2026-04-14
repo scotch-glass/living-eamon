@@ -109,6 +109,28 @@ function getCritChance(weaponSkillValue: number): number {
   return 0.05 + weaponSkillValue * 0.001; // 5% base, +0.1% per skill point
 }
 
+/**
+ * Critical fail chance — exponential decay so veterans almost never fumble.
+ * Masters (200+ skill) NEVER fumble (hard floor). Checked when a strike is evaded.
+ *
+ * Formula: 5% × e^(-skill/30), clamped to 0 at skill 200+.
+ *
+ * Skill   0 → 5.00%  (1 in 20 evaded strikes)
+ * Skill  50 → 0.94%  (1 in 106)
+ * Skill 100 → 0.18%  (1 in 556)
+ * Skill 150 → 0.03%  (1 in 3,333)
+ * Skill 200 → 0%     (never)
+ */
+function getCritFailChance(weaponSkillValue: number): number {
+  if (weaponSkillValue >= 200) return 0;
+  return 0.05 * Math.exp(-weaponSkillValue / 30);
+}
+
+/** Whether a critical fail causes a weapon drop (50% of crit fails). */
+function rollWeaponDrop(): boolean {
+  return Math.random() < 0.5;
+}
+
 // ── Injury Roll ─────────────────────────────────────────────
 
 function rollInjury(
@@ -190,6 +212,8 @@ export function resolveStrike(
     injuryInflicted: null,
     injurySeverity: 0,
     isCritical: false,
+    isCriticalFail: false,
+    weaponDropped: false,
     narrative: "",
   };
 
@@ -197,10 +221,24 @@ export function resolveStrike(
   const baseEvasion = calculateEvasionChance(defender, attacker);
   const evasionChance = clamp(baseEvasion + ZONE_EVASION_PENALTY[targetZone], 0, 95);
   if (Math.random() * 100 < evasionChance) {
+    // ── Critical Fail check (only on evaded strikes) ──
+    // Masters (200+ skill) never fumble. Untrained fighters fumble ~5%.
+    const failChance = getCritFailChance(attacker.weaponSkillValue);
+    const isCritFail = failChance > 0 && Math.random() < failChance;
+    const dropped = isCritFail && attacker.weaponId !== "unarmed" && rollWeaponDrop();
+
+    const failNarrative = dropped
+      ? ` FUMBLE! ${attacker.name}'s weapon slips from their grip and clatters to the ground!`
+      : isCritFail
+        ? ` ${attacker.name} stumbles badly — a clumsy swing that leaves them off-balance.`
+        : "";
+
     return {
       ...baseMiss,
       evaded: true,
-      narrative: `${defender.name} dodges the strike aimed at their ${targetZone}.`,
+      isCriticalFail: isCritFail,
+      weaponDropped: dropped,
+      narrative: `${defender.name} dodges the strike aimed at their ${targetZone}.${failNarrative}`,
     };
   }
 
@@ -277,6 +315,8 @@ export function resolveStrike(
     injuryInflicted,
     injurySeverity,
     isCritical: isCrit,
+    isCriticalFail: false,
+    weaponDropped: false,
     narrative,
   };
 }
@@ -454,7 +494,9 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
     hp: p.hp,
     maxHp: p.maxHp,
     zones,
-    activeEffects: [],
+    // Carry persistent out-of-combat effects (bleed, poison) into the fight
+    activeEffects: (p.activeEffects ?? []).map(e => ({ ...e })),
+    droppedWeaponId: null,
     shieldItemId: p.shield,
     shieldBlockChance: shieldItem?.stats?.shieldBlockChance ?? 0,
     shieldDurability: shieldItem?.stats?.shieldDurability ?? 0,
@@ -512,6 +554,7 @@ export function buildCombatantFromNPC(
     shieldDurability: profile?.shieldDurability ?? 0,
     shieldMaxDurability: profile?.shieldDurability ?? 0,
     weaponId: "unarmed", // NPC weapon is abstracted via damage dice
+    droppedWeaponId: null,
     weaponSkillValue: profile?.weaponSkill ?? 30,
     dexterity: 10,
     strength: 12,
@@ -570,6 +613,14 @@ export function resolveCombatRound(
     };
   }
 
+  // 2b. Auto-retrieve dropped weapons from last round
+  if (player.droppedWeaponId) {
+    player = { ...player, weaponId: player.droppedWeaponId, droppedWeaponId: null };
+  }
+  if (enemy.droppedWeaponId) {
+    enemy = { ...enemy, weaponId: enemy.droppedWeaponId, droppedWeaponId: null };
+  }
+
   // 3. Initiative
   const playerSpeed = WEAPON_DATA[player.weaponId]?.weaponSpeed ?? 5;
   const playerInit = randInt(1, 10) + playerSpeed - getDexReactionBonus(player.dexterity);
@@ -588,10 +639,19 @@ export function resolveCombatRound(
   let playerWon = false;
   let playerDied = false;
 
+  // Helper: apply weapon-drop to the attacker after their strike resolves
+  const applyWeaponDrop = (combatant: CombatantState, strike: StrikeResolution): CombatantState => {
+    if (strike.weaponDropped && combatant.weaponId !== "unarmed") {
+      return { ...combatant, droppedWeaponId: combatant.weaponId, weaponId: "unarmed" };
+    }
+    return combatant;
+  };
+
   if (playerGoesFirst) {
     // Player strikes first
     playerStrike = resolveStrike(player, enemy, playerTargetZone, playerWeaponCat);
     enemy = applyStrike(enemy, playerStrike);
+    player = applyWeaponDrop(player, playerStrike);
 
     if (enemy.hp <= 0) {
       combatOver = true;
@@ -600,6 +660,7 @@ export function resolveCombatRound(
       // Enemy strikes back
       enemyStrike = resolveStrike(enemy, player, enemyTargetZone, enemyWeaponCat);
       player = applyStrike(player, enemyStrike);
+      enemy = applyWeaponDrop(enemy, enemyStrike);
       if (player.hp <= 0) {
         combatOver = true;
         playerDied = true;
@@ -609,6 +670,7 @@ export function resolveCombatRound(
     // Enemy strikes first
     enemyStrike = resolveStrike(enemy, player, enemyTargetZone, enemyWeaponCat);
     player = applyStrike(player, enemyStrike);
+    enemy = applyWeaponDrop(enemy, enemyStrike);
 
     if (player.hp <= 0) {
       combatOver = true;
@@ -617,6 +679,7 @@ export function resolveCombatRound(
       // Player strikes back
       playerStrike = resolveStrike(player, enemy, playerTargetZone, playerWeaponCat);
       enemy = applyStrike(enemy, playerStrike);
+      player = applyWeaponDrop(player, playerStrike);
       if (enemy.hp <= 0) {
         combatOver = true;
         playerWon = true;

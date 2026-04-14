@@ -116,85 +116,95 @@ export default function ItemDetailPopup({ item, onClose }: ItemDetailPopupProps)
           width: "min(90vw, 640px)",
           aspectRatio: "4/3",
           maxHeight: "85vh",
-          backgroundColor: "#3a2a1a",
+          backgroundColor: "transparent",
           backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderRadius: 8,
           boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
           cursor: "default",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "8% 12%",
-          boxSizing: "border-box",
           overflow: "hidden",
         }}
       >
         {loading && !bgUrl && (
-          <div style={{ color: "#cdb78a", fontSize: 14 }}>Opening the codex…</div>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#cdb78a",
+              fontSize: 14,
+            }}
+          >
+            Opening the codex…
+          </div>
         )}
 
-        {/* Linear B name (decorative) */}
-        <div
-          style={{
-            fontFamily: "var(--font-linear-b), serif",
-            fontSize: "2rem",
-            fontWeight: 700,
-            color: "#1a0e05",
-            textAlign: "center",
-            marginBottom: 4,
-            lineHeight: 1.2,
-            textShadow: "0 1px 0 rgba(255,240,210,0.3)",
-          }}
-        >
-          {linearBName}
-        </div>
+        {/*
+          Layout: page art occupies the upper-left corner + top + left margins
+          (illuminated manuscript style). Text lives in the bottom-right blank
+          parchment zone — left-aligned like a scribe's hand.
+        */}
 
-        {/* Latin name (readable) */}
-        <div
-          style={{
-            fontFamily: "Georgia, serif",
-            fontSize: "1.1rem",
-            fontWeight: 600,
-            color: "#2a1a0a",
-            textAlign: "center",
-            marginBottom: 16,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-          }}
-        >
-          {item.name}
-        </div>
-
-        {/* Cedarville cursive description */}
-        <div
-          style={{
-            fontFamily: "var(--font-cedarville), cursive",
-            fontSize: "1.15rem",
-            color: "#2a1a0a",
-            textAlign: "center",
-            lineHeight: 1.6,
-            maxWidth: "90%",
-          }}
-        >
-          {item.alchemicalDescription ?? item.description}
-        </div>
-
-        {/* Close hint */}
+        {/* Title block — top of the right text column */}
         <div
           style={{
             position: "absolute",
-            bottom: 12,
-            right: 16,
-            fontSize: 11,
-            color: "#5a4a3a",
-            fontFamily: "Georgia, serif",
-            fontStyle: "italic",
+            top: "34%",
+            left: "24%",
+            right: "18%",
           }}
         >
-          click outside or press Esc to close
+          {/* Linear B name (decorative) */}
+          <div
+            style={{
+              fontFamily: "var(--font-linear-b), serif",
+              fontSize: "1.6rem",
+              fontWeight: 700,
+              color: "#1a0e05",
+              textAlign: "right",
+              marginBottom: 4,
+              lineHeight: 1.2,
+              textShadow: "0 1px 0 rgba(255,240,210,0.3)",
+            }}
+          >
+            {linearBName}
+          </div>
+
+          {/* Readable name — script font, matches body */}
+          <div
+            style={{
+              fontFamily: "var(--font-cedarville), cursive",
+              fontSize: "1.6rem",
+              fontWeight: 700,
+              color: "#2a1a0a",
+              textAlign: "right",
+            }}
+          >
+            {item.name}
+          </div>
+        </div>
+
+        {/* Body text — fills the bottom-right blank parchment */}
+        <div
+          style={{
+            position: "absolute",
+            top: "56%",
+            left: "19%",
+            right: "18%",
+            bottom: "8%",
+            fontFamily: "var(--font-cedarville), cursive",
+            fontSize: "1.2rem",
+            fontWeight: 700,
+            color: "#2a1a0a",
+            textAlign: "right",
+            lineHeight: 1.55,
+            overflow: "hidden",
+          }}
+        >
+          {item.alchemicalDescription ?? item.description}
         </div>
       </div>
     </div>

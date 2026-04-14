@@ -396,6 +396,10 @@ const INJURY_NARRATION: Record<StatusEffectType, string[]> = {
     "Blood flows freely from the {zone} wound.",
     "The {zone} wound opens — bright blood starts to seep.",
   ],
+  poison: [
+    "The {zone} wound darkens. Black veins spider out from the cut.",
+    "A chill spreads from the {zone}. The blood there runs sluggish and wrong.",
+  ],
   concussion: [
     "The blow rattles {defender}'s brain. Eyes glaze. Concussion.",
     "{defender}'s head rocks. The lights are on but nobody's home.",
@@ -439,6 +443,24 @@ const CRITICAL_PREFIXES: Record<BodyZone, string[]> = {
   limbs: ["The limb is fully exposed!", "CRITICAL — a clean, devastating hit to the limb!"],
 };
 
+// ── CRITICAL FAIL NARRATION ─────────────────────────────────
+
+/** Fumble without weapon drop — just a clumsy miss. */
+const CRITICAL_FAIL_STUMBLE: string[] = [
+  "{attacker} overcommits — the swing goes wide and leaves them staggering.",
+  "{attacker}'s footing fails. A wild, clumsy swing at nothing.",
+  "A terrible swing. {attacker} nearly trips over their own feet.",
+  "{attacker} misjudges the distance badly — the strike whistles past {defender}'s ear and throws {attacker} off-balance.",
+];
+
+/** Fumble WITH weapon drop. */
+const CRITICAL_FAIL_DROP: string[] = [
+  "FUMBLE! {attacker}'s {weapon} slips from sweaty hands and clatters to the ground!",
+  "FUMBLE! The grip fails — {attacker}'s {weapon} spins away across the floor!",
+  "FUMBLE! {attacker}'s fingers lose the {weapon}. It hits the ground with a ring of iron. {attacker} is unarmed!",
+  "FUMBLE! A miserable swing — {attacker}'s {weapon} flies from their hand and skids across the stone!",
+];
+
 // ── NARRATIVE BUILDER ───────────────────────────────────────
 // Replaces the simple string in resolveStrike() with rich zone narration.
 
@@ -461,8 +483,12 @@ export function buildZoneStrikeNarrative(
     zone,
   };
 
-  // Evasion
+  // Evasion (possibly with critical fail)
   if (strike.evaded) {
+    if (strike.isCriticalFail) {
+      const pool = strike.weaponDropped ? CRITICAL_FAIL_DROP : CRITICAL_FAIL_STUMBLE;
+      return fill(pick(EVASION_POOLS[zone]), vars) + " " + fill(pick(pool), vars);
+    }
     return fill(pick(EVASION_POOLS[zone]), vars);
   }
 

@@ -6,7 +6,19 @@
 // ============================================================
 
 import type { NPCScript } from "../roomTypes";
-import { NPCS } from "../gameData";
+import { NPCS, ITEMS } from "../gameData";
+
+/**
+ * Build a __CMD:BUY chip from an item id, pulling the display name and
+ * price straight from ITEMS so welcome-speech menus never drift from
+ * the canonical data.
+ */
+function buyChip(itemId: string, labelOverride?: string): string {
+  const item = ITEMS[itemId];
+  if (!item) return `(missing item: ${itemId})`;
+  const label = labelOverride ?? item.name;
+  return `__CMD:BUY ${item.name.toUpperCase()}__ ${label} | ${item.value} gp`;
+}
 
 // ── Aldric's welcome (first Main Hall entry after amnesia) ──
 // Aldric is the most talkative, forthcoming NPC in the hub.
@@ -289,12 +301,12 @@ function zimReagentSpeech(): string[] {
     "",
     `"Oh, and potions!" He gestures at the glass counter:`,
     "",
-    `__CMD:BUY HEALING POTION__ Healing Potion | 25 gp · __CMD:BUY GREATER HEALING POTION__ Greater Healing | 60 gp`,
-    `__CMD:BUY STAMINA BREW__ Stamina Brew | 20 gp · __CMD:BUY FATIGUE BREW__ Fatigue Brew | 40 gp`,
-    `__CMD:BUY ANTIDOTE__ Antidote | 10 gp · __CMD:BUY STRONG ANTIDOTE__ Strong Antidote | 30 gp`,
-    `__CMD:BUY BANDAGE__ Bandage | 5 gp · __CMD:BUY TOURNIQUET__ Tourniquet | 15 gp`,
-    `__CMD:BUY MANA POTION__ Mana Potion | 30 gp`,
-    `__CMD:BUY UNRELIABLE POISON__ Unreliable Poison | 20 gp · __CMD:BUY STRONG POISON__ Strong Poison | 50 gp`,
+    `${buyChip("healing_potion")} · ${buyChip("greater_healing_potion", "Greater Healing")}`,
+    `${buyChip("stamina_brew")} · ${buyChip("fatigue_brew")}`,
+    `${buyChip("antidote")} · ${buyChip("strong_antidote")}`,
+    `${buyChip("bandage")} · ${buyChip("tourniquet")}`,
+    buyChip("mana_potion"),
+    `${buyChip("unreliable_poison")} · ${buyChip("strong_poison")}`,
   ];
 }
 

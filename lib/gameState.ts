@@ -7,7 +7,17 @@
 // ============================================================
 
 import { RoomState } from "./gameData";
-import type { ActiveCombatSession } from "./combatTypes";
+import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
+
+// ============================================================
+// PASSIVE REGEN CONSTANTS
+// Per-turn recovery rates applied by tickWorldState. Will be
+// gated by hunger/thirst once Phase 2 lands.
+// ============================================================
+export const HP_REGEN_PER_TURN = 1;
+export const MANA_REGEN_PER_TURN = 1;
+/** −1 Honor every N turns the player still has the gray church robe. */
+export const GRAY_ROBE_HONOR_DECAY_INTERVAL = 10;
 
 // ============================================================
 // TYPES
@@ -172,10 +182,17 @@ export interface PlayerState {
   // Core stats
   hp: number;
   maxHp: number;
+  /**
+   * Current mana points. Max = maxMana.
+   * Spent by INVOKE / CAST (when mana costs land); regenerates over time
+   * via tickWorldState. Floor 0, cap = maxMana.
+   */
+  currentMana: number;
+  /** Maximum mana pool. Grows +1 on each combat victory. */
+  maxMana: number;
   strength: number;
   dexterity: number;
   charisma: number;
-  expertise: number;
 
   /** Per-category skill values. Total capped at SKILL_CAP. */
   weaponSkills: WeaponSkills;
@@ -245,6 +262,19 @@ export interface PlayerState {
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
 
+  /**
+   * Status effects carried out of combat (bleed, poison, broken_leg, etc.).
+   * Ticked once per player turn by tickWorldState (when not in combat).
+   * On combat start: copied into playerCombatant.activeEffects.
+   * On combat end: playerCombatant.activeEffects copied back here.
+   */
+  activeEffects: ActiveStatusEffect[];
+
+  /** Remaining poison charges on the equipped weapon. 0 = no coating. */
+  weaponPoisonCharges: number;
+  /** Severity (1-3) of the poison currently coating the weapon. */
+  weaponPoisonSeverity: number;
+
   /** Whether the player is currently mounted. Affects armor dex penalties. */
   mounted: boolean;
 
@@ -290,6 +320,16 @@ export interface WorldState {
 
   // Turn counter (global)
   worldTurn: number;
+
+  /**
+   * Stock of finite charity barrels in the Main Hall. Decrements per item
+   * taken. When 0, the barrel is empty until a future restocking event.
+   * Default: 20 gowns, 10 mixed clothing pieces.
+   */
+  barrelStock: {
+    gowns: number;
+    charityClothes: number;
+  };
 }
 
 // ============================================================
@@ -497,7 +537,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       strength: 12,
       dexterity: 10,
       charisma: 10,
-      expertise: 0,
+      maxMana: 10,
+      currentMana: 10,
 
       weaponSkills: { ...DEFAULT_WEAPON_SKILLS },
 
@@ -547,7 +588,10 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       receivedSamStarterOutfit: false,
       receivedHokasUnarmedGift: false,
       barmaidPreference: null,
+      weaponPoisonCharges: 0,
+      weaponPoisonSeverity: 0,
       activeCombat: null,
+      activeEffects: [],
       mounted: false,
       remembersOwnName: false,
       metZim: false,
@@ -558,6 +602,11 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
     chronicleLog: [],
 
     worldTurn: 0,
+
+    barrelStock: {
+      gowns: 20,
+      charityClothes: 10,
+    },
   };
 }
 
@@ -873,6 +922,7 @@ export function applyPlayerDeath(
     player: {
       ...state.player,
       hp: state.player.maxHp,
+      currentMana: state.player.maxMana,
       gold: 0,
       weapon: "unarmed",
       armor: null,
@@ -882,6 +932,9 @@ export function applyPlayerDeath(
       bodyArmor: null,
       limbArmor: null,
       activeCombat: null,
+      activeEffects: [],
+      weaponPoisonCharges: 0,
+      weaponPoisonSeverity: 0,
       mounted: false,
       remembersOwnName: false,
       metZim: false,
@@ -909,6 +962,61 @@ export function applyPlayerDeath(
 
 export function tickWorldState(state: WorldState): WorldState {
   let newState = { ...state, worldTurn: state.worldTurn + 1 };
+
+  // ── Out-of-combat status effect tick + passive regen ──────
+  // Combat-mode skip: in-combat ticks happen via tickStatusEffects()
+  // inside resolveCombatRound — don't double-tick.
+  if (!newState.player.activeCombat) {
+    let p = newState.player;
+
+    // Tick status effects (bleed, poison, etc.) — apply damage, expire
+    if (p.activeEffects?.length) {
+      let dmg = 0;
+      const remaining: ActiveStatusEffect[] = [];
+      for (const effect of p.activeEffects) {
+        if (effect.bleedPerTurn) dmg += effect.bleedPerTurn;
+        const newTurns =
+          effect.turnsRemaining === -1 ? -1 : effect.turnsRemaining - 1;
+        if (newTurns !== 0) {
+          remaining.push({ ...effect, turnsRemaining: newTurns });
+        }
+      }
+      p = {
+        ...p,
+        hp: Math.max(0, p.hp - dmg),
+        activeEffects: remaining,
+      };
+    }
+
+    // Passive regen — HP + mana (gated by activeCombat above)
+    const nextHp = Math.min(p.maxHp, p.hp + HP_REGEN_PER_TURN);
+    const maxMana = p.maxMana ?? 0;
+    const nextMana = Math.min(maxMana, (p.currentMana ?? maxMana) + MANA_REGEN_PER_TURN);
+    if (nextHp !== p.hp || nextMana !== p.currentMana || p !== newState.player) {
+      newState = {
+        ...newState,
+        player: { ...p, hp: nextHp, currentMana: nextMana },
+      };
+    }
+
+    // Gray-robe Honor decay — wearing the church's robe is shameful for
+    // anyone past the moment of rebirth. −1 Honor every 10 turns it stays
+    // in inventory. Stops as soon as the robe is removed (e.g., after Sam's
+    // outfit purchase or the charity-barrel dressing ceremony).
+    const wearingRobe = newState.player.inventory.some(e => e.itemId === "gray_robe");
+    if (
+      wearingRobe &&
+      newState.worldTurn > 0 &&
+      newState.worldTurn % GRAY_ROBE_HONOR_DECAY_INTERVAL === 0
+    ) {
+      newState = updateVirtue(newState, "Honor", -1);
+      newState = addToChronicle(
+        newState,
+        "Wore the gray church robe for another ten turns.",
+        false
+      );
+    }
+  }
 
   // Advance room state recovery timers
   for (const [roomId, roomState] of Object.entries(newState.rooms)) {

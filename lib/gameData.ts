@@ -53,10 +53,12 @@ export interface Item {
   glance?: string;
   /** One-line shop chip description (e.g. "Restores moderate health."). */
   shortDescription?: string;
-  /** Acheronic codex entry — short alchemical flavor for shop popup. */
+  /** Thurian codex entry — short alchemical flavor for shop popup. */
   alchemicalDescription?: string;
   /** Grok Imagine prompt for the alchemical-book-page background image. */
   bookPagePrompt?: string;
+  /** Grok Imagine prompt for the inventory icon (square, transparent PNG via rembg). */
+  iconPrompt?: string;
   type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key";
   value: number;             // Gold value
   stats?: {
@@ -73,6 +75,9 @@ export interface Item {
     // Shield stats
     shieldBlockChance?: number;  // 0-100
     shieldDurability?: number;
+    // Player-applied poison (Phase B reads these in APPLY POISON TO WEAPON)
+    poisonSeverity?: number;     // 1-3, maps to HP/turn on poisoned target
+    poisonCharges?: number;      // Number of strikes the coating lasts
   };
   isCarryable: boolean;
 }
@@ -461,6 +466,139 @@ export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
 // ITEMS
 // ============================================================
 
+/**
+ * Build a Grok Imagine prompt for a square inventory icon.
+ * All icons share the same template so the inventory grid reads
+ * cohesively. The `subject` should be a concrete physical
+ * description of the OBJECT the player is holding — NEVER the
+ * lore name (e.g. "small wooden cup of murky brown brew with a
+ * sprig of black willow bark beside it" — NOT "Nimble Toes",
+ * because Grok will draw feet).
+ *
+ * Used by the icon pregen pipeline. Items can override per-item
+ * via the `ITEM_ICON_PROMPTS` map below; otherwise we fall back
+ * to `buildItemIconPrompt(item.name)` (which works for items
+ * whose name IS already a concrete object, e.g. "Short Sword").
+ */
+export function buildItemIconPrompt(subject: string): string {
+  return (
+    `A single ${subject}, centered, painted in the style of a Hyborian-Age ` +
+    `inventory illustration — Frazetta/Brom medieval painted realism, weathered ` +
+    `but iconic, slightly desaturated colors. Pure clean white background, no ` +
+    `shadow, no ground, no border, no text, no labels, no other objects. Square ` +
+    `composition, the subject fills 70% of the frame, viewed from a slightly ` +
+    `elevated three-quarter angle. ` +
+    `If the subject is a long weapon (sword, axe, polearm, spear, staff, bow, ` +
+    `crossbow), it should lie diagonally from LOWER-LEFT to UPPER-RIGHT — ` +
+    `grip/hilt/handle at the lower-left, blade-tip/head/business-end at the ` +
+    `upper-right.`
+  );
+}
+
+/**
+ * Per-item icon subject overrides. Each entry is the SUBJECT
+ * passed to buildItemIconPrompt — describes the physical object,
+ * not the lore name. Items not in this map fall back to their
+ * `name` (which works for items like "Short Sword" or "Healing
+ * Potion" where the name is already a concrete object).
+ *
+ * Add a new entry whenever an item's name doesn't visually
+ * describe the item itself (renamed potions, lore-named loot,
+ * etc.) or when the default rendering came out wrong.
+ */
+export const ITEM_ICON_PROMPTS: Record<string, string> = {
+  // ── Weapons ────────────────────────────────────────────────
+  // Most weapon names ARE the object — use defaults. Override
+  // only where the name is ambiguous or the default came out wrong.
+  battle_axe: "heavy two-handed iron battle axe with a long wooden haft, lying diagonally with the wooden grip at the lower-left and the broad iron axe-head at the upper-right",
+  scimitar: "curved single-edged scimitar with a leather-wrapped grip, lying diagonally with the hilt at the lower-left and the curved blade-tip at the upper-right",
+  rusty_shortsword: "rusty pitted iron short sword with a weathered leather-wrapped grip and a notched dull edge",
+  butcher_knife: "heavy-bladed kitchen butcher knife, single-edged, wooden handle, slightly stained blade",
+  black_staff: "dark length of polished black hardwood, six feet long, slight taper, banded with a single dull-iron ring near one end",
+  gnarled_staff: "twisted gnarled hardwood quarterstaff, knotted and bark-stripped, six feet long",
+  castoff_short_sword: "old worn short sword, pitted blade, loose grip wrapping, bent crossguard",
+  quarter_staff: "smooth straight hardwood quarterstaff, six feet long, banded at both ends with iron rings",
+  pitchfork: "rusted three-tined iron pitchfork on a long wooden haft",
+  bow: "simple curved hunting longbow of yew with a hempen string",
+  crossbow: "heavy wooden crossbow with iron prod and a hempen string, mounted on a polished stock",
+  repeating_crossbow: "compact wooden repeating crossbow with a vertical magazine box on top of the stock",
+  spear: "iron-tipped wooden spear, leaf-shaped blade, six feet long",
+  war_fork: "long-hafted weapon with twin curved iron prongs at the head, pole-arm length",
+
+  // ── Clothing — charity barrel + Sam outfit + Hokas pity gift ─
+  gray_robe: "thin pale-gray cloth robe with no back, hanging limp and shapeless, plain shoulders",
+  moth_eaten_woolen_shirt: "dingy gray woolen shirt riddled with small moth-holes, folded loosely",
+  threadbare_linen_shirt: "thin pale linen shirt worn nearly transparent in places, folded loosely",
+  stained_canvas_tunic: "heavy off-white canvas tunic with brown and dark stains down the front, drawstring neck",
+  homespun_pants: "rough undyed linen trousers, plain and short-cut, folded",
+  patched_wool_breeches: "brown wool breeches covered in mismatched patches of darker cloth, folded",
+  rough_canvas_trousers: "stiff pale canvas trousers, slightly creased, folded",
+  cloth_shoes: "pair of soft pale cloth slippers with thin leather soles",
+  worn_leather_sandals: "pair of well-worn brown leather sandals with twine-mended straps",
+  mismatched_boots: "a pair of two clearly different leather boots, one taller than the other, different shades of brown",
+  worn_leather_belt: "creased brown leather belt with a plain dull bronze buckle",
+  fraying_rope_belt: "length of brown hempen rope tied as a belt, with knotted frayed ends",
+  cracked_hide_strap: "wide strip of dark hide leather, cracked and dry, with a simple iron buckle",
+  plain_shirt: "coarse undyed linen shirt, plain and unmarked, folded",
+  plain_trousers: "simple gray-brown wool trousers, plain and undecorated, folded",
+  plain_belt: "plain narrow brown leather belt with a small dull iron buckle",
+  plain_shoes: "pair of plain brown leather shoes, slightly scuffed, low-cut",
+  ragged_shirt: "threadbare pale linen shirt with three visible mended patches, folded",
+  ragged_trousers: "faded gray-brown wool trousers worn thin at the knees, folded",
+  ragged_belt: "cracked dark leather belt with a tarnished bronze buckle",
+  ragged_shoes: "pair of soft-soled tan leather shoes, well-worn",
+
+  // ── Armor (zone-tagged) ────────────────────────────────────
+  leather_armor: "studded brown leather chest cuirass with shoulder straps and a buckle at the side, lacing visible",
+  chain_mail: "interlocking iron chain-mail hauberk torso, draped, slight weathering",
+  buckler: "small round metal-rimmed wooden buckler shield, central iron boss, leather grip strap on the back",
+  leather_cap: "simple brown leather skullcap with a chinstrap, low-profile, plain",
+  iron_helm: "open-faced iron skull-helm with a riveted brow band and a leather chinstrap",
+  leather_gorget: "high stiff brown leather gorget collar that wraps the throat, with side buckles",
+  chain_coif: "iron chain-mail coif (head and neck covering), draped on a wooden form",
+  leather_greaves: "pair of brown leather greaves shaped to cover shins and knees, with side lacing",
+  chain_greaves: "pair of iron chain-mail leg greaves, draped",
+  plate_helm: "polished steel close-helm with cheek-plates and a slim eye-slit, full plate construction",
+  plate_gorget: "polished steel articulated gorget collar with overlapping plates and rivets",
+  plate_cuirass: "polished steel breastplate cuirass with shoulder pauldrons, full plate construction",
+  plate_greaves: "pair of polished steel articulated leg greaves with knee cops and rivets",
+
+  // ── Consumables / Potions / Cures ──────────────────────────
+  healing_potion: "small glass vial of deep red liquid with a cork stopper, slightly luminous",
+  greater_healing_potion: "tall slender glass flask of brilliant scarlet liquid with a wax-sealed cork, faintly pulsing",
+  mana_potion: "crystal vial of iridescent blue liquid with a silver cap, faint glow",
+  stamina_brew: "small wooden cup of murky brown brew with a sprig of dark willow bark beside it",
+  fatigue_brew: "tall narrow glass vial of thick dark green draught with a wax-sealed cork",
+  antidote: "small glass vial of chalky white suspension with a cork stopper",
+  strong_antidote: "small glass vial of vivid yellow potion with a cork stopper, slightly cloudy",
+  bandage: "a roll of clean white linen bandage, neatly wrapped",
+  tourniquet: "a thick brown leather strap with a small iron windlass rod attached, coiled neatly",
+  unreliable_poison: "small dark glass bottle of yellowish liquid with a black cork, dim and slightly murky",
+  strong_poison: "small black glass bottle with a wax-sealed cork, the wax dark crimson, slightly sinister",
+
+  // ── Reagents (sold to Zim) ─────────────────────────────────
+  mandrake_root: "gnarled forked mandrake root shaped uncomfortably like a small screaming human figure, dirt clinging to it",
+  black_pearl: "single large lustrous black pearl, slightly iridescent, resting on its side",
+  nightshade: "small sprig of dark green nightshade with a cluster of black-purple berries",
+  ginseng: "forked tan ginseng root with fine wispy rootlets, knobbled and aged",
+  blood_moss: "small clump of crimson creeping moss, vivid red and slightly damp",
+  spider_silk: "loose skein of pale silvery spider silk, glossy threads gathered in a small bundle",
+  sulfurous_ash: "small heap of grey-yellow sulfurous ash piled loose, slightly crystalline",
+  mysterious_bauble: "a small unidentified ornate metal trinket, vaguely amulet-shaped, dark patina, intricate filigree",
+
+  // ── Misc consumables / treasure / keys ─────────────────────
+  torch: "wooden torch with a pitch-soaked head wrapped in cloth, unlit",
+  rope: "coiled length of thick brown hempen rope, tightly wound",
+  rations: "small bundle of dried hard travel rations wrapped in waxed cloth, tied with twine",
+  members_note: "small folded scrap of parchment with a broken wax seal",
+  ale: "wooden tankard of dark frothy ale",
+  hearty_meal: "wooden trencher with a thick stew, a hunk of dark bread, and a wedge of cheese",
+  rumor_token: "small bronze guild token stamped with an unreadable sigil",
+  notice_board_key: "small brass key with a notched bit and a leather thong loop",
+  goblin_ear: "severed pointed grey-green goblin ear with traces of dried blood",
+  cave_treasure: "small pile of mixed gold coins and a single gem, suggesting a modest hoard",
+};
+
 export const ITEMS: Record<string, Item> = {
   short_sword: {
     id: "short_sword",
@@ -698,7 +836,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A thin gray robe with no back. Standard issue for the recently reborn. The draft it provides is considerable. The dignity it provides is not.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   moth_eaten_woolen_shirt: {
@@ -707,7 +845,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A grey woolen shirt with several moth holes that let in more air than is comfortable. It smells of cedar and long storage.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   threadbare_linen_shirt: {
@@ -715,7 +853,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Threadbare Linen Shirt",
     description: "A linen shirt worn so thin in places you can read through it. Still, it covers.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   stained_canvas_tunic: {
@@ -724,7 +862,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A heavy canvas tunic with stains of uncertain origin and a drawstring that has been retied so many times the knot is now structural.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   homespun_pants: {
@@ -732,7 +870,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Homespun Pants",
     description: "Rough homespun trousers, undyed, slightly too short. Functional.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   patched_wool_breeches: {
@@ -740,7 +878,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Patched Wool Breeches",
     description: "Wool breeches with patches on the patches. Someone put real effort into keeping these alive.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   rough_canvas_trousers: {
@@ -748,7 +886,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Rough Canvas Trousers",
     description: "Canvas trousers stiff enough to stand up on their own. They will soften eventually. Probably.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   cloth_shoes: {
@@ -757,7 +895,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "Soft-soled cloth shoes, the kind worn by people who are mostly indoors. Outdoors they are optimistic.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   worn_leather_sandals: {
@@ -766,7 +904,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "Leather sandals that have walked a long way and show it. The straps have been mended with twine.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   mismatched_boots: {
@@ -775,7 +913,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "Two boots. They are both boots. That is where the agreement ends — different heights, different leather, different opinions about your left foot.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   worn_leather_belt: {
@@ -783,7 +921,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Worn Leather Belt",
     description: "A leather belt creased in three places from years of use. It works.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   fraying_rope_belt: {
@@ -792,7 +930,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A length of rope repurposed as a belt. The fraying ends have been knotted to slow the entropy.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   cracked_hide_strap: {
@@ -801,7 +939,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A wide strap of hide, cracked from drying out too many times. Still holds trousers up, which is the job.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   plain_shirt: {
@@ -1011,8 +1149,8 @@ export const ITEMS: Record<string, Item> = {
     description: "A small glass vial of deep red liquid. It tastes like copper and warmth. Restores a moderate amount of health.",
     glance: "A red vial. Heals wounds.",
     shortDescription: "Restores moderate health.",
-    alchemicalDescription: "Of the simplest healing tincture: distil one part mandrake root with three parts blood-moss in a copper alembic at moonrise. The flesh remembers what it was, and so returns. Acheronic surgeons carried it in war.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a small glass vial filled with deep red liquid, beside a sprig of mandrake root and a clump of dark moss. Small marginalia of arcane symbols and Greek letters. Sepia and rust tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "Of the simplest healing tincture: distil one part mandrake root with three parts blood-moss in a copper alembic at moonrise. The flesh remembers what it was, and so returns. Thurian surgeons carried it in war.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a small glass vial of deep red liquid, a curling mandrake root, and a clump of dark blood-moss. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a coiled serpent for Set, a small purple-tower silhouette of fallen Valusia, a heart-shaped sigil. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia, rust, and oxblood tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 25,
     stats: { healAmount: 15 },
@@ -1024,8 +1162,8 @@ export const ITEMS: Record<string, Item> = {
     description: "A larger flask of brilliant scarlet liquid that seems to pulse faintly. Restores a significant amount of health.",
     glance: "A pulsing scarlet flask. Serious healing.",
     shortDescription: "Restores significant health.",
-    alchemicalDescription: "The greater draught requires a black pearl ground to powder and the heart-blood of a freshly-killed beast. The result pulses in the vial as if remembering its first heartbeat. A staple of the Acheronic war-priests, used to revive wounded sorcerers mid-battle.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a tall glass flask of brilliant scarlet liquid, beside a small black pearl and a copper alembic. Marginalia of arcane symbols. Sepia and rust tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "The greater draught uses a black pearl ground to powder and the fresh heart-blood beast. It pulses in the vial. The essence of life. Thurian war-priests brewed it for reviving the fallen mid-battle.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a tall scarlet flask pulsing with light, a small black pearl, and a copper alembic. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a heart-shaped ruby sigil from the old Thurian rites, a beast-skull, war-priest glyphs, a small purple-tower silhouette of fallen Valusia. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia, deep crimson, and oxblood tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 60,
     stats: { healAmount: 35 },
@@ -1037,32 +1175,32 @@ export const ITEMS: Record<string, Item> = {
     description: "An iridescent blue liquid in a crystal vial. It hums when you hold it. Restores magical energy.",
     glance: "A humming blue vial. Restores mana.",
     shortDescription: "Restores magical energy.",
-    alchemicalDescription: "The blue draught is distilled lightning, caught in a crystal vessel under a storm and tempered with seven drops of moon-wine. To drink it is to remember, briefly, what the soul knew before it was bound to flesh. The Acheronic mages drank it without ceremony.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a crystal vial filled with iridescent blue liquid, surrounded by stylized lightning bolts and a crescent moon. Marginalia of arcane symbols. Sepia and rust tones with hints of indigo. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "The blue draught is distilled lightning, caught in a crystal vessel under a storm and tempered with seven drops of moon-wine. To drink it is to remember, briefly, what the soul knew before it was bound to flesh. The Thurian mages drank it without ceremony.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a crystal vial of iridescent blue liquid, a stylized lightning bolt, and a crescent moon. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a third-eye glyph, a coiled serpent for Set, fragments of unreadable Words of Power. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and rust tones with hints of deep indigo. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 30,
     isCarryable: true,
   },
   stamina_brew: {
     id: "stamina_brew",
-    name: "Stamina Brew",
-    description: "A murky brown liquid that smells like wet bark and tastes worse. Instantly restores stamina and clears fatigue.",
-    glance: "A foul brown brew. Restores stamina.",
-    shortDescription: "Restores stamina, clears fatigue.",
-    alchemicalDescription: "Bark of black willow, ginseng root, and the marrow of a running beast — boiled to a slow paste and strained through linen. The body forgets it is tired. The Acheronic legions marched on it for forty days at a time.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a wooden cup of brown liquid, beside a strip of black willow bark and a forked ginseng root. Marginalia of arcane symbols. Sepia and earthy brown tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    name: "Nimble Toes",
+    description: "A murky brown liquid that smells like wet bark and tastes worse. Quickens the feet and sharpens reflexes.",
+    glance: "A foul brown brew. Quickens the feet.",
+    shortDescription: "Boosts dexterity briefly.",
+    alchemicalDescription: "Bark of black willow, ginseng root, and the marrow of a running beast — simmered to a boil and strained through linen. The body forgets it is tired. The Thurian legions drank it ladled from giant cauldrons before battle.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a wooden cup of brown liquid, a strip of black willow bark, and a forked ginseng root. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a running deer, a marching legion-spear, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and earthy brown tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 20,
     isCarryable: true,
   },
   fatigue_brew: {
     id: "fatigue_brew",
-    name: "Fatigue Recovery Brew",
-    description: "A thick green draught. One swallow and the exhaustion lifts like a curtain. Expensive because the ingredients are rare.",
-    glance: "A thick green draught. Clears deep exhaustion.",
-    shortDescription: "Clears deep exhaustion in one swallow.",
-    alchemicalDescription: "When the simple stamina brew fails, this remains. The greater draught requires moon-grown moss, the breath of a sleeping mountain, and ginseng aged seven winters. Acheronic generals carried a single vial each, for the moment a battle would not end.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a tall vial of thick green draught, beside a tuft of pale moss and a withered ginseng root. Marginalia of arcane symbols. Sepia and verdant green tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    name: "Silent Shadow",
+    description: "A thick green draught. One swallow and the step turns soundless, the hand unerring.",
+    glance: "A thick green draught. Greater quickness.",
+    shortDescription: "Boosts dexterity significantly.",
+    alchemicalDescription: "When Nimble Toes fails, this remains. The greater draught requires moon-grown moss, the breath of a sleeping mountain, and ginseng aged seven winters. Thurian assassins carried a single vial each, for feet like wings.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a tall vial of thick green draught, a tuft of pale moon-grown moss, and a withered ginseng root. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a sleeping mountain silhouette, a crescent moon, a hunting owl. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and verdant green tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 40,
     isCarryable: true,
@@ -1073,8 +1211,8 @@ export const ITEMS: Record<string, Item> = {
     description: "A chalky white suspension that neutralizes mild poisons. Tastes like crushed limestone and regret.",
     glance: "A white vial. Cures mild poisoning.",
     shortDescription: "Cures mild poisoning.",
-    alchemicalDescription: "Powdered limestone, ash of nightshade burned to nothing, and milk of the white spider. The poison that wishes to remain in the blood is reasoned with, then escorted out. Acheronic banquet-tasters drank it before every meal.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a small vial of chalky white liquid, beside a piece of limestone and a stylized white spider. Marginalia of arcane symbols. Sepia and bone-white tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "Powdered limestone, ash of nightshade burned to nothing, and milk of the white spider. The poison that wishes to remain in the blood is reasoned with, then escorted out. Thurian banquet-tasters drank it before every meal.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a small vial of chalky white liquid, a piece of limestone, and a stylized white spider. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a balance scale, a coiled viper turned away, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and bone-white tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 10,
     isCarryable: true,
@@ -1085,8 +1223,8 @@ export const ITEMS: Record<string, Item> = {
     description: "A vivid yellow potion that can neutralize even serious toxins. Burns going down.",
     glance: "A yellow vial. Cures serious poisoning.",
     shortDescription: "Cures serious poisoning.",
-    alchemicalDescription: "Saffron of the southern hills, distilled in a copper still under sunlight only, with one drop of the venom it is meant to oppose. The poison teaches the body its own shape, and the body refuses it. Drink with steady hands; it burns the throat clean.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a vial of brilliant yellow potion, beside saffron threads and a copper distillation still. Marginalia of arcane symbols. Sepia and golden-yellow tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "Saffron of the southern hills, distilled in a copper still under sunlight, with one drop of the venom it must oppose. The poison teaches the body its own shape, and the body refuses it. Drink steadily; it burns the throat clean.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a vial of brilliant yellow potion, a bundle of saffron threads, and a copper distillation still. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a sun-disc, a saffron crocus, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and golden-yellow tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 30,
     isCarryable: true,
@@ -1097,10 +1235,10 @@ export const ITEMS: Record<string, Item> = {
     description: "Clean linen strips. Stops light bleeding when applied to a wound.",
     glance: "Clean linen. Stops bleeding.",
     shortDescription: "Stops light bleeding.",
-    alchemicalDescription: "Linen woven on a frame of birch and washed seven times in salt water. Pressed firmly to a wound, it remembers the shape of the body and refuses the blood passage. The Acheronic surgeons carried bundles of it sewn into their cloaks.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a roll of clean linen bandage, neatly folded, beside a small wooden cross of birch and a salt crystal. Marginalia of arcane symbols. Sepia and pale linen tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "Linen woven on a birch frame, washed seven times in salt water. Pressed firmly to a wound, it remembers the shape of the body and refuses the blood passage. Thurian surgeons carried bundles sewn into their cloaks.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a roll of clean linen bandage neatly folded, a small wooden cross of birch, and a salt crystal. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, an open healer's hand, a knotted cord, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and pale linen tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
-    value: 5,
+    value: 1,
     isCarryable: true,
   },
   tourniquet: {
@@ -1109,34 +1247,36 @@ export const ITEMS: Record<string, Item> = {
     description: "A thick leather strap with a tightening mechanism. Stops even severe bleeding immediately. Painful but effective.",
     glance: "A leather strap. Stops severe bleeding.",
     shortDescription: "Stops severe bleeding immediately.",
-    alchemicalDescription: "A strap of cured ox-leather and a small iron windlass. Tighten it above the wound and turn the rod until the blood remembers it must stay within. It hurts. It works. Acheronic field-surgeons fitted them above severed limbs without ceremony.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a leather tourniquet strap with a small iron windlass rod, coiled neatly. Marginalia of arcane symbols. Sepia and dark leather tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "A strap of cured ox-leather with a small iron windlass. Tighten above the wound and turn until the blood remembers to stay within. It hurts. It works. Thurian field-surgeons fitted them above severed limbs without ceremony.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a leather tourniquet strap with a small iron windlass rod, coiled neatly. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, an iron knot-sigil, a war-surgeon's glyph, a small purple-tower silhouette of fallen Valusia. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and dark leather tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
-    value: 15,
+    value: 2,
     isCarryable: true,
   },
   unreliable_poison: {
     id: "unreliable_poison",
-    name: "Unreliable Poison",
-    description: "A small bottle of yellowish liquid. Apply to a blade for weak poison damage over 3 rounds. The 'unreliable' part is honest.",
+    name: "Painful Poison",
+    description: "A small bottle of yellowish liquid. Apply to a blade for weak poison damage over 3 rounds. Lives up to the name.",
     glance: "A weak blade poison. 3 charges.",
     shortDescription: "Weak blade poison. 3 charges.",
-    alchemicalDescription: "Crushed nightshade berries, fermented spider silk, and a pinch of grave-soil. Smear it on the edge of a blade and pray the cut goes deep. The Acheronic assassins called it 'the wager' — sometimes it killed, sometimes it did nothing at all.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a small dark bottle of yellowish poison, beside a sprig of nightshade berries and a curl of spider silk. Marginalia of arcane symbols. Sepia and sickly yellow-green tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "Crushed nightshade berries, fermented spider silk, a pinch of grave-soil. Smear it on a blade's edge and pray the cut goes deep. Thurian assassins called it 'the wager' — sometimes it killed, sometimes nothing at all.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a small dark bottle of yellowish poison, a sprig of nightshade berries, and a curl of spider silk. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a pair of dice for the assassin's wager, a stylized spider, a coiled serpent for Set. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and sickly yellow-green tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
-    value: 20,
+    value: 10,
+    stats: { poisonSeverity: 1, poisonCharges: 3 },
     isCarryable: true,
   },
   strong_poison: {
     id: "strong_poison",
-    name: "Strong Homebrew Poison",
+    name: "Quick Death",
     description: "A dark bottle with a cork sealed in wax. Serious poison damage over 3 rounds. Don't get it on your hands.",
     glance: "A potent blade poison. 3 charges.",
     shortDescription: "Potent blade poison. 3 charges.",
-    alchemicalDescription: "A patient distillation of nightshade, viper-marrow, and the resin of a black tree that grows in only one valley. Three coats on a blade and the wound becomes a long, slow argument the body cannot win. Acheronic court-poisoners signed their work with this.",
-    bookPagePrompt: "An aged alchemical manuscript page on weathered parchment. Stained, worn edges. In the center, a hand-drawn medieval ink sketch of a black bottle with wax-sealed cork, beside a coiled viper and a drop of black resin. Marginalia of arcane symbols. Sepia and deep black-purple tones. No modern text, no English words, just decorative scribblings. Style of a 15th century alchemical codex. Solid background, fills entire frame.",
+    alchemicalDescription: "A patient distillation of nightshade, viper-marrow, and resin from one black tree in one valley. Three coats and the wound becomes a slow argument the body cannot win. Thurian court-poisoners signed their work with this.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a black bottle with wax-sealed cork, a coiled viper, and a drop of black resin. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a black tree, a court-poisoner's signet ring, a small purple-tower silhouette of fallen Valusia. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and deep black-purple tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 50,
+    stats: { poisonSeverity: 3, poisonCharges: 3 },
     isCarryable: true,
   },
 

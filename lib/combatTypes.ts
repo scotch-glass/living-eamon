@@ -30,7 +30,8 @@ export const ZONE_EVASION_PENALTY: Record<BodyZone, number> = {
 // ── Status Effects ──────────────────────────────────────────
 
 export type StatusEffectType =
-  | "bleed"             // Ongoing HP loss per round
+  | "bleed"             // Ongoing HP loss per round/turn
+  | "poison"            // Ongoing HP loss per round/turn until cured (turnsRemaining = -1)
   | "concussion"        // Head — reduced hit chance
   | "damaged_eye"       // Head — significant accuracy penalty
   | "severed_artery"    // Neck — heavy bleed
@@ -45,15 +46,15 @@ export interface ActiveStatusEffect {
   zone: BodyZone;
   severity: number;         // 1-3, affects magnitude
   turnsRemaining: number;   // -1 = until healed
-  bleedPerTurn?: number;    // For bleed-type effects
+  bleedPerTurn?: number;    // For bleed/poison-type effects (HP per tick)
 }
 
-/** Which injuries can occur per zone. */
+/** Which injuries can occur per zone. Bleed and poison are universal. */
 export const ZONE_INJURY_TABLE: Record<BodyZone, StatusEffectType[]> = {
-  head: ["concussion", "damaged_eye", "bleed"],
-  neck: ["severed_artery", "crushed_windpipe", "bleed"],
-  torso: ["pierced_lung", "cracked_ribs", "bleed"],
-  limbs: ["broken_arm", "broken_leg", "bleed"],
+  head: ["concussion", "damaged_eye", "bleed", "poison"],
+  neck: ["severed_artery", "crushed_windpipe", "bleed", "poison"],
+  torso: ["pierced_lung", "cracked_ribs", "bleed", "poison"],
+  limbs: ["broken_arm", "broken_leg", "bleed", "poison"],
 };
 
 // ── Per-Zone Armor ──────────────────────────────────────────
@@ -97,6 +98,9 @@ export interface CombatantState {
   shieldMaxDurability: number;
   // Offense
   weaponId: string;
+  /** If non-null, the combatant dropped this weapon via critical fail and
+   *  will auto-retrieve it at the start of the next round. */
+  droppedWeaponId: string | null;
   weaponSkillValue: number;
   // Stats
   dexterity: number;
@@ -117,6 +121,11 @@ export interface StrikeResolution {
   injuryInflicted: StatusEffectType | null;
   injurySeverity: number;        // 0 if no injury, 1-3
   isCritical: boolean;
+  /** Critical fail — attacker fumbled. True when the attacker's strike
+   *  was evaded AND the crit-fail roll fired. */
+  isCriticalFail: boolean;
+  /** True if the critical fail caused the attacker to drop their weapon. */
+  weaponDropped: boolean;
   narrative: string;
 }
 

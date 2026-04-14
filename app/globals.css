@@ -34,3 +34,12 @@ body {
 .chat-scroll::-webkit-scrollbar-thumb:hover {
   background-color: #6b7280;
 }
+
+/* Prescripted (static engine) messages fade in instantly instead of streaming */
+@keyframes le-msg-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.le-msg-fadein {
+  animation: le-msg-fadein 0.3s ease-in forwards;
+}

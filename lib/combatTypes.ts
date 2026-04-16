@@ -39,7 +39,16 @@ export type StatusEffectType =
   | "pierced_lung"      // Torso — reduced effectiveness
   | "cracked_ribs"      // Torso — pain on exertion
   | "broken_arm"        // Limbs — weapon skill penalty
-  | "broken_leg";       // Limbs — cannot flee
+  | "broken_leg"        // Limbs — cannot flee
+  // ── Spell-driven buffs / debuffs (combat-only) ──
+  | "haste"             // +10 effective agility (SPEED, POWER:Quickening)
+  | "shield_aura"       // +20 cover on every body zone (POWER:Silver Aura)
+  | "invisible"         // Defender auto-evades for one round (POWER:Untouchable)
+  | "feared_skip"       // Combatant skips next strike (POWER:Dread → on enemy)
+  | "numb_hand"         // Attacker auto-misses next strike (POWER:Numb Hand → on self)
+  | "hiccups"           // -3 effective agility, comic (POWER:Hiccups → on self)
+  | "tongue_tied"       // Next CAST fizzles (POWER:Tongue-Tied → on self)
+  | "marked_by_set";    // Next enemy strike +15 accuracy (POWER:Smelled By Set → on self)
 
 export interface ActiveStatusEffect {
   type: StatusEffectType;

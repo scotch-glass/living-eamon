@@ -120,6 +120,35 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - **Untouched:** `armor_expertise` / `shield_expertise` in WeaponSkills — these are combat skill names, not mana.
 - **STATS display:** now shows `Mana: X / Y` instead of `Expertise: N`. Stats grid shows only STR/DEX/CHA (3 columns).
 
+§5.18 — Combat Spell System + Effect Markers + Attack Animation (April 15-16, 2026)
+- **Four combat spells** implemented in `lib/combatEngine.ts:resolveCombatSpell()`: HEAL (18-32 HP), BLAST (2d8+4 lightning, bypasses armor), SPEED (+10 agility 3 rounds), POWER (weighted d100 random table — 80% good, 16% bad, 4% nothing). Mana debited up-front, never refunded.
+- **Power outcome table** (16 outcomes): Bonus Strike, Mana Surge, Lesser Healing, Quickening, Silver Aura, Untouchable, Dread (good); An Unwanted Vision (-1 Honor), Hiccups (-3 agi), Glimpse the Void (5 psychic), Tongue-Tied (spells fizzle 2 rounds), Numb Hand (miss next strike), Smelled by Set (+15 enemy accuracy), Phantom Pain (1d6), Nothing.
+- **8 new StatusEffectTypes** in `combatTypes.ts`: haste, shield_aura, invisible, feared_skip, numb_hand, hiccups, tongue_tied, marked_by_set. All wired into `resolveStrike` (evasion/armor calculations) and `resolveCombatRound` (feared_skip skips enemy strike).
+- **CAST handler in gameEngine.ts** intercepts combat spells when `activeCombat` is set — routes to `resolveCombatSpell` instead of Jane. Out-of-combat CAST still goes to Jane.
+- **Spell icons** in combat UI: 4 tiny 22px icons (❤ Heal, ⚡ Blast, 🙏 Power, 🪶 Speed) stacked vertically next to the mana bar inside `VerticalStatusCap`. Dim + grayscale when not learned; tinted + glowing when learned. Click → `SpellActionMenu` (Cast / Lore). Lore → `SpellDetailPopup` modal with school, effect line, flavor text.
+- **Effect Marker system**: `lib/effectIconData.ts` (SVG paths + colors + animations for all 18 effects), `components/EffectMarkerIcon.tsx` (20px dark-disc SVG icon with glow + tooltip via `createPortal` to escape stacking contexts). Replaces old 8px dots. 7 CSS animations: pulse, glow, shake, wobble, shimmer, fade, bounce. Icons appear in status column (max 6 + overflow badge) AND as floating 24px overlay near sprite's feet (max 3 priority-sorted).
+- **Invisible sprite transparency**: allies/enemies with `invisible` effect render at 35% opacity + blue hue-shift.
+- **Attack animation** (Option B "Impact Pulse"): attacker sprite pulses to 1.05× twice (0.5s) + dark radial blur disc expands behind them, then defender sprite shakes ±4px (0.35s). `animateThenCommand()` delays the engine command until mid-animation. Zone clicks + spell casts both route through it.
+- **Prescripted death narration**: HWRR combat win path now picks from `getEnemyDeathPool(bodyType)` — HUMANOID/BEAST/AMORPHOUS/UNDEAD pools (40-50 lines each). Player deaths use existing `COMBAT_TEMPLATES.playerDeath` (50 lines) + `REBIRTH_NARRATIVES`.
+- **LootScreen** (`components/LootScreen.tsx`): post-combat modal with enemy name, gold drop, per-item rows (icon + name + quantity + glance + value), individual Take buttons + Take All + Leave. Triggered on player victory (not training dummies, not fleeing).
+- **Combat fast-path** in `chat/route.ts`: when `activeCombat` is set or response contains `__COMBAT_END__`, the static-response handler returns IMMEDIATELY — bypassing courtyard weather injection, NPC on_enter scripts, `__CRITICAL__` Jane rewrite, and everything else. This was the root cause of the room-description leak.
+- **Isolated combat log** (`combatBoxLog` state in page.tsx): completely separate from the chat `messages` array. Only populated by responses to STRIKE/CAST/FLEE/ATTACK commands. Client-side strips any situation-block text (`Exits:`, `●`, `👁`) as a fallback defense. Resets on fight-start (new enemy id) and fight-end.
+- **Situation block suppressed** during combat in all 3 `appendSituation`/`buildSituationBlock` call sites in chat/route.ts.
+- **Training dummy fix**: `resolveCombatRound` accepts `enemyIsTrainingDummy` flag — dummies never strike back, no initiative line. 25 humorous Dufus-specific narration lines (10 miss, 15 hit) in `combatZoneNarration.ts`. Dufus has a `spritePrompt` now.
+- **Hero sprite system**: `HEROES` registry in `gameData.ts`, `/api/hero-image` route (mirrors NPC sprite pipeline). George has a sprite prompt. `known_spells` + `known_deities` columns added to players table via migration `20260415120000`.
+- **Combat layout**: 3v3 — allies (Aldric, Zim, Hero) left-to-right, enemies (Dufus + Pip + Hokas preview) right-to-left. 200px slot pitch, 240px sprite containers. Status columns with vertical HP/mana bars + spell icons + gear grid (2-col) + potion grid (2-col) + Flee button (hero only). Henchmen have sample inventories (bandages, potions).
+- **During combat, hidden**: sidebar, chat panel, text input, breadcrumb bar. Full viewport = scene background + sprites + combat UI.
+
+§5.17 — Inspect Popup Redesign / Pass E + Dufus Narration (April 14-15, 2026)
+
+§5.16 — Inspect Popup Redesign / Pass E (April 14, 2026)
+- **Two visual styles** in `components/ItemDetailPopup.tsx`, routed by `isBookItem(item)`:
+  1. **Alchemical Book style** — existing Thurian-codex parchment (Linear B, Cedarville Cursive, illuminated margins). Reserved for `type === "spell"` items only (books, scrolls, grimoires). No items use this type yet.
+  2. **Standard Inspection style** — dark glassmorphism container. Left 38%: large item sprite from the icon pipeline (reuses `fetchIconUrl` with module-level cache + dedup). Right 62%: scrollable text area with item name (amber Georgia), type + value subline, stats table (context-sensitive: damage for weapons, coverage/durability/dexPenalty for armor, healAmount for consumables, poison severity/charges), and description (alchemicalDescription fallback to description).
+- **Stats table** via `buildStatRows(item)` — derives rows from `item.stats` fields present. Shields detected by `shieldBlockChance` and labeled "Shield" instead of "Armor". Empty stats = no table shown.
+- **No new files** — all contained within the existing `ItemDetailPopup.tsx`. Props unchanged (`{ item: Item | null; onClose: () => void }`), so page.tsx integration unchanged.
+- Glyph fallback (⚔ ⛊ 👕 etc.) while icon loads, same set as ItemIcon.tsx.
+
 §5.15 — Apply Poison to Weapon (April 14, 2026)
 - **PlayerState gained:** `weaponPoisonCharges: number` (0 = no coating) + `weaponPoisonSeverity: number` (1-3). Both reset on death. Migration: `supabase/migrations/20260414110000_players_weapon_poison.sql`.
 - **Engine handler:** `APPLY [poison name] TO [weapon/blade/arrows/bolts]` in lib/gameEngine.ts. Matches Painful Poison (sev 1, 3 charges) and Quick Death (sev 3, 3 charges). Consumes the poison item. Ranged flavor: bow → "arrows", crossbow → "bolts", melee → "blade".
@@ -135,7 +164,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
   - **Equipped context (GEAR tab):** Unequip + Inspect only (no Sell — must unequip first)
   - Verbs dispatch via `sendMessage(command)` — all underlying commands already exist
   - **No confirmation** on Equip or Drop (per design decision)
-  - Inspect opens the existing alchemical popup (until the redesigned inspect ships in Pass E)
+  - Inspect opens the style-routed popup (standard glassmorphism for most items, alchemical codex for books/scrolls)
   - `getItemActions(item, context, currentRoom, isEquipped)` helper derives actions from item type + state
   - `ItemIcon.onClick` now passes MouseEvent for bounding-rect anchoring; `EquipmentGrid` and `BackpackPanel` onItemClick signatures updated to `(item, DOMRect)`
 - **Design decisions** for all 7 future systems documented in GAME_DESIGN.md: Inventory & Equipment UI, Critical Fail, Prescripted Text Display, expanded equip slots, COMPARE popup, bulk sell + vendor temp inventory.
@@ -250,9 +279,15 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 | components/EquipmentGrid.tsx | 3×2 grid of 56px equipment tiles — weapon, shield, helmet/gorget/body/limbs |
 | components/BackpackPanel.tsx | Auto-fill grid of 40px inventory tiles with quantity badges; equipped items dimmed |
 | components/ItemActionMenu.tsx | Contextual verb popup on item-icon click — Equip/Drink/Apply/Inspect/Drop/Sell; context-sensitive per item type + room |
-| components/ItemDetailPopup.tsx | Alchemical book-page modal — Linear B + Cedarville Cursive on Grok-generated parchment |
+| components/ItemDetailPopup.tsx | Style-routed inspect popup: StandardInspectView (dark glassmorphism + icon sprite + stats) for most items, AlchemicalBookView (Thurian codex parchment) for spell-type books/scrolls |
 | app/api/item-image/route.ts | Generates alchemical book page backgrounds for items — Grok Imagine 4:3, no BG removal |
-| components/CombatScreen.tsx | Full-screen combat overlay — PaperDoll, log, strike/flee buttons |
+| components/CombatScreen.tsx | HWRR 3v3 combat overlay — 3 ally sprites left (Aldric/Zim/Hero) + 3 enemy sprites right, per-character status columns (vertical HP/mana bars, spell icons, gear/potion grids, zone-target buttons), scrolling combat log top, attack animation (pulse+blur+shake), effect marker overlays, invisible sprite transparency |
+| components/EffectMarkerIcon.tsx | SVG combat-effect icon in dark disc with animation + portal tooltip — 18 Hyborian-themed icons (injuries + spell buffs/debuffs) |
+| components/LootScreen.tsx | Post-combat loot modal — enemy name, gold, per-item rows with icon/name/value/description, Take/Take All/Leave |
+| components/SpellActionMenu (in CombatScreen) | Spell right-click menu (Cast / Lore) anchored to spell icon |
+| components/SpellDetailPopup (in CombatScreen) | Spell lore modal — school, mana cost, effect line, flavor text |
+| lib/effectIconData.ts | EFFECT_ICON_MAP (SVG paths, colors, animations, labels for 18 effects) + unified EFFECT_COLORS |
+| app/api/hero-image/route.ts | Hero sprite generation — mirrors NPC sprite pipeline (Grok 3:4 → rembg → Supabase cache) |
 | components/PaperDoll.tsx | SVG clickable body zones — color-coded by armor/wounds/selection |
 | lib/gameData.ts | NPCs, Items, SAM_INVENTORY — re-exports Room types from roomTypes.ts |
 | app/api/scene-image/route.ts | Grok Imagine scene generation + cache (soft-delete aware) |
@@ -763,6 +798,8 @@ April 2026
 - **HWRR bleed/poison adopted (April 13, 2026):** poison added to `StatusEffectType`. `player.activeEffects[]` carries effects out of combat, transferred in/out of `playerCombatant.activeEffects` at combat boundaries. Severity 1-3 = 1/2/3 HP/turn (scaled down from HWRR's 3/6/9 because our HP pool is 20). Cures: BANDAGE (-1 bleed sev), TOURNIQUET (all bleed + severed_artery), ANTIDOTE (-1 poison sev), STRONG ANTIDOTE (all poison). Phase B (deferred): poison-application sources (NPC `combatProfile.poisonOnHit`, `APPLY POISON TO WEAPON`, field hazards).
 - **Universal vendor SELL at half price (April 13, 2026):** every vendor buys everything at `Math.max(1, Math.floor(item.value / 2))`. Equipped items refused (UNEQUIP first). All vendor menus refactored to read prices dynamically from `ITEMS` — no more hardcoded prices in welcome speeches.
 - **expertise → maxMana full rename (April 14, 2026):** `PlayerState.expertise` renamed to `PlayerState.maxMana` across all code + DB column renamed `expertise` → `max_mana`. Backfill set pre-mana heroes (where pool was 0) to 10/10. `armor_expertise`/`shield_expertise` in WeaponSkills untouched (they're skill names, not mana).
+- **HWRR visual-novel combat screen (April 15, 2026):** `CombatScreen.tsx` completely redesigned. Replaced the ugly centered modal with a full-viewport transparent overlay. Enemy sprite floats HWRR-style over the room scene (xcenter 0.64, bottom-anchored, 60vh tall). Top HP strip, bottom-left PaperDoll HUD (wound display), bottom-right action panel with zone pills + Strike/Flee. Floating narrative strip replaces the scrolling log. Zone positions lifted from HWRR's `script.rpy:4047-4058`.
+- **Inspect popup redesign / Pass E (April 14, 2026):** `ItemDetailPopup.tsx` now routes between two visual styles. Standard inspection (dark glassmorphism, large item sprite left, scrollable stats+description right) for all current items. Alchemical book (Thurian codex parchment) reserved for `type === "spell"` books/scrolls/grimoires (none exist yet). Stats table is context-sensitive per item type.
 - **Apply Poison to Weapon (April 14, 2026):** APPLY [poison] TO [weapon/blade/arrows/bolts] handler + combat integration. Poison coats the weapon for N charges; each hit that lands transfers a poison effect to the enemy. Painful Poison = sev 1 / 3 charges; Quick Death = sev 3 / 3 charges. Ranged weapons get arrows/bolts flavor text.
 - **Prescripted text instant fade-in (April 14, 2026):** static engine responses now return JSON (not ReadableStream) — client renders instantly with 300ms fade-in. Only Jane dynamic content streams character-by-character. Clear visual signal for dev + player.
 - **Item action menu (April 14, 2026):** click any item icon → contextual verb popup (Equip/Drink/Apply/Inspect/Drop or Sell in vendor rooms). No confirmation on equip/drop. Equipped items show Unequip + Inspect only. "Apply to Blade" for poisons now live.

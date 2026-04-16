@@ -391,7 +391,10 @@ const ENEMY_ZONE_HIT: ZoneEnemyHitPool = {
 
 // ── INJURY NARRATION ────────────────────────────────────────
 
-const INJURY_NARRATION: Record<StatusEffectType, string[]> = {
+// Partial record — spell-driven status effects (haste, shield_aura, etc.)
+// don't have injury narration; combat spells produce their own narration
+// in combatEngine.resolveCombatSpell.
+const INJURY_NARRATION: Partial<Record<StatusEffectType, string[]>> = {
   bleed: [
     "Blood flows freely from the {zone} wound.",
     "The {zone} wound opens — bright blood starts to seep.",
@@ -464,6 +467,41 @@ const CRITICAL_FAIL_DROP: string[] = [
 // ── NARRATIVE BUILDER ───────────────────────────────────────
 // Replaces the simple string in resolveStrike() with rich zone narration.
 
+// ── DUFUS POOLS — humorous narration for the training dummy ─
+
+/** Player misses Dufus. He never moves. He just judges. */
+const DUFUS_MISS_POOL: string[] = [
+  "Dufus stands perfectly still and you somehow miss him entirely.",
+  "Dufus looks at you like you're the dummy.",
+  "Your strike whiffs past Dufus. He has not moved. He never moves.",
+  "You miss a wooden post that does not move. Aldric coughs somewhere.",
+  "Dufus's painted-on face manages to look disappointed.",
+  "The blade sails wide. Dufus would shake his head if he had a neck that worked.",
+  "You swing. Dufus does not. Dufus wins this round morally.",
+  "The strike misses. Dufus's permanent expression of resigned disappointment somehow deepens.",
+  "Even Dufus seems embarrassed for you, and Dufus is a sack of straw.",
+  "Wide miss. Somewhere, a real enemy is laughing.",
+];
+
+/** Player hits Dufus. He takes it. He always takes it. */
+const DUFUS_HIT_POOL: string[] = [
+  "Dufus takes the hit like a champ.",
+  "Dufus just stands there like a dummy. The blow lands square.",
+  "You strike Dufus. Dufus accepts this, as he accepts all things.",
+  "The blow connects. Straw puffs out. Dufus is unbothered.",
+  "Solid hit. Dufus says nothing. Dufus has never said anything.",
+  "Your weapon bites into the wood. Dufus has been here longer than you. He will outlast this too.",
+  "Clean strike. A small chip of Dufus joins the pile of older Dufus on the ground.",
+  "You land a good one. Dufus sways slightly, then settles back into resignation.",
+  "The hit lands. Aldric was right — Dufus does not complain.",
+  "Strike connects. The DUFUS carved into his forehead remains legible.",
+  "Direct hit. Dufus's charcoal frown does not change. It never changes.",
+  "Wood thunks. Straw drifts. Dufus endures.",
+  "You strike true. The dummy creaks once and goes silent again.",
+  "The blow lands. Somewhere, the carpenter who patches Dufus sighs.",
+  "Solid contact. Dufus has been hit harder by smaller heroes. He remembers all of them.",
+];
+
 export function buildZoneStrikeNarrative(
   strike: StrikeResolution,
   attackerName: string,
@@ -482,6 +520,16 @@ export function buildZoneStrikeNarrative(
     damage: String(strike.damageDealt),
     zone,
   };
+
+  // ── Dufus override — humorous flat narration regardless of zone/weapon ──
+  // Only fires when the player is attacking Dufus (not the other way around,
+  // since Dufus never strikes back). Bypasses normal hit/miss prose.
+  if (isPlayerAttacking && defenderName === "Dufus") {
+    if (strike.evaded || strike.armorStopped || strike.blocked) {
+      return pick(DUFUS_MISS_POOL);
+    }
+    return pick(DUFUS_HIT_POOL);
+  }
 
   // Evasion (possibly with critical fail)
   if (strike.evaded) {

@@ -98,6 +98,8 @@ import {
   initCombatSession,
   resolveCombatRound as resolveHWRRRound,
   buildRoundNarrative,
+  resolveCombatSpell,
+  isCombatSpell,
 } from "./combatEngine";
 
 // ============================================================
@@ -3657,6 +3659,26 @@ This is a severe virtue moment — Honor is at stake.`,
       };
     }
 
+    // ── Combat spell: deterministic resolver ──
+    // Heal / Blast / Speed / Power are mechanical. Mana cost, damage rolls,
+    // status effects, and the Power random-outcome table all live in
+    // combatEngine.resolveCombatSpell. The enemy gets their swing afterward,
+    // identical to a STRIKE round.
+    if (p.activeCombat && isCombatSpell(spellName)) {
+      const result = resolveCombatSpell(newState, spellName);
+      if (result) {
+        return {
+          responseType: "static",
+          staticResponse: result.combatOver
+            ? result.narration + "\n__COMBAT_END__"
+            : result.narration,
+          dynamicContext: null,
+          newState: result.newState,
+          stateChanged: true,
+        };
+      }
+    }
+
     return {
       responseType: "dynamic",
       staticResponse: null,
@@ -4845,16 +4867,17 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     }
 
     // Resolve one HWRR combat round
-    const roundResult = resolveHWRRRound(session, zoneArg);
-    const narrative = buildRoundNarrative(roundResult);
+    const isDummyEnemy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
+    const roundResult = resolveHWRRRound(session, zoneArg, { enemyIsTrainingDummy: isDummyEnemy });
+    let narrative = buildRoundNarrative(roundResult);
 
-    // Update session with new combatant states
+    // Session combatLog is re-synced after narrative amendments below.
     let updatedSession: ActiveCombatSession = {
       ...session,
       roundNumber: roundResult.roundNumber,
       playerCombatant: roundResult.updatedPlayer,
       enemyCombatant: roundResult.updatedEnemy,
-      combatLog: [...session.combatLog, narrative].slice(-20),
+      combatLog: session.combatLog, // finalized below once narrative is amended
       finished: roundResult.combatOver,
       playerWon: roundResult.combatOver ? roundResult.playerWon : null,
     };
@@ -4896,7 +4919,7 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     }
 
     // Training dummy: grant weapon skill XP per strike (capped at 25)
-    const isDummy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
+    const isDummy = isDummyEnemy;
     const DUMMY_SKILL_CAP = 25;
     if (isDummy && roundResult.playerStrike && roundResult.playerStrike.damageDealt > 0) {
       const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
@@ -4904,8 +4927,18 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       if (currentSkill < DUMMY_SKILL_CAP) {
         const skillUp = updateWeaponSkill(finalState, weaponSkillKey, 1);
         finalState = skillUp.newState;
+        const newSkill = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
+        narrative += `\n✦ ${SKILL_NAMES[weaponSkillKey]} skill rises: ${currentSkill} → ${newSkill}`;
+      } else {
+        narrative += `\n(${SKILL_NAMES[weaponSkillKey]} ${currentSkill}/${DUMMY_SKILL_CAP} — dummy cap reached)`;
       }
     }
+
+    // Finalize session combatLog with the (possibly amended) narrative
+    updatedSession = {
+      ...updatedSession,
+      combatLog: [...session.combatLog, narrative].slice(-20),
+    };
 
     if (roundResult.combatOver) {
       if (isDummy && roundResult.playerWon) {
@@ -4926,6 +4959,12 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       }
 
       if (roundResult.playerWon) {
+        // ── Prescripted death narration ──
+        const npcDef = NPCS[session.enemyNpcId];
+        const deathPool = getEnemyDeathPool(npcDef?.bodyType);
+        const deathLine = fillTemplate(pickTemplate(deathPool), { enemy: session.enemyName, weapon: ITEMS[p.weapon]?.name ?? "weapon" });
+        narrative += `\n\n${deathLine}`;
+
         // Mark NPC dead, clear combat HP, award virtue + mana pool growth
         finalState = {
           ...finalState,
@@ -5099,9 +5138,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
 
     const weaponName = ITEMS[p.weapon]?.name ?? p.weapon;
     const engageNarrative =
-      `You draw your ${weaponName} and engage ${npcData.name}!\n\n` +
-      `${npcData.name}: ${session.enemyCombatant.hp}/${session.enemyCombatant.maxHp} HP\n` +
-      `Choose your target: STRIKE HEAD · STRIKE NECK · STRIKE TORSO · STRIKE LIMBS\n` +
+      `You draw your ${weaponName} and engage ${npcData.name}.\n` +
       `__COMBAT_START__`;
 
     return {

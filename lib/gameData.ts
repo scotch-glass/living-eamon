@@ -317,6 +317,7 @@ export const NPCS: Record<string, NPC> = {
     description:
       "A man-shaped wooden post wrapped in old rope and stuffed burlap. Generations of sword cuts have chipped away at its torso. Someone has carved the name DUFUS into its forehead in rough, deep letters — the oldest mark on it. Below that, a crude charcoal face has been drawn and redrawn so many times the features have blurred into a permanent expression of resigned disappointment. Dried straw leaks from a gash where the neck meets the shoulder. It has been repaired so many times that very little of the original wood remains.",
     glance: "Dufus the training dummy. DUFUS carved into its forehead.",
+    spritePrompt: "Full-body illustration of a humanoid medieval training dummy. A man-shaped wooden post wrapped tightly in weathered, fraying rope and stuffed grimy burlap, sword-chipped torso leaking dried straw at a torn gash where the neck meets the shoulder. A round burlap-bag head with the name DUFUS carved into its wooden forehead in deep, crude letters; below that a re-drawn charcoal face with a permanent resigned-disappointed frown — eyes are smudged Xs. Stout post legs end in a heavy wooden cross-base. No arms, no weapon, no armor. Painted in the style of Frank Frazetta. Full body from head to base, entire figure must be visible including the wooden cross-base, base at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: "Dufus says nothing. He has heard it all before.",
     personality: "It is a wooden post named Dufus. It does not speak. It does not move. It takes the hit.",
     isHostile: false,
@@ -334,6 +335,25 @@ export const NPCS: Record<string, NPC> = {
       shieldBlockChance: 0,
       shieldDurability: 0,
     },
+  },
+};
+
+// ============================================================
+// HERO SPRITES — for the player character. Looked up by lowercase
+// `character_name`. Each entry follows the NPC `spritePrompt` rules
+// (full body, white background, no shadow, Frazetta painted style)
+// so the existing /api/npc-image cutout pipeline can be reused.
+// ============================================================
+
+export interface HeroSprite {
+  id: string;
+  spritePrompt: string;
+}
+
+export const HEROES: Record<string, HeroSprite> = {
+  george: {
+    id: "george",
+    spritePrompt: "Full-body character illustration of a young medieval Hyborian-Age hero named George. Lean, wiry build, mid-twenties, dark tousled hair, alert eyes, faintly amnesiac thousand-yard stare. Wearing a plain undyed linen shirt, simple wool trousers, a plain leather belt with a dull buckle, scuffed nondescript leather shoes. Holding a polished katana — curved single-edged blade, eastern-style hilt — held casually at his side, point down. No armor, no helmet, no cloak. Standing pose, weight slightly back, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
   },
 };
 

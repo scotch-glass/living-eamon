@@ -454,6 +454,13 @@ export async function POST(request: NextRequest) {
 
     const appendSituation = (body: string, newState: WorldState) => {
       const cleaned = stripTrailingSituationBlocks(body);
+      // During combat, the situation block (exits, room objects, NPCs) is
+      // suppressed — combat is its own context and the dedicated overlay
+      // shows the relevant info. Without this gate, the situation block
+      // leaks into the combat narration log.
+      if (newState.player?.activeCombat) {
+        return cleaned;
+      }
       return cleaned + "\n\n" + buildSituationBlock(newState);
     };
 
@@ -550,8 +557,10 @@ export async function POST(request: NextRequest) {
           } finally {
             reader.releaseLock();
           }
-          const situationSuffix = "\n\n" + buildSituationBlock(newState);
-          controller.enqueue(encoder.encode(situationSuffix));
+          if (!newState.player?.activeCombat) {
+            const situationSuffix = "\n\n" + buildSituationBlock(newState);
+            controller.enqueue(encoder.encode(situationSuffix));
+          }
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...newState,
             playerId: resolvedPlayerId,
@@ -734,7 +743,20 @@ export async function POST(request: NextRequest) {
 
     // STATIC — no API call unless narrative contains __CRITICAL__ (Jane rewrites crit line)
     if (engineResult.responseType === "static" && engineResult.staticResponse !== null) {
-      // Courtyard gets live weather injected
+
+      // ══════════════════════════════════════════════════════════════════════
+      // COMBAT FAST-PATH: when the player is in active combat, the engine's
+      // static response IS the combat narration (STRIKE result, CAST result,
+      // FLEE result, engage line, etc.). It must reach the client UNTOUCHED.
+      // No courtyard weather, no on_enter NPC scripts, no __CRITICAL__ Jane
+      // rewrite, no room descriptions — combat is its own isolated context.
+      // ══════════════════════════════════════════════════════════════════════
+      if (engineResult.newState.player.activeCombat || engineResult.staticResponse.includes("__COMBAT_END__")) {
+        return sendResponse(engineResult.staticResponse, engineResult.newState);
+      }
+
+      // Courtyard gets live weather injected (non-combat only — guard above
+      // already returned if activeCombat was set).
       if (engineResult.newState.player.currentRoom === "guild_courtyard") {
         const weather = await getCourtyardWeather();
         const fullDesc = buildCourtyardDescription(
@@ -887,8 +909,10 @@ export async function POST(request: NextRequest) {
             ).catch(console.error);
             persistPlayer(engineResult.newState).catch(console.error);
           }
-          const examineSituationSuffix = "\n\n" + buildSituationBlock(engineResult.newState);
-          controller.enqueue(encoder.encode(examineSituationSuffix));
+          if (!engineResult.newState.player?.activeCombat) {
+            const examineSituationSuffix = "\n\n" + buildSituationBlock(engineResult.newState);
+            controller.enqueue(encoder.encode(examineSituationSuffix));
+          }
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...engineResult.newState,
             playerId: resolvedPlayerId,

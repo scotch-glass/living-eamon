@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { WorldState, createInitialWorldState } from "../lib/gameState";
-import { ITEMS } from "../lib/gameData";
+import { ITEMS, NPCS } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
 import CombatScreen from "../components/CombatScreen";
+import LootScreen, { type LootEntry } from "../components/LootScreen";
 import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
@@ -115,7 +116,19 @@ export default function Home() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [chatExpanded, setChatExpanded] = useState(true);
   const [inCombat, setInCombat] = useState(false);
-  const [combatLog, setCombatLog] = useState<string[]>([]);
+  // Combat narration is isolated from the main message stream so room
+  // descriptions, Jane chat, examines, etc. can never leak into it.
+  // Only populated by responses to STRIKE / FLEE / ATTACK commands.
+  const [combatBoxLog, setCombatBoxLog] = useState<string[]>([]);
+  // Tracks the previous activeCombat NPC id so we can detect "combat
+  // started fresh" and reset the log even if the player chains fights.
+  const prevEnemyIdRef = useRef<string | null>(null);
+  // Post-combat loot screen state. Null = not showing.
+  const [lootScreen, setLootScreen] = useState<{
+    enemyName: string;
+    gold: number;
+    items: LootEntry[];
+  } | null>(null);
   const [conversationNpcId, setConversationNpcId] = useState<string | null>(null);
   const [itemPopupId, setItemPopupId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -238,6 +251,19 @@ export default function Home() {
     playerName?: string,
     pid?: string
   ) => {
+    // Only combat-action commands should populate the combat log. Any other
+    // response (Jane chat, examine, look, etc.) that happens to come back
+    // while activeCombat is set must NOT leak into the combat narration.
+    const lastUserCmd = (
+      messagesToSend[messagesToSend.length - 1]?.content ?? ""
+    ).trim().toUpperCase();
+    const isCombatCmd =
+      lastUserCmd === "FLEE" ||
+      lastUserCmd.startsWith("STRIKE ") ||
+      lastUserCmd.startsWith("ATTACK ") ||
+      lastUserCmd === "ATTACK" ||
+      lastUserCmd.startsWith("CAST ");
+
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -263,12 +289,66 @@ export default function Home() {
       setConversationNpcId(ws.conversationNpcId ?? null);
       const nowInCombat = ws.player?.activeCombat != null;
       setInCombat(nowInCombat);
+
+      // ── Combat narration (isolated from chat messages) ──
+      // The combat box reads ONLY this state. Nothing else writes to it.
+      // Reset whenever a new fight starts (different enemy id) or when
+      // combat ends. Only push the response when the user's command was
+      // an explicit combat action.
+      const newEnemyId = ws.player?.activeCombat?.enemyNpcId ?? null;
       if (nowInCombat) {
-        const clean = data.response.replace(/__COMBAT_START__|__COMBAT_END__/g, "").trim();
-        if (clean) setCombatLog(prev => [...prev, clean].slice(-20));
+        if (newEnemyId !== prevEnemyIdRef.current) {
+          // Fresh fight (or restored from save) — start with a clean log.
+          setCombatBoxLog([]);
+        }
+        if (isCombatCmd) {
+          // Strip combat tokens + situation blocks (exits, room items, NPC
+          // lists) that may have survived the server-side gate. This is the
+          // nuclear fallback — even if appendSituation fails to suppress,
+          // the client-side strip prevents room text from ever reaching the
+          // combat narration log.
+          const raw = data.response
+            .replace(/__COMBAT_START__|__COMBAT_END__/g, "")
+            .trim();
+          // Strip anything after a dashed-box situation header (Exits: / ● / 👁)
+          const situationIdx = raw.search(/\n\s*(Exits|●|👁)/);
+          const clean = situationIdx > 0 ? raw.slice(0, situationIdx).trim() : raw;
+          if (clean) setCombatBoxLog(prev => [...prev, clean].slice(-20));
+        }
       } else {
-        setCombatLog([]);
+        // Combat just ended. Check if this was a victory (response contains
+        // __COMBAT_END__ and NO death/rebirth markers) to show the loot screen.
+        if (prevEnemyIdRef.current && data.response.includes("__COMBAT_END__") && !data.response.includes("lost") && isCombatCmd) {
+          const defeatedNpcId = prevEnemyIdRef.current;
+          const npc = NPCS[defeatedNpcId];
+          if (npc && !npc.isTrainingDummy) {
+            // Generate loot from the defeated NPC
+            const goldDrop = Math.max(1, Math.floor(npc.stats.hp * 0.5 + Math.random() * 10));
+            const lootItems: LootEntry[] = [];
+            // NPC "weapon" is abstract, but if the NPC has a merchant inventory
+            // we could use that; for now drop a token item based on the NPC.
+            // Always drop some gold + any items in the NPC's description that
+            // are carryable (weapons are abstracted for NPCs so we skip those).
+            if (npc.merchant?.inventory) {
+              // Merchant NPCs drop 1-2 random items from their stock
+              const pool = npc.merchant.inventory
+                .map((mid: string) => ITEMS[mid])
+                .filter((it): it is NonNullable<typeof it> => it != null && it.isCarryable);
+              const count = Math.min(pool.length, 1 + Math.floor(Math.random() * 2));
+              const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+              shuffled.forEach(it => lootItems.push({ item: it, quantity: 1 }));
+            }
+            setLootScreen({
+              enemyName: npc.name,
+              gold: goldDrop,
+              items: lootItems,
+            });
+          }
+        }
+        setCombatBoxLog([]);
       }
+      prevEnemyIdRef.current = newEnemyId;
+
       setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
       return;
     }
@@ -319,17 +399,29 @@ export default function Home() {
             const nowInCombat = newState.player?.activeCombat != null;
             setInCombat(nowInCombat);
 
-            // Update combat log with the visible text (strip tokens)
-            const cleanText = visibleText
-              .replace(/__COMBAT_START__/g, "")
-              .replace(/__COMBAT_END__/g, "")
-              .trim();
-            if (nowInCombat && cleanText) {
-              setCombatLog(prev => [...prev, cleanText].slice(-20));
+            // Combat narration is fully isolated — see the JSON branch above
+            // for the full rationale. Same rules apply on the streaming path.
+            const newEnemyId = newState.player?.activeCombat?.enemyNpcId ?? null;
+            if (nowInCombat) {
+              if (newEnemyId !== prevEnemyIdRef.current) {
+                setCombatBoxLog([]);
+              }
+              if (isCombatCmd) {
+                const rawText = visibleText
+                  .replace(/__COMBAT_START__/g, "")
+                  .replace(/__COMBAT_END__/g, "")
+                  .trim();
+                // Strip any situation block that leaked through
+                const sitIdx = rawText.search(/\n\s*(Exits|●|👁)/);
+                const cleanText = sitIdx > 0 ? rawText.slice(0, sitIdx).trim() : rawText;
+                if (cleanText) {
+                  setCombatBoxLog(prev => [...prev, cleanText].slice(-20));
+                }
+              }
+            } else {
+              setCombatBoxLog([]);
             }
-            if (!nowInCombat) {
-              setCombatLog([]);
-            }
+            prevEnemyIdRef.current = newEnemyId;
           }
         } catch { /* keep existing */ }
         break;
@@ -790,6 +882,37 @@ export default function Home() {
       {/* NPC conversation sprite */}
       {!inCombat && <NPCSprite npcId={conversationNpcId} />}
 
+      {/* Loot screen (post-combat) */}
+      {lootScreen && (
+        <LootScreen
+          enemyName={lootScreen.enemyName}
+          gold={lootScreen.gold}
+          items={lootScreen.items}
+          onTake={(itemIds, takeGold) => {
+            // Add items to player inventory + gold via engine commands
+            if (takeGold && lootScreen.gold > 0) {
+              // Direct state manipulation would be cleaner but routing through
+              // sendMessage keeps the engine authoritative. For now, just
+              // add to local state and let next save persist it.
+              // TODO: wire through a proper LOOT engine command
+            }
+            itemIds.forEach(id => {
+              void sendMessage(`TAKE ${ITEMS[id]?.name?.toUpperCase() ?? id}`);
+            });
+            if (takeGold && lootScreen.gold > 0) {
+              // Gold from loot: modify worldState directly since there's no
+              // TAKE GOLD command. The next save will persist.
+              setWorldState(prev => prev ? {
+                ...prev,
+                player: { ...prev.player, gold: prev.player.gold + lootScreen.gold },
+              } : prev);
+            }
+            setLootScreen(null);
+          }}
+          onLeave={() => setLootScreen(null)}
+        />
+      )}
+
       {/* Item detail popup (alchemical book page) */}
       <ItemDetailPopup item={itemPopupId ? ITEMS[itemPopupId] ?? null : null} onClose={() => setItemPopupId(null)} />
 
@@ -830,12 +953,24 @@ export default function Home() {
           session={player.activeCombat}
           playerHp={player.hp}
           playerMaxHp={player.maxHp}
-          combatLog={combatLog}
+          playerMana={player.currentMana ?? 0}
+          playerMaxMana={player.maxMana ?? 0}
+          playerState={player}
+          combatLog={combatBoxLog}
           loading={loading || isTyping}
           onCommand={sendCombatCommand}
+          onIconClick={(item, context, rect) => {
+            setActionMenu({ item, context, rect });
+          }}
+          // Render 2 extra Dufus-styled sprites next to the main enemy so we
+          // can visualize the 3-enemy layout. Only applies when fighting the
+          // training dummy — real fights stay 1v1 for now.
+          enemyLayoutPreviewCount={
+            player.activeCombat.enemyNpcId === "training_dummy" ? 2 : 0
+          }
         />
       )}
-      {player && (
+      {player && !inCombat && (
         <div style={{
           width: sidebarOpen ? 256 : 48,
           minWidth: sidebarOpen ? 256 : 48,
@@ -1082,6 +1217,7 @@ export default function Home() {
           fullScreen
         />
       </div>
+      {!inCombat && (
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", position: "relative", zIndex: 2, order: 0 }}>
         <span style={{ color: "#b45309", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           Living Eamon
@@ -1096,7 +1232,9 @@ export default function Home() {
         )}
         {player?.isWanted && <span style={{ color: "#ff4444", fontSize: 11, fontWeight: 700, marginLeft: "auto" }}>⚠ WANTED</span>}
       </div>
+      )}
 
+        {!inCombat && (
         <div ref={chatOuterRef} style={{ flex: chatExpanded ? "1 1 0" : "0 0 16vh", height: chatExpanded ? undefined : "16vh", marginTop: chatExpanded ? 0 : "auto", overflow: "hidden", padding: chatExpanded ? "20px 24px" : "4px 24px 0", backgroundColor: "transparent", position: "relative", zIndex: 2, transition: "flex-basis 0.3s ease", order: 1 }}>
           <div ref={scrollContainerRef} style={{ maxWidth: 620, margin: "0 auto", height: "100%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", borderRadius: 16, overflowY: "scroll", scrollbarWidth: "none", display: "flex", flexDirection: "column", padding: chatExpanded ? "14px 20px" : "6px 20px 0", boxSizing: "border-box" }}>
             {messages.map((msg, i) => {
@@ -1131,7 +1269,9 @@ export default function Home() {
             <div ref={bottomRef} />
           </div>
         </div>
+        )}
 
+        {!inCombat && (
         <div style={{ borderTop: "none", padding: "4px 16px 12px", flexShrink: 0, backgroundColor: "transparent", position: "relative", zIndex: 2, order: 2 }}>
           <div style={{ maxWidth: 620, margin: "0 auto 6px", display: "flex", justifyContent: "flex-end" }}>
             <button
@@ -1205,6 +1345,7 @@ export default function Home() {
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

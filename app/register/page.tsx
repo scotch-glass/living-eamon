@@ -276,17 +276,6 @@ function RegisterContent() {
             </a>
           </div>
 
-          <p
-            style={{
-              color: "#1f2937",
-              fontSize: 11,
-              textAlign: "center",
-              marginTop: 32,
-              fontFamily: "Georgia, serif",
-            }}
-          >
-            she is watching
-          </p>
         </div>
       </div>
     </div>

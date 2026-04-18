@@ -159,16 +159,27 @@ function LoginContent() {
                 lineHeight: 1.6,
               }}
             >
-              One hero. A thousand realms. She is watching.
+              One hero. A thousand realms. Infinite death.
             </p>
 
             <div style={{ marginBottom: 32 }}>
+              <p
+                style={{
+                  color: "#e8d4a0",
+                  fontSize: 14,
+                  lineHeight: 1.8,
+                  marginBottom: 24,
+                  fontStyle: "italic",
+                }}
+              >
+                Hack your way through dungeons dark with blood on your blade and death at your heels. Survive a hack-and-slash adventure and stumble back to town covered in gore, your armor dented, your sanity questioned. Face evil sorcerers who traffic in Thurian demon magic. Seduce treacherous harlots and trust damsels at your peril. Learn forbidden occult magics and risk the wrath of the Order. Outfit yourself in realistic armor — plate is heavy, expensive, and only for mounted knights who can afford the custom fit.
+              </p>
               {[
-                "A persistent hero who carries every scar, every skill, every secret",
-                "An AI narrator who remembers what you've done and who you've wronged",
-                "Two magic systems — one legal, one that gets you killed",
+                "One hero carries every scar, every kill, every curse across a thousand adventures",
+                "Deadly encounters where a single mistake means death. Permanently.",
+                "Two magic systems — legal Guild magic and forbidden Occult magic",
+                "Realistic armor and weapon physics. Plate protects. Cloth doesn't.",
                 "A world that rebuilds itself around your choices, permanently",
-                "Sword & sorcery in the tradition of Robert E. Howard",
               ].map((feature, idx) => (
                 <div
                   key={idx}
@@ -500,9 +511,9 @@ function LoginContent() {
         }}
       >
         {[
-          { icon: "⚔", title: "YOUR LEGEND PERSISTS", desc: "One character carries across a thousand adventures. Every scar, every skill, every choice you make follows you forever." },
-          { icon: "🌍", title: "A WORLD THAT BREATHES", desc: "Jane, an ancient intelligence, watches every decision. She remembers what you've done, who you've wronged, and builds the world around you." },
-          { icon: "✦", title: "THE ART IS FORBIDDEN", desc: "Two magic systems: one legal and safe, one forbidden and powerful. Using the Art risks attracting the Order. Choose wisely." },
+          { icon: "⚔", title: "GORE & CONSEQUENCE", desc: "Full detail blood and viscera. Hack and slash your way through adventures. Survive, and you stagger back covered in your enemies' blood. Die, and you're done." },
+          { icon: "🌍", title: "A WORLD THAT REMEMBERS", desc: "NPCs know what you've done. Tavern keepers recognize killers. Temples remember the wicked. The Order hunts those who traffic in forbidden magic." },
+          { icon: "✦", title: "FORBIDDEN OCCULT MAGIC", desc: "Two magic systems: legal Guild magic taught in temples, and forbidden Occult magic written in dust and blood. The Order will kill you for knowing too much." },
         ].map((pillar, idx) => (
           <div
             key={idx}

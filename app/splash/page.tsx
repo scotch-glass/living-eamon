@@ -66,44 +66,34 @@ export default function SplashPage() {
           style={{
             position: "relative",
             zIndex: 1,
-            maxWidth: 1200,
             width: "100%",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            display: "flex",
+            flexDirection: "column",
             gap: 60,
             alignItems: "center",
           }}
         >
-          {/* LEFT: World Promises */}
-          <div style={{ paddingRight: 20 }}>
-            <div style={{ display: "flex", gap: 40, alignItems: "center", marginBottom: 16 }}>
-              <img
-                src="/dragon-hero.png"
-                alt="Living Eamon Dragon"
-                style={{
-                  width: 280,
-                  height: 280,
-                  objectFit: "contain",
-                  flexShrink: 0,
-                }}
-              />
-              <img
-                src="/eamon-title.png"
-                alt="Living Eamon"
-                style={{
-                  width: 320,
-                  height: 320,
-                  objectFit: "contain",
-                  flexShrink: 0,
-                  filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.6))",
-                }}
-              />
-            </div>
+          {/* Tavern Sign Hero Image */}
+          <img
+            src="/eamon-tavern-sign.jpg"
+            alt="Living Eamon Tavern Sign"
+            style={{
+              width: "100%",
+              maxWidth: 1000,
+              height: "auto",
+              objectFit: "contain",
+              borderRadius: 4,
+              border: "2px solid rgba(146, 64, 14, 0.5)",
+            }}
+          />
 
-            <p
+          {/* LEFT: World Promises */}
+          <div style={{ width: "100%", textAlign: "center" }}>
+
+            <h2
               style={{
                 fontFamily: "Cedarville Cursive, cursive",
-                fontSize: "1.5rem",
+                fontSize: "1.8rem",
                 color: "#fbbf24",
                 fontStyle: "italic",
                 margin: "0 0 32px 0",
@@ -111,9 +101,9 @@ export default function SplashPage() {
               }}
             >
               One hero. A thousand realms. Infinite death.
-            </p>
+            </h2>
 
-            <div style={{ marginBottom: 32 }}>
+            <div style={{ marginBottom: 48, maxWidth: 800, margin: "0 auto 48px" }}>
               <p
                 style={{
                   color: "#e8d4a0",
@@ -125,29 +115,30 @@ export default function SplashPage() {
               >
                 Hack your way through dungeons dark with blood on your blade and death at your heels. Survive a hack-and-slash adventure and stumble back to town covered in gore, your armor dented, your sanity questioned. Face evil sorcerers who traffic in Thurian demon magic. Seduce treacherous harlots and trust damsels at your peril. Learn forbidden occult magics and risk the wrath of the Order. Outfit yourself in realistic armor — plate is heavy, expensive, and only for mounted knights who can afford the custom fit.
               </p>
-              {[
-                "One hero carries every scar, every kill, every curse across a thousand adventures",
-                "Deadly encounters where a single mistake means death. Permanently.",
-                "Two magic systems — legal Guild magic and forbidden Occult magic",
-                "Realistic armor and weapon physics. Plate protects. Cloth doesn't.",
-                "A world that rebuilds itself around your choices, permanently",
-              ].map((feature, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    marginBottom: 16,
-                    color: "#e8d4a0",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    fontFamily: "Georgia, serif",
-                  }}
-                >
-                  <span style={{ color: "#fbbf24", flexShrink: 0 }}>◆</span>
-                  <span>{feature}</span>
-                </div>
-              ))}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 900, margin: "0 auto" }}>
+                {[
+                  "One hero carries every scar, every kill, every curse across a thousand adventures",
+                  "Deadly encounters where a single mistake means death. Permanently.",
+                  "Two magic systems — legal Guild magic and forbidden Occult magic",
+                  "Realistic armor and weapon physics. Plate protects. Cloth doesn't.",
+                  "A world that rebuilds itself around your choices, permanently",
+                ].map((feature, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      color: "#e8d4a0",
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                      fontFamily: "Georgia, serif",
+                    }}
+                  >
+                    <span style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }}>◆</span>
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <p
@@ -159,7 +150,9 @@ export default function SplashPage() {
                 lineHeight: 1.8,
                 borderTop: "1px solid rgba(146, 64, 14, 0.3)",
                 paddingTop: 20,
-                marginTop: 32,
+                marginTop: 48,
+                maxWidth: 700,
+                margin: "48px auto 0",
               }}
             >
               "In the shadows, serpent-men plotted. Valusia, mightiest of kingdoms, was crumbling from within. Only Kull stood between the throne and chaos — if he lived long enough to see it."
@@ -168,17 +161,17 @@ export default function SplashPage() {
                 — Robert E. Howard, The Shadow Kingdom (public domain)
               </span>
             </p>
-          </div>
 
-          {/* RIGHT: Call to Action */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 24,
-              textAlign: "center",
-            }}
-          >
+            {/* Call to Action */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 24,
+                textAlign: "center",
+                marginTop: 48,
+              }}
+            >
             <a
               href="/register"
               style={{
@@ -220,6 +213,7 @@ export default function SplashPage() {
             >
               Already a tester? Login here
             </a>
+            </div>
           </div>
         </div>
       </div>

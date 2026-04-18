@@ -4,15 +4,16 @@ REHYDRATION INSTRUCTIONS FOR EVERY NEW SESSION
 Before doing any work, read these files in order:
 
 1. This file (CLAUDE_CONTEXT.md) — project overview, architecture, current status
-2. GAME_DESIGN.md — full game design document. **§10 (Hyborian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. Read it before designing anything new in the game world.
-3. **`lore/hyborian-pd/PD_RESEARCH.md`** — what Howard material is currently public domain (small corpus: the *Hyborian Age* essay + 3 Thurian-Age short stories). Most Conan content is NOT yet PD until 2028–2032. **Verify every named element here before using it.**
-4. **`lore/hyborian-pd/MODULE_PLAN.md`** — the methodology for converting PD stories into Living Eamon adventure modules. Includes the standing rule: *every module = one PD story + Living Eamon systems + Howard's voice + PD-verified naming.*
-5. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
+2. **`Public_Domain_Rules.md`** — CRITICAL: Legal framework & Safe Harbor strategy for using Howard's public domain works. Establishes branding rules, trademark restrictions, timeline (Phase 1: Thurian/Aurelion pre-2028; Phase 2: Hyborian modules post-2028), and content sourcing rules. Read this before any design decision involving IP.
+3. GAME_DESIGN.md — full game design document. **§10 (Hyborian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. Read it before designing anything new in the game world.
+4. **`lore/hyborian-pd/PD_RESEARCH.md`** — what Howard material is currently public domain (small corpus: the *Hyborian Age* essay + 3 Thurian-Age short stories). Most Conan content is NOT yet PD until 2028–2032. **Verify every named element here before using it.**
+5. **`lore/hyborian-pd/MODULE_PLAN.md`** — the methodology for converting PD stories into Living Eamon adventure modules. Includes the standing rule: *every module = one PD story + Living Eamon systems + Howard's voice + PD-verified naming.*
+6. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
    - User profile (Scotch — non-developer founder)
    - Feedback rules (image cache safety, CLAUDE_CONTEXT.md updates, etc.)
    - Project decisions (Aquilonia styling, Hyborian Age + PD limits, etc.)
-6. §5.4 below — HWRR combat system (all 6 phases complete)
-7. §5.10–§5.16 below — recent additions: mana system + static merchant purchases + universal SELL, HWRR bleed/poison Phase A, charity-barrel Honor system, sidebar tabs + per-item painted icons, prescripted-text instant fade-in + item action menu, apply-poison-to-weapon, expertise→maxMana rename
+7. §5.4 below — HWRR combat system (all 6 phases complete)
+8. §5.10–§5.16 below — recent additions: mana system + static merchant purchases + universal SELL, HWRR bleed/poison Phase A, charity-barrel Honor system, sidebar tabs + per-item painted icons, prescripted-text instant fade-in + item action menu, apply-poison-to-weapon, expertise→maxMana rename
 
 Check the todo list for in-progress tasks from the previous session.
 

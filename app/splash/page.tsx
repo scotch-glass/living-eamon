@@ -95,6 +95,7 @@ export default function SplashPage() {
                   height: 320,
                   objectFit: "contain",
                   flexShrink: 0,
+                  filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.6))",
                 }}
               />
             </div>

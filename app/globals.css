@@ -43,3 +43,21 @@ body {
 .le-msg-fadein {
   animation: le-msg-fadein 0.3s ease-in forwards;
 }
+
+/* Landing page: slow ember glow pulse */
+@keyframes le-ember-pulse {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 40px rgba(120, 53, 15, 0.4)); }
+  50% { filter: brightness(1.1) drop-shadow(0 0 60px rgba(251, 191, 36, 0.3)); }
+}
+.le-ember-pulse {
+  animation: le-ember-pulse 6s ease-in-out infinite;
+}
+
+/* Decorative floating runes */
+@keyframes le-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.le-float {
+  animation: le-float 6s ease-in-out infinite;
+}

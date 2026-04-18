@@ -26,7 +26,7 @@ export default function PublicNav({ currentPage }: PublicNavProps) {
     >
       {/* Logo */}
       <a
-        href="/login"
+        href="/splash"
         style={{
           display: "flex",
           alignItems: "center",

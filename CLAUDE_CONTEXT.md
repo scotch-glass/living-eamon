@@ -1871,6 +1871,26 @@ The public-facing pages attract players and manage pre-login flows. All use dark
   3. Results: PNG with transparent background for logo/title, JPG for full-screen backgrounds
 - **Opacity on page:** full-screen backgrounds use 35% or native opacity via CSS for readability without overlay
 
+### Splash Image Restoration (April 18, 2026)
+
+**Issue:** Logo, eamon-title, and dragon-hero images were missing transparent backgrounds and not displaying properly on the splash page.
+
+**Root cause diagnosis:** Former implementation generated images with white backgrounds but never applied rembg to remove them. Additionally, there was risk of applying rembg to full-scene images (which are backgrounds themselves), which would corrupt them by attempting to segment out the background.
+
+**Fix applied:**
+- Regenerated `logo.png` (1024×1024 RGBA) — heraldic crest emblem
+- Regenerated `eamon-title.png` (1024×1024 RGBA) — stylized "Living Eamon" text
+- Regenerated `dragon-hero.png` (896×1280 RGBA) — fearsome dragon figure
+- All three: Grok Imagine (pure white background prompt) → rembg removal → transparent PNG
+- Results now display correctly on `/splash` via PublicNav and hero section
+
+**Image pipeline rules (enforced from now on):**
+1. **Sprites/logos/character images:** Generate with pure white background → apply rembg → transparent PNG
+2. **Full-scene/background images:** Generate directly → upload as JPEG (never apply rembg)
+3. **Verification:** All PNG sprites should be RGBA (8-bit/color RGBA, non-interlaced)
+
+**Prevention:** Added feedback memory `feedback_image_generation_patterns.md` to catch context confusion (rembg applied to wrong image types).
+
 ### Auth Actions (app/auth/actions.ts)
 
 - **registerAction:** email + password only (heroName field removed April 18, 2026)

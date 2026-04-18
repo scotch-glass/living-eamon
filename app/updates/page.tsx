@@ -1,10 +1,10 @@
 "use client";
 
 import PublicNav from "../../components/PublicNav";
-import { PROGRESS_CATEGORIES, calculateTotalProgress } from "../../lib/alphaProgress";
+import { PROGRESS_CATEGORIES, countSystems } from "../../lib/alphaProgress";
 
 export default function UpdatesPage() {
-  const { done, total, percent } = calculateTotalProgress();
+  const { done, active, planned } = countSystems();
 
   return (
     <div
@@ -54,45 +54,63 @@ export default function UpdatesPage() {
           </p>
         </div>
 
-        {/* Progress bar */}
+        {/* Status Summary */}
         <div
           style={{
-            marginBottom: 60,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: 16,
             maxWidth: 600,
             margin: "0 auto 60px",
           }}
         >
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 12,
+              background: "rgba(34, 197, 94, 0.1)",
+              border: "1px solid rgba(34, 197, 94, 0.3)",
+              borderRadius: 8,
+              padding: 16,
+              textAlign: "center",
             }}
           >
-            <span style={{ color: "#e8d4a0", fontSize: 13, fontFamily: "Georgia, serif" }}>
-              Overall Progress
-            </span>
-            <span style={{ color: "#fbbf24", fontSize: 13, fontFamily: "Georgia, serif", fontWeight: 700 }}>
-              {percent}% ({done}/{total})
-            </span>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#22c55e", marginBottom: 4 }}>
+              {done}
+            </div>
+            <div style={{ fontSize: 12, color: "#86efac", fontFamily: "Georgia, serif" }}>
+              Systems Complete
+            </div>
           </div>
           <div
             style={{
-              height: 8,
-              background: "rgba(146, 64, 14, 0.2)",
-              borderRadius: 4,
-              overflow: "hidden",
-              border: "1px solid rgba(146, 64, 14, 0.3)",
+              background: "rgba(251, 191, 36, 0.1)",
+              border: "1px solid rgba(251, 191, 36, 0.3)",
+              borderRadius: 8,
+              padding: 16,
+              textAlign: "center",
             }}
           >
-            <div
-              style={{
-                height: "100%",
-                background: "linear-gradient(90deg, #fbbf24, #92400e)",
-                width: `${percent}%`,
-                transition: "width 0.3s ease",
-              }}
-            />
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#fbbf24", marginBottom: 4 }}>
+              {active}
+            </div>
+            <div style={{ fontSize: 12, color: "#fcd34d", fontFamily: "Georgia, serif" }}>
+              In Progress
+            </div>
+          </div>
+          <div
+            style={{
+              background: "rgba(107, 114, 128, 0.1)",
+              border: "1px solid rgba(107, 114, 128, 0.3)",
+              borderRadius: 8,
+              padding: 16,
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#9ca3af", marginBottom: 4 }}>
+              {planned}
+            </div>
+            <div style={{ fontSize: 12, color: "#d1d5db", fontFamily: "Georgia, serif" }}>
+              Planned
+            </div>
           </div>
         </div>
 
@@ -117,7 +135,7 @@ export default function UpdatesPage() {
               letterSpacing: "0.05em",
             }}
           >
-            Development Roadmap
+            How This Roadmap Works
           </h2>
           <div
             style={{
@@ -128,13 +146,16 @@ export default function UpdatesPage() {
             }}
           >
             <p style={{ margin: "0 0 12px 0" }}>
-              <strong style={{ color: "#c5ad75" }}>MVP (Current)</strong> — A theoretically playable game with core systems. One hero, one city, combat, magic, banking, consequences. Enough to experience the world's essence, but not polished.
+              This is a <strong style={{ color: "#c5ad75" }}>living roadmap</strong> that grows as the game is built. New systems are discovered and planned as we work. The list below shows what we know we need; many more features will emerge during development.
             </p>
             <p style={{ margin: "0 0 12px 0" }}>
-              <strong style={{ color: "#c5ad75" }}>Alpha (2028)</strong> — Balance & bug fixes. Adventure modules, expanded world, proper difficulty tuning. Early testers help us discover what breaks and what feels wrong.
+              <strong style={{ color: "#c5ad75" }}>MVP (Current)</strong> — A theoretically playable game: one hero, one city, combat, magic, banking, consequences. Rough around the edges but functional.
+            </p>
+            <p style={{ margin: "0 0 12px 0" }}>
+              <strong style={{ color: "#c5ad75" }}>Alpha (2028)</strong> — Adventure modules (3 PD stories adapted), expanded world map, balance tuning. Testers help us find what breaks and what doesn't feel right.
             </p>
             <p style={{ margin: "0 0 0 0" }}>
-              <strong style={{ color: "#c5ad75" }}>Beta (2029+)</strong> — Polish & shine. UI refinement, performance optimization, quality-of-life improvements. The game works; now make it sing.
+              <strong style={{ color: "#c5ad75" }}>Beta (2029+)</strong> — Polish, UI refinement, performance. The game works; now make it shine.
             </p>
           </div>
         </div>

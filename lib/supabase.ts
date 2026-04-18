@@ -74,6 +74,9 @@ export async function savePlayer(player: Record<string, unknown>) {
     received_sam_starter_outfit: Boolean(player.receivedSamStarterOutfit),
     received_hokas_unarmed_gift: Boolean(player.receivedHokasUnarmedGift),
     weapon_skills: player.weaponSkills ?? {},
+    known_spells: player.knownSpells ?? [],
+    known_deities: player.knownDeities ?? [],
+    gore_splatters: player.goreSplatters ?? [],
     last_seen: new Date().toISOString(),
   };
 

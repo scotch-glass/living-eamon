@@ -58,12 +58,14 @@ export interface ActiveStatusEffect {
   bleedPerTurn?: number;    // For bleed/poison-type effects (HP per tick)
 }
 
-/** Which injuries can occur per zone. Bleed and poison are universal. */
+/** Which injuries can occur per zone. Poison is NOT included — it only
+ *  comes from poisoned weapons (weaponPoisonCharges) or NPC poisonOnHit,
+ *  never randomly from a clean blade. */
 export const ZONE_INJURY_TABLE: Record<BodyZone, StatusEffectType[]> = {
-  head: ["concussion", "damaged_eye", "bleed", "poison"],
-  neck: ["severed_artery", "crushed_windpipe", "bleed", "poison"],
-  torso: ["pierced_lung", "cracked_ribs", "bleed", "poison"],
-  limbs: ["broken_arm", "broken_leg", "bleed", "poison"],
+  head: ["concussion", "damaged_eye", "bleed"],
+  neck: ["severed_artery", "crushed_windpipe", "bleed"],
+  torso: ["pierced_lung", "cracked_ribs", "bleed"],
+  limbs: ["broken_arm", "broken_leg", "bleed"],
 };
 
 // ── Per-Zone Armor ──────────────────────────────────────────

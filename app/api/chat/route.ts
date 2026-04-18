@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { pregenerateSprites } from "../../../lib/spritePregenerate";
+import type { BloodSplatterState } from "../../../lib/gameState";
 
 // Trigger sprite pre-generation on first module load (server startup)
 pregenerateSprites();
@@ -267,6 +268,9 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     remembersOwnName: state.player.remembersOwnName ?? false,
     metZim: state.player.metZim ?? false,
     weaponSkills: state.player.weaponSkills,
+    knownSpells: state.player.knownSpells ?? [],
+    knownDeities: state.player.knownDeities ?? [],
+    goreSplatters: state.player.goreSplatters ?? [],
   };
 }
 
@@ -351,6 +355,8 @@ export async function POST(request: NextRequest) {
               (savedPlayer as { known_spells?: string[] }).known_spells ?? [],
             knownDeities:
               (savedPlayer as { known_deities?: string[] }).known_deities ?? [],
+            goreSplatters:
+              (savedPlayer as Record<string, unknown>).gore_splatters as BloodSplatterState[] ?? [],
             receivedSamStarterOutfit:
               (savedPlayer as { received_sam_starter_outfit?: boolean })
                 .received_sam_starter_outfit ?? false,
@@ -369,9 +375,13 @@ export async function POST(request: NextRequest) {
               savedPlayer.armor ?? null,
             limbArmor:
               (savedPlayer as { limb_armor?: string | null }).limb_armor ?? null,
-            activeCombat:
-              (savedPlayer as { active_combat?: unknown }).active_combat as
-                import("../../../lib/combatTypes").ActiveCombatSession | null ?? null,
+            activeCombat: (() => {
+              const ac = (savedPlayer as { active_combat?: Record<string, unknown> }).active_combat;
+              // Discard finished combat sessions that were persisted — they
+              // should have been cleared when the loot screen was dismissed.
+              if (ac?.finished) return null;
+              return (ac as unknown as import("../../../lib/combatTypes").ActiveCombatSession | null) ?? null;
+            })(),
             activeEffects:
               (savedPlayer as { active_effects?: unknown }).active_effects as
                 import("../../../lib/combatTypes").ActiveStatusEffect[] ?? [],

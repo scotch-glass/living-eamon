@@ -7,6 +7,7 @@ import { ITEMS, NPCS } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
 import CombatScreen from "../components/CombatScreen";
+import { fromSplatterStates, toSplatterStates, type BloodSplatter } from "../lib/bloodSplatterData";
 import LootScreen, { type LootEntry } from "../components/LootScreen";
 import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
 import { logoutAction } from "./auth/actions";
@@ -287,6 +288,11 @@ export default function Home() {
       setWorldState(ws);
       if (ws.playerId) setPlayerId(ws.playerId);
       setConversationNpcId(ws.conversationNpcId ?? null);
+      // If a finished combat session was persisted to DB, clear it now
+      // rather than showing a dead combat screen with disabled buttons.
+      if (ws.player?.activeCombat?.finished) {
+        ws.player.activeCombat = null;
+      }
       const nowInCombat = ws.player?.activeCombat != null;
       setInCombat(nowInCombat);
 
@@ -308,43 +314,57 @@ export default function Home() {
           // the client-side strip prevents room text from ever reaching the
           // combat narration log.
           const raw = data.response
-            .replace(/__COMBAT_START__|__COMBAT_END__/g, "")
+            .replace(/__COMBAT_START__|__COMBAT_END__|__COMBAT_VICTORY__/g, "")
             .trim();
           // Strip anything after a dashed-box situation header (Exits: / ● / 👁)
           const situationIdx = raw.search(/\n\s*(Exits|●|👁)/);
           const clean = situationIdx > 0 ? raw.slice(0, situationIdx).trim() : raw;
           if (clean) setCombatBoxLog(prev => [...prev, clean].slice(-20));
         }
-      } else {
-        // Combat just ended. Check if this was a victory (response contains
-        // __COMBAT_END__ and NO death/rebirth markers) to show the loot screen.
-        if (prevEnemyIdRef.current && data.response.includes("__COMBAT_END__") && !data.response.includes("lost") && isCombatCmd) {
-          const defeatedNpcId = prevEnemyIdRef.current;
-          const npc = NPCS[defeatedNpcId];
-          if (npc && !npc.isTrainingDummy) {
-            // Generate loot from the defeated NPC
-            const goldDrop = Math.max(1, Math.floor(npc.stats.hp * 0.5 + Math.random() * 10));
-            const lootItems: LootEntry[] = [];
-            // NPC "weapon" is abstract, but if the NPC has a merchant inventory
-            // we could use that; for now drop a token item based on the NPC.
-            // Always drop some gold + any items in the NPC's description that
-            // are carryable (weapons are abstracted for NPCs so we skip those).
-            if (npc.merchant?.inventory) {
-              // Merchant NPCs drop 1-2 random items from their stock
-              const pool = npc.merchant.inventory
-                .map((mid: string) => ITEMS[mid])
-                .filter((it): it is NonNullable<typeof it> => it != null && it.isCarryable);
-              const count = Math.min(pool.length, 1 + Math.floor(Math.random() * 2));
-              const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
-              shuffled.forEach(it => lootItems.push({ item: it, quantity: 1 }));
+
+        // Victory: combat screen stays up (activeCombat still set with
+        // finished=true). Build loot and show it overlaid on combat.
+        if (data.response.includes("__COMBAT_VICTORY__") && isCombatCmd) {
+          const defeatedNpcId = ws.player?.activeCombat?.enemyNpcId ?? prevEnemyIdRef.current;
+          if (defeatedNpcId) {
+            const npc = NPCS[defeatedNpcId];
+            if (npc) {
+              const lootItems: LootEntry[] = [];
+              if (npc.isTrainingDummy) {
+                // Dufus drops 1-4 wood shavings
+                const shavingCount = 1 + Math.floor(Math.random() * 4);
+                const shavingItem = ITEMS["wood_shavings"];
+                if (shavingItem) lootItems.push({ item: shavingItem, quantity: shavingCount });
+              } else {
+                // Real enemies: gold + merchant inventory drops
+                const goldDrop = Math.max(1, Math.floor((npc.stats?.hp ?? 20) * 0.5 + Math.random() * 10));
+                if (npc.merchant?.inventory) {
+                  const pool = npc.merchant.inventory
+                    .map((mid: string) => ITEMS[mid])
+                    .filter((it): it is NonNullable<typeof it> => it != null && it.isCarryable);
+                  const count = Math.min(pool.length, 1 + Math.floor(Math.random() * 2));
+                  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+                  shuffled.forEach(it => lootItems.push({ item: it, quantity: 1 }));
+                }
+                setLootScreen({
+                  enemyName: npc.name,
+                  gold: goldDrop,
+                  items: lootItems,
+                });
+              }
+              // Dufus: show loot with 0 gold
+              if (npc.isTrainingDummy) {
+                setLootScreen({
+                  enemyName: npc.name,
+                  gold: 0,
+                  items: lootItems,
+                });
+              }
             }
-            setLootScreen({
-              enemyName: npc.name,
-              gold: goldDrop,
-              items: lootItems,
-            });
           }
         }
+      } else {
+        // Combat ended via death or flee (__COMBAT_END__, activeCombat already null)
         setCombatBoxLog([]);
       }
       prevEnemyIdRef.current = newEnemyId;
@@ -408,8 +428,7 @@ export default function Home() {
               }
               if (isCombatCmd) {
                 const rawText = visibleText
-                  .replace(/__COMBAT_START__/g, "")
-                  .replace(/__COMBAT_END__/g, "")
+                  .replace(/__COMBAT_START__|__COMBAT_END__|__COMBAT_VICTORY__/g, "")
                   .trim();
                 // Strip any situation block that leaked through
                 const sitIdx = rawText.search(/\n\s*(Exits|●|👁)/);
@@ -680,8 +699,7 @@ export default function Home() {
 
   const formatMessage = (text: string, isLast: boolean) => {
     const cleanText = text.split("__STATE__")[0]
-      .replace(/__COMBAT_START__/g, "")
-      .replace(/__COMBAT_END__/g, "")
+      .replace(/__COMBAT_START__|__COMBAT_END__|__COMBAT_VICTORY__/g, "")
       .replace(/__NPC__[a-z_]+__/g, "");
     // Note: __ITEM:__ tokens preserved here — the line parser handles them as chips
     const needle = "\n\n" + SITUATION_BLOCK_LINE + "\n";
@@ -889,27 +907,29 @@ export default function Home() {
           gold={lootScreen.gold}
           items={lootScreen.items}
           onTake={(itemIds, takeGold) => {
-            // Add items to player inventory + gold via engine commands
-            if (takeGold && lootScreen.gold > 0) {
-              // Direct state manipulation would be cleaner but routing through
-              // sendMessage keeps the engine authoritative. For now, just
-              // add to local state and let next save persist it.
-              // TODO: wire through a proper LOOT engine command
-            }
+            // Give items to player — does NOT dismiss the loot screen.
+            // Individual Takes remove from the LootScreen's internal list.
+            // Take All calls this with all remaining items then onLeave.
             itemIds.forEach(id => {
               void sendMessage(`TAKE ${ITEMS[id]?.name?.toUpperCase() ?? id}`);
             });
             if (takeGold && lootScreen.gold > 0) {
-              // Gold from loot: modify worldState directly since there's no
-              // TAKE GOLD command. The next save will persist.
               setWorldState(prev => prev ? {
                 ...prev,
                 player: { ...prev.player, gold: prev.player.gold + lootScreen.gold },
               } : prev);
             }
+          }}
+          onLeave={() => {
+            // Dismiss loot screen + end combat + return to room
+            setWorldState(prev => prev ? {
+              ...prev,
+              player: { ...prev.player, activeCombat: null },
+            } : prev);
+            setInCombat(false);
+            setCombatBoxLog([]);
             setLootScreen(null);
           }}
-          onLeave={() => setLootScreen(null)}
         />
       )}
 
@@ -968,6 +988,16 @@ export default function Home() {
           enemyLayoutPreviewCount={
             player.activeCombat.enemyNpcId === "training_dummy" ? 2 : 0
           }
+          heroGoreSplatters={fromSplatterStates(player.goreSplatters ?? [])}
+          onHeroGoreChange={(splatters: BloodSplatter[]) => {
+            setWorldState(prev => prev ? {
+              ...prev,
+              player: {
+                ...prev.player,
+                goreSplatters: toSplatterStates(splatters),
+              },
+            } : prev);
+          }}
         />
       )}
       {player && !inCombat && (

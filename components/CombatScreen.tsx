@@ -8,7 +8,8 @@ import { ITEMS, type Item } from "../lib/gameData";
 import type { ItemContext } from "./ItemActionMenu";
 import { EFFECT_COLORS } from "../lib/effectIconData";
 import EffectMarkerIcon from "./EffectMarkerIcon";
-// PaperDoll wireframe removed — sprites replace it in combat.
+import BloodOverlay from "./BloodOverlay";
+import { generateHitSplatters, generateCritWound, generateAttackerSplatter, getWoundTierFromDamage, type BloodSplatter, type SplatterZone } from "../lib/bloodSplatterData";
 import ItemIcon from "./ItemIcon";
 
 // ── Props ───────────────────────────────────────────────────
@@ -37,6 +38,11 @@ export interface CombatScreenProps {
    * the right of the main enemy (for testing 3-enemy scenes). Defaults to 0.
    */
   enemyLayoutPreviewCount?: number;
+  /** Persistent hero blood splatters that accumulate across fights.
+   * Passed down from page.tsx; updated via onHeroGoreChange. */
+  heroGoreSplatters?: BloodSplatter[];
+  /** Callback when hero gore changes (new splatters from enemy hits). */
+  onHeroGoreChange?: (splatters: BloodSplatter[]) => void;
 }
 
 // ── Zone labels + hints ─────────────────────────────────────
@@ -194,6 +200,8 @@ interface SpellDef {
   effect: string;
   /** Long-form lore for the Lore popup. */
   lore: string;
+  /** "self" = always targets caster, "enemy" = targets an enemy, "none" = fires immediately (no picker) */
+  targeting: "self" | "enemy" | "none";
 }
 
 const COMBAT_SPELLS: SpellDef[] = [
@@ -209,6 +217,7 @@ const COMBAT_SPELLS: SpellDef[] = [
       "A simple binding of the body's own knitting-force. The caster speaks the wound shut " +
       "and the flesh remembers what it was. Restores between 18 and 32 hit points to the " +
       "target. Costs 4 mana. The Thurian field-priests carried it everywhere they went.",
+    targeting: "self",
   },
   {
     name: "BLAST",
@@ -222,6 +231,7 @@ const COMBAT_SPELLS: SpellDef[] = [
       "A short, ugly spear of stormlight from the caster's open hand. Deals 2d8+4 lightning " +
       "damage to a single target on the opposite side of the field. Costs 6 mana. Loud " +
       "enough to draw attention — use it where being seen is acceptable.",
+    targeting: "enemy",
   },
   {
     name: "POWER",
@@ -236,6 +246,7 @@ const COMBAT_SPELLS: SpellDef[] = [
       "if blessed, it may be an extra strike, mana surge, sudden vigor, momentary invisibility, " +
       "a divine vision — but extremely unreliable. Costs 5 mana. Veterans have already " +
       "accepted that the next round may be their last.",
+    targeting: "none",
   },
   {
     name: "SPEED",
@@ -250,6 +261,7 @@ const COMBAT_SPELLS: SpellDef[] = [
       "lighten — +10 effective dexterity for the next 3 rounds. Costs 3 mana. Cheap, brief, " +
       "and good. The Thurian assassins wove it into their breath and called it nothing in " +
       "particular.",
+    targeting: "self",
   },
 ];
 
@@ -404,6 +416,109 @@ function SpellActionMenu({ spell, anchorRect, onCast, onLore, onClose }: SpellAc
           }}
         >
           {action.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Spell target picker — appears after clicking Cast ──
+
+interface SpellTargetMenuProps {
+  spell: SpellDef;
+  anchorRect: { top: number; left: number; width: number; height: number };
+  enemyName: string;
+  onSelect: (cmd: string) => void;
+  onClose: () => void;
+}
+
+function SpellTargetMenu({ spell, anchorRect, enemyName, onSelect, onClose }: SpellTargetMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
+
+  const targets: { label: string; cmd: string }[] =
+    spell.targeting === "enemy"
+      ? [{ label: enemyName, cmd: `CAST ${spell.name}` }]
+      : [{ label: "Self", cmd: `CAST ${spell.name}` }];
+
+  return (
+    <div
+      ref={menuRef}
+      style={{
+        position: "fixed",
+        top: anchorRect.top,
+        left: anchorRect.left + anchorRect.width + 6,
+        zIndex: 200,
+        minWidth: 140,
+        background: "linear-gradient(180deg, #1a120a 0%, #0d0805 100%)",
+        border: "1px solid #4a2e15",
+        borderRadius: 6,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5)",
+        padding: "4px 0",
+        fontFamily: "Georgia, serif",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 12px 4px",
+          fontSize: 11,
+          color: spell.color,
+          fontWeight: 700,
+          borderBottom: "1px solid #2a1d0e",
+          marginBottom: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          textShadow: `0 0 4px ${spell.color}80`,
+        }}
+      >
+        <span>{spell.glyph}</span>
+        <span>{spell.label}</span>
+        <span style={{ marginLeft: "auto", fontSize: 9, color: "#8a7a60", fontWeight: 400 }}>
+          Target
+        </span>
+      </div>
+      {targets.map((t, i) => (
+        <button
+          key={i}
+          onClick={() => onSelect(t.cmd)}
+          style={{
+            display: "block",
+            width: "100%",
+            padding: "6px 12px",
+            background: "transparent",
+            border: "none",
+            textAlign: "left",
+            color: "#e8d4a0",
+            fontSize: 12,
+            fontFamily: "Georgia, serif",
+            cursor: "pointer",
+            transition: "background 0.1s",
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(146,64,14,0.3)";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+          }}
+        >
+          {t.label}
         </button>
       ))}
     </div>
@@ -566,6 +681,8 @@ export default function CombatScreen({
   onCommand,
   onIconClick,
   enemyLayoutPreviewCount = 0,
+  heroGoreSplatters = [],
+  onHeroGoreChange,
 }: CombatScreenProps) {
   const [selectedZone, setSelectedZone] = useState<BodyZone>("torso");
   // Spell action menu (anchored to the clicked spell icon) + lore popup state.
@@ -574,6 +691,101 @@ export default function CombatScreen({
     rect: { top: number; left: number; width: number; height: number };
   } | null>(null);
   const [spellDetail, setSpellDetail] = useState<SpellDef | null>(null);
+  // Spell target picker — shown after clicking Cast on a targeted spell.
+  const [spellTarget, setSpellTarget] = useState<{
+    spell: SpellDef;
+    rect: { top: number; left: number; width: number; height: number };
+  } | null>(null);
+
+  // ── Blood & gore state ──
+  // Enemy splatters reset per fight. Hero gore accumulates and is lifted
+  // to page.tsx via onHeroGoreChange so it persists between fights.
+  const [enemyBlood, setEnemyBlood] = useState<BloodSplatter[]>([]);
+  // Red flash on defender (fades out via CSS transition).
+  const [hitFlash, setHitFlash] = useState<"left" | "right" | null>(null);
+  // Critical hit vignette overlay.
+  const [critVignette, setCritVignette] = useState(false);
+  // Track previous HP values to detect damage this render.
+  const prevEnemyHpRef = useRef(session.enemyCombatant.hp);
+  const prevPlayerHpRef = useRef(session.playerCombatant.hp);
+  // Track the last zone the player targeted (for splatter placement).
+  const lastZoneRef = useRef<SplatterZone>("torso");
+
+  // Reset enemy blood when fight changes.
+  const enemyIdRef = useRef(session.enemyNpcId);
+  useEffect(() => {
+    if (session.enemyNpcId !== enemyIdRef.current) {
+      enemyIdRef.current = session.enemyNpcId;
+      setEnemyBlood([]);
+      prevEnemyHpRef.current = session.enemyCombatant.hp;
+      prevPlayerHpRef.current = session.playerCombatant.hp;
+    }
+  }, [session.enemyNpcId, session.enemyCombatant.hp, session.playerCombatant.hp]);
+
+  // ── Hit detection: compare HP snapshots to detect damage each render ──
+  useEffect(() => {
+    const enemyHpNow = session.enemyCombatant.hp;
+    const playerHpNow = session.playerCombatant.hp;
+    const enemyDelta = prevEnemyHpRef.current - enemyHpNow;
+    const playerDelta = prevPlayerHpRef.current - playerHpNow;
+
+    // Check last combat log entry for __CRITICAL__ marker
+    const lastLog = combatLog[combatLog.length - 1] ?? "";
+    const isCrit = lastLog.includes("__CRITICAL__");
+
+    // Enemy took damage — player hit them
+    if (enemyDelta > 0) {
+      const tier = getWoundTierFromDamage(enemyDelta, session.enemyCombatant.maxHp);
+      const zone = lastZoneRef.current;
+      const newSplatters = generateHitSplatters(zone, tier, isCrit);
+      // On crit: enemy gets a visible wound + player gets splattered with blood
+      if (isCrit) {
+        const wound = generateCritWound(zone);
+        setEnemyBlood(prev => [...prev, ...newSplatters, ...wound]);
+        // Attacker (hero) gets splattered by the spray
+        const attackerSplatter = generateAttackerSplatter(zone);
+        const updatedGore = [...heroGoreSplatters, ...attackerSplatter];
+        onHeroGoreChange?.(updatedGore);
+        setCritVignette(true);
+      } else {
+        setEnemyBlood(prev => [...prev, ...newSplatters]);
+      }
+      setHitFlash("right");
+    }
+
+    // Player took damage — enemy hit them.
+    // Normal hits flash red. Crits leave a visible wound on the hero.
+    if (playerDelta > 0) {
+      setHitFlash("left");
+      if (isCrit) {
+        // Crit: hero gets a wound mark in the hit zone
+        const zones: SplatterZone[] = ["head", "neck", "torso", "torso", "torso", "limbs", "limbs"];
+        const zone = zones[Math.floor(Math.random() * zones.length)];
+        const wound = generateCritWound(zone);
+        const updatedGore = [...heroGoreSplatters, ...wound];
+        onHeroGoreChange?.(updatedGore);
+        setCritVignette(true);
+      }
+    }
+
+    prevEnemyHpRef.current = enemyHpNow;
+    prevPlayerHpRef.current = playerHpNow;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.enemyCombatant.hp, session.playerCombatant.hp, session.roundNumber]);
+
+  // Clear hit flash after a short duration.
+  useEffect(() => {
+    if (!hitFlash) return;
+    const t = setTimeout(() => setHitFlash(null), 400);
+    return () => clearTimeout(t);
+  }, [hitFlash]);
+
+  // Clear crit vignette after animation.
+  useEffect(() => {
+    if (!critVignette) return;
+    const t = setTimeout(() => setCritVignette(false), 800);
+    return () => clearTimeout(t);
+  }, [critVignette]);
 
   // ── Attack animation state ──
   // "attacker" = which side is animating (hero slot or enemy slot key).
@@ -588,6 +800,9 @@ export default function CombatScreen({
   /** Fire the attack animation, wait for it to finish, then execute the command. */
   const animateThenCommand = (cmd: string, attackerKey: string, defenderSide: "left" | "right") => {
     if (loading || atkAnim) return;
+    // Track the zone for blood splatter placement.
+    const zoneMatch = cmd.match(/STRIKE\s+(HEAD|NECK|TORSO|LIMBS)/i);
+    if (zoneMatch) lastZoneRef.current = zoneMatch[1].toLowerCase() as SplatterZone;
     setAtkAnim({ attackerKey, defenderSide });
     // Animation lasts 0.8s total. Fire the engine command after 0.5s so
     // narration arrives as the defender shake is finishing.
@@ -723,7 +938,7 @@ export default function CombatScreen({
   ];
 
   const handleFlee = () => {
-    if (!loading) onCommand("FLEE");
+    if (!loading && !session.finished) onCommand("FLEE");
   };
 
   // Auto-scroll the combat log to the bottom whenever a new line appears
@@ -747,22 +962,20 @@ export default function CombatScreen({
       // No backdrop — the ScenePanel behind shows through as the combat stage.
     }}>
       {/* ═══════════════════════════════════════════════════════
-          TOP SMOKEY COMBAT LOG — scrolling, newest at bottom
+          CENTER COMBAT LOG — just below the middle of the screen.
+          Newest entry pops in large; older entries dim above it.
           ═══════════════════════════════════════════════════════ */}
       <div style={{
         position: "absolute",
-        top: 0,
+        bottom: "50%",
         left: 0,
         right: 0,
-        paddingTop: 8,
-        paddingBottom: 14,
-        background: "linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0) 100%)",
+        pointerEvents: "none",
       }}>
         {/* Round counter — centered small pill */}
         <div style={{
           textAlign: "center",
-          marginBottom: 8,
-          pointerEvents: "none",
+          marginBottom: 10,
         }}>
           <span style={{
             display: "inline-block",
@@ -780,14 +993,14 @@ export default function CombatScreen({
           </span>
         </div>
 
-        {/* Scrolling combat log — newest at bottom, older messages dim */}
+        {/* Combat narration — newest pops in large, older entries dim above */}
         <div
           ref={logScrollRef}
           style={{
-            maxWidth: 760,
+            maxWidth: 800,
             margin: "0 auto",
-            padding: "0 24px",
-            maxHeight: "22vh",
+            padding: "0 32px",
+            maxHeight: "30vh",
             overflowY: "auto",
             scrollbarWidth: "none",
             display: "flex",
@@ -798,39 +1011,54 @@ export default function CombatScreen({
           {combatLog.length === 0 ? (
             <div style={{
               textAlign: "center",
-              fontSize: 13,
+              fontSize: 16,
               color: "#a89c7e",
               fontStyle: "italic",
-              textShadow: "0 1px 3px rgba(0,0,0,0.95)",
+              textShadow: "0 2px 8px rgba(0,0,0,0.95)",
             }}>
               Choose a target zone, then strike.
             </div>
           ) : (
             combatLog.map((line, i) => {
               const distanceFromNewest = combatLog.length - 1 - i;
-              // Newest = full brightness. Older messages progressively dim.
-              const opacity = distanceFromNewest === 0 ? 1
-                : distanceFromNewest === 1 ? 0.62
-                : distanceFromNewest === 2 ? 0.4
-                : 0.25;
-              const color = distanceFromNewest === 0 ? "#f5e8c8" : "#cdb78a";
-              const fontSize = distanceFromNewest === 0 ? 13.5 : 12;
+              const isNewest = distanceFromNewest === 0;
+              const hasCrit = isNewest && line.includes("__CRITICAL__");
+              // Strip the __CRITICAL__ marker from display text
+              const displayLine = line.replace(/__CRITICAL__\s*/g, "");
+              // Newest = full brightness + large. Older messages dim.
+              const opacity = isNewest ? 1
+                : distanceFromNewest === 1 ? 0.5
+                : distanceFromNewest === 2 ? 0.3
+                : 0.15;
+              const color = isNewest
+                ? (hasCrit ? "#ff4444" : "#f5e8c8")
+                : "#cdb78a";
+              const fontSize = isNewest ? 17 : (distanceFromNewest === 1 ? 13 : 11);
               return (
                 <div
                   key={`${i}-${line.slice(0, 20)}`}
+                  className={isNewest ? "le-combat-text-pop" : undefined}
                   style={{
                     textAlign: "center",
                     fontSize,
-                    lineHeight: 1.5,
+                    lineHeight: 1.55,
                     color,
                     opacity,
+                    fontWeight: isNewest ? 600 : 400,
                     whiteSpace: "pre-wrap",
-                    padding: "3px 0",
-                    textShadow: "0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.7)",
-                    transition: "opacity 0.3s ease",
+                    padding: isNewest ? "6px 0" : "2px 0",
+                    textShadow: isNewest
+                      ? "0 2px 8px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.8)"
+                      : "0 1px 3px rgba(0,0,0,0.95)",
+                    transition: "opacity 0.3s ease, font-size 0.3s ease",
+                    background: isNewest
+                      ? "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.55) 0%, transparent 75%)"
+                      : "none",
+                    borderRadius: 8,
                   }}
                 >
-                  {line}
+                  {hasCrit && <span style={{ color: "#ff4444", fontWeight: 800 }}>CRITICAL! </span>}
+                  {displayLine}
                 </div>
               );
             })
@@ -911,20 +1139,48 @@ export default function CombatScreen({
                 }} />
               )}
               {ally.sprite.url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  className={isAttacking ? "le-atk-pulse" : undefined}
-                  src={ally.sprite.url}
-                  alt={ally.name}
-                  style={{
-                    maxHeight: "100%",
-                    maxWidth: "100%",
-                    width: "auto",
-                    objectFit: "contain",
-                    position: "relative",
-                    zIndex: 1,
-                  }}
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={isAttacking ? "le-atk-pulse" : undefined}
+                    src={ally.sprite.url}
+                    alt={ally.name}
+                    style={{
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      width: "auto",
+                      objectFit: "contain",
+                      position: "relative",
+                      zIndex: 1,
+                    }}
+                  />
+                  {/* Blood overlay — masked to sprite silhouette.
+                      Hero gets persistent gore; henchmen get nothing for now. */}
+                  {ally.key === "hero" && heroGoreSplatters.length > 0 && (
+                    <BloodOverlay
+                      splatters={heroGoreSplatters}
+                      spriteUrl={ally.sprite.url}
+                    />
+                  )}
+                  {/* Red hit flash — brief red tint over sprite on taking damage */}
+                  {ally.key === "hero" && hitFlash === "left" && (
+                    <div className="le-hit-flash" style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "radial-gradient(ellipse at 50% 60%, rgba(180,0,0,0.35) 0%, transparent 70%)",
+                      pointerEvents: "none",
+                      zIndex: 3,
+                      WebkitMaskImage: `url(${ally.sprite.url})`,
+                      maskImage: `url(${ally.sprite.url})`,
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskPosition: "bottom center",
+                      maskPosition: "bottom center",
+                    }} />
+                  )}
+                </>
               ) : (
                 <div style={{
                   fontSize: 80,
@@ -1251,17 +1507,46 @@ export default function CombatScreen({
                 }}
               >
                 {spriteUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={spriteUrl}
-                    alt={slot.name}
-                    style={{
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      width: "auto",
-                      objectFit: "contain",
-                    }}
-                  />
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={spriteUrl}
+                      alt={slot.name}
+                      style={{
+                        maxHeight: "100%",
+                        maxWidth: "100%",
+                        width: "auto",
+                        objectFit: "contain",
+                        position: "relative",
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* Blood overlay on enemy — masked to sprite silhouette */}
+                    {slot.isMain && enemyBlood.length > 0 && (
+                      <BloodOverlay
+                        splatters={enemyBlood}
+                        spriteUrl={spriteUrl}
+                      />
+                    )}
+                    {/* Red hit flash on enemy when struck */}
+                    {slot.isMain && hitFlash === "right" && (
+                      <div className="le-hit-flash" style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "radial-gradient(ellipse at 50% 60%, rgba(180,0,0,0.35) 0%, transparent 70%)",
+                        pointerEvents: "none",
+                        zIndex: 3,
+                        WebkitMaskImage: `url(${spriteUrl})`,
+                        maskImage: `url(${spriteUrl})`,
+                        WebkitMaskSize: "contain",
+                        maskSize: "contain",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskPosition: "bottom center",
+                        maskPosition: "bottom center",
+                      }} />
+                    )}
+                  </>
                 ) : (
                   <div style={{
                     fontSize: 80,
@@ -1370,8 +1655,8 @@ export default function CombatScreen({
                         // Hero attacks → pulse hero, shake enemy side.
                         animateThenCommand(`STRIKE ${z.toUpperCase()}`, "hero", "right");
                       }}
-                      disabled={loading}
-                      title={`Strike ${ZONE_LABELS[z].toLowerCase()} — ${ZONE_EVASION_HINT[z]}`}
+                      disabled={loading || session.finished}
+                      title={session.finished ? "Combat is over" : `Strike ${ZONE_LABELS[z].toLowerCase()} — ${ZONE_EVASION_HINT[z]}`}
                       style={{
                         width: "100%",
                         padding: "6px 2px 4px",
@@ -1434,9 +1719,16 @@ export default function CombatScreen({
           spell={spellMenu.spell}
           anchorRect={spellMenu.rect}
           onCast={() => {
-            const cmd = `CAST ${spellMenu.spell.name}`;
+            const s = spellMenu.spell;
+            const rect = spellMenu.rect;
             setSpellMenu(null);
-            animateThenCommand(cmd, "hero", "right");
+            if (s.targeting === "none") {
+              // POWER — fires immediately, no target picker
+              animateThenCommand(`CAST ${s.name}`, "hero", "right");
+            } else {
+              // Open target picker for self/enemy spells
+              setSpellTarget({ spell: s, rect });
+            }
           }}
           onLore={() => {
             const def = spellMenu.spell;
@@ -1447,9 +1739,35 @@ export default function CombatScreen({
         />
       )}
 
+      {/* Spell target picker — choose Self or enemy after clicking Cast. */}
+      {spellTarget && (
+        <SpellTargetMenu
+          spell={spellTarget.spell}
+          anchorRect={spellTarget.rect}
+          enemyName={session.enemyName}
+          onSelect={(cmd) => {
+            const defSide = spellTarget.spell.targeting === "enemy" ? "right" : "left";
+            setSpellTarget(null);
+            animateThenCommand(cmd, "hero", defSide);
+          }}
+          onClose={() => setSpellTarget(null)}
+        />
+      )}
+
       {/* Spell lore popup — modal with stats + flavor text. */}
       {spellDetail && (
         <SpellDetailPopup spell={spellDetail} onClose={() => setSpellDetail(null)} />
+      )}
+
+      {/* Critical hit vignette — red border flash across the whole viewport */}
+      {critVignette && (
+        <div className="le-crit-vignette" style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 100,
+          boxShadow: "inset 0 0 120px 40px rgba(139,0,0,0.5), inset 0 0 60px 20px rgba(200,0,0,0.3)",
+        }} />
       )}
 
       {/* Keyframes for combat + effect marker animations */}
@@ -1522,6 +1840,36 @@ export default function CombatScreen({
         .le-atk-pulse { animation: le-atk-pulse-kf 0.5s ease-in-out; }
         .le-atk-blur  { animation: le-atk-blur-kf 0.6s ease-out forwards; }
         .le-atk-shake { animation: le-atk-shake-kf 0.35s ease-in-out 0.45s; }
+
+        /* ── Combat text pop animation ── */
+        @keyframes le-combat-text-pop-kf {
+          0%   { opacity: 0; transform: scale(0.7) translateY(8px); }
+          50%  { opacity: 1; transform: scale(1.06) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .le-combat-text-pop { animation: le-combat-text-pop-kf 0.4s ease-out; }
+
+        /* ── Blood & gore animations ── */
+        @keyframes le-blood-appear-kf {
+          0%   { opacity: 0; transform: scale(0.3); }
+          40%  { opacity: 1; transform: scale(1.15); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .le-blood-appear { animation: le-blood-appear-kf 0.35s ease-out forwards; }
+
+        @keyframes le-hit-flash-kf {
+          0%   { opacity: 0.7; }
+          100% { opacity: 0; }
+        }
+        .le-hit-flash { animation: le-hit-flash-kf 0.4s ease-out forwards; }
+
+        @keyframes le-crit-vignette-kf {
+          0%   { opacity: 0; }
+          15%  { opacity: 1; }
+          60%  { opacity: 0.8; }
+          100% { opacity: 0; }
+        }
+        .le-crit-vignette { animation: le-crit-vignette-kf 0.8s ease-out forwards; }
       `}</style>
     </div>
   );

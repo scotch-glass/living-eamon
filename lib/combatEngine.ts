@@ -318,7 +318,9 @@ export function resolveStrike(
   const baseDmg = rollWeaponDamage(attacker.weaponId);
   const strengthMod = calculateStrengthMod(attacker.strength);
   const zoneMult = ZONE_DAMAGE_MULTIPLIER[targetZone];
-  const isCrit = Math.random() < getCritChance(attacker.weaponSkillValue);
+  // TEMP: force every hit to be a crit for blood/gore testing
+  const isCrit = true;
+  // const isCrit = Math.random() < getCritChance(attacker.weaponSkillValue);
   const finalDmg = Math.max(1, Math.floor(baseDmg * strengthMod * zoneMult * (isCrit ? 2 : 1)));
 
   // Armor still takes durability loss on penetrating hits

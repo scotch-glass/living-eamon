@@ -9,6 +9,19 @@
 import { RoomState } from "./gameData";
 import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 
+/** Serializable blood splatter record for persistence.
+ *  The full SVG path is reconstructed client-side from pathIndex. */
+export interface BloodSplatterState {
+  id: string;
+  pathIndex: number;
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+  rotation: number;
+  isCrit: boolean;
+}
+
 // ============================================================
 // PASSIVE REGEN CONSTANTS
 // Per-turn recovery rates applied by tickWorldState. Will be
@@ -249,6 +262,10 @@ export interface PlayerState {
   knownSpells: string[];
   /** Divine names learned in play — autocomplete for PRAY */
   knownDeities: string[];
+
+  /** Accumulated blood splatters on the hero sprite — persists until washed.
+   *  Serialized positions; purely visual, no gameplay effect. */
+  goreSplatters: BloodSplatterState[];
 
   /** After first Sam shop purchase, Sam gives a plain outfit and removes the gray robe; reset on death. */
   receivedSamStarterOutfit: boolean;
@@ -584,6 +601,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
 
       knownSpells: [],
       knownDeities: [],
+      goreSplatters: [],
 
       receivedSamStarterOutfit: false,
       receivedHokasUnarmedGift: false,
@@ -933,6 +951,7 @@ export function applyPlayerDeath(
       limbArmor: null,
       activeCombat: null,
       activeEffects: [],
+      goreSplatters: [],
       weaponPoisonCharges: 0,
       weaponPoisonSeverity: 0,
       mounted: false,

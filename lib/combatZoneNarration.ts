@@ -502,6 +502,85 @@ const DUFUS_HIT_POOL: string[] = [
   "Solid contact. Dufus has been hit harder by smaller heroes. He remembers all of them.",
 ];
 
+// ── Blood splatter narration — zone-specific gore lines ──
+// Appended after a successful hit lands. Tier-gated: glancing = nothing,
+// solid = short, devastating/crit = vivid.
+
+const BLOOD_SPLATTER: Record<BodyZone, { solid: string[]; devastating: string[] }> = {
+  head: {
+    solid: [
+      "Blood runs from the wound, streaking down {defender}'s face.",
+      "A red line opens across {defender}'s brow. Blood wells fast.",
+      "The cut weeps crimson down {defender}'s cheek.",
+    ],
+    devastating: [
+      "Blood sprays from {defender}'s skull in a hot arc. Bone shows white beneath.",
+      "The blow splits {defender}'s scalp wide. Blood sheets down, blinding one eye.",
+      "{defender}'s head snaps sideways and a curtain of blood follows.",
+      "A red mist hangs where {defender}'s head was a moment ago.",
+    ],
+  },
+  neck: {
+    solid: [
+      "A red line opens across {defender}'s throat. Blood beads along it.",
+      "The blade draws a wet streak across {defender}'s neck.",
+      "Blood seeps from the wound, staining {defender}'s collar dark.",
+    ],
+    devastating: [
+      "Blood erupts from {defender}'s neck in a pressurized gout.",
+      "The strike opens {defender}'s throat. Blood pumps in rhythm with a dying heartbeat.",
+      "{defender}'s neck parts like meat on a butcher's block. Arterial spray paints the ground.",
+      "A hot red sheet pours from {defender}'s opened throat.",
+    ],
+  },
+  torso: {
+    solid: [
+      "The wound opens and blood darkens {defender}'s clothing.",
+      "A wet stain spreads across {defender}'s midsection.",
+      "Blood seeps from the gash, soaking into {defender}'s gear.",
+    ],
+    devastating: [
+      "The blow cleaves through muscle. Blood splashes across the stone in a wide fan.",
+      "{defender}'s torso opens like a split melon. Something inside glistens.",
+      "A gout of hot blood sprays from {defender}'s chest. Ribs show through the ruin.",
+      "The wound is terrible. Blood pours freely, pooling at {defender}'s feet.",
+    ],
+  },
+  limbs: {
+    solid: [
+      "Blood runs down {defender}'s arm, dripping from the fingertips.",
+      "The wound weeps. {defender}'s leg darkens with spreading blood.",
+      "A red line opens along {defender}'s forearm. Blood wells immediately.",
+    ],
+    devastating: [
+      "The limb splits open to the bone. Blood sprays in a wide arc across the ground.",
+      "{defender}'s arm hangs at a wrong angle, blood pouring from the wound like a tap.",
+      "The strike nearly severs the limb. Arterial blood jets in rhythmic spurts.",
+      "Meat and muscle part. {defender}'s blood splatters across {attacker}'s face and arms.",
+    ],
+  },
+};
+
+/** Crit-specific gore — attacker gets splattered. */
+const CRIT_ATTACKER_GORE: Record<BodyZone, string[]> = {
+  head:  [
+    "Hot blood spatters across {attacker}'s face and chest.",
+    "{attacker} tastes copper. {defender}'s blood is everywhere.",
+  ],
+  neck:  [
+    "Arterial spray catches {attacker} full in the face. Vision goes red.",
+    "The gout drenches {attacker}'s weapon arm to the elbow.",
+  ],
+  torso: [
+    "{attacker}'s arms are slick to the shoulder with {defender}'s blood.",
+    "The spray catches {attacker} across the chest. Warmth soaks through.",
+  ],
+  limbs: [
+    "Blood flecks spatter across {attacker}'s hands and forearms.",
+    "{attacker} is painted red from the spray. It will not wash easily.",
+  ],
+};
+
 export function buildZoneStrikeNarrative(
   strike: StrikeResolution,
   attackerName: string,
@@ -580,6 +659,22 @@ export function buildZoneStrikeNarrative(
     const injuryPool = INJURY_NARRATION[strike.injuryInflicted];
     if (injuryPool) {
       parts.push(fill(pick(injuryPool), vars));
+    }
+  }
+
+  // Blood splatter narration — solid and devastating hits get gore lines.
+  // Crits additionally describe blood hitting the attacker.
+  if (tier !== "glancing") {
+    const bloodTier = tier === "devastating" || strike.isCritical ? "devastating" : "solid";
+    const bloodPool = BLOOD_SPLATTER[zone]?.[bloodTier];
+    if (bloodPool) {
+      parts.push(fill(pick(bloodPool), vars));
+    }
+    if (strike.isCritical) {
+      const critGore = CRIT_ATTACKER_GORE[zone];
+      if (critGore) {
+        parts.push(fill(pick(critGore), vars));
+      }
     }
   }
 

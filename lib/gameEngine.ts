@@ -12,13 +12,6 @@ import {
   COMBAT_TEMPLATES,
   getEnemyDeathPool,
   SAM_INVENTORY,
-  ARMOR_ABSORB_DESCRIPTIONS,
-  ARMOR_FULL_ABSORB_DESCRIPTIONS,
-  PLAYER_MISS_DESCRIPTIONS,
-  getEnemyHitPlayerPool,
-  getEnemyMissPlayerPool,
-  getPlayerHitEnemyPool,
-  getWeaponCategory,
   PRIEST_SILENCE_RESPONSES,
   REBIRTH_NARRATIVES,
   ROOM_ROBE_HUMILIATION,
@@ -28,9 +21,7 @@ import {
   BARREL_NPC_HINTS,
   ALDRIC_OPENING_LINES,
   ALDRIC_TOPIC_RESPONSES,
-  PLAYER_FUMBLE_DESCRIPTIONS,
   type NPCBodyType,
-  type WoundTier,
   type SamShopRow,
   Room,
   NPC,
@@ -68,7 +59,6 @@ import type { TimeOfDay } from "./weatherService";
 
 import {
   isTwoHanded,
-  rollWeaponDamage,
   WEAPON_DATA,
   getDexReactionBonus,
   getWeaponSkillKey,
@@ -1938,284 +1928,6 @@ function resolveTrainTargetSkill(raw: string): keyof WeaponSkills | null {
   return null;
 }
 
-export function resolveCombatRound(
-  state: WorldState,
-  enemyId: string,
-  enemyHp: number,
-  enemyData: { name: string; damage: string; armor: number },
-  bodyType?: NPCBodyType
-): {
-  narrative: string;
-  newState: WorldState;
-  enemyHp: number;
-  combatOver: boolean;
-  playerWon: boolean;
-} {
-  const player = state.player;
-  if (player.weapon === "unarmed") {
-    return {
-      narrative: "You cannot fight unarmed.",
-      newState: state,
-      enemyHp,
-      combatOver: false,
-      playerWon: false,
-    };
-  }
-  const weaponItem = ITEMS[player.weapon];
-  const playerSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
-  const playerInit =
-    Math.floor(Math.random() * 10) +
-    1 +
-    playerSpeed -
-    getDexReactionBonus(player.dexterity);
-  const enemyInit = Math.floor(Math.random() * 10) + 1 + 5;
-  const playerGoesFirst = playerInit <= enemyInit;
-  const winnerLabel = playerGoesFirst ? "You" : enemyData.name;
-
-  const enemyStartHp = enemyHp;
-
-  let narrative = `⚡ Initiative — You: ${playerInit} · ${enemyData.name}: ${enemyInit}\n${winnerLabel} acts first.\n\n`;
-
-  const weaponSkillKey = getWeaponSkillKey(player.weapon);
-  const skillBonus = Math.min(
-    0.2,
-    (player.weaponSkills?.[weaponSkillKey] ?? 0) * 0.005
-  );
-  const playerHitChance = 0.75 + skillBonus;
-
-  const ws = normalizeWeaponSkills(player.weaponSkills);
-  const weaponSkillVal = ws[weaponSkillKey] ?? 0;
-  const playerSkill = Math.min(100, weaponSkillVal / 7);
-  const enemySkill = 30;
-  const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
-
-  function getWoundTier(
-    dmg: number,
-    maxHp: number,
-    axis: "playerOnEnemy" | "enemyOnPlayer"
-  ): WoundTier {
-    const pct = dmg / Math.max(1, maxHp);
-    if (axis === "playerOnEnemy") {
-      if (pct <= 0.15) return "glancing";
-      if (pct <= 0.4) return "solid";
-      return "devastating";
-    }
-    if (pct <= 0.1) return "glancing";
-    if (pct <= 0.25) return "solid";
-    return "devastating";
-  }
-
-  function calcPlayerDamage(): number {
-    const base = rollWeaponDamage(player.weapon);
-    const strPct = Math.min(0.2, Math.max(0, (player.strength - 10) / 40));
-    const tacPct = Math.min(0.2, (player.maxMana / 50) * 0.2);
-    const boosted = base * (1 + strPct + tacPct);
-    const afterAR = Math.max(0, boosted - (enemyData.armor ?? 0));
-    const result = Math.max(1, Math.floor(afterAR / 2));
-    return isNaN(result) ? 1 : result;
-  }
-
-  let newState = state;
-  let newEnemyHp = enemyHp;
-
-  function doPlayerAttack(): boolean {
-    const roll = Math.random();
-    if (roll >= playerHitChance) {
-      if (Math.random() < 0.08) {
-        narrative += pickTemplate(PLAYER_FUMBLE_DESCRIPTIONS);
-      } else {
-        narrative += fillTemplate(pickTemplate(PLAYER_MISS_DESCRIPTIONS), {
-          weapon: weaponItem?.name ?? "weapon",
-          enemy: enemyData.name,
-        });
-      }
-      return false;
-    }
-
-    const isCrit = Math.random() < 0.1;
-    const baseDmg = calcPlayerDamage();
-    const dmg = isCrit ? baseDmg * 2 : baseDmg;
-    newEnemyHp -= dmg;
-
-    const skillUp = updateWeaponSkill(newState, weaponSkillKey, 1);
-    newState = skillUp.newState;
-    const tier = getWoundTier(dmg, enemyStartHp, "playerOnEnemy");
-    const category = getWeaponCategory(player.weapon);
-    const pool = getPlayerHitEnemyPool(bodyType, category, tier);
-    const hitLine = fillTemplate(pickTemplate(pool), {
-      weapon: weaponItem?.name ?? "weapon",
-      enemy: enemyData.name,
-      damage: String(dmg),
-    });
-    if (isCrit) {
-      narrative += `__CRITICAL__ ${hitLine}`;
-    } else {
-      narrative += hitLine;
-    }
-    if (skillUp.degradedSkill) {
-      narrative += `\n\nYour ${SKILL_NAMES[skillUp.degradedSkill]} slips a point — the guild's ${SKILL_CAP}-point skill ceiling makes room for your ${SKILL_NAMES[weaponSkillKey]}.`;
-    }
-
-    if (newEnemyHp <= 0) {
-      const deathPool = getEnemyDeathPool(bodyType);
-      narrative +=
-        "\n\n" +
-        fillTemplate(pickTemplate(deathPool), {
-          enemy: enemyData.name,
-          weapon: weaponItem?.name ?? "weapon",
-        });
-      return true;
-    }
-    return false;
-  }
-
-  function doEnemyAttack(): boolean {
-    const roll = Math.random();
-    if (roll >= enemyHitChance) {
-      const missPool = getEnemyMissPlayerPool(bodyType);
-      narrative +=
-        "\n\n" +
-        fillTemplate(pickTemplate(missPool), {
-          enemy: enemyData.name,
-        });
-      return false;
-    }
-
-    const rawEnemyDmg = rollDice(enemyData.damage);
-    const armorAC = player.armor
-      ? (ITEMS[player.armor]?.stats?.armorClass ?? 0)
-      : 0;
-    const shieldAC = player.shield
-      ? (ITEMS[player.shield]?.stats?.armorClass ?? 0)
-      : 0;
-    const totalAC = armorAC + shieldAC;
-    const enemyDmg = Math.max(0, rawEnemyDmg - totalAC);
-    const absorbKey = player.armor ?? player.shield ?? "default";
-
-    if (totalAC > 0 && rawEnemyDmg > 0) {
-      if (enemyDmg <= 0) {
-        const pool =
-          ARMOR_FULL_ABSORB_DESCRIPTIONS[absorbKey] ??
-          ARMOR_FULL_ABSORB_DESCRIPTIONS["default"]!;
-        narrative += "\n\n" + fillTemplate(pickTemplate(pool), {
-          enemy: enemyData.name,
-          armor: ITEMS[absorbKey]?.name ?? absorbKey,
-        });
-      } else {
-        const pool =
-          ARMOR_ABSORB_DESCRIPTIONS[absorbKey] ??
-          ARMOR_ABSORB_DESCRIPTIONS["default"]!;
-        narrative += "\n\n" + fillTemplate(pickTemplate(pool), {
-          enemy: enemyData.name,
-          armor: ITEMS[absorbKey]?.name ?? absorbKey,
-        });
-      }
-    }
-
-    if (enemyDmg <= 0) return false;
-
-    newState = updatePlayerHP(newState, -enemyDmg);
-    const enemyTier = getWoundTier(enemyDmg, player.maxHp, "enemyOnPlayer");
-    const enemyPool = getEnemyHitPlayerPool(bodyType, enemyTier);
-    narrative +=
-      "\n\n" +
-      fillTemplate(pickTemplate(enemyPool), {
-        enemy: enemyData.name,
-        damage: String(enemyDmg),
-      });
-
-    return newState.player.hp <= 0;
-  }
-
-  function completePlayerDeathReturn(): {
-    narrative: string;
-    newState: WorldState;
-    enemyHp: number;
-    combatOver: boolean;
-    playerWon: boolean;
-  } {
-    const deathLine = fillTemplate(
-      pickTemplate(COMBAT_TEMPLATES.playerDeath),
-      { enemy: enemyData.name }
-    );
-    const rebirthLine = pickTemplate(REBIRTH_NARRATIVES);
-    const { newState: afterDeath, lostGold } = applyPlayerDeath(
-      newState,
-      enemyData.name
-    );
-    const fullNarrative =
-      narrative +
-      "\n\n" +
-      deathLine +
-      "\n\n" +
-      rebirthLine +
-      `\n\nYou lost ${lostGold} gold and everything you carried.`;
-    return {
-      narrative: fullNarrative,
-      newState: afterDeath,
-      enemyHp: newEnemyHp,
-      combatOver: true,
-      playerWon: false,
-    };
-  }
-
-  function applyEnemyDeath(): void {
-    newState = updateVirtue(newState, "Valor", 1);
-    newState = addToChronicle(
-      newState,
-      `${player.name} defeated ${enemyData.name}.`,
-      false
-    );
-    newState = {
-      ...newState,
-      player: {
-        ...newState.player,
-        maxMana: newState.player.maxMana + 1,
-      },
-    };
-  }
-
-  if (playerGoesFirst) {
-    if (doPlayerAttack()) {
-      applyEnemyDeath();
-      return {
-        narrative,
-        newState,
-        enemyHp: 0,
-        combatOver: true,
-        playerWon: true,
-      };
-    }
-    narrative += "\n\n";
-    if (doEnemyAttack()) {
-      return completePlayerDeathReturn();
-    }
-  } else {
-    if (doEnemyAttack()) {
-      return completePlayerDeathReturn();
-    }
-    narrative += "\n\n";
-    if (doPlayerAttack()) {
-      applyEnemyDeath();
-      return {
-        narrative,
-        newState,
-        enemyHp: 0,
-        combatOver: true,
-        playerWon: true,
-      };
-    }
-  }
-
-  return {
-    narrative,
-    newState,
-    enemyHp: newEnemyHp,
-    combatOver: false,
-    playerWon: false,
-  };
-}
-
 // ============================================================
 // STATIC RESPONSE BUILDERS
 // ============================================================
@@ -3279,7 +2991,7 @@ export function processInput(
       .join(", ") || "none";
 
   // ── Combat-mode guard: only combat commands allowed while in combat ──
-  const COMBAT_ALLOWED_COMMANDS = new Set(["STRIKE", "FLEE", "HEALTH", "HELP"]);
+  const COMBAT_ALLOWED_COMMANDS = new Set(["STRIKE", "FLEE", "HEALTH", "HELP", "CAST"]);
   if (p.activeCombat && !COMBAT_ALLOWED_COMMANDS.has(first)) {
     const enemy = p.activeCombat.enemyName;
     return {
@@ -4942,18 +4654,30 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
 
     if (roundResult.combatOver) {
       if (isDummy && roundResult.playerWon) {
-        // Training dummy: reset HP, don't kill, end session
+        // Training dummy: reset HP, don't kill. Keep session for loot screen.
         finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
         const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
         const skillVal = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
         const capNote = skillVal >= DUMMY_SKILL_CAP
           ? `\n\nThe dummy has nothing more to teach you. Your ${SKILL_NAMES[weaponSkillKey]} has outgrown wooden targets.`
           : `\n\n${SKILL_NAMES[weaponSkillKey]}: ${skillVal}/${DUMMY_SKILL_CAP} (dummy training cap)`;
+        const carriedDummyEffects = updatedSession.playerCombatant.activeEffects.map(e => ({ ...e }));
         return {
           responseType: "static",
-          staticResponse: narrative + "\n\nThe dummy splinters apart — but someone will patch it back together by morning." + capNote + "\n__COMBAT_END__",
+          staticResponse: narrative + "\n\nThe dummy splinters apart — but someone will patch it back together by morning." + capNote + "\n__COMBAT_VICTORY__",
           dynamicContext: null,
-          newState: endCombatSession(finalState, true),
+          newState: {
+            ...finalState,
+            player: {
+              ...finalState.player,
+              activeEffects: carriedDummyEffects,
+              activeCombat: {
+                ...updatedSession,
+                finished: true,
+                playerWon: true,
+              },
+            },
+          },
           stateChanged: true,
         };
       }
@@ -5011,12 +4735,27 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
         };
       }
 
-      // Combat over (player won) — clear session, transfer persistent effects
+      // Combat over (player won) — keep session alive with finished=true
+      // so the combat screen stays up for the final blow + loot screen.
+      // Transfer persistent effects but DON'T clear activeCombat yet —
+      // page.tsx clears it when the loot screen is dismissed.
+      const carriedEffects = updatedSession.playerCombatant.activeEffects.map(e => ({ ...e }));
       return {
         responseType: "static",
-        staticResponse: narrative + "\n__COMBAT_END__",
+        staticResponse: narrative + "\n__COMBAT_VICTORY__",
         dynamicContext: null,
-        newState: endCombatSession(finalState, true),
+        newState: {
+          ...finalState,
+          player: {
+            ...finalState.player,
+            activeEffects: carriedEffects,
+            activeCombat: {
+              ...updatedSession,
+              finished: true,
+              playerWon: true,
+            },
+          },
+        },
         stateChanged: true,
       };
     }

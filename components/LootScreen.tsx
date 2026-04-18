@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Item } from "../lib/gameData";
 import ItemIcon from "./ItemIcon";
 
@@ -17,27 +18,48 @@ export interface LootScreenProps {
   items: LootEntry[];
   /** Called when the player takes specific items + gold. */
   onTake: (itemIds: string[], takeGold: boolean) => void;
-  /** Called when the player dismisses without taking anything. */
+  /** Called when the player dismisses (Leave / click outside / after taking everything). */
   onLeave: () => void;
 }
 
 export default function LootScreen({
   enemyName,
   gold,
-  items,
+  items: initialItems,
   onTake,
   onLeave,
 }: LootScreenProps) {
+  // Track remaining items locally so individual Takes remove from the list
+  // without dismissing the whole screen.
+  const [remaining, setRemaining] = useState(initialItems);
+  const [goldTaken, setGoldTaken] = useState(false);
+
   const handleTakeAll = () => {
-    onTake(items.map(e => e.item.id), true);
+    onTake(remaining.map(e => e.item.id), !goldTaken);
+    onLeave();
   };
 
   const handleTakeItem = (itemId: string) => {
+    // Take just this item — remove from the displayed list
     onTake([itemId], false);
+    setRemaining(prev => prev.filter(e => e.item.id !== itemId));
   };
+
+  const handleTakeGold = () => {
+    if (!goldTaken) {
+      onTake([], true);
+      setGoldTaken(true);
+    }
+  };
+
+  const hasAnythingLeft = remaining.length > 0 || (gold > 0 && !goldTaken);
 
   return (
     <div
+      onClick={(e) => {
+        // Click outside the inner box → dismiss
+        if (e.target === e.currentTarget) onLeave();
+      }}
       style={{
         position: "fixed",
         inset: 0,
@@ -47,9 +69,11 @@ export default function LootScreen({
         justifyContent: "center",
         zIndex: 90,
         fontFamily: "Georgia, serif",
+        cursor: "pointer",
       }}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
           width: "min(92vw, 520px)",
           maxHeight: "80vh",
@@ -61,6 +85,7 @@ export default function LootScreen({
           borderRadius: 10,
           boxShadow: "0 24px 64px rgba(0,0,0,0.85), 0 0 1px rgba(205,183,138,0.15) inset",
           padding: "20px 24px",
+          cursor: "default",
         }}
       >
         {/* Header */}
@@ -93,10 +118,12 @@ export default function LootScreen({
               alignItems: "center",
               justifyContent: "space-between",
               padding: "10px 12px",
-              background: "rgba(251,191,36,0.06)",
+              background: goldTaken ? "rgba(60,60,60,0.1)" : "rgba(251,191,36,0.06)",
               border: "1px solid rgba(146,64,14,0.3)",
               borderRadius: 6,
               marginBottom: 10,
+              opacity: goldTaken ? 0.4 : 1,
+              transition: "opacity 0.3s",
             }}
           >
             <div>
@@ -104,14 +131,41 @@ export default function LootScreen({
                 {gold} Gold
               </div>
               <div style={{ fontSize: 10, color: "#8a7a60", marginTop: 2 }}>
-                Coins scattered in the dust.
+                {goldTaken ? "Taken." : "Coins scattered in the dust."}
               </div>
             </div>
+            {!goldTaken && (
+              <button
+                onClick={handleTakeGold}
+                style={{
+                  padding: "5px 12px",
+                  fontFamily: "Georgia, serif",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  background: "rgba(146,64,14,0.2)",
+                  border: "1px solid rgba(146,64,14,0.4)",
+                  borderRadius: 4,
+                  color: "#e8d4a0",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(146,64,14,0.4)";
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(146,64,14,0.2)";
+                }}
+              >
+                Take
+              </button>
+            )}
           </div>
         )}
 
         {/* Item list */}
-        {items.map(entry => (
+        {remaining.map(entry => (
           <div
             key={entry.item.id}
             style={{
@@ -167,7 +221,7 @@ export default function LootScreen({
           </div>
         ))}
 
-        {items.length === 0 && gold === 0 && (
+        {remaining.length === 0 && (gold === 0 || goldTaken) && (
           <div style={{ fontSize: 12, color: "#5a4a3a", fontStyle: "italic", padding: "12px 0" }}>
             Nothing of value remains.
           </div>
@@ -205,7 +259,7 @@ export default function LootScreen({
           >
             Leave
           </button>
-          {(items.length > 0 || gold > 0) && (
+          {hasAnythingLeft && (
             <button
               onClick={handleTakeAll}
               style={{

@@ -733,6 +733,40 @@ movement, and survival.
 
 ---
 
+### Campfire System *(Phase 2)*
+
+A campfire can be built anywhere there is solid ground (not in
+water, not in rooms with active enemies). Buildings are fair
+game — but doing it in town has consequences.
+
+**Requirements:**
+- 5 wood shavings (consumed on use)
+- Command: `MAKE CAMPFIRE` or `BUILD FIRE`
+
+**Effects while campfire is burning:**
+- **Double healing rate** when well-fed (stamina above 50%):
+  HP regen doubles from 1/turn to 2/turn
+- Campfire lasts 50 turns before dying out
+- Provides light (equivalent to a torch) in dark areas
+- Some NPCs and animals are attracted to or repelled by fire
+- **In town/buildings:** NPCs are furious. They stamp it out
+  immediately (fire is destroyed, shavings consumed). Player
+  loses 1 Honor. Narration reflects the social disgrace.
+
+**Wood shavings sources:**
+- Training dummies drop 1–4 on destruction
+- Found as adventure loot in forests, workshops, carpenter areas
+- Purchased cheaply from general goods vendors (when implemented)
+
+**Design intent:** Wood shavings are a common, low-value material
+with genuine tactical use. The campfire is a survival tool for
+dungeon expeditions — the player who carries wood shavings can
+rest more efficiently than one who does not. Combined with food,
+a campfire rest stop becomes a meaningful tactical decision:
+stop and heal, or push forward wounded.
+
+---
+
 ### Hunger & Thirst System *(Phase 2)*
 
 Hunger and thirst are tracked separately. Both reduce stamina

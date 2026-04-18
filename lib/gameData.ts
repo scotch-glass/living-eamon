@@ -322,7 +322,8 @@ export const NPCS: Record<string, NPC> = {
     personality: "It is a wooden post named Dufus. It does not speak. It does not move. It takes the hit.",
     isHostile: false,
     isTrainingDummy: true,
-    stats: { hp: 50, armor: 0, damage: "0" },
+    // TEMP: 150 HP for blood/gore testing (was 50)
+    stats: { hp: 150, armor: 0, damage: "0" },
     combatProfile: {
       agility: 0,
       weaponSkill: 0,
@@ -1484,6 +1485,19 @@ export const ITEMS: Record<string, Item> = {
     type: "armor",
     value: 1250,
     stats: { zoneSlot: "limbs", zoneCover: 80, zoneDurability: 60, dexPenalty: 10, mountedDexPenalty: 3, customFit: true },
+    isCarryable: true,
+  },
+
+  // ── Materials / Crafting ──
+
+  wood_shavings: {
+    id: "wood_shavings",
+    name: "Wood Shavings",
+    description: "Dry curls of wood, light as breath. Five handfuls will start a campfire anywhere there is ground to burn on.",
+    glance: "A handful of dry wood shavings.",
+    shortDescription: "Campfire fuel. 5 required.",
+    type: "treasure",
+    value: 1,
     isCarryable: true,
   },
 };

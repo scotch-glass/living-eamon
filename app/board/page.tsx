@@ -71,10 +71,24 @@ export default function BoardPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
+        backgroundImage: "url(/board-bg.jpg)",
+        backgroundAttachment: "fixed",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
+      {/* Background overlay for readability */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(3, 7, 18, 0.87)",
+          pointerEvents: "none",
+        }}
+      />
       <PublicNav currentPage="board" />
 
       <main
@@ -84,6 +98,8 @@ export default function BoardPage() {
           maxWidth: 1000,
           margin: "0 auto",
           width: "100%",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         {/* Header */}

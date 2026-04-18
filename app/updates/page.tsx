@@ -11,10 +11,24 @@ export default function UpdatesPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
+        backgroundImage: "url(/updates-bg.jpg)",
+        backgroundAttachment: "fixed",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
+      {/* Background overlay for readability */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(3, 7, 18, 0.85)",
+          pointerEvents: "none",
+        }}
+      />
       <PublicNav currentPage="updates" />
 
       <main
@@ -24,6 +38,8 @@ export default function UpdatesPage() {
           maxWidth: 1200,
           margin: "0 auto",
           width: "100%",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         {/* Header */}

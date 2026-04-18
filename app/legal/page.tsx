@@ -8,10 +8,24 @@ export default function LegalPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
+        backgroundImage: "url(/legal-bg.jpg)",
+        backgroundAttachment: "fixed",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
+      {/* Background overlay for readability */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(3, 7, 18, 0.88)",
+          pointerEvents: "none",
+        }}
+      />
       <PublicNav currentPage="legal" />
 
       <main
@@ -22,6 +36,8 @@ export default function LegalPage() {
           margin: "0 auto",
           width: "100%",
           fontFamily: "Georgia, serif",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         <h1

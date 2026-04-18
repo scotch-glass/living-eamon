@@ -24,7 +24,6 @@ export default function LegalPage() {
           fontFamily: "Georgia, serif",
         }}
       >
-        {/* Title */}
         <h1
           style={{
             fontSize: 36,
@@ -40,7 +39,6 @@ export default function LegalPage() {
           Intellectual property, attributions, and contact information
         </p>
 
-        {/* Drop cap style intro */}
         <div style={{ marginBottom: 40 }}>
           <p
             style={{
@@ -54,7 +52,6 @@ export default function LegalPage() {
           </p>
         </div>
 
-        {/* Section: About Living Eamon */}
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -72,7 +69,6 @@ export default function LegalPage() {
           </p>
         </section>
 
-        {/* Section: Public Domain Works */}
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -102,7 +98,7 @@ export default function LegalPage() {
             <p style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.6, margin: "0 0 12px 0" }}>
               We draw from the following works by Robert E. Howard, all of which are in the public domain in the European Union and the United States (or will enter public domain by 2028 in the US):
             </p>
-            <ul style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.8, paddingLeft: 24, margin: 0 }}>
+            <ul style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.8, paddingLeft: 24, margin: 0, marginBottom: 16 }}>
               <li>
                 <strong>The Hyborian Age</strong> (essay, 1936) — The world-building document detailing prehistory, races, and kingdoms.
               </li>
@@ -116,10 +112,9 @@ export default function LegalPage() {
                 <strong>Kings of the Night</strong> (short story, Weird Tales 1930) — Kull summoned through time to aid Bran Mak Morn against Rome.
               </li>
             </ul>
-          </p>
-        </div>
+          </div>
+        </section>
 
-        {/* Section: Trademarks */}
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -157,7 +152,6 @@ export default function LegalPage() {
           </p>
         </section>
 
-        {/* Section: AI-Generated Content */}
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -175,7 +169,6 @@ export default function LegalPage() {
           </p>
         </section>
 
-        {/* Section: Intellectual Property Complaints */}
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -214,7 +207,6 @@ export default function LegalPage() {
           </p>
         </section>
 
-        {/* Section: Compliance & Updates */}
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -246,7 +238,6 @@ export default function LegalPage() {
           </p>
         </section>
 
-        {/* Footer note */}
         <div
           style={{
             borderTop: "1px solid rgba(146, 64, 14, 0.3)",

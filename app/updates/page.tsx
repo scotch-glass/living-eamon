@@ -96,6 +96,49 @@ export default function UpdatesPage() {
           </div>
         </div>
 
+        {/* Development Philosophy */}
+        <div
+          style={{
+            background: "rgba(45, 22, 0, 0.4)",
+            border: "1px solid rgba(146, 64, 14, 0.3)",
+            borderRadius: 8,
+            padding: 24,
+            maxWidth: 800,
+            margin: "0 auto 60px",
+          }}
+        >
+          <h2
+            style={{
+              color: "#fbbf24",
+              fontSize: 16,
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
+              marginBottom: 12,
+              letterSpacing: "0.05em",
+            }}
+          >
+            Development Roadmap
+          </h2>
+          <div
+            style={{
+              color: "#a8a097",
+              fontSize: 13,
+              fontFamily: "Georgia, serif",
+              lineHeight: 1.8,
+            }}
+          >
+            <p style={{ margin: "0 0 12px 0" }}>
+              <strong style={{ color: "#c5ad75" }}>MVP (Current)</strong> — A theoretically playable game with core systems. One hero, one city, combat, magic, banking, consequences. Enough to experience the world's essence, but not polished.
+            </p>
+            <p style={{ margin: "0 0 12px 0" }}>
+              <strong style={{ color: "#c5ad75" }}>Alpha (2028)</strong> — Balance & bug fixes. Adventure modules, expanded world, proper difficulty tuning. Early testers help us discover what breaks and what feels wrong.
+            </p>
+            <p style={{ margin: "0 0 0 0" }}>
+              <strong style={{ color: "#c5ad75" }}>Beta (2029+)</strong> — Polish & shine. UI refinement, performance optimization, quality-of-life improvements. The game works; now make it sing.
+            </p>
+          </div>
+        </div>
+
         {/* Categories */}
         <div
           style={{
@@ -173,8 +216,8 @@ export default function UpdatesPage() {
                       item.status === "done"
                         ? "#e8d4a0"
                         : item.status === "active"
-                          ? "#a8a097"
-                          : "#5a4a3a";
+                          ? "#b8a8a0"
+                          : "#7a6a60";
 
                     return (
                       <div

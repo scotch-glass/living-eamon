@@ -100,6 +100,21 @@ function LoginContent() {
           overflow: "hidden",
         }}
       >
+        {/* Hero art background */}
+        <img
+          src="/hero.jpg"
+          alt="Living Eamon"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.15,
+            pointerEvents: "none",
+          }}
+        />
+
         {/* Decorative Linear B characters as texture (very low opacity) */}
         <div
           style={{

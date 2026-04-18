@@ -28,16 +28,28 @@ export default function PublicNav({ currentPage }: PublicNavProps) {
       <a
         href="/login"
         style={{
-          fontSize: 16,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          fontSize: 14,
           fontWeight: 700,
           color: "#fbbf24",
           textDecoration: "none",
-          letterSpacing: "0.1em",
+          letterSpacing: "0.08em",
           transition: "color 0.2s",
         }}
         onMouseEnter={(e) => (e.currentTarget.style.color = "#fef3c7")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "#fbbf24")}
       >
+        <img
+          src="/logo.png"
+          alt="Living Eamon"
+          style={{
+            width: 32,
+            height: 32,
+            objectFit: "contain",
+          }}
+        />
         LIVING EAMON
       </a>
 

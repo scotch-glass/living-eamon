@@ -71,6 +71,7 @@ export default function SplashPage() {
             flexDirection: "column",
             gap: 60,
             alignItems: "center",
+            paddingTop: 20,
           }}
         >
           {/* Tavern Sign Logo */}
@@ -79,10 +80,11 @@ export default function SplashPage() {
             alt="Living Eamon Sign Logo"
             style={{
               width: "100%",
-              maxWidth: 400,
+              maxWidth: 280,
               height: "auto",
               objectFit: "contain",
               filter: "drop-shadow(0 0 15px rgba(146, 64, 14, 0.6))",
+              marginBottom: 20,
             }}
           />
 

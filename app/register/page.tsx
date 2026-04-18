@@ -93,9 +93,22 @@ function RegisterContent() {
           alignItems: "center",
           justifyContent: "center",
           padding: "60px 32px",
-          background: "radial-gradient(ellipse at 50% 100%, #78350f 0%, #1c0a00 30%, #030712 70%)",
+          backgroundImage: "url(/register-bg.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          position: "relative",
         }}
       >
+        {/* Background overlay */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(3, 7, 18, 0.75)",
+            pointerEvents: "none",
+          }}
+        />
         <div
           style={{
             width: "100%",
@@ -106,6 +119,8 @@ function RegisterContent() {
             padding: 32,
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
+            position: "relative",
+            zIndex: 1,
           }}
         >
           {/* Header */}
@@ -166,26 +181,8 @@ function RegisterContent() {
           <form
             action={registerAction}
             onSubmit={() => setLoading(true)}
-            style={{ display: "flex", flexDirection: "column", gap: 12 }}
+            style={{ display: "flex", flexDirection: "column", gap: 12, position: "relative", zIndex: 1 }}
           >
-            <input
-              name="heroName"
-              type="text"
-              placeholder="Hero name (your character)"
-              required
-              maxLength={30}
-              autoComplete="username"
-              style={{
-                backgroundColor: "#111827",
-                border: "1px solid #374151",
-                color: "#e5e7eb",
-                padding: "12px 16px",
-                borderRadius: 6,
-                fontSize: 14,
-                outline: "none",
-                fontFamily: "Georgia, serif",
-              }}
-            />
             <input
               name="email"
               type="email"

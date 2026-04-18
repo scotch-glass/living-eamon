@@ -11,9 +11,8 @@ import { serviceClient } from "../../lib/supabase";
 export async function registerAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const heroName = formData.get("heroName") as string;
 
-  if (!email || !password || !heroName) {
+  if (!email || !password) {
     redirect("/register?error=missing_fields");
   }
 
@@ -23,21 +22,12 @@ export async function registerAction(formData: FormData) {
     email,
     password,
     options: {
-      data: { hero_name: heroName },
       emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
     },
   });
 
   if (error) {
     redirect(`/register?error=${encodeURIComponent(error.message)}`);
-  }
-
-  // Link auth user to players table
-  if (data.user) {
-    await serviceClient.from("players").insert({
-      user_id: data.user.id,
-      character_name: heroName,
-    });
   }
 
   // If email confirmation is required, redirect to a "check your email" page

@@ -1784,3 +1784,98 @@ This keeps Aldric current and prevents the tutorial
 system from drifting out of sync with the game.
 
 ---
+
+## §6 — Public Suite Architecture (April 18, 2026)
+
+The public-facing pages attract players and manage pre-login flows. All use dark theme (#030712 base), Georgia serif, amber gold (#fbbf24) accents, and background images with dark overlays for readability.
+
+### Pages & Routes
+
+**`/splash`** — Marketing landing page (entry point)
+- **Hero section:** Dragon logo (280×280px) + title image (320×320px, LIVING + glowing sword + EAMON) side-by-side on left; features list + tagline on left side
+- Three pillars section (GORE & CONSEQUENCE, A WORLD THAT REMEMBERS, FORBIDDEN OCCULT MAGIC) with icons and descriptions
+- Progress teaser (6 key completed items) + link to /updates
+- Prominent "Register for Early Access" button (amber) + small dim "Already a tester? Login here" link
+- No login/register forms (pure marketing funnel)
+- Background: hero.jpg (full-screen, 35% opacity) — barbarian protecting harlot from Persian warriors, 1 lich, 1 UFO
+
+**`/login`** — Minimal login form for existing testers
+- Email + password fields only
+- "Enter the Realm" button
+- "Sign in with Google" link
+- "New adventurer? Register →" link to /register
+- No marketing copy
+- Background: login-bg.jpg (full-screen, no overlay) — drunk mercenary, woman stealing his purse, busy whorehouse
+
+**`/register`** — Registration form for new users
+- Email + password fields only (hero name is set during character creation, not signup)
+- Cloudflare Turnstile CAPTCHA widget
+- "Begin the Legend" button
+- "Already have an account? Sign in →" link to /login
+- Background: register-bg.jpg (75% dark overlay) — barbarian vs sorcerer epic battle
+
+**`/updates`** — Development progress tracker
+- Status cards (done/active/planned counts)
+- MVP/Alpha/Beta explanation
+- 76-item checklist across 9 categories with progress bars
+- Styled as stone tablet aesthetic
+
+**`/legal`** — Copyright & IP disclaimer
+- About Living Eamon, Public Domain Works, Trademarks, AI-Generated Content, IP Complaints, Compliance
+- Lists 4 PD Howard works (Hyborian Age essay + 3 Thurian-Age stories)
+
+**`/board`** — Community forum
+- 4 seeded categories: Adventurers' Hall, Bug Catcher's Trap, Petitions to Jane, Lore & Theory
+- Category index shows thread count, post count, last post date
+- **`/board/[threadId]`** — individual thread view with OP + replies
+
+### Shared Navigation
+
+**`components/PublicNav.tsx`** — sticky nav used on all public pages
+- Logo + wordmark (LIVING EAMON) links to /splash
+- Links: Updates, Community, Legal
+- "Alpha Access →" button links to /splash
+
+### Image Processing Rules for Public Assets
+
+**CRITICAL: All images processed with rembg require pure white background in Grok prompt.**
+
+- **Logo** (`dragon-hero.png`): 280×280px, transparent PNG, rampant Western dragon
+  - Generated with pure white background → rembg → transparent PNG
+  - No CSS effects needed (placed as-is)
+
+- **Title** (`eamon-title.png`): 320×320px, transparent PNG, weathered brass text + sword
+  - Generated with pure white background → rembg → transparent PNG
+  - CSS drop-shadow filter applied (blue glow) after placement: `filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.6))`
+  - **Rule:** glow effects added via CSS, never baked into image
+
+- **Full-screen backgrounds** (hero.jpg, login-bg.jpg, register-bg.jpg): JPG direct, no rembg needed
+  - Background images do NOT need transparency processing
+  - Generate without transparency requirement; use JPG for efficiency
+
+### Design System Details
+
+- **Colors:** `#030712` (void black), `#fbbf24` (amber gold), `#92400e` (deep amber), `#e8d4a0` (parchment)
+- **Typography:** Georgia serif (body default), Cedarville Cursive (taglines/decorative), Noto Sans Linear B (texture only, 0.04 opacity)
+- **Form inputs:** dark background (#111827), amber border on focus, amber buttons with hover effects
+- **Overlays:** 75–88% dark overlay on backgrounds for text readability; full-screen backgrounds may have no overlay if designed for it
+- **Responsive:** mobile-first, flex layouts, no fixed widths beyond max-width containers
+
+### Background Image Strategy
+
+- **How generated:** All images generated via Grok Imagine Pro with Robert E. Howard sword & sorcery style
+- **White background rule:** For images that will be processed with rembg, ALWAYS request "pure white background" in the prompt (non-negotiable)
+- **Processing workflow:**
+  1. Generate with white background (if transparency needed)
+  2. Run rembg: `Image.open(file) → remove() → Image.save()` (Python)
+  3. Results: PNG with transparent background for logo/title, JPG for full-screen backgrounds
+- **Opacity on page:** full-screen backgrounds use 35% or native opacity via CSS for readability without overlay
+
+### Auth Actions (app/auth/actions.ts)
+
+- **registerAction:** email + password only (heroName field removed April 18, 2026)
+- **loginAction:** email + password → sets session → redirects to /
+- **googleSignInAction:** OAuth flow via Supabase
+- **logoutAction:** clears session → redirects to /login
+
+---

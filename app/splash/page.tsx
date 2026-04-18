@@ -76,20 +76,32 @@ export default function SplashPage() {
         >
           {/* LEFT: World Promises */}
           <div style={{ paddingRight: 20 }}>
-            <h1
-              style={{
-                fontSize: "5rem",
-                fontWeight: 700,
-                color: "#fbbf24",
-                fontFamily: "Georgia, serif",
-                letterSpacing: "0.05em",
-                margin: "0 0 16px 0",
-                textShadow: "0 2px 10px rgba(251, 191, 36, 0.3)",
-              }}
-            >
-              LIVING<br />
-              EAMON
-            </h1>
+            <div style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 16 }}>
+              <h1
+                style={{
+                  fontSize: "5rem",
+                  fontWeight: 700,
+                  color: "#fbbf24",
+                  fontFamily: "Georgia, serif",
+                  letterSpacing: "0.05em",
+                  margin: 0,
+                  textShadow: "0 2px 10px rgba(251, 191, 36, 0.3)",
+                }}
+              >
+                LIVING<br />
+                EAMON
+              </h1>
+              <img
+                src="/dragon-hero.png"
+                alt="Living Eamon Dragon"
+                style={{
+                  width: 200,
+                  height: 200,
+                  objectFit: "contain",
+                  flexShrink: 0,
+                }}
+              />
+            </div>
 
             <p
               style={{

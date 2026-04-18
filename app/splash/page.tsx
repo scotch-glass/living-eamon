@@ -73,17 +73,16 @@ export default function SplashPage() {
             alignItems: "center",
           }}
         >
-          {/* Tavern Sign Hero Image */}
+          {/* Tavern Sign Logo */}
           <img
-            src="/eamon-tavern-sign.jpg"
-            alt="Living Eamon Tavern Sign"
+            src="/eamon-sign-logo.png"
+            alt="Living Eamon Sign Logo"
             style={{
               width: "100%",
-              maxWidth: 1000,
+              maxWidth: 400,
               height: "auto",
               objectFit: "contain",
-              borderRadius: 4,
-              border: "2px solid rgba(146, 64, 14, 0.5)",
+              filter: "drop-shadow(0 0 15px rgba(146, 64, 14, 0.6))",
             }}
           />
 

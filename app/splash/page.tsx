@@ -29,7 +29,7 @@ export default function SplashPage() {
       >
         {/* Hero art background */}
         <img
-          src="/hero.png"
+          src="/hero.jpg"
           alt="Living Eamon"
           style={{
             position: "absolute",

@@ -64,7 +64,8 @@ export const PROGRESS_CATEGORIES: ProgressCategory[] = [
     items: [
       { label: "Banking system (Account, Savings, Security)", status: "done" },
       { label: "Static merchant inventory", status: "done" },
-      { label: "Universal SELL command", status: "done" },
+      { label: "Universal SELL command (single & bulk sell)", status: "done" },
+      { label: "Vendor temporary inventory (72-hour buyback window)", status: "done" },
       { label: "Item identification (Identify skill)", status: "done" },
       { label: "Potion brewing & alchemy", status: "planned" },
       { label: "Crafting system (weapons, armor, items)", status: "planned" },
@@ -123,7 +124,9 @@ export const PROGRESS_CATEGORIES: ProgressCategory[] = [
     label: "Core Game Systems",
     items: [
       { label: "Command parser (LOOK, ATTACK, CAST, DRINK, etc.)", status: "done" },
-      { label: "Inventory & equipment system", status: "done" },
+      { label: "Inventory & equipment system (12 slots, compare popup)", status: "done" },
+      { label: "Item inspection (two visual styles)", status: "done" },
+      { label: "Virtue tracking & notifications", status: "active" },
       { label: "Skill/stat advancement (learning from doing)", status: "planned" },
       { label: "Injury & scarring system (permanent marks from battles)", status: "planned" },
       { label: "Sanity & mental health mechanics", status: "planned" },

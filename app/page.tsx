@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { WorldState, createInitialWorldState } from "../lib/gameState";
-import { ITEMS, NPCS } from "../lib/gameData";
+import { ITEMS, NPCS, type Item } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
 import CombatScreen from "../components/CombatScreen";
@@ -18,6 +18,7 @@ import ItemDetailPopup from "../components/ItemDetailPopup";
 import EquipmentGrid from "../components/EquipmentGrid";
 import BackpackPanel from "../components/BackpackPanel";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
+import ComparePopup from "../components/ComparePopup";
 import { getRoom } from "../lib/adventures/registry";
 
 interface Message {
@@ -132,6 +133,7 @@ export default function Home() {
   } | null>(null);
   const [conversationNpcId, setConversationNpcId] = useState<string | null>(null);
   const [itemPopupId, setItemPopupId] = useState<string | null>(null);
+  const [compareItem, setCompareItem] = useState<{ item: Item; equippedSlot: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
@@ -936,6 +938,39 @@ export default function Home() {
       {/* Item detail popup (alchemical book page) */}
       <ItemDetailPopup item={itemPopupId ? ITEMS[itemPopupId] ?? null : null} onClose={() => setItemPopupId(null)} />
 
+      {/* Compare popup */}
+      {compareItem && (
+        <ComparePopup
+          itemBeingCompared={compareItem.item}
+          equippedItem={
+            compareItem.equippedSlot === "weapon"
+              ? player?.weapon && player.weapon !== "unarmed"
+                ? ITEMS[player.weapon] ?? null
+                : null
+              : compareItem.equippedSlot === "armor"
+                ? compareItem.item.stats?.zoneSlot === "head"
+                  ? player?.helmet
+                    ? ITEMS[player.helmet] ?? null
+                    : null
+                  : compareItem.item.stats?.zoneSlot === "neck"
+                    ? player?.gorget
+                      ? ITEMS[player.gorget] ?? null
+                      : null
+                    : compareItem.item.stats?.zoneSlot === "torso"
+                      ? player?.bodyArmor
+                        ? ITEMS[player.bodyArmor] ?? null
+                        : null
+                      : compareItem.item.stats?.zoneSlot === "limbs"
+                        ? player?.limbArmor
+                          ? ITEMS[player.limbArmor] ?? null
+                          : null
+                        : null
+                : null
+          }
+          onClose={() => setCompareItem(null)}
+        />
+      )}
+
       {/* Item action menu — contextual right-click style popup */}
       {actionMenu && player && (
         <ItemActionMenu
@@ -964,6 +999,22 @@ export default function Home() {
             setActionMenu(null);
             if (action.isInspect) {
               setItemPopupId(actionMenu.item.id);
+            } else if (action.isCompare) {
+              const item = actionMenu.item;
+              let equippedItemId: string | null = null;
+
+              if (item.type === "weapon") {
+                equippedItemId = player?.weapon === "unarmed" ? null : player?.weapon ?? null;
+              } else if (item.type === "armor") {
+                const zoneSlot = item.stats?.zoneSlot;
+                if (zoneSlot === "head") equippedItemId = player?.helmet ?? null;
+                else if (zoneSlot === "neck") equippedItemId = player?.gorget ?? null;
+                else if (zoneSlot === "torso") equippedItemId = player?.bodyArmor ?? null;
+                else if (zoneSlot === "limbs") equippedItemId = player?.limbArmor ?? null;
+              }
+
+              const equippedItem = equippedItemId ? ITEMS[equippedItemId] ?? null : null;
+              setCompareItem({ item, equippedSlot: item.type });
             } else if (action.command) {
               sendMessage(action.command);
             }

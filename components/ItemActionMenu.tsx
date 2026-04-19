@@ -11,6 +11,8 @@ export interface ItemAction {
   comingSoon?: boolean;
   /** If true, this opens the inspect popup instead of sending a command. */
   isInspect?: boolean;
+  /** If true, open the compare popup. */
+  isCompare?: boolean;
 }
 
 export type ItemContext =
@@ -45,9 +47,11 @@ export function getItemActions(
   // Equip actions (weapons, armor, shields)
   if (item.type === "weapon" && !isEquipped) {
     actions.push({ label: "Equip", command: `EQUIP ${item.name.toUpperCase()}` });
+    actions.push({ label: "Compare", command: null, isCompare: true });
   }
   if (item.type === "armor" && !isEquipped) {
     actions.push({ label: "Equip", command: `EQUIP ${item.name.toUpperCase()}` });
+    actions.push({ label: "Compare", command: null, isCompare: true });
   }
 
   // Consumable actions

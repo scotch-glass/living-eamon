@@ -1,5 +1,5 @@
 // app/auth/callback/route.ts
-// Handles OAuth redirects (Google SSO) and email confirmation links
+// Handles email confirmation links
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "../../../lib/supabaseAuthServer";

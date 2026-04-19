@@ -1,7 +1,7 @@
 "use client";
 
 import PublicNav from "../../components/PublicNav";
-import { PROGRESS_CATEGORIES, countSystems } from "../../lib/alphaProgress";
+import { PROGRESS_CATEGORIES, countSystems, LAST_UPDATED } from "../../lib/alphaProgress";
 
 export default function UpdatesPage() {
   const { done, active, planned } = countSystems();
@@ -44,6 +44,19 @@ export default function UpdatesPage() {
       >
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 60 }}>
+          <p
+            style={{
+              color: "#fbbf24",
+              fontSize: 13,
+              fontFamily: "Georgia, serif",
+              fontWeight: 700,
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              margin: "0 0 16px 0",
+            }}
+          >
+            Latest Update · {LAST_UPDATED}
+          </p>
           <h1
             style={{
               fontSize: 40,
@@ -168,10 +181,10 @@ export default function UpdatesPage() {
               <strong style={{ color: "#c5ad75" }}>MVP (Current)</strong> — A theoretically playable game: one hero, one city, combat, magic, banking, consequences. Rough around the edges but functional.
             </p>
             <p style={{ margin: "0 0 12px 0" }}>
-              <strong style={{ color: "#c5ad75" }}>Alpha (2028)</strong> — Adventure modules (3 PD stories adapted), expanded world map, balance tuning. Testers help us find what breaks and what doesn't feel right.
+              <strong style={{ color: "#c5ad75" }}>Alpha Test</strong> — Adventure modules, expanded world map, balance tuning. Testers help us find what breaks and what doesn't feel right.
             </p>
             <p style={{ margin: "0 0 0 0" }}>
-              <strong style={{ color: "#c5ad75" }}>Beta (2029+)</strong> — Polish, UI refinement, performance. The game works; now make it shine.
+              <strong style={{ color: "#c5ad75" }}>Beta Test</strong> — Polish, UI refinement, performance. The game works; now make it shine.
             </p>
           </div>
         </div>
@@ -299,7 +312,7 @@ export default function UpdatesPage() {
               margin: 0,
             }}
           >
-            Last updated: April 18, 2026
+            Last updated: {LAST_UPDATED}
             <br />
             Jane is perpetually building. This chronicle is updated at the end of each development cycle.
           </p>

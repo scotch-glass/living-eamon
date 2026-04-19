@@ -199,7 +199,7 @@ async function generateOne(item) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "grok-imagine-image",
+      model: "grok-imagine-image-pro",
       prompt: buildPrompt(item),
       n: 1,
       response_format: "b64_json",

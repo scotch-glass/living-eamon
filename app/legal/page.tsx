@@ -2,6 +2,17 @@
 
 import PublicNav from "../../components/PublicNav";
 
+const RADIOACTIVE_WORDS = [
+  "CONAN",
+  "Conan the Barbarian",
+  "CIMMERIAN",
+  "CIMMERIANS",
+  "CIMMERIA",
+  "HYBORIA",
+  "HYBORIAN AGE",
+  "HYBORIAN",
+];
+
 export default function LegalPage() {
   return (
     <div
@@ -52,22 +63,9 @@ export default function LegalPage() {
           Legal Information
         </h1>
         <p style={{ color: "#8a7a60", fontSize: 13, marginBottom: 40 }}>
-          Intellectual property, attributions, and contact information
+          Intellectual property, trademarks, and contact information
         </p>
 
-        <div style={{ marginBottom: 40 }}>
-          <p
-            style={{
-              color: "#e8d4a0",
-              fontSize: 15,
-              lineHeight: 1.8,
-              margin: 0,
-            }}
-          >
-            Living Eamon is a text-adventure game inspired by the classic Eamon system (1980) and the public domain works of Robert E. Howard. This page clarifies our intellectual property position, attributes the sources we draw from, and provides contact information for legal matters.
-          </p>
-        </div>
-
         <section style={{ marginBottom: 48 }}>
           <h2
             style={{
@@ -78,10 +76,17 @@ export default function LegalPage() {
               letterSpacing: "0.03em",
             }}
           >
-            About Living Eamon
+            Our Use of Source Material
           </h2>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7 }}>
-            Living Eamon is an AI-driven persistent text adventure. One hero carries across hundreds of adventures, a world that remembers every choice, and two magic systems — one legal, one forbidden. The game world is built using a mix of original creativity and adaptations of public domain source material.
+          <p style={{ color: "#e8d4a0", fontSize: 15, lineHeight: 1.75 }}>
+            Living Eamon is an AI-driven persistent text adventure. All source
+            material appearing in Living Eamon&mdash;narrative prose, imagery,
+            world concepts, characters, locations, and adapted story
+            elements&mdash;is used under rights that Thot Technologies either
+            owns outright or is lawfully entitled to use under applicable
+            copyright law in the jurisdictions where Living Eamon is offered.
+            We have conducted the necessary rights review for every element we
+            publish.
           </p>
         </section>
 
@@ -95,76 +100,42 @@ export default function LegalPage() {
               letterSpacing: "0.03em",
             }}
           >
-            Public Domain Works
+            Trademark Disclaimer
           </h2>
-
-          <div style={{ marginBottom: 16 }}>
-            <h3 style={{ color: "#c5ad75", fontSize: 14, fontWeight: 700, marginBottom: 6 }}>
-              The Eamon Adventure System (1980)
-            </h3>
-            <p style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
-              Eamon was created by Donald Brown (TRIAD/Adventure International, 1980). It is a foundational text-based dungeon adventure system. The copyright was not renewed, placing it in the public domain. Living Eamon adopts its structure, philosophy, and design spirit as a successor system.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <h3 style={{ color: "#c5ad75", fontSize: 14, fontWeight: 700, marginBottom: 6 }}>
-              Robert E. Howard's Public Domain Works
-            </h3>
-            <p style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.6, margin: "0 0 12px 0" }}>
-              We draw from the following works by Robert E. Howard, all of which are in the public domain in the European Union and the United States (or will enter public domain by 2028 in the US):
-            </p>
-            <ul style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.8, paddingLeft: 24, margin: 0, marginBottom: 16 }}>
-              <li>
-                <strong>The Hyborian Age</strong> (essay, 1936) — The world-building document detailing prehistory, races, and kingdoms.
-              </li>
-              <li>
-                <strong>The Shadow Kingdom</strong> (short story, Weird Tales 1929) — Kull of Atlantis discovers serpent-men infiltrating the throne.
-              </li>
-              <li>
-                <strong>The Mirrors of Tuzun Thune</strong> (short story, Weird Tales 1929) — Kull's meditation on alternate realities and kingship.
-              </li>
-              <li>
-                <strong>Kings of the Night</strong> (short story, Weird Tales 1930) — Kull summoned through time to aid Bran Mak Morn against Rome.
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section style={{ marginBottom: 48 }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: "#fbbf24",
-              marginBottom: 12,
-              letterSpacing: "0.03em",
-            }}
-          >
-            Trademarks & Legal Notices
-          </h2>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>
-            Living Eamon is not affiliated with, endorsed by, or associated with Conan Properties Inc. or any copyright holder of Robert E. Howard's works beyond those explicitly listed above as public domain.
+          <p style={{ color: "#e8d4a0", fontSize: 15, lineHeight: 1.75, marginBottom: 16 }}>
+            Living Eamon is not affiliated with, endorsed by, sponsored by,
+            associated with, or authorized by Conan Properties International
+            LLC, any successor or assign of the estate of Robert E.&nbsp;Howard,
+            or any holder of trademarks or copyrights in the works commonly
+            associated with those names. Any resemblance between Living Eamon
+            and those properties&mdash;whether in tone, setting, or
+            atmosphere&mdash;does not imply any such affiliation or endorsement.
           </p>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>
-            The following trademarks remain the property of Conan Properties Inc. and are not used in Living Eamon:
+          <p style={{ color: "#e8d4a0", fontSize: 15, lineHeight: 1.75, marginBottom: 16 }}>
+            Living Eamon expressly does not use the following words, phrases,
+            or marks anywhere in the game, its code, its marketing, its
+            branding, or any product or service offered under the Living Eamon
+            name:
           </p>
           <ul
             style={{
-              color: "#a8a097",
-              fontSize: 13,
-              lineHeight: 1.8,
+              color: "#fcd34d",
+              fontSize: 15,
+              lineHeight: 1.9,
               paddingLeft: 24,
-              marginBottom: 12,
+              marginBottom: 20,
+              fontWeight: 600,
             }}
           >
-            <li>CONAN</li>
-            <li>Conan the Barbarian</li>
-            <li>HYBORIA</li>
-            <li>Hyborian Age (as a brand or product name)</li>
+            {RADIOACTIVE_WORDS.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
           </ul>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7 }}>
-            Living Eamon is titled as such and marketed independently of any trademark-protected names.
+          <p style={{ color: "#e8d4a0", fontSize: 15, lineHeight: 1.75 }}>
+            Each of the words listed above is, to the extent it has been
+            registered or is asserted as a trademark, the property of its
+            respective owner. Living Eamon claims no right, title, or interest
+            in any of them.
           </p>
         </section>
 
@@ -180,8 +151,12 @@ export default function LegalPage() {
           >
             AI-Generated Content
           </h2>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7 }}>
-            Much of the narrative content in Living Eamon is generated or assisted by artificial intelligence systems (Grok, Anthropic Claude). These systems are tools used to create original content in the voice and style of the game world. Living Eamon does not claim human authorship for AI-assisted content, nor does it claim copyright ownership over AI generation processes themselves.
+          <p style={{ color: "#e8d4a0", fontSize: 15, lineHeight: 1.75 }}>
+            Portions of Living Eamon&rsquo;s narrative, imagery, and responsive
+            content are generated with the assistance of AI systems under Thot
+            Technologies&rsquo; creative direction. Thot Technologies reserves
+            all rights it holds in the curated, directed, and edited output
+            that forms part of Living Eamon.
           </p>
         </section>
 
@@ -197,60 +172,25 @@ export default function LegalPage() {
           >
             Intellectual Property Complaints
           </h2>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>
-            If you believe Living Eamon infringes upon your intellectual property rights, please contact us directly at:
+          <p style={{ color: "#e8d4a0", fontSize: 15, lineHeight: 1.75, marginBottom: 12 }}>
+            If you believe Living Eamon infringes upon an intellectual-property
+            right you hold, please contact us directly:
           </p>
           <p
             style={{
               color: "#fbbf24",
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 600,
-              margin: "0 0 12px 0",
+              margin: "0 0 16px 0",
             }}
           >
             {process.env.NEXT_PUBLIC_CONTACT_EMAIL || "legal@livingeamon.game"}
           </p>
-          <p style={{ color: "#a8a097", fontSize: 13, lineHeight: 1.7 }}>
-            Please include:
-            <br />
-            • The specific content or feature in question
-            <br />
-            • Your copyright or trademark registration (if applicable)
-            <br />
-            • A detailed explanation of the alleged infringement
-            <br />
-            • Your contact information and credentials
-          </p>
-        </section>
-
-        <section style={{ marginBottom: 48 }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: "#fbbf24",
-              marginBottom: 12,
-              letterSpacing: "0.03em",
-            }}
-          >
-            Compliance & Future Updates
-          </h2>
           <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7 }}>
-            Living Eamon monitors copyright law as new works enter the public domain (notably, Robert E. Howard Conan stories enter US public domain January 1, 2028, and progressively through 2032). This legal notice will be updated as new works become available for use without licensing.
-          </p>
-          <p style={{ color: "#a8a097", fontSize: 14, lineHeight: 1.7 }}>
-            For detailed information on public domain status and our development roadmap, see our{" "}
-            <a
-              href="/updates"
-              style={{
-                color: "#fbbf24",
-                textDecoration: "none",
-                borderBottom: "1px solid #fbbf24",
-              }}
-            >
-              development progress page
-            </a>
-            .
+            Include: the specific content or feature in question; your
+            copyright or trademark registration, if any; a detailed
+            description of the alleged infringement; and your contact
+            information. We review every complaint promptly.
           </p>
         </section>
 
@@ -261,10 +201,8 @@ export default function LegalPage() {
             textAlign: "center",
           }}
         >
-          <p style={{ color: "#5a4a3a", fontSize: 12, lineHeight: 1.6, margin: 0 }}>
-            Last updated: April 18, 2026
-            <br />
-            This notice was prepared with reference to jurisdiction-specific public domain calendars and Berne Convention copyright law.
+          <p style={{ color: "#5a4a3a", fontSize: 12, lineHeight: 1.7, margin: 0 }}>
+            Last updated: April 20, 2026
           </p>
         </div>
       </main>

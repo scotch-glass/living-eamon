@@ -54,28 +54,6 @@ export async function loginAction(formData: FormData) {
   redirect("/");
 }
 
-// ── Google SSO ─────────────────────────────────────────────────
-export async function googleSignInAction() {
-  const supabase = await createServerSupabase();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
-      queryParams: {
-        access_type: "offline",
-        prompt: "consent",
-      },
-    },
-  });
-
-  if (error || !data.url) {
-    redirect("/login?error=google_auth_failed");
-  }
-
-  redirect(data.url);
-}
-
 // ── Logout ─────────────────────────────────────────────────────
 export async function logoutAction() {
   const supabase = await createServerSupabase();

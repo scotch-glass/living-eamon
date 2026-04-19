@@ -6,7 +6,7 @@ Before doing any work, read these files in order:
 1. This file (CLAUDE_CONTEXT.md) — project overview, architecture, current status
 2. **`Public_Domain_Rules.md`** — CRITICAL: Legal framework & Safe Harbor strategy for using Howard's public domain works. Establishes branding rules, trademark restrictions, timeline (Phase 1: Thurian/Aurelion pre-2028; Phase 2: Hyborian modules post-2028), and content sourcing rules. Read this before any design decision involving IP.
 3. GAME_DESIGN.md — full game design document. **§10 (Hyborian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. Read it before designing anything new in the game world.
-4. **`lore/hyborian-pd/PD_RESEARCH.md`** — what Howard material is currently public domain (small corpus: the *Hyborian Age* essay + 3 Thurian-Age short stories). Most Conan content is NOT yet PD until 2028–2032. **Verify every named element here before using it.**
+4. **`Public_Domain_Rules.md`** is now the single consolidated PD-safety doc (as of April 19, 2026). The former `lore/hyborian-pd/PD_RESEARCH.md` was deleted and its content absorbed. The authoritative name-by-name Safe Harbor / Radioactive lookup is at the top of **`GAME_DESIGN.md`** — that table supersedes everything else. Currently-PD corpus: *The Hyborian Age* essay (1936), three Thurian-Age Kull stories (1929–1930), and two *Phantagraph* poems ("Always Comes Evening" 1936, "Song at Midnight" 1940). Most Conan short-story content enters PD 2028–2032.
 5. **`lore/hyborian-pd/MODULE_PLAN.md`** — the methodology for converting PD stories into Living Eamon adventure modules. Includes the standing rule: *every module = one PD story + Living Eamon systems + Howard's voice + PD-verified naming.*
 6. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
    - User profile (Scotch — non-developer founder)
@@ -513,8 +513,7 @@ Style: Extremely high definition, gritty, photorealistic grimdark. Warhammer mee
 Maps: Hand-drawn in the style of Tolkien's own cartography — Middle-earth aesthetic with compass roses, illustrated terrain, aged parchment texture.
 Image API: Grok Imagine
 
-Master reference generation: grok-imagine-image-pro ($0.07/image)
-Composited scene renders: grok-imagine-image standard ($0.02/image)
+**Art-quality mandate (April 19, 2026):** All art calls use `grok-imagine-image-pro` ($0.07/image). The standard `grok-imagine-image` model is never used — no downgrade fallback, no cost-optimization swap. This applies to every surface: item icons, NPC sprites, hero sprite, scene backgrounds, item book-page art, barmaid portraits, and all scripts.
 
 White studio backdrop rule: All master character reference images are generated on clean white background for maximum contrast and sharpest Flux model anchor. Black backgrounds cause edge halos and lighting bleed. White is canon.
 Regional Tone Archetypes
@@ -1207,7 +1206,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 ## 10. Art System
 
 - Output path (script): `public/uo-art/items/[numeric artId].png` (created by `scripts/generate-all-art.mjs`; folder may be absent in a fresh clone).
-- Model: **`grok-imagine-image`** (xAI Images API).
+- Model: **`grok-imagine-image-pro`** (xAI Images API). **Mandate:** never use the non-pro `grok-imagine-image` model. See §7 Art Direction art-quality mandate.
 - Batch script: `scripts/generate-all-art.mjs` (reads `GROK_API_KEY` from `.env.local`).
 - Test script: `scripts/test-plate-chest.mjs`.
 - Paperdoll figures, male/female layered wearables: **not built** (parked).

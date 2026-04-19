@@ -2,6 +2,82 @@
 
 import PublicNav from "../../components/PublicNav";
 
+const FEATURES: { title: string; body: string }[] = [
+  {
+    title: "Forbidden Sorcery That Hunts You",
+    body: "The Order disappears Occultists and sometimes the witnesses who saw them. Invoke in public, fizzle a syllable, attract attention — and discover that inquisitors don't leave survivors. No tutorial will teach you the Words of Power. Find them yourself and choose the destiny of worlds.",
+  },
+  {
+    title: "Your Deeds Live in the Chronicle of Deeds",
+    body: "Every kill, every betrayal, every forbidden summoning is recorded in the Chronicle of Deeds and carried forward across sessions, realms, and lifetimes. The Chronicle is read by every NPC you meet. You cannot erase what you have done.",
+  },
+  {
+    title: "Body-Zone Combat & Real Wounds",
+    body: "Strike head, neck, torso, or limbs. Armor covers specific zones and degrades hit by hit. Severed arteries bleed until bandaged. Poison accrues in severity. Broken legs keep you from running. Flesh wounds, not abstract HP.",
+  },
+  {
+    title: "Power Corrupts",
+    body: "Powerful, dark sorceries grant nearly unlimited power. NPCs smell the taint. Temples close their doors. You can wield the dagger of a Scythian priest, but the kingdom will know what you have become.",
+  },
+  {
+    title: "Eight Circles of Sorcery",
+    body: "64 forbidden invocations, from simple binding to the summoning of things the stars wish forgotten. Each circle demands rarer reagents, costlier risk, and greater notice from the Order. The highest circles can shatter a city.",
+  },
+  {
+    title: "Reagents Cannot Be Bought in Town",
+    body: "Eight sacred reagents, none for sale in civilized places. Hunt them, trade for them in worlds that don't ask questions, and keep your hoard hidden. A full reagent pouch is evidence if put to the Question by the Order.",
+  },
+  {
+    title: "Realistic Armor & Weapon Physics",
+    body: "Weight has consequences. Plate armor is heavy and custom-fit — crippling on foot. Only mounted knights wear it without being immobilized by their own gear. An unarmored sword master with high dexterity will out-dance an unhorsed, armored knight every time.",
+  },
+  {
+    title: "Destructible Environments, Permanent Ruins",
+    body: "Burn a building and it stays burnt — in this realm and in the Chronicle. Survivors become refugees, reagent markets collapse, the Order investigates. Circle-7 rituals can ruin a city entirely.",
+  },
+  {
+    title: "Death Is Costly. Be prepared to pay the price.",
+    body: "Die and you rise again naked and shamed in the Church of Perpetual Life, your gear lost, your gold gone. But your virtues and skills remain. The hero returns, blessed or cursed by the silent god of perpetual life.",
+  },
+];
+
+const PILLARS = [
+  {
+    eyebrow: "The Order",
+    title: "Forbidden Occult Sorcery",
+    body: "Two systems. Legal Guild-endorsed magic is safe and weak. Mysterious, occult sorcery is powerful and illegal — and the Order hunts everyone who has ever even asked about it. Sorcery triggered the Cataclysm that ended the Thurian Age, and will destroy the world again if it can...and it can.",
+  },
+  {
+    eyebrow: "The Chronicle",
+    title: "A World That Remembers",
+    body: "Every significant act is written into a persistent chronicle that follows the Perpetual Hero across every realm, every adventure, every death. Nothing is forgotten.",
+  },
+];
+
+const LAUNCH_ADVENTURES: { title: string; hook: string }[] = [
+  {
+    title: "The Mirrors of Tuzun Thune",
+    hook: "A ruined tower in the wilderness. A dead wizard's mirror chamber, undusted after twelve thousand years. Each mirror shows a life you never lived — and the Order wants them shattered.",
+  },
+  {
+    title: "The Shadow Kingdom",
+    hook: "A noble court is being killed off one by one and replaced by serpent-men wearing the dead's faces. A single phrase in an ancient tongue will unmask them. Say it and watch who cannot say it back.",
+  },
+  {
+    title: "Kings of the Night",
+    hook: "A Pictish shaman opens a tomb sealed before the Cataclysm. The ritual needs a hero who can reach across the ages — and a corpse-army of Stygian raiders stands between her and sunrise.",
+  },
+];
+
+const PROGRESS_ITEMS = [
+  "Body-zone combat with bleed, poison & wound effects",
+  "Persistent hero with name, virtues, Chronicle across realms",
+  "Guild magic & Occult sorcery — four Guild spells, sorcery circles 1–4 coded",
+  "Living-world database: NPCs remember, rooms remember",
+  "Ten-virtue moral tracking & Honor system",
+  "Banking, vendor temp stock & 72-hour buyback",
+];
+
 export default function SplashPage() {
   return (
     <div
@@ -10,362 +86,762 @@ export default function SplashPage() {
         backgroundColor: "#030712",
         display: "flex",
         flexDirection: "column",
+        color: "#e8d4a0",
       }}
     >
       <PublicNav currentPage="login" />
 
-      {/* HERO SECTION */}
-      <div
+      {/* ───────────────────────── HERO ───────────────────────── */}
+      <section
         style={{
           position: "relative",
           minHeight: "100vh",
-          background: "radial-gradient(ellipse at 50% 100%, #78350f 0%, #1c0a00 30%, #030712 70%)",
-          padding: "60px 32px",
+          padding: "80px 32px 96px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
         }}
       >
-        {/* Hero art background */}
         <img
           src="/hero.jpg"
-          alt="Living Eamon"
+          alt="A barbarian protects a kneeling woman from Persian warriors under a stormy sky crafted by Robert E. Howard"
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: 0.35,
+            opacity: 0.5,
             pointerEvents: "none",
           }}
         />
-
-        {/* Decorative Linear B characters as texture (very low opacity) */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            fontSize: "12rem",
-            color: "#fbbf24",
-            opacity: 0.04,
-            overflow: "hidden",
+            background:
+              "radial-gradient(ellipse at 50% 50%, rgba(3, 7, 18, 0.2) 0%, rgba(3, 7, 18, 0.7) 60%, rgba(3, 7, 18, 0.95) 100%)",
             pointerEvents: "none",
-            fontFamily: "Noto Sans Linear B, serif",
-            whiteSpace: "pre-wrap",
-            lineHeight: 1.2,
-            fontWeight: 700,
           }}
-        >
-          𐀀𐀁𐀂𐀃𐀄𐀅𐀆𐀇  𐀈𐀉𐀊𐀋𐀌𐀍𐀎𐀏 𐀐𐀑𐀒𐀓𐀔𐀕𐀖𐀗 𐀘𐀙𐀚𐀛𐀜𐀝𐀞𐀟 𐀠𐀡𐀢𐀣𐀤𐀥𐀦𐀧
-        </div>
+        />
 
-        {/* Content container */}
         <div
           style={{
             position: "relative",
             zIndex: 1,
             width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            gap: 60,
-            alignItems: "center",
+            maxWidth: 960,
+            textAlign: "center",
+            fontFamily: "Georgia, serif",
           }}
         >
-          {/* LEFT: World Promises */}
-          <div style={{ width: "100%", textAlign: "center", maxWidth: 900, margin: "0 auto" }}>
+          <p
+            style={{
+              color: "#fbbf24",
+              fontSize: 14,
+              fontWeight: 700,
+              letterSpacing: "0.35em",
+              textTransform: "uppercase",
+              margin: "0 0 24px 0",
+            }}
+          >
+            A Living Text Adventure — Inspired by Robert E. Howard's Thurian Age Sword & Sorcery Tales
+          </p>
 
-            <h2
-              style={{
-                fontFamily: "Cedarville Cursive, cursive",
-                fontSize: "1.8rem",
-                color: "#fbbf24",
-                fontStyle: "italic",
-                margin: "0 0 32px 0",
-                lineHeight: 1.6,
-              }}
-            >
-              One hero. A thousand realms. Infinite death.
-            </h2>
+          <h1
+            style={{
+              color: "#fef3c7",
+              fontSize: "clamp(2.75rem, 6vw, 4.25rem)",
+              fontWeight: 700,
+              lineHeight: 1.05,
+              margin: "0 0 28px 0",
+              textShadow: "0 2px 24px rgba(0, 0, 0, 0.8)",
+            }}
+          >
+            One hero. A thousand realms.
+            <br />
+            A chronicle that never forgets.
+          </h1>
 
-            <div style={{ marginBottom: 48, maxWidth: 800, margin: "0 auto 48px" }}>
-              <p
-                style={{
-                  color: "#e8d4a0",
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                  marginBottom: 24,
-                  fontStyle: "italic",
-                }}
-              >
-                Hack your way through dungeons dark with blood on your blade and death at your heels. Survive a hack-and-slash adventure and stumble back to town covered in gore, your armor dented, your sanity questioned. Face evil sorcerers who traffic in Thurian demon magic. Seduce treacherous harlots and trust damsels at your peril. Learn forbidden occult magics and risk the wrath of the Order. Outfit yourself in realistic armor — plate is heavy, expensive, and only for mounted knights who can afford the custom fit.
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 900, margin: "0 auto" }}>
-                {[
-                  "One hero carries every scar, every kill, every curse across a thousand adventures",
-                  "Deadly encounters where a single mistake means death. Permanently.",
-                  "Two magic systems — legal Guild magic and forbidden Occult magic",
-                  "Realistic armor and weapon physics. Plate protects. Cloth doesn't.",
-                  "A world that rebuilds itself around your choices, permanently",
-                ].map((feature, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      gap: 12,
-                      color: "#e8d4a0",
-                      fontSize: 13,
-                      lineHeight: 1.6,
-                      fontFamily: "Georgia, serif",
-                    }}
-                  >
-                    <span style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }}>◆</span>
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <p
+            style={{
+              color: "#e8d4a0",
+              fontSize: "clamp(1.0625rem, 1.6vw, 1.25rem)",
+              lineHeight: 1.7,
+              margin: "0 auto 40px",
+              maxWidth: 780,
+              textShadow: "0 1px 12px rgba(0, 0, 0, 0.7)",
+            }}
+          >
+            Living Eamon is a persistent, AI-driven sword-and-sorcery adventure set in
+            Robert E.&nbsp;Howard&rsquo;s sword and sorcery age. Hunt forbidden reagents under the
+            full moon, avoiding the Order&rsquo;s inquisitive eye. Carry your scars, your virtues, and your legend from one realm to the next. Everything you do is written down — you are the immortal hero - famed or shamed across worlds.
+          </p>
 
-            <p
-              style={{
-                fontFamily: "Cedarville Cursive, cursive",
-                fontSize: "0.95rem",
-                color: "#8a7a60",
-                fontStyle: "italic",
-                lineHeight: 1.8,
-                borderTop: "1px solid rgba(146, 64, 14, 0.3)",
-                paddingTop: 20,
-                marginTop: 48,
-                maxWidth: 700,
-                margin: "48px auto 0",
-              }}
-            >
-              "In the shadows, serpent-men plotted. Valusia, mightiest of kingdoms, was crumbling from within. Only Kull stood between the throne and chaos — if he lived long enough to see it."
-              <br />
-              <span style={{ fontSize: "0.85rem", color: "#5a4a3a", marginTop: 8, display: "block" }}>
-                — Robert E. Howard, The Shadow Kingdom (public domain)
-              </span>
-            </p>
-
-            {/* Call to Action */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 24,
-                textAlign: "center",
-                marginTop: 48,
-              }}
-            >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 18,
+            }}
+          >
             <a
               href="/register"
               style={{
                 background: "#92400e",
                 color: "#fef3c7",
-                padding: "16px 32px",
+                padding: "18px 44px",
                 borderRadius: 8,
-                fontSize: 16,
+                fontSize: 17,
                 fontWeight: 700,
-                letterSpacing: "0.1em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 textDecoration: "none",
-                transition: "background 0.2s",
-                border: "none",
-                cursor: "pointer",
+                transition: "background 0.2s, transform 0.15s",
                 fontFamily: "Georgia, serif",
+                border: "1px solid #fbbf24",
+                boxShadow: "0 4px 24px rgba(146, 64, 14, 0.4)",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.background = "#a84d10";
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "#b35712";
+                el.style.transform = "translateY(-1px)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.background = "#92400e";
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "#92400e";
+                el.style.transform = "translateY(0)";
               }}
             >
               Register for Early Access
             </a>
-
             <a
               href="/login"
               style={{
-                color: "#5a4a3a",
-                fontSize: 12,
-                textDecoration: "none",
+                color: "#a8a097",
+                fontSize: 15,
                 fontFamily: "Georgia, serif",
+                textDecoration: "none",
                 transition: "color 0.2s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#8a7a60")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#5a4a3a")}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#fbbf24")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#a8a097")}
             >
-              Already a tester? Login here
+              Already a tester? Sign in &rarr;
             </a>
-            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* THREE PILLARS */}
-      <div
+      {/* ───────────────────────── PILLARS ───────────────────────── */}
+      <section
         style={{
           background: "linear-gradient(180deg, #030712 0%, #0a0a0a 100%)",
-          padding: "80px 32px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 32,
-          maxWidth: 1200,
-          margin: "0 auto",
-          width: "100%",
+          padding: "96px 32px",
         }}
       >
-        {[
-          { icon: "⚔", title: "GORE & CONSEQUENCE", desc: "Full detail blood and viscera. Hack and slash your way through adventures. Survive, and you stagger back covered in your enemies' blood. Die, and you're done." },
-          { icon: "🌍", title: "A WORLD THAT REMEMBERS", desc: "NPCs know what you've done. Tavern keepers recognize killers. Temples remember the wicked. The Order hunts those who traffic in forbidden magic." },
-          { icon: "✦", title: "FORBIDDEN OCCULT MAGIC", desc: "Two magic systems: legal Guild magic taught in temples, and forbidden Occult magic written in dust and blood. The Order will kill you for knowing too much." },
-        ].map((pillar, idx) => (
-          <div
-            key={idx}
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <h2
             style={{
-              background: "rgba(45, 22, 0, 0.6)",
-              border: "1px solid rgba(146, 64, 14, 0.3)",
-              borderRadius: 8,
-              padding: 24,
+              color: "#fbbf24",
+              fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
               textAlign: "center",
+              marginBottom: 12,
             }}
           >
-            <div style={{ fontSize: "3rem", marginBottom: 16 }}>{pillar.icon}</div>
-            <h3
-              style={{
-                color: "#fbbf24",
-                fontFamily: "Georgia, serif",
-                fontSize: 16,
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                marginBottom: 12,
-                textTransform: "uppercase",
-              }}
-            >
-              {pillar.title}
-            </h3>
-            <p
-              style={{
-                color: "#a8a097",
-                fontSize: 13,
-                fontFamily: "Georgia, serif",
-                lineHeight: 1.6,
-              }}
-            >
-              {pillar.desc}
-            </p>
-          </div>
-        ))}
-      </div>
+            Two Things No Other Adventure Has
+          </h2>
+          <p
+            style={{
+              color: "#a8a097",
+              fontSize: 17,
+              lineHeight: 1.6,
+              textAlign: "center",
+              maxWidth: 700,
+              margin: "0 auto 56px",
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            Living Eamon is a persistent, living world with memory and a magistrate.
+          </p>
 
-      {/* PROGRESS TEASER */}
-      <div
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: 28,
+            }}
+          >
+            {PILLARS.map((p) => (
+              <div
+                key={p.title}
+                style={{
+                  background: "rgba(45, 22, 0, 0.55)",
+                  border: "1px solid rgba(146, 64, 14, 0.4)",
+                  borderRadius: 10,
+                  padding: "32px 28px",
+                }}
+              >
+                <p
+                  style={{
+                    color: "#fbbf24",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: "0.25em",
+                    textTransform: "uppercase",
+                    margin: "0 0 10px 0",
+                    fontFamily: "Georgia, serif",
+                  }}
+                >
+                  {p.eyebrow}
+                </p>
+                <h3
+                  style={{
+                    color: "#fef3c7",
+                    fontSize: "1.375rem",
+                    fontWeight: 700,
+                    fontFamily: "Georgia, serif",
+                    margin: "0 0 16px 0",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {p.title}
+                </h3>
+                <p
+                  style={{
+                    color: "#e8d4a0",
+                    fontSize: 16,
+                    lineHeight: 1.65,
+                    fontFamily: "Georgia, serif",
+                    margin: 0,
+                  }}
+                >
+                  {p.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────── NUMBERS STRIP ───────────────────────── */}
+      <section
         style={{
-          background: "rgba(12, 6, 2, 0.4)",
-          borderTop: "1px solid rgba(146, 64, 14, 0.2)",
-          borderBottom: "1px solid rgba(146, 64, 14, 0.2)",
-          padding: "60px 32px",
-          maxWidth: 1200,
-          margin: "0 auto",
-          width: "100%",
+          background: "rgba(12, 6, 2, 0.6)",
+          borderTop: "1px solid rgba(146, 64, 14, 0.25)",
+          borderBottom: "1px solid rgba(146, 64, 14, 0.25)",
+          padding: "56px 32px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 24,
+            textAlign: "center",
+            fontFamily: "Georgia, serif",
+          }}
+        >
+          {[
+            { n: "8", label: "Circles of Sorcery" },
+            { n: "64", label: "Forbidden Invocations" },
+            { n: "10", label: "Tracked Virtues" },
+            { n: "4", label: "Body Zones in Combat" },
+            { n: "∞", label: "Procedurally-Generated Realms" },
+          ].map((s) => (
+            <div key={s.label}>
+              <div
+                style={{
+                  color: "#fbbf24",
+                  fontSize: "3rem",
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  marginBottom: 10,
+                }}
+              >
+                {s.n}
+              </div>
+              <div
+                style={{
+                  color: "#a8a097",
+                  fontSize: 14,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ───────────────────────── FEATURE GRID ───────────────────────── */}
+      <section
+        style={{
+          background: "linear-gradient(180deg, #0a0a0a 0%, #030712 100%)",
+          padding: "96px 32px",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <h2
+            style={{
+              color: "#fbbf24",
+              fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
+              textAlign: "center",
+              marginBottom: 16,
+            }}
+          >
+            What You Will Actually Do
+          </h2>
+          <p
+            style={{
+              color: "#a8a097",
+              fontSize: 17,
+              lineHeight: 1.6,
+              textAlign: "center",
+              maxWidth: 720,
+              margin: "0 auto 64px",
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            Nine concrete systems, each designed to make every decision feel like it
+            could kill you — or make you immortal.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+              gap: 28,
+            }}
+          >
+            {FEATURES.map((f, idx) => (
+              <div
+                key={f.title}
+                style={{
+                  background: "rgba(45, 22, 0, 0.35)",
+                  border: "1px solid rgba(146, 64, 14, 0.3)",
+                  borderLeft: "3px solid #fbbf24",
+                  borderRadius: 6,
+                  padding: "24px 26px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#92400e",
+                      fontSize: 14,
+                      fontWeight: 700,
+                      fontFamily: "Georgia, serif",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <h3
+                    style={{
+                      color: "#fef3c7",
+                      fontSize: "1.1875rem",
+                      fontWeight: 700,
+                      fontFamily: "Georgia, serif",
+                      margin: 0,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {f.title}
+                  </h3>
+                </div>
+                <p
+                  style={{
+                    color: "#e8d4a0",
+                    fontSize: 16,
+                    lineHeight: 1.65,
+                    fontFamily: "Georgia, serif",
+                    margin: 0,
+                  }}
+                >
+                  {f.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────── LAUNCH ADVENTURES ───────────────────────── */}
+      <section
+        style={{
+          background: "linear-gradient(180deg, #030712 0%, #0a0a0a 100%)",
+          padding: "96px 32px",
+          borderTop: "1px solid rgba(146, 64, 14, 0.25)",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <p
+            style={{
+              color: "#fbbf24",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              textAlign: "center",
+              margin: "0 0 12px 0",
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            Launch Adventures
+          </p>
+          <h2
+            style={{
+              color: "#fbbf24",
+              fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
+              textAlign: "center",
+              marginBottom: 16,
+            }}
+          >
+            Three Sagas to Begin Your Legend
+          </h2>
+          <p
+            style={{
+              color: "#a8a097",
+              fontSize: 17,
+              lineHeight: 1.6,
+              textAlign: "center",
+              maxWidth: 720,
+              margin: "0 auto 56px",
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            The first three modules are ancient tales reborn — ruins the hero walks
+            twelve thousand years after the deeds Howard set to paper.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: 24,
+            }}
+          >
+            {LAUNCH_ADVENTURES.map((a, idx) => (
+              <div
+                key={a.title}
+                style={{
+                  background: "rgba(45, 22, 0, 0.5)",
+                  border: "1px solid rgba(146, 64, 14, 0.4)",
+                  borderRadius: 8,
+                  padding: "28px 26px",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#92400e",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: "0.2em",
+                    marginBottom: 8,
+                    fontFamily: "Georgia, serif",
+                  }}
+                >
+                  SAGA {String(idx + 1).padStart(2, "0")}
+                </div>
+                <h3
+                  style={{
+                    color: "#fef3c7",
+                    fontSize: "1.3125rem",
+                    fontWeight: 700,
+                    fontFamily: "Georgia, serif",
+                    fontStyle: "italic",
+                    margin: "0 0 14px 0",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {a.title}
+                </h3>
+                <p
+                  style={{
+                    color: "#e8d4a0",
+                    fontSize: 15,
+                    lineHeight: 1.65,
+                    fontFamily: "Georgia, serif",
+                    margin: 0,
+                  }}
+                >
+                  {a.hook}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────── HOWARD QUOTE ───────────────────────── */}
+      <section
+        style={{
+          background: "#030712",
+          padding: "80px 32px",
+          textAlign: "center",
+        }}
+      >
+        <blockquote
+          style={{
+            maxWidth: 820,
+            margin: "0 auto",
+            color: "#e8d4a0",
+            fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
+            lineHeight: 1.6,
+            fontStyle: "italic",
+            fontFamily: "Georgia, serif",
+            padding: "0 24px",
+            borderLeft: "2px solid #92400e",
+            borderRight: "2px solid #92400e",
+          }}
+        >
+          &ldquo;In the shadows, serpent-men plotted. Valusia, mightiest of kingdoms,
+          was crumbling from within. Only Kull stood between the throne and chaos — if
+          he lived long enough to see it.&rdquo;
+          <footer
+            style={{
+              color: "#8a7a60",
+              fontSize: 15,
+              marginTop: 20,
+              fontStyle: "normal",
+              fontWeight: 400,
+              letterSpacing: "0.05em",
+            }}
+          >
+            — Robert E. Howard, <cite>The Shadow Kingdom</cite> 
+          </footer>
+        </blockquote>
+      </section>
+
+      {/* ───────────────────────── PROGRESS TEASER ───────────────────────── */}
+      <section
+        style={{
+          background: "rgba(12, 6, 2, 0.5)",
+          borderTop: "1px solid rgba(146, 64, 14, 0.25)",
+          borderBottom: "1px solid rgba(146, 64, 14, 0.25)",
+          padding: "80px 32px",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <h2
+            style={{
+              color: "#fbbf24",
+              fontSize: "clamp(1.625rem, 2.75vw, 2rem)",
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
+              textAlign: "center",
+              marginBottom: 12,
+            }}
+          >
+            What We Have Already Built
+          </h2>
+          <p
+            style={{
+              color: "#a8a097",
+              fontSize: 16,
+              lineHeight: 1.6,
+              textAlign: "center",
+              marginBottom: 40,
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            Early access is coming soon. Watch here as we build.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+              marginBottom: 40,
+            }}
+          >
+            {PROGRESS_ITEMS.map((item) => (
+              <div
+                key={item}
+                style={{
+                  color: "#e8d4a0",
+                  fontSize: 15,
+                  fontFamily: "Georgia, serif",
+                  padding: "16px 20px",
+                  background: "rgba(146, 64, 14, 0.12)",
+                  borderLeft: "3px solid #fbbf24",
+                  borderRadius: 4,
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ color: "#fbbf24", marginRight: 10 }}>✓</span>
+                {item}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center" }}>
+            <a
+              href="/updates"
+              style={{
+                display: "inline-block",
+                color: "#fbbf24",
+                fontSize: 16,
+                fontFamily: "Georgia, serif",
+                textDecoration: "none",
+                padding: "12px 24px",
+                border: "1px solid rgba(251, 191, 36, 0.4)",
+                borderRadius: 6,
+                transition: "background 0.2s, color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "rgba(146, 64, 14, 0.3)";
+                el.style.color = "#fef3c7";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.background = "transparent";
+                el.style.color = "#fbbf24";
+              }}
+            >
+              See the full development tracker &rarr;
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────── FINAL CTA ───────────────────────── */}
+      <section
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 50%, #78350f 0%, #1c0a00 50%, #030712 100%)",
+          padding: "96px 32px",
+          textAlign: "center",
         }}
       >
         <h2
           style={{
-            color: "#fbbf24",
-            fontSize: 28,
-            fontFamily: "Georgia, serif",
+            color: "#fef3c7",
+            fontSize: "clamp(2rem, 4vw, 2.75rem)",
             fontWeight: 700,
-            textAlign: "center",
-            marginBottom: 8,
+            fontFamily: "Georgia, serif",
+            margin: "0 0 20px 0",
+            lineHeight: 1.2,
           }}
         >
-          What We've Built So Far
+          Your legend begins with a single step through the church door.
         </h2>
-        <p style={{ color: "#8a7a60", textAlign: "center", fontSize: 13, marginBottom: 24 }}>
-          48% of the living world is complete. Here are the keystones.
-        </p>
-
-        <div
+        <p
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 20,
-            marginBottom: 24,
+            color: "#e8d4a0",
+            fontSize: 17,
+            lineHeight: 1.6,
+            maxWidth: 640,
+            margin: "0 auto 36px",
+            fontFamily: "Georgia, serif",
           }}
         >
-          {[
-            "✅ HWRR Combat System with gore effects",
-            "✅ Persistent hero profiles & equipment",
-            "✅ Dual magic systems (Guild + Occult)",
-            "✅ Living World engine with consequences",
-            "✅ Banking & commerce systems",
-            "✅ 10-virtue moral tracking system",
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              style={{
-                color: "#e8d4a0",
-                fontSize: 13,
-                fontFamily: "Georgia, serif",
-                padding: "12px 16px",
-                background: "rgba(146, 64, 14, 0.1)",
-                borderLeft: "2px solid #fbbf24",
-                borderRadius: 2,
-              }}
-            >
-              {item}
-            </div>
-          ))}
-        </div>
-
+          Alpha access is free and by invitation. Every account gets the full game,
+          permanent virtues, and a chronicle that will outlive your character.
+        </p>
         <a
-          href="/updates"
+          href="/register"
           style={{
             display: "inline-block",
-            color: "#fbbf24",
-            fontSize: 13,
-            fontFamily: "Georgia, serif",
+            background: "#92400e",
+            color: "#fef3c7",
+            padding: "18px 48px",
+            borderRadius: 8,
+            fontSize: 17,
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
             textDecoration: "none",
-            transition: "color 0.2s",
+            transition: "background 0.2s, transform 0.15s",
+            fontFamily: "Georgia, serif",
+            border: "1px solid #fbbf24",
+            boxShadow: "0 4px 24px rgba(146, 64, 14, 0.5)",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#fef3c7")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#fbbf24")}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLAnchorElement;
+            el.style.background = "#b35712";
+            el.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLAnchorElement;
+            el.style.background = "#92400e";
+            el.style.transform = "translateY(0)";
+          }}
         >
-          → See full development progress
+          Claim Your Early Access
         </a>
-      </div>
+      </section>
 
-      {/* FOOTER */}
+      {/* ───────────────────────── FOOTER ───────────────────────── */}
       <footer
         style={{
           background: "#030712",
-          borderTop: "1px solid rgba(146, 64, 14, 0.2)",
-          padding: "40px 32px",
+          borderTop: "1px solid rgba(146, 64, 14, 0.25)",
+          padding: "48px 32px",
           textAlign: "center",
-          color: "#5a4a3a",
-          fontSize: 12,
+          color: "#8a7a60",
+          fontSize: 14,
           fontFamily: "Georgia, serif",
-          lineHeight: 1.8,
+          lineHeight: 1.7,
         }}
       >
-        <p style={{ marginBottom: 16 }}>
-          Living Eamon is built in the tradition of Robert E. Howard's public domain works and the classic Eamon adventure system. Every legend begins here.
+        <p style={{ margin: "0 0 18px 0", maxWidth: 720, marginLeft: "auto", marginRight: "auto" }}>
+          Living Eamon is built in the tradition of Robert E.&nbsp;Howard&rsquo;s sword-and-sorcery
+          tales and the classic 1980 <em>Eamon</em> adventure system. Every legend begins
+          here.
         </p>
-        <div style={{ display: "flex", gap: 24, justifyContent: "center", marginBottom: 16 }}>
-          <a href="/updates" style={{ color: "#5a4a3a", textDecoration: "none" }}>
+        <div style={{ display: "flex", gap: 28, justifyContent: "center", marginBottom: 20 }}>
+          <a
+            href="/updates"
+            style={{ color: "#a8a097", textDecoration: "none", transition: "color 0.2s" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#fbbf24")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#a8a097")}
+          >
             Updates
           </a>
-          <a href="/board" style={{ color: "#5a4a3a", textDecoration: "none" }}>
+          <a
+            href="/board"
+            style={{ color: "#a8a097", textDecoration: "none", transition: "color 0.2s" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#fbbf24")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#a8a097")}
+          >
             Community
           </a>
-          <a href="/legal" style={{ color: "#5a4a3a", textDecoration: "none" }}>
+          <a
+            href="/legal"
+            style={{ color: "#a8a097", textDecoration: "none", transition: "color 0.2s" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#fbbf24")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#a8a097")}
+          >
             Legal
           </a>
         </div>
-        <p style={{ marginBottom: 0 }}>Alpha access by invitation. Your legend is permanent. Enter wisely.</p>
+        <p style={{ margin: 0, color: "#5a4a3a" }}>
+          Alpha access by invitation. Your legend is permanent. Enter wisely.
+        </p>
       </footer>
     </div>
   );

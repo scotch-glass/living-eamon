@@ -71,7 +71,7 @@ async function doPregenerate() {
       // Generate with Grok Imagine
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await grok.images.generate({
-        model: "grok-imagine-image",
+        model: "grok-imagine-image-pro",
         prompt: npc.spritePrompt!,
         response_format: "b64_json",
         aspect_ratio: "3:4",
@@ -143,7 +143,7 @@ async function doPregenerate() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await grok.images.generate({
-        model: "grok-imagine-image",
+        model: "grok-imagine-image-pro",
         prompt: item.bookPagePrompt!,
         response_format: "b64_json",
         aspect_ratio: "4:3",
@@ -227,7 +227,7 @@ async function doPregenerate() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await grok.images.generate({
-        model: "grok-imagine-image",
+        model: "grok-imagine-image-pro",
         prompt,
         response_format: "b64_json",
         aspect_ratio: "1:1",

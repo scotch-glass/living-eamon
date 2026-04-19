@@ -1,7 +1,8 @@
 # Adventure Module Plan — Building Modules from Public Domain Howard
 
-> **Read `PD_RESEARCH.md` first.** This document presumes you know
-> what is and isn't currently PD. The single most important rule:
+> **Read `Public_Domain_Rules.md` first** (the consolidated PD-safety
+> doc at the repo root). This document presumes you know what is and
+> isn't currently PD. The single most important rule:
 > **only build modules from PD-confirmed source material.**
 
 ---
@@ -10,7 +11,7 @@
 
 Every adventure module in Living Eamon must trace its named
 elements (characters, places, magical phenomena, races) to a
-public-domain Howard source verified in `PD_RESEARCH.md`. Generic
+public-domain Howard source verified in `Public_Domain_Rules.md`. Generic
 or invented elements are fine; **using a copyrighted name is
 not.**
 
@@ -82,7 +83,7 @@ The README.md inside each module folder must include:
 # <Module Name>
 
 **Source:** <PD story title> (Weird Tales, <month year>)
-**PD status:** Verified <date> per lore/hyborian-pd/PD_RESEARCH.md
+**PD status:** Verified <date> per `Public_Domain_Rules.md`
 **Difficulty:** <novice / moderate / deadly>
 **Recommended hero level:** <range>
 
@@ -154,7 +155,7 @@ The README.md inside each module folder must include:
 
 - Any name from a copyrighted Conan story (Conan himself,
   Acheron, Xaltotun, Heart of Ahriman, Thoth-Amon, Bêlit,
-  Valeria, the city of Python, etc. — see PD_RESEARCH.md).
+  Valeria, the city of Python, etc. — see `Public_Domain_Rules.md` §6).
 - Generic D&D-style flavor that breaks Howard's voice.
 - Plot armor for the player. Death is permanent (respawn
   resets gold and inventory; Chronicle is forever).
@@ -413,8 +414,8 @@ Until then, additional content should be:
   larger campaign (e.g., the same Stygian sorcerer-priest
   surfaces across all three)
 
-When 2028 hits, **revisit PD_RESEARCH.md and this document
-together** and queue Conan modules:
+When 2028 hits, **revisit `Public_Domain_Rules.md` §8 calendar and this
+document together** and queue Conan modules:
 
 - **2028:** *The Phoenix on the Sword*, *The Scarlet Citadel* —
   Conan himself becomes PD; first Conan-era modules possible

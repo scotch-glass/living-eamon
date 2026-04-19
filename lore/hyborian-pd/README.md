@@ -1,29 +1,32 @@
-# lore/hyborian-pd/ — Public Domain Howard Reference
+# lore/hyborian-pd/ — Public Domain Howard Module Methodology
 
-This folder is the canonical reference for Howard's Hyborian and
-Thurian Age public-domain corpus, and the methodology for turning
-it into Living Eamon adventure modules.
+This folder holds the methodology for turning public-domain Robert E.
+Howard material into Living Eamon adventure modules.
+
+**The canonical PD-safety legal doc is at the repo root:**
+[`Public_Domain_Rules.md`](../../Public_Domain_Rules.md). It contains
+what is and isn't PD, the future PD calendar, the trademark rules, and
+the Safe Harbor strategy. (The former `PD_RESEARCH.md` file was
+consolidated into `Public_Domain_Rules.md` on April 19, 2026 and
+deleted.)
 
 ## Files
 
-- **[PD_RESEARCH.md](PD_RESEARCH.md)** — what is and isn't currently
-  in US public domain. Includes the future PD entry calendar
-  (mostly 2028–2032 for Conan stories) and per-work usable-element
-  inventory. **Re-verify before each module ships to production.**
-
-- **[MODULE_PLAN.md](MODULE_PLAN.md)** — the methodology for
-  converting PD stories into Living Eamon modules. Includes the
-  module template structure, the Living Eamon system integration
-  checklist, and the build order for the first three modules.
+- **[MODULE_PLAN.md](MODULE_PLAN.md)** — methodology for converting PD
+  stories into Living Eamon modules. Module template structure,
+  Living Eamon system integration checklist, and build order for the
+  first three modules.
 
 ## Cross-references
 
-- `GAME_DESIGN.md §10` — Hyborian Age lore (the in-canon worldbuilding)
-- `GAME_DESIGN.md §10.10` — PD calendar pointer
+- [`Public_Domain_Rules.md`](../../Public_Domain_Rules.md) — **legal
+  authority** on what is and isn't PD, trademark rules, calendar.
+- [`GAME_DESIGN.md`](../../GAME_DESIGN.md) top-of-file tables — the
+  name-by-name Safe Harbor / Radioactive lookup.
 - `CLAUDE_CONTEXT.md` rehydration block — flags this folder as
-  required reading before any new lore work
+  required reading before any new lore work.
 - `.claude/projects/.../memory/project_hyborian_canon.md` — the
-  pinned memory rule that points future sessions here
+  pinned memory rule that points future sessions here.
 
 ## The Standing Rule (from MODULE_PLAN.md §10)
 
@@ -31,5 +34,5 @@ it into Living Eamon adventure modules.
 > voice + PD-verified naming.
 
 If a proposed element fails the PD-verification test in
-PD_RESEARCH.md, either find a PD-safe equivalent or wait until
-the source story enters PD.
+`Public_Domain_Rules.md` and the `GAME_DESIGN.md` tables, either find
+a PD-safe equivalent or wait until the source story enters PD.

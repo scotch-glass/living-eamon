@@ -1,3 +1,5 @@
+export const LAST_UPDATED = "April 19, 2026";
+
 export interface ProgressItem {
   label: string;
   status: "done" | "active" | "planned";

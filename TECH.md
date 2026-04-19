@@ -24,7 +24,7 @@ Raw URLs for Claude rehydration:
 | Auth | Supabase Auth + `@supabase/ssr` | Email/password + Google SSO; cookie sessions |
 | AI Narrator | Anthropic Claude (`claude-sonnet-4-20250514`) | Jane; streaming + buffered |
 | AI Fallback | xAI Grok (`grok-3`) | Optional; OpenAI-compatible API |
-| Image Gen | xAI (`grok-imagine-image`) | UO-style item art; local scripts only |
+| Image Gen | xAI (`grok-imagine-image-pro`) | **Mandate:** all art calls use `grok-imagine-image-pro`. Never downgrade to the standard model. |
 | Hosting | Vercel | Auto-deploy from `main` |
 | IDE | Cursor | Rules enforce `CLAUDE_CONTEXT.md` updates |
 

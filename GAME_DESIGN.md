@@ -2,6 +2,250 @@
 
 ---
 
+## ⚠️ READ BEFORE DESIGNING ANYTHING — PUBLIC-DOMAIN SAFETY
+
+Before using any name, creature, artifact, nation, magic school, or quoted
+prose in this document or in code, you **must** verify it against the
+public-domain rules. Most Conan-related material is **not** yet public
+domain — using it will expose Thot Technologies to a takedown or suit.
+
+**Required reading, in order:**
+
+1. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — **the
+   authoritative legal doc.** Full legal framework, trademark
+   restrictions, Always-Safe Corpus, future PD calendar, Phase 1 /
+   Phase 2 timeline. (As of April 19, 2026, this file consolidated
+   the former `lore/hyborian-pd/PD_RESEARCH.md` and that file was
+   deleted.)
+2. The Safe Harbor / Radioactive tables below in this document —
+   **name-by-name authoritative lookup.** Supersedes any other doc on
+   individual term status.
+3. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
+   methodology for converting PD stories into adventure modules.
+
+**Current PD corpus (verified April 2026):**
+
+- **"The Hyborian Age"** essay, *The Phantagraph* 1936 — fully PD. No
+  US copyright registration or renewal found. Project Gutenberg hosts
+  the full text. The entire Hyborian-Age geography, migrations,
+  cataclysms, named kingdoms, and peoples are freely usable.
+- **"Always Comes Evening"** poem, *The Phantagraph* Aug 1936 — fully PD.
+- **"Song at Midnight"** / **"Man, the Master"** poem, *The Phantagraph*
+  Aug 1940 — fully PD (posthumous).
+- **"The Shadow Kingdom"** *Weird Tales* Aug 1929 — fully PD.
+- **"The Mirrors of Tuzun Thune"** *Weird Tales* Sept 1929 — fully PD.
+- **"Kings of the Night"** *Weird Tales* Nov 1930 — fully PD.
+
+**Trademark-radioactive terms (apply forever, regardless of any PD
+claim):** "Conan," "Conan the Barbarian," "Cimmerian," "Cimmerians,"
+"Cimmeria," "Hyboria," "Hyborian Age," "Hyborian" as a marketing
+adjective. These are CPI-held trademarks or project-designated
+brand-marker avoids; they do not appear in player-facing pages,
+marketing, titles, meta tags, or alt text regardless of copyright
+status of the underlying essay.
+
+**Still copyright-protected until 2028–2032:** All Conan short-story
+content (Conan himself, Tarantia, Thoth-Amon, Bêlit, Valeria,
+Yag-Kosha) and *The Hour of the Dragon* content (Acheron, Xaltotun,
+Heart of Ahriman, Python). See the Radioactive table below.
+
+When in doubt, **ask before using.**
+
+---
+
+## Safe Harbor & Radioactive Terms — Authoritative Reference
+
+This is the canonical lookup table for every name, place, people, deity,
+artifact, or concept the project uses. It supersedes anything in
+`lore/**`, `CLAUDE_CONTEXT.md`, or memory if there is a conflict.
+
+Before using any proper noun in code, prose, player-facing copy, or
+design docs, check it against these tables. If it's not listed, treat
+it as **UNCERTAIN** and ask before using.
+
+### 🟢 SAFE HARBOR — Terms We Can Use
+
+Sources cited below:
+- **Essay** = *The Hyborian Age* essay, *The Phantagraph* 1936 (PD).
+- **Shadow Kingdom** = Kull story, *Weird Tales* Aug 1929 (PD).
+- **Mirrors** = *The Mirrors of Tuzun Thune*, *Weird Tales* Sept 1929 (PD).
+- **Kings** = *Kings of the Night*, *Weird Tales* Nov 1930 (PD).
+
+**Usage rule for all Safe Harbor terms:** free to use in player-facing
+narrative prose, room descriptions, item descriptions, NPC dialogue,
+and internal code. **Never use in marketing titles or slogans** if
+flagged with ⚠ — those are trademark-adjacent in the popular mind.
+
+#### Ages & Eras
+| Term | Source | Notes |
+|---|---|---|
+| The Hyborian Age (setting concept) | Essay | ⚠ Internal + in-game prose OK. **Never in marketing / splash / register / login / board / nav / meta tags** (CPI trademark concern). In marketing use "Thurian Age" or "sword & sorcery." |
+| Thurian Age | Essay + Shadow Kingdom | Pre-Cataclysmic era. **Preferred marketing label.** |
+| The Cataclysm | Essay | Great catastrophe ending the Thurian Age. |
+| Age after the Cataclysm | Essay | Substitute for "Hyborian Age" in marketing copy. |
+
+#### Nations & Kingdoms — Hyborian Era (post-Cataclysm, from Essay)
+| Term | Source | Notes |
+|---|---|---|
+| Aquilonia | Essay | Central western kingdom. Ostavar (our invented city) is visually styled after it. Usable in narrative. |
+| Argos | Essay | |
+| Asgard | Essay | Northern Aesir homeland. |
+| Border Kingdom | Essay | |
+| Brythunia | Essay | |
+| Corinthia | Essay | |
+| Gunderland | Essay | Sub-region of Aquilonia. |
+| Hyperborea | Essay | |
+| Hyrkania | Essay | |
+| Iranistan | Essay | |
+| Khauran | Essay | |
+| Khitai | Essay | |
+| Koth | Essay | |
+| Kush | Essay | |
+| Nemedia | Essay | |
+| Ophir | Essay | |
+| Pictish Wilderness | Essay + Kings | Picts appear in *Kings of the Night* as well. |
+| Poitain | Essay | |
+| Shem (incl. Pelishtia sub-region) | Essay | |
+| Stygia | Essay | Essay reference is safe. Don't import plot elements from copyrighted Conan stories. |
+| Turan | Essay | |
+| Vanaheim | Essay | Northern Vanir homeland. |
+| Vendhya | Essay | |
+| Zamora | Essay | |
+| Zingara | Essay | |
+
+#### Nations & Kingdoms — Thurian Age (pre-Cataclysm)
+| Term | Source | Notes |
+|---|---|---|
+| Atlantis | Essay + Shadow Kingdom | Kull's barbarian homeland. |
+| Valusia | Shadow Kingdom | Serpent-haunted empire where Kull reigns. |
+| Commoria | Essay | Lost pre-Cataclysmic kingdom. |
+| Grondar | Essay | Lost pre-Cataclysmic kingdom. |
+| Kamelia | Essay | Lost pre-Cataclysmic kingdom. |
+| Thule | Essay | Lost pre-Cataclysmic kingdom. |
+| Verulia | Essay | Lost pre-Cataclysmic kingdom. |
+
+#### Peoples, Tribes, Races
+| Term | Source | Notes |
+|---|---|---|
+| Aesir | Essay | People of Asgard. |
+| Vanir | Essay | People of Vanaheim. |
+| Picts | Essay + Kings | |
+| Hyborians (as a descent group) | Essay | Central post-Cataclysm civilizations. |
+| Shemites | Essay | |
+| Stygians | Essay | |
+| Hyrkanians | Essay | |
+| Khitans | Essay | |
+| Kushites | Essay | |
+| Zamorans | Essay | |
+| Lemurians | Essay | Ancient race. |
+| Atlanteans | Essay + Shadow Kingdom | Kull's people. |
+| Valusians | Shadow Kingdom | Decadent human empire. |
+| Serpent-Men | Shadow Kingdom | Shapeshifting race that ruled before humans. Core antagonist archetype. Full combat profile permissible. |
+
+#### Named Characters
+| Term | Source | Notes |
+|---|---|---|
+| Kull of Atlantis / Kull the Conqueror | Shadow Kingdom | Barbarian king of Valusia. Fully usable. |
+| Tuzun Thune | Mirrors | Ancient wizard. Preferred template for our ancient-sorcerer archetype. |
+| Bran Mak Morn | Kings | King of the Picts. May appear in person in modules. |
+
+#### Magic & Sorcery Concepts
+| Term | Source | Notes |
+|---|---|---|
+| Thurian sorcery / pre-Cataclysmic magic | Mirrors + Shadow Kingdom | Ancient, calmer, more philosophical than later necromancy. |
+| Mirror portals / alternate-reality visions | Mirrors | Mirrors show visions of alternate realities. Core mechanic for legacy-artifact use. |
+| Serpent-men shapeshifting / infiltration | Shadow Kingdom | Core antagonist mechanic. |
+| Time-bridging ritual summoning | Kings | Bran Mak Morn summons Kull across ages. |
+| "Ka nama kaa lajerama" | Shadow Kingdom | Canonical exposure phrase for identifying Serpent-Men imposters. Usable verbatim. |
+
+#### Locations & Ruins
+| Term | Source | Notes |
+|---|---|---|
+| Valusian stonework / Valusian ruins | Shadow Kingdom | Pre-human architecture. Usable as location description. |
+| Ruined towers of Valusia (post-Cataclysm dungeon) | MODULE_PLAN (derivative) | Our framing of Valusia as a ruin in the player's era. |
+| Mirror chamber of Tuzun Thune | Mirrors | Setting containing the mirrors. |
+
+#### Artifacts & Items
+| Term | Source | Notes |
+|---|---|---|
+| The mirrors of Tuzun Thune | Mirrors | Central legacy artifact. |
+| Serpent-Men poisoned fangs | Shadow Kingdom | Looted as artifact after combat. |
+
+#### Atmospheric / Quotable Material
+| Term | Source | Notes |
+|---|---|---|
+| Howard quotations up to ~200 words per module | Any of the 6 always-safe works | Always cite source. Use in room descriptions, item inscriptions, Chronicle entries. |
+| "Always Comes Evening" lines | *The Phantagraph* Aug 1936 poem | Quotable atmospheric verse. |
+| "Song at Midnight" / "Man, the Master" lines | *The Phantagraph* Aug 1940 poem | Quotable atmospheric verse. |
+
+#### Living Eamon Original Terms (our IP)
+| Term | Source | Notes |
+|---|---|---|
+| Aurelion | Public_Domain_Rules.md | Invented frame city for Phase 1 content. |
+| Ostavar | MODULE_PLAN + CLAUDE_CONTEXT | **Invented** city. Visually styled after Aquilonia but the name and all specifics are ours. |
+| Jane | Living Eamon original | The ancient intelligence / narrator. Our IP. |
+| The Eamon Chronicle | Living Eamon original | Persistent deed-log system. Our IP. |
+| The Order | Living Eamon original | Inquisition faction that prosecutes Occultists. Our IP. |
+| The Church of Perpetual Life | Living Eamon original | Respawn location. Our IP. |
+
+---
+
+### 🔴 RADIOACTIVE — Never Use
+
+Two categories live here:
+
+1. **Trademark-protected terms** — permanent. Forbidden in player-facing
+   pages, marketing, titles, meta tags, alt text, and branding
+   regardless of underlying copyright status. Held by Conan Properties
+   International (CPI) or designated project-radioactive by Scotch.
+2. **Copyright-protected terms from Conan stories (not yet PD)** —
+   these enter US public domain between 2028 and 2032, per story
+   publication date + 95 years. Do not use until their year passes.
+
+#### Trademark-radioactive (permanent; never use in player-facing content)
+| Term | Why | PD date |
+|---|---|---|
+| **Conan** | CPI trademark. Forbidden in titles, character names, branding, marketing. | Permanent TM (story PD 2028, TM forever) |
+| **Conan the Barbarian** | CPI trademark. | Permanent TM |
+| **Hyboria** | CPI trademark. | Permanent TM |
+| **Hyborian Age** | CPI trademark. Internal design docs + in-game prose may reference the concept; **never in marketing / splash / register / login / board / updates / legal / nav / meta tags.** Use "Thurian Age" or "age after the Cataclysm" in marketing. | Permanent TM |
+| **Hyborian** (as marketing adjective) | TM-adjacent. Never in splash, login, register, board, updates, legal, nav, or meta tags. | Permanent avoid |
+| **Cimmerian** | Iconic Conan-brand marker. Project-designated radioactive. Use a synonym ("highland barbarian," "mountain folk"). | Permanent avoid |
+| **Cimmerians** | Same as above. | Permanent avoid |
+| **Cimmeria** (place) | Technically PD-copyright via essay, but project-designated radioactive for brand reasons. | Permanent avoid |
+| "Conan universe" (colloquial) | TM via usage. | Permanent avoid |
+
+#### Copyright-radioactive — Conan-story content (enters PD 2028–2032)
+| Term | Source | Earliest PD date |
+|---|---|---|
+| Conan (character) | Any Conan story | 2028 |
+| Thoth-Amon | Copyrighted Conan stories | 2028+ |
+| Bêlit | *Queen of the Black Coast* (1934) | 2030 |
+| Valeria | *Red Nails* (1936) | 2032 |
+| Yag-Kosha | *The Tower of the Elephant* (1933) | 2029 |
+| Tarantia (Aquilonia's capital) | Copyrighted Conan stories | 2028+ |
+| Acheron (as named empire) | *The Hour of the Dragon* (1935–1936). Use **"Thurian"** as substitute. | 2031 |
+| Xaltotun | *The Hour of the Dragon*. Use **Tuzun Thune** as template. | 2031 |
+| Heart of Ahriman | *The Hour of the Dragon*. Use **mirror chamber** (from *Mirrors*). | 2031 |
+| Python (Acheronian capital) | *The Hour of the Dragon* | 2031 |
+| *The Hour of the Dragon* (novel title) | 1935–1936 serial | 2031 |
+| Any Conan short-story title (*"The Tower of the Elephant," "Queen of the Black Coast," "Red Nails," "Beyond the Black River," "Black Colossus,"* etc.) | Copyrighted. See `Public_Domain_Rules.md` §8 calendar. | 2028–2032 (varies per story) |
+
+---
+
+### 🟡 UNCERTAIN — Ask Scotch Before Using
+
+These require Scotch's explicit approval before they appear in code or
+copy.
+
+| Term | Issue |
+|---|---|
+| Stygia as used beyond essay-level reference | Essay reference is safe. Plot elements drawn from copyrighted Conan stories are not. Spot-check any Stygia-focused module prose. |
+| Connecting the three PD Thurian stories into a grand canon | The three PD stories (*Shadow Kingdom*, *Mirrors*, *Kings*) do not explicitly cross-reference each other in Howard's text. Building a unified canon that links them thematically risks creating derivative work beyond what's in the PD originals. Have Scotch review. |
+| Any Howard term not listed above | Treat as uncertain by default. |
+
+---
+
 ## 9. Magic — Two Systems
 
 ### Official Guild Magic (CAST command)
@@ -245,18 +489,20 @@ Howard's public-domain works, or invented in his voice and fitted
 to his geography and chronology.
 
 > ⚠️ **CRITICAL — PD STATUS:** Most of Howard's Conan corpus is
-> NOT yet in US public domain. The full PD-status table and the
-> list of currently-usable elements live in
-> **`lore/hyborian-pd/PD_RESEARCH.md`**. **Read it before
-> designing anything new.** This §10 references only PD-safe
-> material. The full module-creation methodology is in
+> NOT yet in US public domain. The full PD-status framework and
+> calendar live in **`Public_Domain_Rules.md`** (repo root); the
+> name-by-name Safe Harbor / Radioactive lookup lives at the top
+> of this document. **Read both before designing anything new.**
+> This §10 references only PD-safe material. The full
+> module-creation methodology is in
 > **`lore/hyborian-pd/MODULE_PLAN.md`**.
 
 When a new adventure, NPC, or artifact is being designed, the
-writer must first ask: *Is this element verifiable as public domain
-per `PD_RESEARCH.md`?* If no, either find a PD-safe equivalent
-or wait until it enters PD (see PD calendar in PD_RESEARCH.md —
-most Conan stories enter 2028–2032).
+writer must first ask: *Is this element verifiable as public
+domain per the Safe Harbor table above and `Public_Domain_Rules.md`?*
+If no, either find a PD-safe equivalent or wait until it enters PD
+(see PD calendar in `Public_Domain_Rules.md` §8 — most Conan stories
+enter 2028–2032).
 
 ---
 
@@ -290,7 +536,7 @@ seeps into the player's present.
 
 The Thurian Age is exceptionally well-suited to Living Eamon
 because **three Thurian-Age short stories by Howard are fully
-public domain** (see PD_RESEARCH.md): *The Shadow Kingdom*,
+public domain** (see `Public_Domain_Rules.md` §5): *The Shadow Kingdom*,
 *The Mirrors of Tuzun Thune*, and *Kings of the Night*. These
 give us **named characters, named places, named magical
 phenomena, and named races** that we can use freely.
@@ -478,7 +724,7 @@ module roster, build order, and full conversion methodology.**
 Summary here:
 
 **First three modules** (all built from Thurian-Age PD source
-stories — see PD_RESEARCH.md for verification):
+stories — see `Public_Domain_Rules.md` §5 for verification):
 
 1. **The Mirrors of Tuzun Thune** — ruined Thurian tower with the
    wizard's mirror chamber. Profile-driven visions. Low combat,
@@ -544,7 +790,7 @@ are:
 - **Kings of the Night** (Weird Tales, November 1930) — Bran Mak
   Morn, Pictish ritual time-bridges, Kull summoned across eras.
 
-> **`lore/hyborian-pd/PD_RESEARCH.md` is the authoritative source
+> **`Public_Domain_Rules.md` (repo root) is the authoritative source
 > on what's PD and when more works enter (mostly 2028–2032).**
 
 **Voice when writing in this canon:**
@@ -558,8 +804,9 @@ are:
 
 When in doubt, ask: *"Would Howard publish this in a 1934
 Weird Tales issue?"* If the answer is no, rewrite. Then ask:
-*"Is every named element PD-verified per PD_RESEARCH.md?"* If
-no, rewrite again.
+*"Is every named element PD-verified per the Safe Harbor table at
+the top of this doc and `Public_Domain_Rules.md`?"* If no, rewrite
+again.
 
 ---
 
@@ -579,13 +826,14 @@ Conan modules using copyrighted-today material:
   Ahriman, and the city of Python** for use in Living Eamon prose
   and modules.
 
-When 2028 arrives, **revisit PD_RESEARCH.md and MODULE_PLAN.md
-together** and queue Conan modules. Treat the unlock as a
-deliberate design event, not an automatic batch import — each
+When 2028 arrives, **revisit `Public_Domain_Rules.md` §8 and
+MODULE_PLAN.md together** and queue Conan modules. Treat the unlock
+as a deliberate design event, not an automatic batch import — each
 newly-unlocked story should be reviewed for fit and only the
 best-fitting are converted to modules.
 
-The full PD entry calendar is maintained in **PD_RESEARCH.md**.
+The full PD entry calendar is maintained in **`Public_Domain_Rules.md`
+§8**.
 
 ---
 

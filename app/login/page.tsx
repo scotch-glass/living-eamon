@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { loginAction, googleSignInAction } from "../auth/actions";
+import { loginAction } from "../auth/actions";
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -152,33 +152,6 @@ function LoginContent() {
             {loading ? "Entering..." : "Enter the Realm"}
           </button>
         </form>
-
-        <div style={{ marginTop: 20 }}>
-          <button
-            onClick={() => googleSignInAction()}
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              background: "#ffffff",
-              color: "#030712",
-              border: "1px solid #e5e7eb",
-              borderRadius: 6,
-              fontSize: 13,
-              fontFamily: "Georgia, serif",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#ffffff";
-            }}
-          >
-            Sign in with Google
-          </button>
-        </div>
 
         <div style={{ textAlign: "center", marginTop: 20 }}>
           <a

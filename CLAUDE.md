@@ -4,8 +4,8 @@
 
 1. [**CLAUDE_CONTEXT.md**](./CLAUDE_CONTEXT.md) — project overview, architecture, current status, file map, player state, world state, art system
 2. [**GAME_DESIGN.md**](./GAME_DESIGN.md) — full game design document (§10 Hyborian Age Lore is canonical for all setting decisions)
-3. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — IP legal framework, Howard PD timeline, branding rules
-4. [**lore/hyborian-pd/PD_RESEARCH.md**](./lore/hyborian-pd/PD_RESEARCH.md) — what Howard material is currently public domain
+3. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — **CRITICAL, authoritative**: consolidated IP legal framework, Howard PD timeline, trademark restrictions, Always-Safe Corpus, future PD calendar, Safe Harbor strategy. (Supersedes and replaces the former `lore/hyborian-pd/PD_RESEARCH.md`, which was deleted April 19, 2026.)
+4. [**GAME_DESIGN.md**](./GAME_DESIGN.md) top-of-file tables — name-by-name Safe Harbor / Radioactive lookup. Supersedes any other doc on individual term status.
 5. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) — methodology for converting PD stories into adventure modules
 
 **User profile:** Scotch — non-developer founder/designer. All technical instructions must be explicit step-by-step or exact Cursor prompts. No vague guidance.

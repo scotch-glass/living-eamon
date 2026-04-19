@@ -47,6 +47,7 @@ import {
   setNPCCombatHp,
   applyPlayerDeath,
   updateWeaponSkill,
+  addToVendorTempStock,
   SKILL_NAMES,
   SKILL_CAP,
   normalizeWeaponSkills,
@@ -2882,61 +2883,80 @@ function runMerchantSell(
     };
   }
 
-  const itemId = matchPlayerInventoryItem(query, p.inventory);
-  if (!itemId) {
-    return {
-      responseType: "static",
-      staticResponse: `You have no "${query}" to sell.`,
-      dynamicContext: null,
-      newState: state,
-      stateChanged: false,
-      conversationNpcId: merchantNpcId,
-    };
+  // Support bulk sell: SELL ITEM1, ITEM2, ITEM3 or SELL ITEM1 ITEM2 ITEM3
+  const itemNames = query.split(/[,\s]+/).filter(s => s.trim());
+  const itemIds: string[] = [];
+
+  for (const name of itemNames) {
+    const itemId = matchPlayerInventoryItem(name, p.inventory);
+    if (!itemId) {
+      return {
+        responseType: "static",
+        staticResponse: `You have no "${name}" to sell.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+        conversationNpcId: merchantNpcId,
+      };
+    }
+    itemIds.push(itemId);
   }
 
-  const item = ITEMS[itemId];
-  if (!item) {
-    return {
-      responseType: "static",
-      staticResponse: "That item doesn't exist.",
-      dynamicContext: null,
-      newState: state,
-      stateChanged: false,
-    };
+  // Validate all items
+  let totalGold = 0;
+  for (const itemId of itemIds) {
+    const item = ITEMS[itemId];
+    if (!item) {
+      return {
+        responseType: "static",
+        staticResponse: "One of those items doesn't exist.",
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+
+    if (!item.isCarryable || (item.value ?? 0) <= 0) {
+      return {
+        responseType: "static",
+        staticResponse: `${npc.name} shrugs. "${item.name}? Worthless to me."`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+        conversationNpcId: merchantNpcId,
+      };
+    }
+
+    if (isItemEquipped(p, itemId)) {
+      return {
+        responseType: "static",
+        staticResponse: `You can't sell ${item.name} while it's equipped. UNEQUIP it first.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+        conversationNpcId: merchantNpcId,
+      };
+    }
+
+    const halfPrice = Math.max(1, Math.floor((item.value ?? 0) / 2));
+    totalGold += halfPrice;
   }
 
-  if (!item.isCarryable || (item.value ?? 0) <= 0) {
-    return {
-      responseType: "static",
-      staticResponse: `${npc.name} shrugs. "${item.name}? Worthless to me."`,
-      dynamicContext: null,
-      newState: state,
-      stateChanged: false,
-      conversationNpcId: merchantNpcId,
-    };
+  // Process all sales
+  let newState = updatePlayerGold(state, totalGold);
+  const pg = newState.player;
+  let nextInv = pg.inventory;
+  for (const itemId of itemIds) {
+    nextInv = decrementInventory(nextInv, itemId);
+    newState = addToVendorTempStock(newState, merchantNpcId, itemId);
   }
-
-  if (isItemEquipped(p, itemId)) {
-    return {
-      responseType: "static",
-      staticResponse: `You can't sell ${item.name} while it's equipped. UNEQUIP it first.`,
-      dynamicContext: null,
-      newState: state,
-      stateChanged: false,
-      conversationNpcId: merchantNpcId,
-    };
-  }
-
-  const halfPrice = Math.max(1, Math.floor((item.value ?? 0) / 2));
-  const afterGold = updatePlayerGold(state, halfPrice);
-  const pg = afterGold.player;
-  const nextInv = decrementInventory(pg.inventory, itemId);
   const nextPlayer: PlayerState = { ...pg, inventory: nextInv };
-  const newState: WorldState = { ...afterGold, player: nextPlayer };
+  newState = { ...newState, player: nextPlayer };
 
+  const itemList = itemIds.map(id => ITEMS[id]!.name).join(", ");
   return {
     responseType: "static",
-    staticResponse: `${npc.name} hands over ${halfPrice} gp for the ${item.name}. (${nextPlayer.gold} gp total.)`,
+    staticResponse: `${npc.name} hands over ${totalGold} gp for ${itemList}. (${nextPlayer.gold} gp total.) You can buy these items back for 72 hours.`,
     dynamicContext: null,
     newState,
     stateChanged: true,

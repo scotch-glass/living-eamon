@@ -13,6 +13,8 @@ export interface ItemAction {
   isInspect?: boolean;
   /** If true, open the compare popup. */
   isCompare?: boolean;
+  /** If true, open the bulk sell popup. */
+  isBulkSell?: boolean;
 }
 
 export type ItemContext =
@@ -95,6 +97,7 @@ export function getItemActions(
   // Drop / Sell (mutually exclusive based on location)
   if (inShop) {
     actions.push({ label: "Sell", command: `SELL ${item.name.toUpperCase()}` });
+    actions.push({ label: "Bulk Sell", command: null, isBulkSell: true });
   } else {
     actions.push({ label: "Drop", command: `DROP ${item.name.toUpperCase()}` });
   }

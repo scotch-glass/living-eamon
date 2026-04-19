@@ -19,6 +19,7 @@ import EquipmentGrid from "../components/EquipmentGrid";
 import BackpackPanel from "../components/BackpackPanel";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
 import ComparePopup from "../components/ComparePopup";
+import BulkSellPopup from "../components/BulkSellPopup";
 import { getRoom } from "../lib/adventures/registry";
 
 interface Message {
@@ -134,6 +135,7 @@ export default function Home() {
   const [conversationNpcId, setConversationNpcId] = useState<string | null>(null);
   const [itemPopupId, setItemPopupId] = useState<string | null>(null);
   const [compareItem, setCompareItem] = useState<{ item: Item; equippedSlot: string } | null>(null);
+  const [bulkSellVendor, setBulkSellVendor] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<CommandInputHandle>(null);
   const charQueueRef = useRef<string[]>([]);
@@ -971,6 +973,19 @@ export default function Home() {
         />
       )}
 
+      {/* Bulk sell popup */}
+      {bulkSellVendor && player && (
+        <BulkSellPopup
+          inventory={player.inventory}
+          vendorName={bulkSellVendor}
+          onSell={(itemIds) => {
+            const itemList = itemIds.join(", ").toUpperCase();
+            sendMessage(`SELL ${itemList}`);
+          }}
+          onClose={() => setBulkSellVendor(null)}
+        />
+      )}
+
       {/* Item action menu — contextual right-click style popup */}
       {actionMenu && player && (
         <ItemActionMenu
@@ -1015,6 +1030,10 @@ export default function Home() {
 
               const equippedItem = equippedItemId ? ITEMS[equippedItemId] ?? null : null;
               setCompareItem({ item, equippedSlot: item.type });
+            } else if (action.isBulkSell) {
+              const room = getRoom(player?.currentRoom ?? "");
+              const vendorName = room?.name ?? "Merchant";
+              setBulkSellVendor(vendorName);
             } else if (action.command) {
               sendMessage(action.command);
             }

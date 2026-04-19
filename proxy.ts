@@ -10,8 +10,12 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Auth routes — allow through always
+  // Public routes — allow through always (no auth required)
   if (
+    pathname.startsWith("/splash") ||
+    pathname.startsWith("/updates") ||
+    pathname.startsWith("/legal") ||
+    pathname.startsWith("/board") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/auth") ||
@@ -19,16 +23,16 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/chat") ||
     pathname.startsWith("/api/player") ||
+    pathname.startsWith("/api/board") ||
     pathname === "/favicon.ico"
   ) {
     return response;
   }
 
-  // Protected routes — redirect to login if not authenticated
+  // Protected routes (the game itself) — redirect unauthenticated users to splash
   if (!user) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(loginUrl);
+    const splashUrl = new URL("/splash", request.url);
+    return NextResponse.redirect(splashUrl);
   }
 
   return response;

@@ -39,6 +39,14 @@ const FEATURES: { title: string; body: string }[] = [
     title: "Death Is Costly. Be prepared to pay the price.",
     body: "Die and you rise again naked and shamed in the Church of Perpetual Life, your gear lost, your gold gone. But your virtues and skills remain. The hero returns, blessed or cursed by the silent god of perpetual life.",
   },
+  {
+    title: "Voice Narration & Graphic-Novel Art",
+    body: "Every scene is rendered in the spirit of the 1970s–80s sword-and-sorcery graphic novels that set our imaginations on fire — Frazetta, Brom, Corben — in full R-rated weight. Jane speaks your story aloud, in a voice that knows it by heart. You read, you listen, you see.",
+  },
+  {
+    title: "From Player to Creator",
+    body: "Living Eamon ships with the same Creator Lab we use to build new realms. Ambitious players become writers, cartographers, and dungeon-masters — continuing the Perpetual Hero's journey with their own sagas, shared with the world or kept as private canon.",
+  },
 ];
 
 const PILLARS = [
@@ -51,6 +59,11 @@ const PILLARS = [
     eyebrow: "The Chronicle",
     title: "A World That Remembers",
     body: "Every significant act is written into a persistent chronicle that follows the Perpetual Hero across every realm, every adventure, every death. Nothing is forgotten.",
+  },
+  {
+    eyebrow: "The Realms",
+    title: "An Atlas of Realms, in the Tradition of Eamon",
+    body: "The original 1980 Eamon shipped with hundreds of player-written realms. Living Eamon resurrects that promise. One realm is ruled by sorcerers in marble courts. Another by alien intelligences in fallen skyships. Another by gunsmiths riding iron rails through sulfur deserts. Your hero carries every scar across them all.",
   },
 ];
 
@@ -253,7 +266,7 @@ export default function SplashPage() {
               marginBottom: 12,
             }}
           >
-            Two Things No Other Adventure Has
+            Three Things No Other Adventure Has
           </h2>
           <p
             style={{
@@ -266,7 +279,7 @@ export default function SplashPage() {
               fontFamily: "Georgia, serif",
             }}
           >
-            Living Eamon is a persistent, living world with memory and a magistrate.
+            Living Eamon is a persistent, living world with memory, a magistrate, and an atlas of realms stretching across every genre of the fantastic.
           </p>
 
           <div
@@ -413,7 +426,7 @@ export default function SplashPage() {
               fontFamily: "Georgia, serif",
             }}
           >
-            Nine concrete systems, each designed to make every decision feel like it
+            Eleven concrete systems, each designed to make every decision feel like it
             could kill you — or make you immortal.
           </p>
 

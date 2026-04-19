@@ -140,6 +140,35 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - **Combat layout**: 3v3 — allies (Aldric, Zim, Hero) left-to-right, enemies (Dufus + Pip + Hokas preview) right-to-left. 200px slot pitch, 240px sprite containers. Status columns with vertical HP/mana bars + spell icons + gear grid (2-col) + potion grid (2-col) + Flee button (hero only). Henchmen have sample inventories (bandages, potions).
 - **During combat, hidden**: sidebar, chat panel, text input, breadcrumb bar. Full viewport = scene background + sprites + combat UI.
 
+§5.18 — Equipment & Vendor Expansion / Passes F, G, H (April 19, 2026)
+
+**Pass F — Expanded Equipment Slots (12-slot grid)**
+- Added 6 new equipment slots to PlayerState: `boots`, `ringLeft`, `ringRight`, `cuffLeft`, `cuffRight`, `necklace`
+- EquipmentGrid now displays 3×4 grid (was 3×2 with 6 slots, now 12 slots)
+- Layout (paper-doll arrangement):
+  - Row 1: Weapon, Head, Shield
+  - Row 2: Neck (gorget), Amulet (necklace), Feet (boots)
+  - Row 3: Body, Ring L, Ring R
+  - Row 4: Limbs, Cuff L, Cuff R
+- Updated PlayerState, EquipmentGrid props, isItemEquipped() function in gameEngine.ts, and database schema
+- Migration: `supabase/migrations/20260418150000_add_expanded_equipment_slots.sql`
+
+**Pass G — COMPARE Popup**
+- New component `components/ComparePopup.tsx` — side-by-side stat comparison popup
+- Displays equipped item vs. item being inspected with comparable stats: damage, block chance, durability, coverage, dex penalties, value
+- "Compare" action added to ItemActionMenu for weapons and armor
+- Triggered via `isCompare` flag in ItemAction interface
+- Highlights improvements in green (e.g., higher damage)
+- Centered modal with close button
+
+**Pass H — Vendor Temporary Inventory (Data Model)**
+- Added `vendorTempStock` to WorldState: `Record<vendorId, Array<{ itemId, expiresAtTime }>>`
+- Items sold to vendors stay for **72 hours of server time** (supports multiplayer)
+- Expiration stored as ISO 8601 timestamp, checked in `tickWorldState` (not turn-based)
+- Helper function `addToVendorTempStock(state, vendorId, itemId)` adds items to temp stock
+- Items can be repurchased at double the sale price (original item.value)
+- Pending: bulk sell UI component, SELL command refactor for multiple items
+
 §5.17 — Inspect Popup Redesign / Pass E + Dufus Narration (April 14-15, 2026)
 
 §5.16 — Inspect Popup Redesign / Pass E (April 14, 2026)

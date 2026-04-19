@@ -25,7 +25,7 @@ function LoginContent() {
         position: "relative",
       }}
     >
-      {/* Dark overlay — 25% opacity black, 75% image visibility */}
+      {/* Dark overlay — 50% opacity black */}
       <div
         style={{
           position: "absolute",
@@ -33,7 +33,7 @@ function LoginContent() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.25)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
           zIndex: 0,
         }}
       />

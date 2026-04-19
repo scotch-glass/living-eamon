@@ -4,12 +4,16 @@ REHYDRATION INSTRUCTIONS FOR EVERY NEW SESSION
 Before doing any work, read these files in order:
 
 1. This file (CLAUDE_CONTEXT.md) — project overview, architecture, current status
-2. GAME_DESIGN.md — full game design document
-3. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
+2. **`Public_Domain_Rules.md`** — CRITICAL: Legal framework & Safe Harbor strategy for using Howard's public domain works. Establishes branding rules, trademark restrictions, timeline (Phase 1: Thurian/Aurelion pre-2028; Phase 2: Hyborian modules post-2028), and content sourcing rules. Read this before any design decision involving IP.
+3. GAME_DESIGN.md — full game design document. **§10 (Hyborian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. Read it before designing anything new in the game world.
+4. **`Public_Domain_Rules.md`** is now the single consolidated PD-safety doc (as of April 19, 2026). The former `lore/hyborian-pd/PD_RESEARCH.md` was deleted and its content absorbed. The authoritative name-by-name Safe Harbor / Radioactive lookup is at the top of **`GAME_DESIGN.md`** — that table supersedes everything else. Currently-PD corpus: *The Hyborian Age* essay (1936), three Thurian-Age Kull stories (1929–1930), and two *Phantagraph* poems ("Always Comes Evening" 1936, "Song at Midnight" 1940). Most Conan short-story content enters PD 2028–2032.
+5. **`lore/hyborian-pd/MODULE_PLAN.md`** — the methodology for converting PD stories into Living Eamon adventure modules. Includes the standing rule: *every module = one PD story + Living Eamon systems + Howard's voice + PD-verified naming.*
+6. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
    - User profile (Scotch — non-developer founder)
    - Feedback rules (image cache safety, CLAUDE_CONTEXT.md updates, etc.)
-   - Project decisions (Aquilonia styling, PD adaptation plan, etc.)
-4. §5.4 below — HWRR combat system status (Phases 1-2 complete, Phases 3-6 remaining)
+   - Project decisions (Aquilonia styling, Hyborian Age + PD limits, etc.)
+7. §5.4 below — HWRR combat system (all 6 phases complete)
+8. §5.10–§5.16 below — recent additions: mana system + static merchant purchases + universal SELL, HWRR bleed/poison Phase A, charity-barrel Honor system, sidebar tabs + per-item painted icons, prescripted-text instant fade-in + item action menu, apply-poison-to-weapon, expertise→maxMana rename
 
 Check the todo list for in-progress tasks from the previous session.
 
@@ -92,7 +96,7 @@ Current rooms (lib/adventures/guild-hall.ts):
 - Main Hall (Hokas bar, Aldric veteran, 3 barmaids — Lira/Mavia/Seraine, notice board, members chest)
 - Notice Board (3 adventure postings)
 - Armory (Pip attendant)
-- Guild Vault (Brunt banker)
+- Guild Bank (Brunt banker)
 - Pots & Bobbles / Mage School (south of courtyard, Zim wizard, potions, reagents, identification, magic training)
   - Larger inside than outside (subtle magical architecture)
   - Sells: healing potions, stamina/fatigue brews, antidotes, bandages, tourniquets, poisons, mana potions
@@ -106,6 +110,190 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - barmaid_select_response — on_response, handles LIRA/MAVIA/SERAINE choice, stores barmaidPreference
 - zim_welcome — on_enter Pots & Bobbles when metZim=false, foot-in-mouth intro, spell curriculum + HEAL discount YES/NO
 - zim_heal_response — on_response, YES+gold teaches HEAL, YES+broke gives reagent/identification speech
+- Shop room greetings — entering Sam's/Armory/Pots & Bobbles shows "Welcome. Would you like to SHOP?" chip + NPC sprite
+- Brunt banking greetings — 4 tiers (poor 0-10, modest 11-50, solid 51-1000, distinguished 1001+), 20 responses each, in guild-hall.ts
+- Aldric training YES + unarmed — gives well-used short sword before Dufus intro
+
+§5.16 — expertise → maxMana Rename (April 14, 2026)
+- **Full codebase rename:** `PlayerState.expertise` → `PlayerState.maxMana`. `expertise` was always the mana pool size but the name confused the engine (combat "awards expertise" read like XP, not mana).
+- **DB migration:** `supabase/migrations/20260414100000_rename_expertise_to_max_mana.sql` — renames the column `expertise` → `max_mana` + backfills any rows where `max_mana = 0` (pre-mana heroes) to 10/10.
+- **Load path fallback:** chat/route.ts reads `savedPlayer.max_mana` with fallback to legacy `savedPlayer.expertise` for any rows that somehow weren't migrated.
+- **Untouched:** `armor_expertise` / `shield_expertise` in WeaponSkills — these are combat skill names, not mana.
+- **STATS display:** now shows `Mana: X / Y` instead of `Expertise: N`. Stats grid shows only STR/DEX/CHA (3 columns).
+
+§5.18 — Combat Spell System + Effect Markers + Attack Animation (April 15-16, 2026)
+- **Four combat spells** implemented in `lib/combatEngine.ts:resolveCombatSpell()`: HEAL (18-32 HP), BLAST (2d8+4 lightning, bypasses armor), SPEED (+10 agility 3 rounds), POWER (weighted d100 random table — 80% good, 16% bad, 4% nothing). Mana debited up-front, never refunded.
+- **Power outcome table** (16 outcomes): Bonus Strike, Mana Surge, Lesser Healing, Quickening, Silver Aura, Untouchable, Dread (good); An Unwanted Vision (-1 Honor), Hiccups (-3 agi), Glimpse the Void (5 psychic), Tongue-Tied (spells fizzle 2 rounds), Numb Hand (miss next strike), Smelled by Set (+15 enemy accuracy), Phantom Pain (1d6), Nothing.
+- **8 new StatusEffectTypes** in `combatTypes.ts`: haste, shield_aura, invisible, feared_skip, numb_hand, hiccups, tongue_tied, marked_by_set. All wired into `resolveStrike` (evasion/armor calculations) and `resolveCombatRound` (feared_skip skips enemy strike).
+- **CAST handler in gameEngine.ts** intercepts combat spells when `activeCombat` is set — routes to `resolveCombatSpell` instead of Jane. Out-of-combat CAST still goes to Jane.
+- **Spell icons** in combat UI: 4 tiny 22px icons (❤ Heal, ⚡ Blast, 🙏 Power, 🪶 Speed) stacked vertically next to the mana bar inside `VerticalStatusCap`. Dim + grayscale when not learned; tinted + glowing when learned. Click → `SpellActionMenu` (Cast / Lore). Lore → `SpellDetailPopup` modal with school, effect line, flavor text.
+- **Effect Marker system**: `lib/effectIconData.ts` (SVG paths + colors + animations for all 18 effects), `components/EffectMarkerIcon.tsx` (20px dark-disc SVG icon with glow + tooltip via `createPortal` to escape stacking contexts). Replaces old 8px dots. 7 CSS animations: pulse, glow, shake, wobble, shimmer, fade, bounce. Icons appear in status column (max 6 + overflow badge) AND as floating 24px overlay near sprite's feet (max 3 priority-sorted).
+- **Invisible sprite transparency**: allies/enemies with `invisible` effect render at 35% opacity + blue hue-shift.
+- **Attack animation** (Option B "Impact Pulse"): attacker sprite pulses to 1.05× twice (0.5s) + dark radial blur disc expands behind them, then defender sprite shakes ±4px (0.35s). `animateThenCommand()` delays the engine command until mid-animation. Zone clicks + spell casts both route through it.
+- **Prescripted death narration**: HWRR combat win path now picks from `getEnemyDeathPool(bodyType)` — HUMANOID/BEAST/AMORPHOUS/UNDEAD pools (40-50 lines each). Player deaths use existing `COMBAT_TEMPLATES.playerDeath` (50 lines) + `REBIRTH_NARRATIVES`.
+- **LootScreen** (`components/LootScreen.tsx`): post-combat modal with enemy name, gold drop, per-item rows (icon + name + quantity + glance + value), individual Take buttons + Take All + Leave. Triggered on player victory (not training dummies, not fleeing).
+- **Combat fast-path** in `chat/route.ts`: when `activeCombat` is set or response contains `__COMBAT_END__`, the static-response handler returns IMMEDIATELY — bypassing courtyard weather injection, NPC on_enter scripts, `__CRITICAL__` Jane rewrite, and everything else. This was the root cause of the room-description leak.
+- **Isolated combat log** (`combatBoxLog` state in page.tsx): completely separate from the chat `messages` array. Only populated by responses to STRIKE/CAST/FLEE/ATTACK commands. Client-side strips any situation-block text (`Exits:`, `●`, `👁`) as a fallback defense. Resets on fight-start (new enemy id) and fight-end.
+- **Situation block suppressed** during combat in all 3 `appendSituation`/`buildSituationBlock` call sites in chat/route.ts.
+- **Training dummy fix**: `resolveCombatRound` accepts `enemyIsTrainingDummy` flag — dummies never strike back, no initiative line. 25 humorous Dufus-specific narration lines (10 miss, 15 hit) in `combatZoneNarration.ts`. Dufus has a `spritePrompt` now.
+- **Hero sprite system**: `HEROES` registry in `gameData.ts`, `/api/hero-image` route (mirrors NPC sprite pipeline). George has a sprite prompt. `known_spells` + `known_deities` columns added to players table via migration `20260415120000`.
+- **Combat layout**: 3v3 — allies (Aldric, Zim, Hero) left-to-right, enemies (Dufus + Pip + Hokas preview) right-to-left. 200px slot pitch, 240px sprite containers. Status columns with vertical HP/mana bars + spell icons + gear grid (2-col) + potion grid (2-col) + Flee button (hero only). Henchmen have sample inventories (bandages, potions).
+- **During combat, hidden**: sidebar, chat panel, text input, breadcrumb bar. Full viewport = scene background + sprites + combat UI.
+
+§5.18 — Equipment & Vendor Expansion / Passes F, G, H (April 19, 2026)
+
+**Pass F — Expanded Equipment Slots (12-slot grid)**
+- Added 6 new equipment slots to PlayerState: `boots`, `ringLeft`, `ringRight`, `cuffLeft`, `cuffRight`, `necklace`
+- EquipmentGrid now displays 3×4 grid (was 3×2 with 6 slots, now 12 slots)
+- Layout (paper-doll arrangement):
+  - Row 1: Weapon, Head, Shield
+  - Row 2: Neck (gorget), Amulet (necklace), Feet (boots)
+  - Row 3: Body, Ring L, Ring R
+  - Row 4: Limbs, Cuff L, Cuff R
+- Updated PlayerState, EquipmentGrid props, isItemEquipped() function in gameEngine.ts, and database schema
+- Migration: `supabase/migrations/20260418150000_add_expanded_equipment_slots.sql`
+
+**Pass G — COMPARE Popup**
+- New component `components/ComparePopup.tsx` — side-by-side stat comparison popup
+- Displays equipped item vs. item being inspected with comparable stats: damage, block chance, durability, coverage, dex penalties, value
+- "Compare" action added to ItemActionMenu for weapons and armor
+- Triggered via `isCompare` flag in ItemAction interface
+- Highlights improvements in green (e.g., higher damage)
+- Centered modal with close button
+
+**Pass H — Vendor Temporary Inventory + Bulk Sell**
+- Added `vendorTempStock` to WorldState: `Record<vendorId, Array<{ itemId, expiresAtTime }>>`
+- Items sold to vendors stay for **72 hours of server time** (supports multiplayer)
+- Expiration stored as ISO 8601 timestamp, checked in `tickWorldState` (not turn-based)
+- Helper function `addToVendorTempStock(state, vendorId, itemId)` adds items to temp stock
+- **BulkSellPopup component** (`components/BulkSellPopup.tsx`): checkbox-based selection, shows prices + total
+- "Bulk Sell" action added to ItemActionMenu in vendor rooms (opens popup)
+- **SELL command refactored** to support multiple items: `SELL ITEM1 ITEM2 ITEM3` (comma or space separated)
+  - Validates all items before sale
+  - Adds all items to vendor temp stock
+  - Calculates total gold at half-price
+  - Shows 72-hour buyback window confirmation
+- Items can be repurchased at double the sale price (original item.value)
+
+§5.17 — Inspect Popup Redesign / Pass E + Dufus Narration (April 14-15, 2026)
+
+§5.16 — Inspect Popup Redesign / Pass E (April 14, 2026)
+- **Two visual styles** in `components/ItemDetailPopup.tsx`, routed by `isBookItem(item)`:
+  1. **Alchemical Book style** — existing Thurian-codex parchment (Linear B, Cedarville Cursive, illuminated margins). Reserved for `type === "spell"` items only (books, scrolls, grimoires). No items use this type yet.
+  2. **Standard Inspection style** — dark glassmorphism container. Left 38%: large item sprite from the icon pipeline (reuses `fetchIconUrl` with module-level cache + dedup). Right 62%: scrollable text area with item name (amber Georgia), type + value subline, stats table (context-sensitive: damage for weapons, coverage/durability/dexPenalty for armor, healAmount for consumables, poison severity/charges), and description (alchemicalDescription fallback to description).
+- **Stats table** via `buildStatRows(item)` — derives rows from `item.stats` fields present. Shields detected by `shieldBlockChance` and labeled "Shield" instead of "Armor". Empty stats = no table shown.
+- **No new files** — all contained within the existing `ItemDetailPopup.tsx`. Props unchanged (`{ item: Item | null; onClose: () => void }`), so page.tsx integration unchanged.
+- Glyph fallback (⚔ ⛊ 👕 etc.) while icon loads, same set as ItemIcon.tsx.
+
+§5.15 — Apply Poison to Weapon (April 14, 2026)
+- **PlayerState gained:** `weaponPoisonCharges: number` (0 = no coating) + `weaponPoisonSeverity: number` (1-3). Both reset on death. Migration: `supabase/migrations/20260414110000_players_weapon_poison.sql`.
+- **Engine handler:** `APPLY [poison name] TO [weapon/blade/arrows/bolts]` in lib/gameEngine.ts. Matches Painful Poison (sev 1, 3 charges) and Quick Death (sev 3, 3 charges). Consumes the poison item. Ranged flavor: bow → "arrows", crossbow → "bolts", melee → "blade".
+- **Combat integration:** after `resolveHWRRRound` in gameEngine.ts, if player's strike dealt damage and `weaponPoisonCharges > 0`: adds a `poison` ActiveStatusEffect to the enemy combatant (severity from coating, turnsRemaining = -1, bleedPerTurn = severity). Charges decrement per hit; severity resets to 0 when charges reach 0.
+- **Action menu wired:** "Apply to Blade" option on Painful Poison / Quick Death is now live (removed comingSoon flag from ItemActionMenu.tsx).
+
+§5.14 — Prescripted Text Instant Fade-in + Item Action Menu (April 14, 2026)
+- **Prescripted (static engine) text now displays instantly** — `sendResponse()` in chat/route.ts rewritten to return `Response.json({ response, worldState })` instead of a ReadableStream. Client hits the JSON path (already existed) and adds the message in one shot. Only `streamJane()` (dynamic NPC conversation, world-object generation) still streams character-by-character.
+- **Fade-in animation:** new CSS keyframe `le-msg-fadein` (opacity 0→1 over 300ms) in globals.css. Applied via `.le-msg-fadein` class to the last assistant message when it's NOT streaming (i.e., JSON-delivered). Older messages and actively-streaming messages unaffected.
+- **Visual signal:** prescripted text appears instantly (fade-in); Jane's dynamic text streams character-by-character. Players can see which is which. Developers can see which responses are hitting the LLM.
+- **Item Action Menu** — new component `components/ItemActionMenu.tsx`. Click any item icon (PACK or GEAR tab) → contextual verb popup anchored to the tile:
+  - **Pack context:** Equip / Drink / Apply / Eat / Use / Inspect + Drop (or **Sell** if in a vendor room — replaces Drop)
+  - **Equipped context (GEAR tab):** Unequip + Inspect only (no Sell — must unequip first)
+  - Verbs dispatch via `sendMessage(command)` — all underlying commands already exist
+  - **No confirmation** on Equip or Drop (per design decision)
+  - Inspect opens the style-routed popup (standard glassmorphism for most items, alchemical codex for books/scrolls)
+  - `getItemActions(item, context, currentRoom, isEquipped)` helper derives actions from item type + state
+  - `ItemIcon.onClick` now passes MouseEvent for bounding-rect anchoring; `EquipmentGrid` and `BackpackPanel` onItemClick signatures updated to `(item, DOMRect)`
+- **Design decisions** for all 7 future systems documented in GAME_DESIGN.md: Inventory & Equipment UI, Critical Fail, Prescripted Text Display, expanded equip slots, COMPARE popup, bulk sell + vendor temp inventory.
+
+§5.13 — Sidebar Tabs + Per-Item Icons (April 2026)
+- **Per-item painted icons** — every item in `ITEMS` gets a square transparent-PNG icon. New `Item.iconPrompt?` field (optional override) + helper `buildItemIconPrompt(subject)` in lib/gameData.ts that builds the canonical prompt (Frazetta/Brom medieval painted realism, weathered-but-iconic, pure white background, 70% subject fill, 1:1 aspect, three-quarter angle).
+- **API + pregen pipeline** — `app/api/item-icon/route.ts` (mirrors `/api/npc-image`): Grok Imagine 1:1 → rembg cuts white → upload PNG → cache row. `lib/spritePregenerate.ts` extended with a third loop generating an icon for every `ITEMS` entry. Cache key: `itemIcon_<itemId>`, tone: `"icon"`. Sequential generation; ~3s per icon × ~86 items ≈ 4-5 min on first boot. Same `upsert(onConflict: "room_id,room_state,tone")` pattern as book pages — soft-deleted rows regen cleanly.
+- **Bug fix in pregen:** the `itemBgPregen` block had an early-return-on-empty that prevented downstream loops from running (same bug we already fixed for the NPC sprite path). Now uses the if/else pattern so the icon loop always reaches.
+- **`<ItemIcon>` component** (components/ItemIcon.tsx) — lazy-loads the icon URL via fetch. **Module-level `iconUrlCache: Map<itemId, url>` + in-flight promise dedup** so repeat renders don't re-fetch. Falls back to a type-glyph (⚔ ⛊ 👕 ⚱ ✦ ⚷ ✶) while loading or on failure. Props: `item`, `size` (default 40), `quantity` (badge for stackables), `tooltip`, `showEmpty` (silhouette for empty slots), `ringColor` (for equipped emphasis), `onClick`.
+- **`<EquipmentGrid>`** (components/EquipmentGrid.tsx) — 3×2 grid of 56px tiles: weapon, shield, helmet | gorget, body, limbs. Empty slots show silhouette + label. Shield tooltip says "two-handed" when `weaponIsTwoHanded`. Click tile → opens alchemical popup.
+- **`<BackpackPanel>`** (components/BackpackPanel.tsx) — auto-fill grid of 40px tiles for `player.inventory`. Quantity badges (corner, amber Georgia serif). Equipped items dimmed to 55% with "(worn)" tooltip suffix. Empty pack message: "Your pack is empty." Click → alchemical popup.
+- **STATS / GEAR / PACK tab system** in sidebar (app/page.tsx) — `sidebarTab: "stats" | "gear" | "pack"` state. Tab strip below the mana bar; active tab gets amber underline + dark-gradient bg. **HP bar + STATUS effects + MANA bar stay above the tabs (always visible — vital info glanceable from any tab).** Tab content:
+  - **STATS:** STR/DEX/CHA grid + GOLD (carried/banked) + top virtues
+  - **GEAR:** EquipmentGrid component
+  - **PACK:** BackpackPanel component
+- **Sidebar cleanup:** LOCATION row removed (room name still in header bar), "she is watching" footer line removed, REPUTATION row collapsed (revisit later). Sidebar width unchanged at 256px.
+
+§5.11 — HWRR Bleed & Poison (April 2026)
+- **`poison` added to `StatusEffectType`** (combatTypes.ts) — universal across all body zones in `ZONE_INJURY_TABLE` (alongside `bleed`). Severity 1-3 maps to 1/2/3 HP per turn (scaled down from HWRR's 3/6/9 because our HP pool is 20).
+- **PlayerState gains `activeEffects: ActiveStatusEffect[]`** — out-of-combat effect store. Migration: `supabase/migrations/20260413130000_players_active_effects.sql` adds `active_effects jsonb default '[]' not null`.
+- **Combat-boundary plumbing** (`endCombatSession` helper in gameEngine.ts):
+  - On combat START: `buildCombatantFromPlayer` copies `player.activeEffects` → `playerCombatant.activeEffects` (carries bleed/poison into the fight)
+  - On combat END (victory/flee/dummy): `endCombatSession(state, true)` copies `playerCombatant.activeEffects` → `player.activeEffects` (bleed/poison persists between fights)
+  - On player death: `applyPlayerDeath` resets `activeEffects = []`; `endCombatSession(state, false)` skips transfer
+- **Out-of-combat tick** in `tickWorldState`: applies `bleedPerTurn` damage from each active effect, decrements `turnsRemaining` (effects with `-1` persist until cured), then runs the existing HP/mana regen. So bleed sev 2 + regen +1 = net -1 HP/turn.
+- **Consumable handlers** (`runConsumable` in gameEngine.ts) — verbs accepted:
+  - `BANDAGE` / `BANDAGE [npc]` / `USE BANDAGE [ON [npc]]` — reduces 1 severity of `bleed`. Does NOT cure `severed_artery`.
+  - `TOURNIQUET` / `USE TOURNIQUET` — removes ALL `bleed` AND `severed_artery` (regardless of severity).
+  - `ANTIDOTE` / `USE ANTIDOTE` — reduces 1 severity of `poison`.
+  - `USE STRONG ANTIDOTE` — removes ALL `poison`.
+  - `USE HEALING POTION` / `USE GREATER HEALING POTION` — restores HP (15 / 35 by default).
+  - `USE MANA POTION` — restores 10 mana.
+  - All consume the item from inventory on success. Refusal cases (no wound to bind, full HP, etc.) don't consume.
+  - Ally-targeting (`BANDAGE HOKAS`) is wired but always graceful no-op until allies/escorts have effects (no item consumed).
+- **HEALTH command** lists active effects with severity + zone + damage/turn + duration.
+- **Sidebar** shows STATUS section under HP bar — color-coded glyphs (♦ red bleed, ☠ green poison, ✕ amber broken bone, ◉ amber concussion/eye, ✦ amber lung/rib) + severity dots (●●○).
+- **Item prices:** Bandage 5 → **1 gp**, Tourniquet 15 → **2 gp** (HWRR-faithful: cures should be cheap and accessible).
+- **Phase B (next PR, NOT in this one):** poison-application sources — NPC `combatProfile.poisonOnHit`, `APPLY POISON TO WEAPON` for player-side blade coating, field hazards in adventures.
+
+§5.10 — Mana System & Static Merchant Purchases (April 2026)
+- **PlayerState gained `currentMana: number`** — `expertise` is now formally the max mana pool. Default new hero: expertise=10, currentMana=10. Migration: `supabase/migrations/20260413120000_players_current_mana.sql` adds `current_mana int default 10`, backfills existing rows from expertise.
+- **Passive regen in tickWorldState** — `HP_REGEN_PER_TURN = 1`, `MANA_REGEN_PER_TURN = 1` (both exported constants in lib/gameState.ts). Skipped while `activeCombat` is set. Will be gated by hunger/thirst when Phase 2 lands; unconditional for now.
+- **applyPlayerDeath** restores `currentMana = expertise` (alongside `hp = maxHp`) on respawn at Church.
+- **Sidebar redesign (app/page.tsx)** — Hyborian-tinged polish:
+  - HP bar: bronze frame (`#4a2e15`), red gradient fill, ♥ glyph in label, Georgia serif numerals
+  - Mana bar: bronze-blue frame (`#1e3a5f`), blue gradient fill, ✦ glyph in label, wired to `currentMana / expertise` (no more `— / —`)
+  - Aquilonian rosette divider between bars and stats grid (✦ between two faded amber rules)
+  - Stats grid: 3 columns (STR / DEX / CHA only — EXP dropped since it's now the mana pool, not a 4th stat)
+  - Collapsed mini-sidebar mana bar fixed to also use currentMana
+- **Generic static merchant purchase handler** — `runMerchantPurchase(state, merchantNpcId, query)` in lib/gameEngine.ts. Used by Zim (mage_school) and Pip (armory). Sam keeps his bespoke `runSamPurchase` for the first-purchase outfit bundle. `matchMerchantItem()` does exact-id, display-name → underscore, and fuzzy scoring (mirrors `findSamShopRow`). Resolves renamed items like "Nimble Toes" → `stamina_brew` correctly without needing Jane.
+- **Universal SELL handler** — `runMerchantSell(state, merchantNpcId, query)` in lib/gameEngine.ts. Buyback = `Math.max(1, Math.floor(item.value / 2))`. Works in any of the four vendor rooms via `ROOM_MERCHANT_ID` map. `SELL` (no args) shows sellable inventory chips; `SELL [item]` completes the sale via `matchPlayerInventoryItem` fuzzy match. Refuses equipped items (UNEQUIP first), non-carryable items, and value-0 items. Replaces the old dynamic-Jane fallthrough — no more LLM round-trip for sales.
+- **Dynamic vendor welcome menus** — `buyChip(itemId, labelOverride?)` helper in lib/adventures/guild-hall-npcs.ts pulls display name + price straight from `ITEMS`. Zim's welcome-speech inline list rewritten to use `buyChip()` calls so future price changes in `gameData.ts` propagate automatically. Sam and Pip already used dynamic prices in their SHOP listings.
+
+§5.12 — Charity Barrels & Honor System (April 2026)
+- **`WorldState.barrelStock`** — `{ gowns: number; charityClothes: number }`. Defaults: 20 gowns, 10 mixed clothing pieces. Migration: `supabase/migrations/20260413140000_players_barrel_stock.sql` adds `barrel_stock jsonb default '{"gowns":20,"charityClothes":10}' not null`. Persisted via worldStateToPlayerRecord → savePlayer.
+- **TAKE clothing handler** (existing, modified) — checks `barrelStock.charityClothes` first; refuses with "the charity barrel is empty…" when 0; takes only what's available if stock < requested. Each item taken: **−1 Honor + chronicle entry** "Took N charity garment(s) from the Main Hall barrels."
+- **TAKE GRAY ROBE / TAKE ROBE / TAKE GOWN handler** (NEW, in main_hall) — separate from the charity-clothing TAKE. Checks `barrelStock.gowns`, decrements, adds `gray_robe` to inventory, **−1 Honor + chronicle entry** "Took a gray church robe from the gowns barrel." NOT advertised in the room copy chips — discoverable but furtive.
+- **Passive gray-robe Honor decay** in `tickWorldState` — every `GRAY_ROBE_HONOR_DECAY_INTERVAL` (= 10) turns the player still has `gray_robe` in inventory: **−1 Honor + chronicle entry** "Wore the gray church robe for another ten turns." Stops the moment the robe leaves inventory (Sam's outfit purchase, charity-barrel dressing ceremony). Constant exported from gameState.ts.
+- **Item values updated:** `gray_robe.value`: 0 → **1 gp**. All 12 charity-barrel clothing items (SHIRT/PANTS/SHOES/BELT_VARIANTS): 0 → **1 gp**. Sam's "plain_*" outfit and Hokas's "ragged_*" pity gift kept at 0 (gifted, not charity barrel inventory).
+- **Honor design intent:** taking from charity = small dishonor that accumulates. The charity clothing barrel is "much better than wearing the gray robe" (charity is honest poverty; the gowns barrel is sneaking another robe to sell for 1 gp). Gray robe in inventory = ongoing shame the player is incentivized to shed quickly.
+
+§5.9 — Item Detail Popups (Thurian Codex)
+- Item interface gained: shortDescription (chip row), alchemicalDescription (popup), bookPagePrompt (Grok prompt for background)
+- All 11 Zim shop items have all three fields written (Thurian alchemical lore framing — pre-Cataclysmic ancient sorcery, PD-safe via the Hyborian Age essay + Thurian-Age short stories)
+- Background images pregenerated on server startup via lib/spritePregenerate.ts (parallel to NPC sprites)
+- API route: /api/item-image?id=itemId — Grok Imagine 4:3 alchemical book page, NO background removal (full art)
+- Cached as scene_image_cache rows with room_id = itemBg_{itemId}, tone = "alchemical"
+- **Page layout (April 2026 fix):** illuminated-manuscript style. Sketch in UPPER-LEFT QUADRANT only; decorative border runs along TOP and LEFT edges only; right two-thirds + bottom half intentionally CLEAN BLANK PARCHMENT for scribe text. Hyborian iconography in the borders (Set serpents, fallen-Valusia purple-tower silhouettes, Thurian heart-stone sigils, Aquilonian rosettes, Words-of-Power fragments) — NOT generic Greek/arcane. **PD-safe:** all named references (Valusia, Set serpents, Thurian rites) come from the public-domain Hyborian Age essay or the three Thurian-Age short stories. Background prompt also specifies "PURE MATTE BLACK background" so the modal's `backgroundColor: transparent` lets the page float on the dark interface.
+- **All 11 prompts use the same prompt template** (in `lib/gameData.ts`), differing only in subject sketch and marginalia. Pregenerated via `lib/spritePregenerate.ts` using `upsert(onConflict: "room_id,room_state,tone")` — soft-deleted cache rows get cleanly overwritten on regen.
+- components/ItemDetailPopup.tsx — modal with Linear B name + Latin (script-font) name + Cedarville Cursive body, all absolute-positioned, RIGHT-aligned (text grows leftward away from corner art):
+  - Modal: `backgroundColor: transparent` (parchment floats on dark backdrop)
+  - Title block: `top:34%, left:24%, right:18%`. Linear B = 1.6rem; Latin name = 1.6rem (Cedarville cursive, sentence case, NOT uppercase)
+  - Body: `top:56%, left:19%, right:18%, bottom:8%`. Cedarville cursive, 1.2rem, bold (700)
+  - Close hint removed (modal closes on outside-click or Esc)
+- toLinearB() — phonetic CV-syllable approximation of Latin name → Linear B glyphs (decorative only, not real transliteration)
+- Shop chip format: __CMD:BUY ITEM__ | price · short desc · __ITEM:itemId__ (read more link)
+- __ITEM:itemId__ token parsed in formatMessage and rendered as "📖 read more" button
+- Fonts loaded via next/font/google: Noto Sans Linear B, Cedarville Cursive (CSS vars --font-linear-b, --font-cedarville)
+
+§5.7 — NPC Sprite System
+- AI background removal via rembg (Python CLI) — subprocess call from Node.js
+- Sprites pre-generated on server startup via lib/spritePregenerate.ts (checks cache, generates missing)
+- API route: /api/npc-image?id=npcId — generates 3:4 portrait, runs rembg, uploads transparent PNG to Supabase Storage
+- Sprites appear during active conversation only — triggered by conversationNpcId on EngineResult
+- __NPC__npcId__ token emitted at start of response for early sprite prefetch
+- spritePrompt on all hub NPCs: Hokas, Sam, Aldric, Lira, Mavia, Seraine, Brunt, Pip, Zim
+- Sprite container: fixed position, left edge overlaps text bubble by ~10px, feet anchored to bottom
+- Cached in scene_image_cache with room_id = sprite_{npcId}
+
+§5.8 — Session Persistence Fix
+- On page refresh (empty messages), chat API skips client state merge — DB is source of truth
+- Prevents fresh createInitialWorldState() from overwriting saved player data
+- Within a session, client state is merged normally for turn-to-turn continuity
 
 §5.2 — Key Architecture Files
 | File | Purpose |
@@ -118,7 +306,24 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 | lib/combatTypes.ts | BodyZone, CombatantState, StrikeResolution, ActiveCombatSession, NPCCombatProfile |
 | lib/combatEngine.ts | 3-roll strike resolution, round resolution, enemy AI, status ticks, combatant builders |
 | lib/combatZoneNarration.ts | Zone-specific narration pools, buildZoneStrikeNarrative(), injury/crit narration |
-| components/CombatScreen.tsx | Full-screen combat overlay — PaperDoll, log, strike/flee buttons |
+| lib/imageProcessing.ts | AI background removal via rembg (Python subprocess) for transparent sprite PNGs |
+| lib/spritePregenerate.ts | Server-startup pre-generation — NPC sprites + item book-pages + item icons. Three sequential loops, all using upsert(onConflict) so soft-deleted cache rows regen cleanly |
+| app/api/npc-image/route.ts | Generates NPC sprites — Grok Imagine 3:4 → rembg → Supabase Storage cache |
+| app/api/item-icon/route.ts | Generates per-item painted icons — Grok Imagine 1:1 → rembg → PNG. Falls back to buildItemIconPrompt(name) if item.iconPrompt unset. Cache key `itemIcon_<id>`, tone `"icon"` |
+| components/NPCSprite.tsx | Conversation sprite display — fixed position, bottom-anchored, fade in/out |
+| components/ItemIcon.tsx | Lazy-loading inventory icon tile with module-level URL cache + in-flight dedup. Type-glyph fallback. Quantity badges, ringColor, click handler |
+| components/EquipmentGrid.tsx | 3×2 grid of 56px equipment tiles — weapon, shield, helmet/gorget/body/limbs |
+| components/BackpackPanel.tsx | Auto-fill grid of 40px inventory tiles with quantity badges; equipped items dimmed |
+| components/ItemActionMenu.tsx | Contextual verb popup on item-icon click — Equip/Drink/Apply/Inspect/Drop/Sell; context-sensitive per item type + room |
+| components/ItemDetailPopup.tsx | Style-routed inspect popup: StandardInspectView (dark glassmorphism + icon sprite + stats) for most items, AlchemicalBookView (Thurian codex parchment) for spell-type books/scrolls |
+| app/api/item-image/route.ts | Generates alchemical book page backgrounds for items — Grok Imagine 4:3, no BG removal |
+| components/CombatScreen.tsx | HWRR 3v3 combat overlay — 3 ally sprites left (Aldric/Zim/Hero) + 3 enemy sprites right, per-character status columns (vertical HP/mana bars, spell icons, gear/potion grids, zone-target buttons), scrolling combat log top, attack animation (pulse+blur+shake), effect marker overlays, invisible sprite transparency |
+| components/EffectMarkerIcon.tsx | SVG combat-effect icon in dark disc with animation + portal tooltip — 18 Hyborian-themed icons (injuries + spell buffs/debuffs) |
+| components/LootScreen.tsx | Post-combat loot modal — enemy name, gold, per-item rows with icon/name/value/description, Take/Take All/Leave |
+| components/SpellActionMenu (in CombatScreen) | Spell right-click menu (Cast / Lore) anchored to spell icon |
+| components/SpellDetailPopup (in CombatScreen) | Spell lore modal — school, mana cost, effect line, flavor text |
+| lib/effectIconData.ts | EFFECT_ICON_MAP (SVG paths, colors, animations, labels for 18 effects) + unified EFFECT_COLORS |
+| app/api/hero-image/route.ts | Hero sprite generation — mirrors NPC sprite pipeline (Grok 3:4 → rembg → Supabase cache) |
 | components/PaperDoll.tsx | SVG clickable body zones — color-coded by armor/wounds/selection |
 | lib/gameData.ts | NPCs, Items, SAM_INVENTORY — re-exports Room types from roomTypes.ts |
 | app/api/scene-image/route.ts | Grok Imagine scene generation + cache (soft-delete aware) |
@@ -132,7 +337,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - scene_image_cache.deleted_at timestamptz — soft delete
 - scene_image_cache.approved boolean — protects accepted images from accidental clearing
 
-§5.4 — HWRR Combat System Rewrite (In Progress)
+§5.4 — HWRR Combat System Rewrite (COMPLETE — all 6 phases shipped)
 Replacing flat ATTACK [enemy] with Heads Will Roll Reforged-style body-part targeting.
 Status tracked in §5.4 below (plan file archived).
 
@@ -308,8 +513,7 @@ Style: Extremely high definition, gritty, photorealistic grimdark. Warhammer mee
 Maps: Hand-drawn in the style of Tolkien's own cartography — Middle-earth aesthetic with compass roses, illustrated terrain, aged parchment texture.
 Image API: Grok Imagine
 
-Master reference generation: grok-imagine-image-pro ($0.07/image)
-Composited scene renders: grok-imagine-image standard ($0.02/image)
+**Art-quality mandate (April 19, 2026):** All art calls use `grok-imagine-image-pro` ($0.07/image). The standard `grok-imagine-image` model is never used — no downgrade fallback, no cost-optimization swap. This applies to every surface: item icons, NPC sprites, hero sprite, scene backgrounds, item book-page art, barmaid portraits, and all scripts.
 
 White studio backdrop rule: All master character reference images are generated on clean white background for maximum contrast and sharpest Flux model anchor. Black backgrounds cause edge halos and lighting bleed. White is canon.
 Regional Tone Archetypes
@@ -625,8 +829,20 @@ PhaseFocusPhase 1Core engine, streaming chat, Supabase persistence, character cr
 §17 — Key Design Decisions Log
 April 2026
 
-- **Expertise field clarification (April 2026):** `expertise` in `PlayerState` was documented in `GAME_DESIGN.md` as "mana renamed for lore" but this is incorrect per the game design intent. In a skill-based system (UO/Eamon), `expertise` is a combat/skill stat, separate from mana. The mana bar graphic is implemented in the sidebar but shows `— / —` until mana is properly designed and added as its own `PlayerState` fields (`currentMana`, `maxMana`). Consider whether `expertise` is needed at all — the UO skill system uses per-skill values (see `WeaponSkills`), not a single expertise score. Flag for review before Phase 2 combat implementation.
-Mana System Design (planned, graphic-only UI implemented April 2026): `expertise` in `PlayerState` is the mana pool; sidebar now shows HP (red) and Mana (blue) in full and collapsed states. When mana mechanics land, add `currentMana: number`; mana bar width becomes `(currentMana / expertise) * 100%`. Guild `CAST` costs no mana. Occult `INVOKE` costs mana by circle (Circle 1 = 4, Circle 2 = 6; see `GAME_DESIGN.md` §9). Mana regenerates over time at rest; stamina affects regen rate.
+- **Mana system implemented (April 13, 2026):** `expertise` is now formally the max mana pool. New field `currentMana: number` added to PlayerState (default 10/10). Passive regen +1 mana/turn (and +1 HP/turn) via `tickWorldState`, gated by `!activeCombat`. INVOKE costs are still pending. Sidebar shows live HP/mana bars with bronze framing and ✦/♥ glyphs; STR/DEX/CHA in 3-column grid (EXP dropped from display).
+- **HWRR bleed/poison adopted (April 13, 2026):** poison added to `StatusEffectType`. `player.activeEffects[]` carries effects out of combat, transferred in/out of `playerCombatant.activeEffects` at combat boundaries. Severity 1-3 = 1/2/3 HP/turn (scaled down from HWRR's 3/6/9 because our HP pool is 20). Cures: BANDAGE (-1 bleed sev), TOURNIQUET (all bleed + severed_artery), ANTIDOTE (-1 poison sev), STRONG ANTIDOTE (all poison). Phase B (deferred): poison-application sources (NPC `combatProfile.poisonOnHit`, `APPLY POISON TO WEAPON`, field hazards).
+- **Universal vendor SELL at half price (April 13, 2026):** every vendor buys everything at `Math.max(1, Math.floor(item.value / 2))`. Equipped items refused (UNEQUIP first). All vendor menus refactored to read prices dynamically from `ITEMS` — no more hardcoded prices in welcome speeches.
+- **expertise → maxMana full rename (April 14, 2026):** `PlayerState.expertise` renamed to `PlayerState.maxMana` across all code + DB column renamed `expertise` → `max_mana`. Backfill set pre-mana heroes (where pool was 0) to 10/10. `armor_expertise`/`shield_expertise` in WeaponSkills untouched (they're skill names, not mana).
+- **HWRR visual-novel combat screen (April 15, 2026):** `CombatScreen.tsx` completely redesigned. Replaced the ugly centered modal with a full-viewport transparent overlay. Enemy sprite floats HWRR-style over the room scene (xcenter 0.64, bottom-anchored, 60vh tall). Top HP strip, bottom-left PaperDoll HUD (wound display), bottom-right action panel with zone pills + Strike/Flee. Floating narrative strip replaces the scrolling log. Zone positions lifted from HWRR's `script.rpy:4047-4058`.
+- **Inspect popup redesign / Pass E (April 14, 2026):** `ItemDetailPopup.tsx` now routes between two visual styles. Standard inspection (dark glassmorphism, large item sprite left, scrollable stats+description right) for all current items. Alchemical book (Thurian codex parchment) reserved for `type === "spell"` books/scrolls/grimoires (none exist yet). Stats table is context-sensitive per item type.
+- **Apply Poison to Weapon (April 14, 2026):** APPLY [poison] TO [weapon/blade/arrows/bolts] handler + combat integration. Poison coats the weapon for N charges; each hit that lands transfers a poison effect to the enemy. Painful Poison = sev 1 / 3 charges; Quick Death = sev 3 / 3 charges. Ranged weapons get arrows/bolts flavor text.
+- **Prescripted text instant fade-in (April 14, 2026):** static engine responses now return JSON (not ReadableStream) — client renders instantly with 300ms fade-in. Only Jane dynamic content streams character-by-character. Clear visual signal for dev + player.
+- **Item action menu (April 14, 2026):** click any item icon → contextual verb popup (Equip/Drink/Apply/Inspect/Drop or Sell in vendor rooms). No confirmation on equip/drop. Equipped items show Unequip + Inspect only. "Apply to Blade" for poisons now live.
+- **7 future design decisions ratified in GAME_DESIGN.md (April 14, 2026):** Inventory & Equipment UI (action menus, two inspect styles, COMPARE popup, expanded equip slots, bulk sell + vendor temp inventory), Critical Fail system, Prescripted Text Display.
+- **Sidebar tabs + per-item painted icons (April 13, 2026):** every item in `ITEMS` now has a Grok-generated painted icon (Frazetta/Brom tone, transparent PNG via rembg, ~$1 one-time pregeneration cost for ~86 items). Sidebar reorganized into STATS / GEAR / PACK tabs with HP+Mana+Status always visible above the tabs. New components: `<ItemIcon>`, `<EquipmentGrid>` (3×2 paper-doll-style equipment slots), `<BackpackPanel>` (UO-style inventory grid). Equipment slots and pack tiles both clickable → opens existing alchemical popup. Drag-and-drop reorganization is the next iteration. Removed: LOCATION row, "she is watching" footer.
+- **Charity-barrel Honor system (April 13, 2026):** Main Hall has finite-stock barrels (20 gowns, 10 mixed clothing pieces). Each item taken from either barrel = −1 Honor + chronicle entry. Wearing `gray_robe` decays Honor by 1 every 10 turns it stays in inventory. Robe is removed by the charity-clothing dressing ceremony or by Sam's first-purchase outfit bundle. Taking the gray robe from the gowns barrel is intentionally NOT advertised in room copy chips (discoverable but furtive).
+- **Player-facing names plain not literary (April 13, 2026):** item/NPC names must be immediately understandable to non-literary players. Atmospheric/literary flavor goes in the *description* and *alchemicalDescription*, never the name. (Saved as `feedback_player_facing_names.md` memory.)
+- **Expertise field clarification (April 2026):** `expertise` in `PlayerState` was documented in `GAME_DESIGN.md` as "mana renamed for lore" — this was incorrect. **FULLY RESOLVED April 14:** field renamed `expertise` → `maxMana` across all code + DB. `currentMana` tracks current; `maxMana` tracks the pool. Sidebar wired to `currentMana / maxMana`.
 Tolkienian-GrimDark tone locked. Fusion of Tolkien world-building aesthetic + The Black Company narrative DNA + Heads Will Roll: Reforged structural model. Regional tone system: Pastoral Innocent / Civilized Human / Grimdark Frontier. Zones degrade permanently through player actions.
 Scene image architecture confirmed. Every major scene transition generates one establishing image (Tolkien/Lewis illustrative model). Template layering: background + NPC sprites + custom player avatar composited in one Grok Imagine API call. Modeled on HWR Reforged's Ren'Py architecture (confirmed from source file study).
 Soul Forge designed. One-time permanent avatar creation. Grok Imagine Pro master reference + 12 standard poses. White studio backdrop for all masters. Coherence protocol: master image + verbatim Identity Block in every call. Full customization: 8 archetypes per gender (M/F), extensive body/face/scar parameters.
@@ -890,7 +1106,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 | `main_hall_exit` | The Guild Entrance | north→`main_hall`, west→`guild_courtyard` | door_guard | _(none)_ | _(none)_ |
 | `guild_courtyard` | The Guild Courtyard | east→`main_hall_exit`, west→`church_of_perpetual_life` | _(none)_ | _(none)_ | _(none)_ — live weather via **`route.ts`** + **`buildCourtyardDescription`** |
 | `church_of_perpetual_life` | The Church of Perpetual Life | east→`guild_courtyard` | priest_of_perpetual_life | _(none)_ | _(none)_ |
-| `guild_vault` | The Guild Vault | up→`main_hall` | brunt_the_banker | _(none)_ | _(none)_ |
+| `guild_vault` | The Guild Bank | up→`main_hall` | brunt_the_banker | _(none)_ | _(none)_ |
 
 **`createInitialWorldState.rooms` keys:** `main_hall`, `armory`, `notice_board`, `guild_vault`, **`guild_courtyard`**, **`church_of_perpetual_life`** (not `main_hall_exit`). `door_guard` NPC state uses `location: "main_hall_exit"`.
 
@@ -990,7 +1206,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 ## 10. Art System
 
 - Output path (script): `public/uo-art/items/[numeric artId].png` (created by `scripts/generate-all-art.mjs`; folder may be absent in a fresh clone).
-- Model: **`grok-imagine-image`** (xAI Images API).
+- Model: **`grok-imagine-image-pro`** (xAI Images API). **Mandate:** never use the non-pro `grok-imagine-image` model. See §7 Art Direction art-quality mandate.
 - Batch script: `scripts/generate-all-art.mjs` (reads `GROK_API_KEY` from `.env.local`).
 - Test script: `scripts/test-plate-chest.mjs`.
 - Paperdoll figures, male/female layered wearables: **not built** (parked).
@@ -1600,5 +1816,120 @@ When writing any Cursor prompt that adds a new feature:
 
 This keeps Aldric current and prevents the tutorial
 system from drifting out of sync with the game.
+
+---
+
+## §6 — Public Suite Architecture (April 18, 2026)
+
+The public-facing pages attract players and manage pre-login flows. All use dark theme (#030712 base), Georgia serif, amber gold (#fbbf24) accents, and background images with dark overlays for readability.
+
+### Pages & Routes
+
+**`/splash`** — Marketing landing page (entry point)
+- **Hero section:** Dragon logo (280×280px) + title image (320×320px, LIVING + glowing sword + EAMON) side-by-side on left; features list + tagline on left side
+- Three pillars section (GORE & CONSEQUENCE, A WORLD THAT REMEMBERS, FORBIDDEN OCCULT MAGIC) with icons and descriptions
+- Progress teaser (6 key completed items) + link to /updates
+- Prominent "Register for Early Access" button (amber) + small dim "Already a tester? Login here" link
+- No login/register forms (pure marketing funnel)
+- Background: hero.jpg (full-screen, 35% opacity) — barbarian protecting harlot from Persian warriors, 1 lich, 1 UFO
+
+**`/login`** — Minimal login form for existing testers
+- Email + password fields only
+- "Enter the Realm" button
+- "Sign in with Google" link
+- "New adventurer? Register →" link to /register
+- No marketing copy
+- Background: login-bg.jpg (full-screen, no overlay) — drunk mercenary, woman stealing his purse, busy whorehouse
+
+**`/register`** — Registration form for new users
+- Email + password fields only (hero name is set during character creation, not signup)
+- Cloudflare Turnstile CAPTCHA widget
+- "Begin the Legend" button
+- "Already have an account? Sign in →" link to /login
+- Background: register-bg.jpg (75% dark overlay) — barbarian vs sorcerer epic battle
+
+**`/updates`** — Development progress tracker
+- Status cards (done/active/planned counts)
+- MVP/Alpha/Beta explanation
+- 76-item checklist across 9 categories with progress bars
+- Styled as stone tablet aesthetic
+
+**`/legal`** — Copyright & IP disclaimer
+- About Living Eamon, Public Domain Works, Trademarks, AI-Generated Content, IP Complaints, Compliance
+- Lists 4 PD Howard works (Hyborian Age essay + 3 Thurian-Age stories)
+
+**`/board`** — Community forum
+- 4 seeded categories: Adventurers' Hall, Bug Catcher's Trap, Petitions to Jane, Lore & Theory
+- Category index shows thread count, post count, last post date
+- **`/board/[threadId]`** — individual thread view with OP + replies
+
+### Shared Navigation
+
+**`components/PublicNav.tsx`** — sticky nav used on all public pages
+- Logo + wordmark (LIVING EAMON) links to /splash
+- Links: Updates, Community, Legal
+- "Alpha Access →" button links to /splash
+
+### Image Processing Rules for Public Assets
+
+**CRITICAL: All images processed with rembg require pure white background in Grok prompt.**
+
+- **Logo** (`dragon-hero.png`): 280×280px, transparent PNG, rampant Western dragon
+  - Generated with pure white background → rembg → transparent PNG
+  - No CSS effects needed (placed as-is)
+
+- **Title** (`eamon-title.png`): 320×320px, transparent PNG, weathered brass text + sword
+  - Generated with pure white background → rembg → transparent PNG
+  - CSS drop-shadow filter applied (blue glow) after placement: `filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.6))`
+  - **Rule:** glow effects added via CSS, never baked into image
+
+- **Full-screen backgrounds** (hero.jpg, login-bg.jpg, register-bg.jpg): JPG direct, no rembg needed
+  - Background images do NOT need transparency processing
+  - Generate without transparency requirement; use JPG for efficiency
+
+### Design System Details
+
+- **Colors:** `#030712` (void black), `#fbbf24` (amber gold), `#92400e` (deep amber), `#e8d4a0` (parchment)
+- **Typography:** Georgia serif (body default), Cedarville Cursive (taglines/decorative), Noto Sans Linear B (texture only, 0.04 opacity)
+- **Form inputs:** dark background (#111827), amber border on focus, amber buttons with hover effects
+- **Overlays:** 75–88% dark overlay on backgrounds for text readability; full-screen backgrounds may have no overlay if designed for it
+- **Responsive:** mobile-first, flex layouts, no fixed widths beyond max-width containers
+
+### Background Image Strategy
+
+- **How generated:** All images generated via Grok Imagine Pro with Robert E. Howard sword & sorcery style
+- **White background rule:** For images that will be processed with rembg, ALWAYS request "pure white background" in the prompt (non-negotiable)
+- **Processing workflow:**
+  1. Generate with white background (if transparency needed)
+  2. Run rembg: `Image.open(file) → remove() → Image.save()` (Python)
+  3. Results: PNG with transparent background for logo/title, JPG for full-screen backgrounds
+- **Opacity on page:** full-screen backgrounds use 35% or native opacity via CSS for readability without overlay
+
+### Splash Image Restoration (April 18, 2026)
+
+**Issue:** Logo, eamon-title, and dragon-hero images were missing transparent backgrounds and not displaying properly on the splash page.
+
+**Root cause diagnosis:** Former implementation generated images with white backgrounds but never applied rembg to remove them. Additionally, there was risk of applying rembg to full-scene images (which are backgrounds themselves), which would corrupt them by attempting to segment out the background.
+
+**Fix applied:**
+- Regenerated `logo.png` (1024×1024 RGBA) — heraldic crest emblem
+- Regenerated `eamon-title.png` (1024×1024 RGBA) — stylized "Living Eamon" text
+- Regenerated `dragon-hero.png` (896×1280 RGBA) — fearsome dragon figure
+- All three: Grok Imagine (pure white background prompt) → rembg removal → transparent PNG
+- Results now display correctly on `/splash` via PublicNav and hero section
+
+**Image pipeline rules (enforced from now on):**
+1. **Sprites/logos/character images:** Generate with pure white background → apply rembg → transparent PNG
+2. **Full-scene/background images:** Generate directly → upload as JPEG (never apply rembg)
+3. **Verification:** All PNG sprites should be RGBA (8-bit/color RGBA, non-interlaced)
+
+**Prevention:** Added feedback memory `feedback_image_generation_patterns.md` to catch context confusion (rembg applied to wrong image types).
+
+### Auth Actions (app/auth/actions.ts)
+
+- **registerAction:** email + password only (heroName field removed April 18, 2026)
+- **loginAction:** email + password → sets session → redirects to /
+- **googleSignInAction:** OAuth flow via Supabase
+- **logoutAction:** clears session → redirects to /login
 
 ---

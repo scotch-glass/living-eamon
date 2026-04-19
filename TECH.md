@@ -24,7 +24,7 @@ Raw URLs for Claude rehydration:
 | Auth | Supabase Auth + `@supabase/ssr` | Email/password + Google SSO; cookie sessions |
 | AI Narrator | Anthropic Claude (`claude-sonnet-4-20250514`) | Jane; streaming + buffered |
 | AI Fallback | xAI Grok (`grok-3`) | Optional; OpenAI-compatible API |
-| Image Gen | xAI (`grok-imagine-image`) | UO-style item art; local scripts only |
+| Image Gen | xAI (`grok-imagine-image-pro`) | **Mandate:** all art calls use `grok-imagine-image-pro`. Never downgrade to the standard model. |
 | Hosting | Vercel | Auto-deploy from `main` |
 | IDE | Cursor | Rules enforce `CLAUDE_CONTEXT.md` updates |
 
@@ -115,15 +115,28 @@ const { data } = await serviceClient
 | `user_id` | UUID | FK → `auth.users(id)` ON DELETE CASCADE |
 | `character_name` | text | Hero name from registration |
 | `hp` / `max_hp` | int | |
-| `strength` / `dexterity` / `charisma` / `expertise` | int | `dexterity` replaces legacy `agility` |
+| `current_mana` | int | Current mana points; max = `expertise` (the mana pool size). Default 10. |
+| `strength` / `dexterity` / `charisma` / `expertise` | int | `dexterity` replaces legacy `agility`. `expertise` is the mana pool size (formerly a 4th display stat — dropped from sidebar). |
 | `gold` / `banked_gold` | int | |
-| `weapon` / `armor` / `shield` | text / nullable | Item ids |
+| `weapon` / `armor` / `shield` | text / nullable | Item ids. Legacy `armor` mapped to `body_armor` on load. |
+| `helmet` / `gorget` / `body_armor` / `limb_armor` | text / nullable | Per-zone armor slots (HWRR-style) |
 | `inventory` | jsonb | `{ itemId, quantity }[]` |
-| `virtues` | jsonb | 10 virtue scores |
+| `virtues` | jsonb | 10 virtue scores; **Honor** is decremented by charity-barrel takes and gray-robe-worn ticks |
+| `active_combat` | jsonb / nullable | `ActiveCombatSession` — non-null while in a fight |
+| `active_effects` | jsonb | `ActiveStatusEffect[]` — bleed, poison, broken_leg etc. that persist out of combat. Default `[]`. |
+| `barrel_stock` | jsonb | `{ gowns: number, charityClothes: number }` — finite stock for Main Hall charity barrels. Default `{gowns:20, charityClothes:10}`. |
 | `reputation_score` / `reputation_level` / `known_as` | | |
 | `current_room` / `current_adventure` / `completed_adventures` | | |
+| `visited_rooms` | text[] | Fog-of-war exit labels — only revealed for rooms the player has entered |
 | `bounty` / `is_wanted` | | |
 | `turn_count` / `last_seen` | | |
+| `mounted` | bool | Affects armor dex penalties (plate is viable only when mounted) |
+| `remembers_own_name` | bool | Set true after first NPC name-revelation (Hokas/Sam/Aldric BEG) |
+| `met_zim` | bool | Set true after first visit to Pots & Bobbles (Zim's intro fires once) |
+| `barmaid_preference` | text / nullable | Aldric drink offer choice (Lira/Mavia/Seraine) |
+| `received_sam_starter_outfit` | bool | Set after Sam's first-purchase outfit bundle; reset on death |
+| `received_hokas_unarmed_gift` | bool | Set after Hokas's one-time unarmed pity gift; reset on death |
+| `weapon_skills` | jsonb | Per-category skill values (swordsmanship, mace_fighting, etc.). Total capped at SKILL_CAP=700. |
 | `jane_calls_today` / `jane_calls_reset_at` | | Jane rate limiting |
 | `tier` | text | Subscription tier |
 | `known_spells` / `known_deities` | jsonb | Not yet persisted in savePlayer — known gap |

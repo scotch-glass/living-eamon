@@ -12,13 +12,6 @@ import {
   COMBAT_TEMPLATES,
   getEnemyDeathPool,
   SAM_INVENTORY,
-  ARMOR_ABSORB_DESCRIPTIONS,
-  ARMOR_FULL_ABSORB_DESCRIPTIONS,
-  PLAYER_MISS_DESCRIPTIONS,
-  getEnemyHitPlayerPool,
-  getEnemyMissPlayerPool,
-  getPlayerHitEnemyPool,
-  getWeaponCategory,
   PRIEST_SILENCE_RESPONSES,
   REBIRTH_NARRATIVES,
   ROOM_ROBE_HUMILIATION,
@@ -28,15 +21,14 @@ import {
   BARREL_NPC_HINTS,
   ALDRIC_OPENING_LINES,
   ALDRIC_TOPIC_RESPONSES,
-  PLAYER_FUMBLE_DESCRIPTIONS,
   type NPCBodyType,
-  type WoundTier,
   type SamShopRow,
   Room,
   NPC,
 } from "./gameData";
 
 import { ALL_ROOMS as MAIN_HALL_ROOMS } from "./adventures/registry";
+import { BRUNT_GREETINGS, getBruntTier } from "./adventures/guild-hall";
 
 import {
   WorldState,
@@ -55,6 +47,7 @@ import {
   setNPCCombatHp,
   applyPlayerDeath,
   updateWeaponSkill,
+  addToVendorTempStock,
   SKILL_NAMES,
   SKILL_CAP,
   normalizeWeaponSkills,
@@ -67,18 +60,37 @@ import type { TimeOfDay } from "./weatherService";
 
 import {
   isTwoHanded,
-  rollWeaponDamage,
   WEAPON_DATA,
   getDexReactionBonus,
   getWeaponSkillKey,
 } from "./uoData";
 
-import type { BodyZone, ActiveCombatSession } from "./combatTypes";
+import type { BodyZone, ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 import { BODY_ZONES } from "./combatTypes";
+
+// ── Combat-end helper: transfer persistent effects back to player ──
+// Called from every place that ends combat (victory, flee, dummy).
+// On player death, applyPlayerDeath() resets activeEffects = [] separately.
+function endCombatSession(state: WorldState, transferEffects: boolean): WorldState {
+  const session = state.player.activeCombat;
+  const carried: ActiveStatusEffect[] = transferEffects && session
+    ? session.playerCombatant.activeEffects.map(e => ({ ...e }))
+    : (state.player.activeEffects ?? []);
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      activeCombat: null,
+      activeEffects: carried,
+    },
+  };
+}
 import {
   initCombatSession,
   resolveCombatRound as resolveHWRRRound,
   buildRoundNarrative,
+  resolveCombatSpell,
+  isCombatSpell,
 } from "./combatEngine";
 
 // ============================================================
@@ -99,6 +111,8 @@ export interface EngineResult {
   examineObjectKey?: string | null;
   hasCritical?: boolean;
   criticalContext?: string | null;
+  /** NPC id the hero is actively conversing with (shows sprite). */
+  conversationNpcId?: string | null;
 }
 
 // ============================================================
@@ -113,6 +127,21 @@ function equippedWeaponDisplayLabel(weaponId: string): string {
   if (weaponId === "unarmed") return "Unarmed";
   return ITEMS[weaponId]?.name ?? weaponId;
 }
+
+/** Shop greetings — appended to room description when player enters a shop room. */
+const SHOP_ROOM_GREETINGS: Record<string, string> = {
+  sams_sharps: `Sam glances up. "Welcome. Would you like to __CMD:SHOP__?"`,
+  armory: `Pip straightens up. "Welcome. Would you like to __CMD:SHOP__?"`,
+  mage_school: `Zim looks up from his books. "Welcome. Would you like to __CMD:SHOP__?"`,
+};
+
+/** NPC id for each shop/service room — shown as sprite when entering. */
+const SHOP_ROOM_NPC: Record<string, string> = {
+  sams_sharps: "sam_slicker",
+  armory: "armory_attendant",
+  mage_school: "zim_the_wizard",
+  guild_vault: "brunt_the_banker",
+};
 
 const EXIT_ARROW: Record<string, string> = {
   north: "North",
@@ -165,6 +194,8 @@ export function buildSituationBlock(state: WorldState): string {
       if (!n?.isAlive || n.location !== room.id) return false;
       // Hide barmaids from situation block unless she's the chosen one
       if (BARMAID_IDS.has(n.npcId)) return n.npcId === chosenBarmaid;
+      // Hide training dummies from situation block — they're furniture
+      if (NPCS[n.npcId]?.isTrainingDummy) return false;
       return true;
     })
     .map(n => {
@@ -316,7 +347,8 @@ function tryHokasUnarmedPity(
   const disp = hokasState.disposition ?? "neutral";
   if (disp === "furious" || disp === "hostile") return null;
 
-  const newInventory = grantHokasUnarmedGiftInventory(p.inventory);
+  const newInventory = grantHokasUnarmedGiftInventory(p.inventory)
+    .filter(e => e.itemId !== "gray_robe"); // gown returned to barrel
   const after: WorldState = {
     ...newState,
     player: {
@@ -328,11 +360,11 @@ function tryHokasUnarmedPity(
   };
 
   const body =
-    `Hokas is wiping a mug when thou drawest near. He looks up — then looks away almost at once, fixing on the bottles, the counter, the fire, anywhere but thy face or thy empty hands. The silver bells in his beard give one soft chime, as if embarrassed for thee.\n\n` +
-    `"Aye," he says to the woodgrain. "We've all stood where thou standest. None of us care to name the hour."\n\n` +
-    `Still without meeting thine eyes, he reaches below the bar and sets out a folded pile — shirt, trousers, belt, and shoes, all ragged but whole. Beside it he lays a short sword: notched, loose in the grip, honest scrap metal.\n\n` +
-    `"'Tis not guild issue. Cast-offs from the back. Take them. Go dressed. Go armed. Come back when thou hast a story worth the telling."\n\n` +
-    `Thou hast the ragged garments and a Cast-Off Short Sword. The sword is equipped.`;
+    `Hokas is wiping a mug when you draw near. He looks up — then looks away almost at once, fixing on the bottles, the counter, the fire, anywhere but your face or your empty hands. The silver bells in his beard give one soft chime, as if embarrassed for you.\n\n` +
+    `"Aye," he says to the woodgrain. "We've all stood where you stand. None of us care to name the hour."\n\n` +
+    `Still without meeting your eyes, he reaches below the bar and sets out a folded pile — shirt, trousers, belt, and shoes, all ragged but whole. Beside it he lays a short sword: notched, loose in the grip, honest scrap metal.\n\n` +
+    `"Not guild issue. Cast-offs from the back. Take them. Go dressed. Go armed. Come back when you have a story worth the telling."\n\n` +
+    `You gratefully change into the ragged clothes and carry the sword in your belt, ready for use. The gray church gown goes into the return barrel with a shudder you do not try to suppress.`;
 
   return {
     responseType: "static",
@@ -341,6 +373,7 @@ function tryHokasUnarmedPity(
     newState: after,
     stateChanged: true,
     echoPrefix: opts?.echoPrefix ?? null,
+    conversationNpcId: "hokas_tokas",
   };
 }
 
@@ -938,66 +971,50 @@ export function getCommandAutocompleteSuggestions(
 const FIRE_IN_CAST = ["fireball", "fire ball", "flame", "ignite", "burn the hall", "set fire", "torch the"];
 
 const HELP_TEXT = `MOVEMENT
-  GO [direction]     GO NORTH, GO SOUTH, GO EAST, GO WEST, GO UP, GO DOWN
-  N / S / E / W      Shorthand directions
+  GO [direction]       GO NORTH
+  N / S / E / W        shorthand directions
 
 OBSERVATION
-  LOOK               Quick scan of the room (semiverbose)
-  EXAMINE ROOM       Thorough look — full detail, takes more time (verbose)
-  EXAMINE [target]   EXAMINE HOKAS, EXAMINE SWORD, EXAMINE FIREPLACE
-  SEARCH             Same as EXAMINE ROOM — search the area carefully
-  SEARCH [target]    Same as EXAMINE [target]
+  LOOK                 quick scan of the room
+  EXAMINE ROOM         thorough look, full detail
+  EXAMINE [target]     EXAMINE HOKAS
+  SEARCH               same as EXAMINE ROOM
 
 INTERACTION
-  READ               Read notices, signs, or posted contracts
-  GET [item]         GET SWORD, GET TORCH
-  GET ALL            Take everything visible in the room
-  DROP [item]        DROP SWORD
-  EQUIP [item]       Weapon, shield, or armor from inventory (auto-detects slot)
-  WIELD [item]       Alias for EQUIP [item] (either works)
-  EQUIP SHIELD [item]  EQUIP SHIELD BUCKLER  |  SHIELD BUCKLER
-  EQUIP ARMOR [item]   Torso armor from inventory
-  EQUIP HELMET [item]  Head protection (leather cap, iron helm)
-  EQUIP GORGET [item]  Neck protection (leather gorget, chain coif)
-  EQUIP GREAVES [item] Limb protection (leather greaves, chain greaves)
-  REMOVE SHIELD      Lower thy shield
-  REMOVE ARMOR       Doff all armor at once
-  REMOVE HELMET      Doff head armor only
-  REMOVE GORGET      Doff neck armor only
-  REMOVE GREAVES     Doff limb armor only
-  UNEQUIP [item]     Sheathe weapon or remove any equipped item by name
+  READ                 read notices or signs
+  GET [item]           GET SWORD
+  GET ALL              take everything visible
+  DROP [item]          DROP SWORD
+  EQUIP [item]         EQUIP LONG SWORD
+  REMOVE [slot]        REMOVE SHIELD, REMOVE HELMET, REMOVE ARMOR
+  UNEQUIP [item]       UNEQUIP BUCKLER
 
 COMBAT
-  ATTACK [enemy]     Engage a hostile foe (starts combat)
-  STRIKE [zone]      STRIKE HEAD, STRIKE NECK, STRIKE TORSO, STRIKE LIMBS
-                     Target a body zone during combat (HWRR system)
-  FLEE               Escape through a random exit (enemy stays wounded)
-  BEG [name]         When you have nothing, BEG helps.
-                     BEG SAM — Sam may spare a rusty blade.
-                     BEG HOKAS — Hokas may part with a knife.
-                     Use it to survive until you can do better.
+  ATTACK [enemy]       ATTACK GOBLIN
+  STRIKE [zone]        STRIKE HEAD, STRIKE NECK, STRIKE TORSO, STRIKE LIMBS
+  FLEE                 escape through a random exit
+  BEG [name]           BEG SAM, BEG HOKAS
 
-SPEECH (MUD conventions)
-  SAY [text]         SAY Hello everyone!  (speaks to whole room)
-  TALK [text]        Same as SAY (alias)
-  TELL [name] [text] TELL HOKAS What news?  (speaks to one NPC)
-  TELL Aldric [topic]  Static tutorial: survival, combat, training, skills, adventures, world, magic, secrets, order
+SPEECH
+  SAY [text]           SAY Hello everyone!
+  TELL [name] [text]   TELL HOKAS What news?
+  TELL Aldric [topic]  survival, combat, training, skills, adventures, world, magic, secrets
 
 MAGIC
-  CAST [spell]       CAST BLAST, CAST HEAL, CAST LIGHT, CAST SPEED
-  INVOKE [ritual]    INVOKE ...  (occult — discovered through play)
-  PRAY [TO deity]    PRAY TO MYSTRA  (divine — discovered through play)
+  CAST [spell]         CAST HEAL
+  INVOKE [ritual]      occult — discovered through play
+  PRAY [TO deity]      divine — discovered through play
 
 INVENTORY & STATS
-  INVENTORY / I      Show what you're carrying
-  STATS              Show your character sheet
-  HEALTH / HP        Check your health and active effects
+  INVENTORY / I        show what you carry
+  STATS                character sheet
+  HEALTH / HP          health and active effects
 
 ECONOMY
-  SHOP / LIST / SAM   Sam's price list (Sam's Sharps or Main Hall)
-  BUY [item]         In Main Hall: static Sam's shop; elsewhere merchant (Jane)
-  SELL [item]        SELL DAGGER
-  DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Vault)
+  SHOP                 show merchant wares
+  BUY [item]           BUY SHORT SWORD
+  SELL [item]          SELL DAGGER
+  DEPOSIT [amount]   DEPOSIT 20  (must be in the Guild Bank)
   WITHDRAW [amount]  WITHDRAW 10
 
 TRAINING (Main Hall, Aldric the Veteran)
@@ -1600,6 +1617,17 @@ function tryResolveNameAloneExamine(
 
   for (const n of presentNPCsInRoom(room, newState)) {
     if (lower === n.firstName.toLowerCase() || lower === n.name.toLowerCase()) {
+      // Training dummy: return static description, don't call Jane
+      const npcDef = NPCS[n.id];
+      if (npcDef?.isTrainingDummy) {
+        return {
+          responseType: "static",
+          staticResponse: npcDef.description,
+          dynamicContext: null,
+          newState: newState,
+          stateChanged: false,
+        };
+      }
       if (n.id === "hokas_tokas") {
         const pit = tryHokasUnarmedPity(newState, room, newState.player);
         if (pit) return pit;
@@ -1632,7 +1660,7 @@ function runBanking(
   if (player.currentRoom !== "guild_vault") {
     return {
       responseType: "static",
-      staticResponse: "The vault is below the Main Hall. Head down to bank thy gold.",
+      staticResponse: "The Guild Bank is below the Main Hall. Head down to bank your gold.",
       dynamicContext: null,
       newState,
       stateChanged: false,
@@ -1647,20 +1675,22 @@ function runBanking(
     if (amount > player.gold) {
       return {
         responseType: "static",
-        staticResponse: `Thou dost not have ${amount} gold to deposit. Thou carriest only ${player.gold}.`,
+        staticResponse: `You don't have ${amount} gold to deposit. You carry only ${player.gold}.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "brunt_the_banker",
       };
     }
     let s = updatePlayerGold(newState, -amount);
     s = { ...s, player: { ...s.player, bankedGold: s.player.bankedGold + amount } };
     return {
       responseType: "static",
-      staticResponse: `Brunt records the deposit without looking up. ${amount} gold secured in thy vault account. Carried gold: ${s.player.gold}. Banked: ${s.player.bankedGold}.`,
+      staticResponse: `Brunt records the deposit without looking up. ${amount} gold secured. Carried: ${s.player.gold} gp. Banked: ${s.player.bankedGold} gp.`,
       dynamicContext: null,
       newState: s,
       stateChanged: true,
+      conversationNpcId: "brunt_the_banker",
     };
   }
 
@@ -1668,29 +1698,32 @@ function runBanking(
     if (amount > player.bankedGold) {
       return {
         responseType: "static",
-        staticResponse: `Thou hast only ${player.bankedGold} gold banked.`,
+        staticResponse: `You only have ${player.bankedGold} gold banked.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "brunt_the_banker",
       };
     }
     let s = updatePlayerGold(newState, amount);
     s = { ...s, player: { ...s.player, bankedGold: s.player.bankedGold - amount } };
     return {
       responseType: "static",
-      staticResponse: `Brunt counts out ${amount} gold coins and slides them across the counter. Carried gold: ${s.player.gold}. Banked: ${s.player.bankedGold}.`,
+      staticResponse: `Brunt counts out ${amount} gold coins and slides them across the counter. Carried: ${s.player.gold} gp. Banked: ${s.player.bankedGold} gp.`,
       dynamicContext: null,
       newState: s,
       stateChanged: true,
+      conversationNpcId: "brunt_the_banker",
     };
   }
 
   return {
     responseType: "static",
-    staticResponse: `Brunt looks up. "Deposit or withdraw. State the amount."`,
+    staticResponse: `Brunt looks up. "Deposit or withdraw. State the amount."\n\n__CMD:DEPOSIT__ __CMD:WITHDRAW__`,
     dynamicContext: null,
     newState,
     stateChanged: false,
+    conversationNpcId: "brunt_the_banker",
   };
 }
 
@@ -1896,284 +1929,6 @@ function resolveTrainTargetSkill(raw: string): keyof WeaponSkills | null {
   return null;
 }
 
-export function resolveCombatRound(
-  state: WorldState,
-  enemyId: string,
-  enemyHp: number,
-  enemyData: { name: string; damage: string; armor: number },
-  bodyType?: NPCBodyType
-): {
-  narrative: string;
-  newState: WorldState;
-  enemyHp: number;
-  combatOver: boolean;
-  playerWon: boolean;
-} {
-  const player = state.player;
-  if (player.weapon === "unarmed") {
-    return {
-      narrative: "You cannot fight unarmed.",
-      newState: state,
-      enemyHp,
-      combatOver: false,
-      playerWon: false,
-    };
-  }
-  const weaponItem = ITEMS[player.weapon];
-  const playerSpeed = WEAPON_DATA[player.weapon]?.weaponSpeed ?? 5;
-  const playerInit =
-    Math.floor(Math.random() * 10) +
-    1 +
-    playerSpeed -
-    getDexReactionBonus(player.dexterity);
-  const enemyInit = Math.floor(Math.random() * 10) + 1 + 5;
-  const playerGoesFirst = playerInit <= enemyInit;
-  const winnerLabel = playerGoesFirst ? "You" : enemyData.name;
-
-  const enemyStartHp = enemyHp;
-
-  let narrative = `⚡ Initiative — You: ${playerInit} · ${enemyData.name}: ${enemyInit}\n${winnerLabel} acts first.\n\n`;
-
-  const weaponSkillKey = getWeaponSkillKey(player.weapon);
-  const skillBonus = Math.min(
-    0.2,
-    (player.weaponSkills?.[weaponSkillKey] ?? 0) * 0.005
-  );
-  const playerHitChance = 0.75 + skillBonus;
-
-  const ws = normalizeWeaponSkills(player.weaponSkills);
-  const weaponSkillVal = ws[weaponSkillKey] ?? 0;
-  const playerSkill = Math.min(100, weaponSkillVal / 7);
-  const enemySkill = 30;
-  const enemyHitChance = (enemySkill + 50) / ((playerSkill + 50) * 2);
-
-  function getWoundTier(
-    dmg: number,
-    maxHp: number,
-    axis: "playerOnEnemy" | "enemyOnPlayer"
-  ): WoundTier {
-    const pct = dmg / Math.max(1, maxHp);
-    if (axis === "playerOnEnemy") {
-      if (pct <= 0.15) return "glancing";
-      if (pct <= 0.4) return "solid";
-      return "devastating";
-    }
-    if (pct <= 0.1) return "glancing";
-    if (pct <= 0.25) return "solid";
-    return "devastating";
-  }
-
-  function calcPlayerDamage(): number {
-    const base = rollWeaponDamage(player.weapon);
-    const strPct = Math.min(0.2, Math.max(0, (player.strength - 10) / 40));
-    const tacPct = Math.min(0.2, (player.expertise / 50) * 0.2);
-    const boosted = base * (1 + strPct + tacPct);
-    const afterAR = Math.max(0, boosted - (enemyData.armor ?? 0));
-    const result = Math.max(1, Math.floor(afterAR / 2));
-    return isNaN(result) ? 1 : result;
-  }
-
-  let newState = state;
-  let newEnemyHp = enemyHp;
-
-  function doPlayerAttack(): boolean {
-    const roll = Math.random();
-    if (roll >= playerHitChance) {
-      if (Math.random() < 0.08) {
-        narrative += pickTemplate(PLAYER_FUMBLE_DESCRIPTIONS);
-      } else {
-        narrative += fillTemplate(pickTemplate(PLAYER_MISS_DESCRIPTIONS), {
-          weapon: weaponItem?.name ?? "weapon",
-          enemy: enemyData.name,
-        });
-      }
-      return false;
-    }
-
-    const isCrit = Math.random() < 0.1;
-    const baseDmg = calcPlayerDamage();
-    const dmg = isCrit ? baseDmg * 2 : baseDmg;
-    newEnemyHp -= dmg;
-
-    const skillUp = updateWeaponSkill(newState, weaponSkillKey, 1);
-    newState = skillUp.newState;
-    const tier = getWoundTier(dmg, enemyStartHp, "playerOnEnemy");
-    const category = getWeaponCategory(player.weapon);
-    const pool = getPlayerHitEnemyPool(bodyType, category, tier);
-    const hitLine = fillTemplate(pickTemplate(pool), {
-      weapon: weaponItem?.name ?? "weapon",
-      enemy: enemyData.name,
-      damage: String(dmg),
-    });
-    if (isCrit) {
-      narrative += `__CRITICAL__ ${hitLine}`;
-    } else {
-      narrative += hitLine;
-    }
-    if (skillUp.degradedSkill) {
-      narrative += `\n\nYour ${SKILL_NAMES[skillUp.degradedSkill]} slips a point — the guild's ${SKILL_CAP}-point skill ceiling makes room for your ${SKILL_NAMES[weaponSkillKey]}.`;
-    }
-
-    if (newEnemyHp <= 0) {
-      const deathPool = getEnemyDeathPool(bodyType);
-      narrative +=
-        "\n\n" +
-        fillTemplate(pickTemplate(deathPool), {
-          enemy: enemyData.name,
-          weapon: weaponItem?.name ?? "weapon",
-        });
-      return true;
-    }
-    return false;
-  }
-
-  function doEnemyAttack(): boolean {
-    const roll = Math.random();
-    if (roll >= enemyHitChance) {
-      const missPool = getEnemyMissPlayerPool(bodyType);
-      narrative +=
-        "\n\n" +
-        fillTemplate(pickTemplate(missPool), {
-          enemy: enemyData.name,
-        });
-      return false;
-    }
-
-    const rawEnemyDmg = rollDice(enemyData.damage);
-    const armorAC = player.armor
-      ? (ITEMS[player.armor]?.stats?.armorClass ?? 0)
-      : 0;
-    const shieldAC = player.shield
-      ? (ITEMS[player.shield]?.stats?.armorClass ?? 0)
-      : 0;
-    const totalAC = armorAC + shieldAC;
-    const enemyDmg = Math.max(0, rawEnemyDmg - totalAC);
-    const absorbKey = player.armor ?? player.shield ?? "default";
-
-    if (totalAC > 0 && rawEnemyDmg > 0) {
-      if (enemyDmg <= 0) {
-        const pool =
-          ARMOR_FULL_ABSORB_DESCRIPTIONS[absorbKey] ??
-          ARMOR_FULL_ABSORB_DESCRIPTIONS["default"]!;
-        narrative += "\n\n" + fillTemplate(pickTemplate(pool), {
-          enemy: enemyData.name,
-          armor: ITEMS[absorbKey]?.name ?? absorbKey,
-        });
-      } else {
-        const pool =
-          ARMOR_ABSORB_DESCRIPTIONS[absorbKey] ??
-          ARMOR_ABSORB_DESCRIPTIONS["default"]!;
-        narrative += "\n\n" + fillTemplate(pickTemplate(pool), {
-          enemy: enemyData.name,
-          armor: ITEMS[absorbKey]?.name ?? absorbKey,
-        });
-      }
-    }
-
-    if (enemyDmg <= 0) return false;
-
-    newState = updatePlayerHP(newState, -enemyDmg);
-    const enemyTier = getWoundTier(enemyDmg, player.maxHp, "enemyOnPlayer");
-    const enemyPool = getEnemyHitPlayerPool(bodyType, enemyTier);
-    narrative +=
-      "\n\n" +
-      fillTemplate(pickTemplate(enemyPool), {
-        enemy: enemyData.name,
-        damage: String(enemyDmg),
-      });
-
-    return newState.player.hp <= 0;
-  }
-
-  function completePlayerDeathReturn(): {
-    narrative: string;
-    newState: WorldState;
-    enemyHp: number;
-    combatOver: boolean;
-    playerWon: boolean;
-  } {
-    const deathLine = fillTemplate(
-      pickTemplate(COMBAT_TEMPLATES.playerDeath),
-      { enemy: enemyData.name }
-    );
-    const rebirthLine = pickTemplate(REBIRTH_NARRATIVES);
-    const { newState: afterDeath, lostGold } = applyPlayerDeath(
-      newState,
-      enemyData.name
-    );
-    const fullNarrative =
-      narrative +
-      "\n\n" +
-      deathLine +
-      "\n\n" +
-      rebirthLine +
-      `\n\nYou lost ${lostGold} gold and everything you carried.`;
-    return {
-      narrative: fullNarrative,
-      newState: afterDeath,
-      enemyHp: newEnemyHp,
-      combatOver: true,
-      playerWon: false,
-    };
-  }
-
-  function applyEnemyDeath(): void {
-    newState = updateVirtue(newState, "Valor", 1);
-    newState = addToChronicle(
-      newState,
-      `${player.name} defeated ${enemyData.name}.`,
-      false
-    );
-    newState = {
-      ...newState,
-      player: {
-        ...newState.player,
-        expertise: newState.player.expertise + 1,
-      },
-    };
-  }
-
-  if (playerGoesFirst) {
-    if (doPlayerAttack()) {
-      applyEnemyDeath();
-      return {
-        narrative,
-        newState,
-        enemyHp: 0,
-        combatOver: true,
-        playerWon: true,
-      };
-    }
-    narrative += "\n\n";
-    if (doEnemyAttack()) {
-      return completePlayerDeathReturn();
-    }
-  } else {
-    if (doEnemyAttack()) {
-      return completePlayerDeathReturn();
-    }
-    narrative += "\n\n";
-    if (doPlayerAttack()) {
-      applyEnemyDeath();
-      return {
-        narrative,
-        newState,
-        enemyHp: 0,
-        combatOver: true,
-        playerWon: true,
-      };
-    }
-  }
-
-  return {
-    narrative,
-    newState,
-    enemyHp: newEnemyHp,
-    combatOver: false,
-    playerWon: false,
-  };
-}
-
 // ============================================================
 // STATIC RESPONSE BUILDERS
 // ============================================================
@@ -2375,11 +2130,13 @@ function buildHealthDescription(player: PlayerState): string {
 
   const hpBar = `HP: ${player.hp} / ${player.maxHp}`;
 
-  // Effects — Phase 2 systems (poison, stamina, hunger) will populate this list.
-  // For now the hook is here and ready.
-  const effects: string[] = [];
-  // e.g. if (player.poisoned) effects.push("Poison: active");
-  // e.g. if (player.stamina < 20) effects.push("Stamina: dangerously low");
+  // Active status effects (bleed, poison, broken_leg, etc.)
+  const effects: string[] = (player.activeEffects ?? []).map(e => {
+    const sev = ["", "minor", "moderate", "severe"][e.severity] ?? `sev ${e.severity}`;
+    const dur = e.turnsRemaining === -1 ? "until cured" : `${e.turnsRemaining} turn${e.turnsRemaining === 1 ? "" : "s"} left`;
+    const dmg = e.bleedPerTurn ? ` — ${e.bleedPerTurn} HP/turn` : "";
+    return `${sev} ${e.type.replace(/_/g, " ")} (${e.zone})${dmg}, ${dur}`;
+  });
 
   const effectsLine = effects.length > 0
     ? `\nEffects:\n${effects.map(e => `  ${e}`).join("\n")}`
@@ -2415,7 +2172,7 @@ function buildStatDescription(player: PlayerState): string {
     : "None";
 
   const strPct = Math.round(Math.min(20, Math.max(0, ((player.strength - 10) / 40) * 100)));
-  const tacPct = Math.round(Math.min(20, (player.expertise / 50) * 20));
+  const tacPct = Math.round(Math.min(20, (player.maxMana / 50) * 20));
   const ws = normalizeWeaponSkills(player.weaponSkills);
   const wSkillKey = getWeaponSkillKey(player.weapon);
   const weaponSkillVal = ws[wSkillKey] ?? 0;
@@ -2431,7 +2188,7 @@ function buildStatDescription(player: PlayerState): string {
   return `— ${player.name} —
 HP: ${player.hp} / ${player.maxHp}
 Strength: ${player.strength} | Dexterity: ${player.dexterity} | Charisma: ${player.charisma}
-Expertise: ${player.expertise}
+Mana: ${player.currentMana} / ${player.maxMana}
 Weapon skills (total ${skillTotal} / ${SKILL_CAP}; active weapon uses ${SKILL_NAMES[wSkillKey]} @ ${weaponSkillVal})
 ${skillBlock}
 Gold (carried): ${player.gold} | Gold (banked): ${player.bankedGold}
@@ -2563,7 +2320,7 @@ function buildSamShopListing(player: PlayerState): string {
     "ONE-HANDED WEAPONS",
     ...oneHanded.map(formatSamShopWeaponLine),
     "",
-    "TWO-HANDED WEAPONS [2H]",
+    "TWO-HANDED WEAPONS",
     ...twoHanded.map(formatSamShopWeaponLine),
     "",
     "ARMOR & SHIELDS",
@@ -2693,6 +2450,520 @@ function runSamPurchase(state: WorldState, query: string): EngineResult {
   };
 }
 
+// ───────────────────────────────────────────────────────────
+// Consumable use — BANDAGE, TOURNIQUET, ANTIDOTE, potions.
+// Self-target by default; ally targeting via [npc] supported
+// (no-op until allies/escorts have status effects).
+// ───────────────────────────────────────────────────────────
+
+function decrementInventory(
+  inv: PlayerInventoryItem[],
+  itemId: string
+): PlayerInventoryItem[] {
+  return inv
+    .map(e => (e.itemId === itemId ? { ...e, quantity: e.quantity - 1 } : e))
+    .filter(e => e.quantity > 0);
+}
+
+function describeRemovedEffects(removed: ActiveStatusEffect[]): string {
+  if (removed.length === 0) return "";
+  return removed
+    .map(e => `${e.type.replace(/_/g, " ")} (${e.zone})`)
+    .join(", ");
+}
+
+function runConsumable(
+  state: WorldState,
+  itemId: string,
+  targetNpcId: string | null
+): EngineResult {
+  const item = ITEMS[itemId];
+  if (!item) {
+    return {
+      responseType: "static",
+      staticResponse: "That item doesn't exist.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+  const p = state.player;
+  const inInv = p.inventory.find(e => e.itemId === itemId && e.quantity > 0);
+  if (!inInv) {
+    return {
+      responseType: "static",
+      staticResponse: `You have no ${item.name.toLowerCase()} to use.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  // Targeted ally case: no NPCs carry status effects yet, so always a no-op
+  // (graceful — doesn't consume the item). Wired for future ally/escort use.
+  if (targetNpcId) {
+    const npc = NPCS[targetNpcId];
+    return {
+      responseType: "static",
+      staticResponse: `${npc?.name ?? "They"} have no need of that.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  // Self-target — apply the item's effect to the player.
+  const effects = p.activeEffects ?? [];
+  let removed: ActiveStatusEffect[] = [];
+  let remaining = effects;
+  let hpDelta = 0;
+  let manaDelta = 0;
+  let refusalMsg: string | null = null;
+
+  switch (itemId) {
+    case "bandage": {
+      // Reduce 1 severity of one bleed. Does NOT cure severed_artery.
+      const idx = remaining.findIndex(e => e.type === "bleed");
+      if (idx < 0) {
+        refusalMsg = "You have no bleeding wound to bind.";
+        break;
+      }
+      const target = remaining[idx]!;
+      if (target.severity > 1) {
+        remaining = remaining.map((e, i) =>
+          i === idx
+            ? { ...e, severity: e.severity - 1, bleedPerTurn: Math.max(0, (e.bleedPerTurn ?? e.severity) - 1) }
+            : e
+        );
+      } else {
+        removed = [target];
+        remaining = remaining.filter((_, i) => i !== idx);
+      }
+      break;
+    }
+    case "tourniquet": {
+      // Removes ALL bleed AND severed_artery, regardless of severity.
+      removed = remaining.filter(e => e.type === "bleed" || e.type === "severed_artery");
+      if (removed.length === 0) {
+        refusalMsg = "You have no bleeding wound to staunch.";
+        break;
+      }
+      remaining = remaining.filter(e => e.type !== "bleed" && e.type !== "severed_artery");
+      break;
+    }
+    case "antidote": {
+      // Reduce 1 severity of one poison.
+      const idx = remaining.findIndex(e => e.type === "poison");
+      if (idx < 0) {
+        refusalMsg = "You are not poisoned.";
+        break;
+      }
+      const target = remaining[idx]!;
+      if (target.severity > 1) {
+        remaining = remaining.map((e, i) =>
+          i === idx
+            ? { ...e, severity: e.severity - 1, bleedPerTurn: Math.max(0, (e.bleedPerTurn ?? e.severity) - 1) }
+            : e
+        );
+      } else {
+        removed = [target];
+        remaining = remaining.filter((_, i) => i !== idx);
+      }
+      break;
+    }
+    case "strong_antidote": {
+      // Removes ALL poison.
+      removed = remaining.filter(e => e.type === "poison");
+      if (removed.length === 0) {
+        refusalMsg = "You are not poisoned.";
+        break;
+      }
+      remaining = remaining.filter(e => e.type !== "poison");
+      break;
+    }
+    case "healing_potion": {
+      if (p.hp >= p.maxHp) {
+        refusalMsg = "Your wounds are already healed.";
+        break;
+      }
+      hpDelta = item.stats?.healAmount ?? 15;
+      break;
+    }
+    case "greater_healing_potion": {
+      if (p.hp >= p.maxHp) {
+        refusalMsg = "Your wounds are already healed.";
+        break;
+      }
+      hpDelta = item.stats?.healAmount ?? 35;
+      break;
+    }
+    case "mana_potion": {
+      const maxMana = p.maxMana ?? 0;
+      if ((p.currentMana ?? 0) >= maxMana) {
+        refusalMsg = "Your mana is already full.";
+        break;
+      }
+      manaDelta = 10;
+      break;
+    }
+    default: {
+      // stamina_brew / fatigue_brew / poisons (Painful Poison, Quick Death):
+      // no effect-on-self yet. Phase B will wire dex buff and APPLY-to-blade.
+      refusalMsg = `${item.name} can't be used like that yet.`;
+      break;
+    }
+  }
+
+  if (refusalMsg) {
+    return {
+      responseType: "static",
+      staticResponse: refusalMsg,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  // Apply changes + consume the item
+  const newPlayer: PlayerState = {
+    ...p,
+    hp: Math.min(p.maxHp, p.hp + hpDelta),
+    currentMana: Math.min(p.maxMana ?? 0, (p.currentMana ?? 0) + manaDelta),
+    activeEffects: remaining,
+    inventory: decrementInventory(p.inventory, itemId),
+  };
+
+  const parts: string[] = [];
+  if (hpDelta > 0) parts.push(`Restored ${hpDelta} HP. (${newPlayer.hp}/${newPlayer.maxHp})`);
+  if (manaDelta > 0) parts.push(`Restored ${manaDelta} mana. (${newPlayer.currentMana}/${newPlayer.maxMana})`);
+  if (removed.length > 0) parts.push(`Cured: ${describeRemovedEffects(removed)}.`);
+  else if (effects.length !== remaining.length || effects !== remaining) {
+    parts.push("The wound eases.");
+  }
+  parts.push(`(${item.name} consumed.)`);
+
+  return {
+    responseType: "static",
+    staticResponse: parts.join("\n"),
+    dynamicContext: null,
+    newState: { ...state, player: newPlayer },
+    stateChanged: true,
+  };
+}
+
+// ───────────────────────────────────────────────────────────
+// Generic merchant purchase — used by Zim, Pip, and any future
+// shop that doesn't need bespoke logic. Sam still uses his own
+// runSamPurchase because of the first-purchase outfit bundle.
+// ───────────────────────────────────────────────────────────
+
+function matchMerchantItem(raw: string, inventory: string[]): string | null {
+  const phrase = raw.trim();
+  if (!phrase) return null;
+  const qUnd = phrase.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "").replace(/\./g, "");
+  const qLow = phrase.toLowerCase().replace(/'/g, "");
+
+  // Exact id match or display-name → underscore match
+  for (const itemId of inventory) {
+    if (itemId === qUnd) return itemId;
+    const item = ITEMS[itemId];
+    if (item && displayNameToUnderscore(item.name) === qUnd) return itemId;
+  }
+
+  // Fuzzy (mirrors findSamShopRow scoring)
+  let best: { itemId: string; score: number } | null = null;
+  for (const itemId of inventory) {
+    const item = ITEMS[itemId];
+    if (!item) continue;
+    const k = itemId;
+    const d = item.name.toLowerCase();
+    let score = 0;
+    if (qUnd.length >= 2 && k.includes(qUnd)) score += 2000 + qUnd.length * 10;
+    if (qUnd.length >= 3 && k.length >= 3 && qUnd.includes(k)) score += 1500 + k.length * 5;
+    if (k.startsWith(qUnd)) score += 3000;
+    if (qUnd.startsWith(k) && k.length >= 4) score += 2800;
+    const words = qLow.split(/\s+/).filter(Boolean);
+    if (words.length > 0 && words.every(w => d.includes(w))) score += 1000 + words.join("").length;
+    if (score > 0 && (!best || score > best.score)) best = { itemId, score };
+  }
+  return best?.itemId ?? null;
+}
+
+function runMerchantPurchase(
+  state: WorldState,
+  merchantNpcId: string,
+  query: string
+): EngineResult {
+  const npc = NPCS[merchantNpcId];
+  const inventory = npc?.merchant?.inventory ?? [];
+  if (!npc || inventory.length === 0) {
+    return {
+      responseType: "static",
+      staticResponse: "Nothing for sale here.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  const itemId = matchMerchantItem(query, inventory);
+  if (!itemId) {
+    return {
+      responseType: "static",
+      staticResponse: `${npc.name} doesn't carry that. Type __CMD:SHOP__ to see the wares.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+      conversationNpcId: merchantNpcId,
+    };
+  }
+
+  const item = ITEMS[itemId];
+  if (!item) {
+    return {
+      responseType: "static",
+      staticResponse: "That item doesn't exist.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  const price = item.value ?? 0;
+  const p = state.player;
+  if (price > p.gold) {
+    return {
+      responseType: "static",
+      staticResponse: `Insufficient gold. ${item.name} costs ${price} gp; thou hast only ${p.gold} gp.`,
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+      conversationNpcId: merchantNpcId,
+    };
+  }
+
+  const afterGold = updatePlayerGold(state, -price);
+  const pg = afterGold.player;
+  const inv = pg.inventory;
+  const idx = inv.findIndex(e => e.itemId === itemId);
+  const nextInv =
+    idx < 0
+      ? [...inv, { itemId, quantity: 1 }]
+      : inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e));
+  const nextPlayer: PlayerState = { ...pg, inventory: nextInv };
+  const newState: WorldState = { ...afterGold, player: nextPlayer };
+
+  return {
+    responseType: "static",
+    staticResponse: `Purchased: ${item.name} for ${price} gp. (${nextPlayer.gold} gp remaining.)`,
+    dynamicContext: null,
+    newState,
+    stateChanged: true,
+    conversationNpcId: merchantNpcId,
+  };
+}
+
+// ───────────────────────────────────────────────────────────
+// Universal SELL — every merchant buys at half price.
+// Floor(value/2), minimum 1 gp. Skips equipped items and
+// non-carryable items. Items with value <= 0 are refused.
+// ───────────────────────────────────────────────────────────
+
+const ROOM_MERCHANT_ID: Record<string, string> = {
+  main_hall: "sam_slicker",
+  sams_sharps: "sam_slicker",
+  armory: "armory_attendant",
+  mage_school: "zim_the_wizard",
+};
+
+function isItemEquipped(player: PlayerState, itemId: string): boolean {
+  return (
+    player.weapon === itemId ||
+    player.shield === itemId ||
+    player.helmet === itemId ||
+    player.gorget === itemId ||
+    player.bodyArmor === itemId ||
+    player.limbArmor === itemId ||
+    player.boots === itemId ||
+    player.ringLeft === itemId ||
+    player.ringRight === itemId ||
+    player.cuffLeft === itemId ||
+    player.cuffRight === itemId ||
+    player.necklace === itemId
+  );
+}
+
+function matchPlayerInventoryItem(
+  raw: string,
+  inventory: PlayerInventoryItem[]
+): string | null {
+  const phrase = raw.trim();
+  if (!phrase) return null;
+  const qUnd = phrase.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "").replace(/\./g, "");
+  const qLow = phrase.toLowerCase().replace(/'/g, "");
+
+  // Exact id or display-name → underscore
+  for (const entry of inventory) {
+    if (entry.itemId === qUnd) return entry.itemId;
+    const item = ITEMS[entry.itemId];
+    if (item && displayNameToUnderscore(item.name) === qUnd) return entry.itemId;
+  }
+
+  // Fuzzy
+  let best: { itemId: string; score: number } | null = null;
+  for (const entry of inventory) {
+    const item = ITEMS[entry.itemId];
+    if (!item) continue;
+    const k = entry.itemId;
+    const d = item.name.toLowerCase();
+    let score = 0;
+    if (qUnd.length >= 2 && k.includes(qUnd)) score += 2000 + qUnd.length * 10;
+    if (qUnd.length >= 3 && k.length >= 3 && qUnd.includes(k)) score += 1500 + k.length * 5;
+    if (k.startsWith(qUnd)) score += 3000;
+    if (qUnd.startsWith(k) && k.length >= 4) score += 2800;
+    const words = qLow.split(/\s+/).filter(Boolean);
+    if (words.length > 0 && words.every(w => d.includes(w))) score += 1000 + words.join("").length;
+    if (score > 0 && (!best || score > best.score)) best = { itemId: entry.itemId, score };
+  }
+  return best?.itemId ?? null;
+}
+
+function buildSellListing(player: PlayerState, merchantName: string): string {
+  const sellable = player.inventory
+    .map(e => ({ entry: e, item: ITEMS[e.itemId] }))
+    .filter(({ item }) => item && item.isCarryable && (item.value ?? 0) > 0);
+
+  if (sellable.length === 0) {
+    return `${merchantName} looks over your inventory. "Nothing here I'd pay for."`;
+  }
+
+  const lines = [
+    "╔══════════════════════════════════════╗",
+    `║   ${merchantName.toUpperCase().padEnd(34)} ║`,
+    "║   Buying at half price.              ║",
+    "╚══════════════════════════════════════╝",
+    "",
+    ...sellable.map(({ entry, item }) => {
+      const halfPrice = Math.max(1, Math.floor((item!.value ?? 0) / 2));
+      const equipped = isItemEquipped(player, entry.itemId) ? " (equipped — UNEQUIP first)" : "";
+      const qty = entry.quantity > 1 ? ` x${entry.quantity}` : "";
+      return `__CMD:SELL ${item!.name.toUpperCase()}__ ${item!.name}${qty} | ${halfPrice} gp${equipped}`;
+    }),
+    "",
+    `Your gold: ${player.gold} gp`,
+  ];
+  return lines.join("\n");
+}
+
+function runMerchantSell(
+  state: WorldState,
+  merchantNpcId: string,
+  query: string
+): EngineResult {
+  const npc = NPCS[merchantNpcId];
+  if (!npc) {
+    return {
+      responseType: "static",
+      staticResponse: "There is no merchant here.",
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+    };
+  }
+
+  const p = state.player;
+  if (!query) {
+    return {
+      responseType: "static",
+      staticResponse: buildSellListing(p, npc.name),
+      dynamicContext: null,
+      newState: state,
+      stateChanged: false,
+      conversationNpcId: merchantNpcId,
+    };
+  }
+
+  // Support bulk sell: SELL ITEM1, ITEM2, ITEM3 or SELL ITEM1 ITEM2 ITEM3
+  const itemNames = query.split(/[,\s]+/).filter(s => s.trim());
+  const itemIds: string[] = [];
+
+  for (const name of itemNames) {
+    const itemId = matchPlayerInventoryItem(name, p.inventory);
+    if (!itemId) {
+      return {
+        responseType: "static",
+        staticResponse: `You have no "${name}" to sell.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+        conversationNpcId: merchantNpcId,
+      };
+    }
+    itemIds.push(itemId);
+  }
+
+  // Validate all items
+  let totalGold = 0;
+  for (const itemId of itemIds) {
+    const item = ITEMS[itemId];
+    if (!item) {
+      return {
+        responseType: "static",
+        staticResponse: "One of those items doesn't exist.",
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+
+    if (!item.isCarryable || (item.value ?? 0) <= 0) {
+      return {
+        responseType: "static",
+        staticResponse: `${npc.name} shrugs. "${item.name}? Worthless to me."`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+        conversationNpcId: merchantNpcId,
+      };
+    }
+
+    if (isItemEquipped(p, itemId)) {
+      return {
+        responseType: "static",
+        staticResponse: `You can't sell ${item.name} while it's equipped. UNEQUIP it first.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+        conversationNpcId: merchantNpcId,
+      };
+    }
+
+    const halfPrice = Math.max(1, Math.floor((item.value ?? 0) / 2));
+    totalGold += halfPrice;
+  }
+
+  // Process all sales
+  let newState = updatePlayerGold(state, totalGold);
+  const pg = newState.player;
+  let nextInv = pg.inventory;
+  for (const itemId of itemIds) {
+    nextInv = decrementInventory(nextInv, itemId);
+    newState = addToVendorTempStock(newState, merchantNpcId, itemId);
+  }
+  const nextPlayer: PlayerState = { ...pg, inventory: nextInv };
+  newState = { ...newState, player: nextPlayer };
+
+  const itemList = itemIds.map(id => ITEMS[id]!.name).join(", ");
+  return {
+    responseType: "static",
+    staticResponse: `${npc.name} hands over ${totalGold} gp for ${itemList}. (${nextPlayer.gold} gp total.) You can buy these items back for 72 hours.`,
+    dynamicContext: null,
+    newState,
+    stateChanged: true,
+    conversationNpcId: merchantNpcId,
+  };
+}
+
 function samShopWrongRoomResult(state: WorldState): EngineResult {
   return {
     responseType: "static",
@@ -2746,7 +3017,7 @@ export function processInput(
       .join(", ") || "none";
 
   // ── Combat-mode guard: only combat commands allowed while in combat ──
-  const COMBAT_ALLOWED_COMMANDS = new Set(["STRIKE", "FLEE", "HEALTH", "HELP"]);
+  const COMBAT_ALLOWED_COMMANDS = new Set(["STRIKE", "FLEE", "HEALTH", "HELP", "CAST"]);
   if (p.activeCombat && !COMBAT_ALLOWED_COMMANDS.has(first)) {
     const enemy = p.activeCombat.enemyName;
     return {
@@ -2873,6 +3144,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
           dynamicContext: null,
           newState,
           stateChanged: false,
+          conversationNpcId: "old_mercenary",
         };
       }
       const topic = matchAldricTopic(topicMsg);
@@ -2883,6 +3155,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
           dynamicContext: null,
           newState,
           stateChanged: false,
+          conversationNpcId: "old_mercenary",
         };
       }
       return {
@@ -2893,6 +3166,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
         dynamicContext: null,
         newState,
         stateChanged: false,
+        conversationNpcId: "old_mercenary",
       };
     }
 
@@ -2929,6 +3203,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
   : ""}Respond primarily in character as ${npcData?.name}. Universal Common for dialogue.`,
       newState,
       stateChanged: false,
+      conversationNpcId: parsed.npcId,
     };
   }
 
@@ -3122,6 +3397,26 @@ This is a severe virtue moment — Honor is at stake.`,
       };
     }
 
+    // ── Combat spell: deterministic resolver ──
+    // Heal / Blast / Speed / Power are mechanical. Mana cost, damage rolls,
+    // status effects, and the Power random-outcome table all live in
+    // combatEngine.resolveCombatSpell. The enemy gets their swing afterward,
+    // identical to a STRIKE round.
+    if (p.activeCombat && isCombatSpell(spellName)) {
+      const result = resolveCombatSpell(newState, spellName);
+      if (result) {
+        return {
+          responseType: "static",
+          staticResponse: result.combatOver
+            ? result.narration + "\n__COMBAT_END__"
+            : result.narration,
+          dynamicContext: null,
+          newState: result.newState,
+          stateChanged: true,
+        };
+      }
+    }
+
     return {
       responseType: "dynamic",
       staticResponse: null,
@@ -3176,16 +3471,180 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
   }
 
   if (first === "SHOP" || first === "SAM" || first === "LIST") {
-    if (p.currentRoom !== "main_hall" && p.currentRoom !== "sams_sharps") {
-      return samShopWrongRoomResult(newState);
+    if (p.currentRoom === "main_hall" || p.currentRoom === "sams_sharps") {
+      return {
+        responseType: "static",
+        staticResponse: buildSamShopListing(p),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+        conversationNpcId: "sam_slicker",
+      };
     }
-    return {
-      responseType: "static",
-      staticResponse: buildSamShopListing(p),
-      dynamicContext: null,
-      newState,
-      stateChanged: false,
-    };
+    if (p.currentRoom === "armory") {
+      // Trigger armory listing via BUY handler (no arg = listing)
+    }
+    if (p.currentRoom === "mage_school") {
+      // Trigger Zim listing via BUY handler (no arg = listing)
+    }
+    // Generic SHOP in any shop room — fall through to BUY with no args
+    if (SHOP_ROOM_NPC[p.currentRoom]) {
+      return processInput("BUY", newState);
+    }
+    return samShopWrongRoomResult(newState);
+  }
+
+  // ── APPLY [poison] TO [weapon / BLADE / ARROWS / BOLTS] ──
+  // Coats the equipped weapon with poison. Consumes the poison item.
+  // Works on any weapon including bow/crossbow (text reflects arrows/bolts).
+  {
+    const applyMatch = trimmed.match(
+      /^APPLY\s+(.+?)\s+TO\s+(WEAPON|BLADE|SWORD|AXE|MACE|BOW|CROSSBOW|ARROWS?|BOLTS?|.+)$/i
+    );
+    if (applyMatch) {
+      const poisonPhrase = applyMatch[1]!.trim();
+      // Find the poison in inventory
+      const poisonId =
+        poisonPhrase.toUpperCase() === "PAINFUL POISON" ? "unreliable_poison"
+        : poisonPhrase.toUpperCase() === "QUICK DEATH" ? "strong_poison"
+        : null;
+      if (!poisonId) {
+        return {
+          responseType: "static",
+          staticResponse: `You have no "${poisonPhrase}" to apply.`,
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      const poison = ITEMS[poisonId];
+      if (!poison) {
+        return {
+          responseType: "static",
+          staticResponse: `That poison doesn't exist.`,
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      const inInv = p.inventory.find(e => e.itemId === poisonId && e.quantity > 0);
+      if (!inInv) {
+        return {
+          responseType: "static",
+          staticResponse: `You have no ${poison.name} to apply.`,
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      if (p.weapon === "unarmed") {
+        return {
+          responseType: "static",
+          staticResponse: "You need to equip a weapon first.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+
+      const severity = poison.stats?.poisonSeverity ?? 1;
+      const charges = poison.stats?.poisonCharges ?? 3;
+      const weaponItem = ITEMS[p.weapon];
+      const weaponName = weaponItem?.name ?? p.weapon;
+
+      // Determine flavor text for ranged vs melee
+      const isRanged = p.weapon === "bow" || p.weapon === "crossbow" || p.weapon === "repeating_crossbow";
+      const surfaceText = isRanged
+        ? (p.weapon === "bow" ? "arrows" : "bolts")
+        : "blade";
+
+      const nextInv = p.inventory
+        .map(e => (e.itemId === poisonId ? { ...e, quantity: e.quantity - 1 } : e))
+        .filter(e => e.quantity > 0);
+
+      const updatedState: WorldState = {
+        ...newState,
+        player: {
+          ...p,
+          inventory: nextInv,
+          weaponPoisonCharges: charges,
+          weaponPoisonSeverity: severity,
+        },
+      };
+
+      return {
+        responseType: "static",
+        staticResponse:
+          `You carefully coat the ${surfaceText} of your ${weaponName} with ${poison.name}. ` +
+          `${charges} poisoned strikes remain. (${poison.name} consumed.)`,
+        dynamicContext: null,
+        newState: updatedState,
+        stateChanged: true,
+      };
+    }
+  }
+
+  // ── Consumables: BANDAGE / TOURNIQUET / ANTIDOTE / potions ──
+  // Bare verbs and USE [item] [ON [npc]] forms. Targets default to self.
+  // Resolved before the chest USE handler so they claim those verbs first.
+  {
+    const trimUpper = trimmed.toUpperCase();
+    // Verb prefix → item id. Order matters: longer matches first.
+    const consumableVerbs: [string, string][] = [
+      ["USE STRONG ANTIDOTE", "strong_antidote"],
+      ["USE GREATER HEALING POTION", "greater_healing_potion"],
+      ["USE HEALING POTION", "healing_potion"],
+      ["USE MANA POTION", "mana_potion"],
+      ["USE NIMBLE TOES", "stamina_brew"],
+      ["USE SILENT SHADOW", "fatigue_brew"],
+      ["USE PAINFUL POISON", "unreliable_poison"],
+      ["USE QUICK DEATH", "strong_poison"],
+      ["USE BANDAGE", "bandage"],
+      ["USE TOURNIQUET", "tourniquet"],
+      ["USE ANTIDOTE", "antidote"],
+      ["BANDAGE", "bandage"],
+      ["TOURNIQUET", "tourniquet"],
+      ["ANTIDOTE", "antidote"],
+    ];
+    let consumableId: string | null = null;
+    let restAfterVerb = "";
+    for (const [verb, id] of consumableVerbs) {
+      if (trimUpper === verb || trimUpper.startsWith(verb + " ")) {
+        consumableId = id;
+        restAfterVerb = trimmed.slice(verb.length).trim();
+        break;
+      }
+    }
+    if (consumableId) {
+      // Parse target: "ON [name]" or bare "[name]" both supported.
+      let targetNpcId: string | null = null;
+      let targetParseFailed = false;
+      const onMatch = restAfterVerb.match(/^on\s+(.+)$/i);
+      const targetText = onMatch ? onMatch[1].trim() : restAfterVerb;
+      if (targetText) {
+        const room = getRoom(p.currentRoom);
+        const targetLower = targetText.toLowerCase();
+        const matchedNpcId = room?.npcs.find(npcId => {
+          const npc = NPCS[npcId];
+          return npc && npc.name.toLowerCase().includes(targetLower);
+        });
+        if (matchedNpcId) {
+          targetNpcId = matchedNpcId;
+        } else {
+          targetParseFailed = true;
+        }
+      }
+      if (targetParseFailed) {
+        return {
+          responseType: "static",
+          staticResponse: `There is no "${targetText}" here.`,
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      return runConsumable(newState, consumableId, targetNpcId);
+    }
   }
 
   // ── USE KEY / UNLOCK CHEST / OPEN CHEST ──
@@ -3378,12 +3837,21 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     }
     const alreadyVisited = newState.player.visitedRooms.includes(destinationId);
     newState = movePlayer(newState, destinationId);
+    const roomDesc = buildRoomDescription(newState, destinationId, alreadyVisited ? "nonverbose" : "semiverbose");
+    let roomGreeting = SHOP_ROOM_GREETINGS[destinationId] ?? "";
+    // Brunt gets a dynamic greeting based on banked gold
+    if (destinationId === "guild_vault") {
+      const tier = getBruntTier(newState.player.bankedGold);
+      const pool = BRUNT_GREETINGS[tier] ?? BRUNT_GREETINGS.poor;
+      roomGreeting = pickTemplate(pool) + `\n\n__CMD:DEPOSIT__ __CMD:WITHDRAW__`;
+    }
     return {
       responseType: "static",
-      staticResponse: buildRoomDescription(newState, destinationId, alreadyVisited ? "nonverbose" : "semiverbose"),
+      staticResponse: roomGreeting ? roomDesc + "\n\n" + roomGreeting : roomDesc,
       dynamicContext: null,
       newState,
       stateChanged: true,
+      conversationNpcId: SHOP_ROOM_NPC[destinationId] ?? null,
     };
   }
 
@@ -3563,6 +4031,53 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     if (p.currentRoom === "main_hall") {
       const lowerRest = trimmed.slice(first.length).trim().toLowerCase();
 
+      // ── Gowns barrel: TAKE GRAY ROBE / TAKE ROBE / TAKE GOWN ──
+      // Each take = −1 Honor + chronicle. Stock-limited (default 20).
+      const wantsRobe =
+        /\b(gray\s*robe|grey\s*robe|robe|gown)\b/.test(lowerRest);
+      if (wantsRobe) {
+        const gownStock = newState.barrelStock?.gowns ?? 0;
+        if (gownStock <= 0) {
+          return {
+            responseType: "static",
+            staticResponse: "The gowns barrel is empty. The Church will refill it eventually.",
+            dynamicContext: null,
+            newState,
+            stateChanged: false,
+          };
+        }
+        const inv = p.inventory;
+        const idx = inv.findIndex(e => e.itemId === "gray_robe");
+        const nextInv =
+          idx < 0
+            ? [...inv, { itemId: "gray_robe", quantity: 1 }]
+            : inv.map((e, i) => (i === idx ? { ...e, quantity: e.quantity + 1 } : e));
+
+        let updatedState: WorldState = {
+          ...newState,
+          player: { ...newState.player, inventory: nextInv },
+          barrelStock: {
+            ...newState.barrelStock,
+            gowns: gownStock - 1,
+          },
+        };
+        updatedState = updateVirtue(updatedState, "Honor", -1);
+        updatedState = addToChronicle(
+          updatedState,
+          "Took a gray church robe from the gowns barrel.",
+          false
+        );
+
+        return {
+          responseType: "static",
+          staticResponse:
+            "You take a gray church robe from the barrel. It is thin, backless, and identical to every other one in there. Nobody is watching. You tell yourself that.",
+          dynamicContext: null,
+          newState: updatedState,
+          stateChanged: true,
+        };
+      }
+
       const wantsShirt =
         lowerRest.includes("shirt") ||
         lowerRest.includes("tunic") ||
@@ -3596,6 +4111,18 @@ Describe what they find to read, or tell them there is nothing to read here.`,
       const wantsAny = wantsShirt || wantsPants || wantsShoes || wantsBelt;
 
       if (wantsAny) {
+        // Stock check — barrel has finite capacity (10 mixed pieces by default)
+        const stockAvailable = newState.barrelStock?.charityClothes ?? 0;
+        if (stockAvailable <= 0) {
+          return {
+            responseType: "static",
+            staticResponse: "The charity barrel is empty. Someone got there first.",
+            dynamicContext: null,
+            newState,
+            stateChanged: false,
+          };
+        }
+
         const alreadyRevealed = (
           newState.rooms["main_hall"]?.revealedItems ?? []
         ).filter(r => r.containerId === "charity_barrel");
@@ -3651,9 +4178,11 @@ Describe what they find to read, or tell them there is nothing to read here.`,
 
         const gotItems: string[] = [];
         let newInventory = [...p.inventory];
+        let remainingStock = stockAvailable;
 
         const addItem = (itemId: string) => {
-          if (!isClothingItem(itemId)) return;
+          if (!isClothingItem(itemId)) return false;
+          if (remainingStock <= 0) return false;
           const existing = newInventory.find(e => e.itemId === itemId);
           if (existing) {
             newInventory = newInventory.map(e =>
@@ -3663,6 +4192,8 @@ Describe what they find to read, or tell them there is nothing to read here.`,
             newInventory = [...newInventory, { itemId, quantity: 1 }];
           }
           gotItems.push(ITEMS[itemId]?.name ?? itemId);
+          remainingStock--;
+          return true;
         };
 
         if (wantsShirt) addItem(clothingSet.shirt);
@@ -3670,10 +4201,36 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         if (wantsShoes) addItem(clothingSet.shoes);
         if (wantsBelt) addItem(clothingSet.belt);
 
+        const itemsTaken = gotItems.length;
+        if (itemsTaken === 0) {
+          return {
+            responseType: "static",
+            staticResponse: "The charity barrel is empty. Someone got there first.",
+            dynamicContext: null,
+            newState,
+            stateChanged: false,
+          };
+        }
+
         let updatedState: WorldState = {
           ...clothingState,
           player: { ...clothingState.player, inventory: newInventory },
+          barrelStock: {
+            ...clothingState.barrelStock,
+            charityClothes: remainingStock,
+          },
         };
+
+        // Honor + chronicle: −1 Honor per item taken from charity, single
+        // chronicle entry summarizing the take.
+        for (let i = 0; i < itemsTaken; i++) {
+          updatedState = updateVirtue(updatedState, "Honor", -1);
+        }
+        updatedState = addToChronicle(
+          updatedState,
+          `Took ${itemsTaken} charity garment${itemsTaken === 1 ? "" : "s"} from the Main Hall barrels.`,
+          false
+        );
 
         const takenIds = [
           wantsShirt ? clothingSet.shirt : null,
@@ -3885,12 +4442,9 @@ Describe what they find to read, or tell them there is nothing to read here.`,
 
     newState = movePlayer(newState, fleeDest);
 
-    // Clear combat session on flee
+    // Clear combat session on flee — bleed/poison persists out of combat
     if (wasInCombat) {
-      newState = {
-        ...newState,
-        player: { ...newState.player, activeCombat: null },
-      };
+      newState = endCombatSession(newState, true);
     }
 
     const destRoom = getRoom(fleeDest);
@@ -3951,6 +4505,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
+        conversationNpcId: "sam_slicker",
       };
     }
 
@@ -3997,6 +4552,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         dynamicContext: null,
         newState: afterGift,
         stateChanged: true,
+        conversationNpcId: "hokas_tokas",
       };
     }
 
@@ -4049,24 +4605,59 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     }
 
     // Resolve one HWRR combat round
-    const roundResult = resolveHWRRRound(session, zoneArg);
-    const narrative = buildRoundNarrative(roundResult);
+    const isDummyEnemy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
+    const roundResult = resolveHWRRRound(session, zoneArg, { enemyIsTrainingDummy: isDummyEnemy });
+    let narrative = buildRoundNarrative(roundResult);
 
-    // Update session with new combatant states
+    // Session combatLog is re-synced after narrative amendments below.
     let updatedSession: ActiveCombatSession = {
       ...session,
       roundNumber: roundResult.roundNumber,
       playerCombatant: roundResult.updatedPlayer,
       enemyCombatant: roundResult.updatedEnemy,
-      combatLog: [...session.combatLog, narrative].slice(-20),
+      combatLog: session.combatLog, // finalized below once narrative is amended
       finished: roundResult.combatOver,
       playerWon: roundResult.combatOver ? roundResult.playerWon : null,
     };
 
     let finalState = newState;
 
+    // ── Weapon poison: if player landed a hit and weapon is poisoned, apply poison to enemy ──
+    if (
+      roundResult.playerStrike &&
+      roundResult.playerStrike.damageDealt > 0 &&
+      finalState.player.weaponPoisonCharges > 0
+    ) {
+      const sev = finalState.player.weaponPoisonSeverity;
+      const poisonEffect: import("./combatTypes").ActiveStatusEffect = {
+        type: "poison",
+        zone: roundResult.playerStrike.targetZone,
+        severity: sev,
+        turnsRemaining: -1, // persists until cured
+        bleedPerTurn: sev,  // 1/2/3 HP per round based on severity
+      };
+      const updatedEnemy: import("./combatTypes").CombatantState = {
+        ...updatedSession.enemyCombatant,
+        activeEffects: [...updatedSession.enemyCombatant.activeEffects, poisonEffect],
+      };
+      updatedSession = {
+        ...updatedSession,
+        enemyCombatant: updatedEnemy,
+      };
+
+      const newCharges = finalState.player.weaponPoisonCharges - 1;
+      finalState = {
+        ...finalState,
+        player: {
+          ...finalState.player,
+          weaponPoisonCharges: newCharges,
+          weaponPoisonSeverity: newCharges > 0 ? sev : 0,
+        },
+      };
+    }
+
     // Training dummy: grant weapon skill XP per strike (capped at 25)
-    const isDummy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
+    const isDummy = isDummyEnemy;
     const DUMMY_SKILL_CAP = 25;
     if (isDummy && roundResult.playerStrike && roundResult.playerStrike.damageDealt > 0) {
       const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
@@ -4074,32 +4665,57 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       if (currentSkill < DUMMY_SKILL_CAP) {
         const skillUp = updateWeaponSkill(finalState, weaponSkillKey, 1);
         finalState = skillUp.newState;
+        const newSkill = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
+        narrative += `\n✦ ${SKILL_NAMES[weaponSkillKey]} skill rises: ${currentSkill} → ${newSkill}`;
+      } else {
+        narrative += `\n(${SKILL_NAMES[weaponSkillKey]} ${currentSkill}/${DUMMY_SKILL_CAP} — dummy cap reached)`;
       }
     }
 
+    // Finalize session combatLog with the (possibly amended) narrative
+    updatedSession = {
+      ...updatedSession,
+      combatLog: [...session.combatLog, narrative].slice(-20),
+    };
+
     if (roundResult.combatOver) {
       if (isDummy && roundResult.playerWon) {
-        // Training dummy: reset HP, don't kill, end session
+        // Training dummy: reset HP, don't kill. Keep session for loot screen.
         finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
         const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
         const skillVal = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
         const capNote = skillVal >= DUMMY_SKILL_CAP
           ? `\n\nThe dummy has nothing more to teach you. Your ${SKILL_NAMES[weaponSkillKey]} has outgrown wooden targets.`
           : `\n\n${SKILL_NAMES[weaponSkillKey]}: ${skillVal}/${DUMMY_SKILL_CAP} (dummy training cap)`;
+        const carriedDummyEffects = updatedSession.playerCombatant.activeEffects.map(e => ({ ...e }));
         return {
           responseType: "static",
-          staticResponse: narrative + "\n\nThe dummy splinters apart — but someone will patch it back together by morning." + capNote + "\n__COMBAT_END__",
+          staticResponse: narrative + "\n\nThe dummy splinters apart — but someone will patch it back together by morning." + capNote + "\n__COMBAT_VICTORY__",
           dynamicContext: null,
           newState: {
             ...finalState,
-            player: { ...finalState.player, activeCombat: null },
+            player: {
+              ...finalState.player,
+              activeEffects: carriedDummyEffects,
+              activeCombat: {
+                ...updatedSession,
+                finished: true,
+                playerWon: true,
+              },
+            },
           },
           stateChanged: true,
         };
       }
 
       if (roundResult.playerWon) {
-        // Mark NPC dead, clear combat HP, award virtue + expertise
+        // ── Prescripted death narration ──
+        const npcDef = NPCS[session.enemyNpcId];
+        const deathPool = getEnemyDeathPool(npcDef?.bodyType);
+        const deathLine = fillTemplate(pickTemplate(deathPool), { enemy: session.enemyName, weapon: ITEMS[p.weapon]?.name ?? "weapon" });
+        narrative += `\n\n${deathLine}`;
+
+        // Mark NPC dead, clear combat HP, award virtue + mana pool growth
         finalState = {
           ...finalState,
           npcs: {
@@ -4121,7 +4737,7 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
           ...finalState,
           player: {
             ...finalState.player,
-            expertise: finalState.player.expertise + 1,
+            maxMana: finalState.player.maxMana + 1,
           },
         };
       } else if (roundResult.playerDied) {
@@ -4139,22 +4755,32 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
           responseType: "static",
           staticResponse: narrative + deathSuffix + "\n__COMBAT_END__",
           dynamicContext: null,
-          newState: {
-            ...finalState,
-            player: { ...finalState.player, activeCombat: null },
-          },
+          // Death path: applyPlayerDeath already wiped activeEffects; use false transfer
+          newState: endCombatSession(finalState, false),
           stateChanged: true,
         };
       }
 
-      // Combat over (player won) — clear session
+      // Combat over (player won) — keep session alive with finished=true
+      // so the combat screen stays up for the final blow + loot screen.
+      // Transfer persistent effects but DON'T clear activeCombat yet —
+      // page.tsx clears it when the loot screen is dismissed.
+      const carriedEffects = updatedSession.playerCombatant.activeEffects.map(e => ({ ...e }));
       return {
         responseType: "static",
-        staticResponse: narrative + "\n__COMBAT_END__",
+        staticResponse: narrative + "\n__COMBAT_VICTORY__",
         dynamicContext: null,
         newState: {
           ...finalState,
-          player: { ...finalState.player, activeCombat: null },
+          player: {
+            ...finalState.player,
+            activeEffects: carriedEffects,
+            activeCombat: {
+              ...updatedSession,
+              finished: true,
+              playerWon: true,
+            },
+          },
         },
         stateChanged: true,
       };
@@ -4277,9 +4903,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
 
     const weaponName = ITEMS[p.weapon]?.name ?? p.weapon;
     const engageNarrative =
-      `You draw your ${weaponName} and engage ${npcData.name}!\n\n` +
-      `${npcData.name}: ${session.enemyCombatant.hp}/${session.enemyCombatant.maxHp} HP\n` +
-      `Choose your target: STRIKE HEAD · STRIKE NECK · STRIKE TORSO · STRIKE LIMBS\n` +
+      `You draw your ${weaponName} and engage ${npcData.name}.\n` +
       `__COMBAT_START__`;
 
     return {
@@ -4305,63 +4929,71 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
       }
       return runSamPurchase(newState, buyRest);
     }
-    // Armory — Pip's static shop listing
-    if (p.currentRoom === "armory" && !buyRest) {
-      const pip = NPCS["armory_attendant"];
-      const pipItems = pip?.merchant?.inventory ?? [];
-      const lines = [
-        "╔══════════════════════════════════════╗",
-        "║        GUILD ARMORY — PIP            ║",
-        "╚══════════════════════════════════════╝",
-        "",
-        ...pipItems.map(iid => {
-          const item = ITEMS[iid];
-          if (!item) return iid;
-          const cover = item.stats?.zoneCover;
-          const coverSeg = cover != null ? ` [${item.stats?.zoneSlot ?? "body"}: ${cover}% cover]` : "";
-          const block = item.stats?.shieldBlockChance;
-          const blockSeg = block != null ? ` [block: ${block}%]` : "";
-          const dmg = WEAPON_DATA[iid]?.damage ?? item.stats?.damage;
-          const dmgSeg = dmg ? ` [dmg: ${dmg}]` : "";
-          return `__CMD:BUY ${item.name.toUpperCase()}__ ${item.name} | ${item.value} gp${dmgSeg}${coverSeg}${blockSeg}`;
-        }),
-        "",
-        `Your gold: ${p.gold} gp`,
-      ];
-      return {
-        responseType: "static",
-        staticResponse: lines.join("\n"),
-        dynamicContext: null,
-        newState,
-        stateChanged: false,
-      };
+    // Armory — Pip's static shop (list + purchase)
+    if (p.currentRoom === "armory") {
+      if (!buyRest) {
+        const pip = NPCS["armory_attendant"];
+        const pipItems = pip?.merchant?.inventory ?? [];
+        const lines = [
+          "╔══════════════════════════════════════╗",
+          "║        GUILD ARMORY — PIP            ║",
+          "╚══════════════════════════════════════╝",
+          "",
+          ...pipItems.map(iid => {
+            const item = ITEMS[iid];
+            if (!item) return iid;
+            const cover = item.stats?.zoneCover;
+            const coverSeg = cover != null ? ` [${item.stats?.zoneSlot ?? "body"}: ${cover}% cover]` : "";
+            const block = item.stats?.shieldBlockChance;
+            const blockSeg = block != null ? ` [block: ${block}%]` : "";
+            const dmg = WEAPON_DATA[iid]?.damage ?? item.stats?.damage;
+            const dmgSeg = dmg ? ` [dmg: ${dmg}]` : "";
+            return `__CMD:BUY ${item.name.toUpperCase()}__ ${item.name} | ${item.value} gp${dmgSeg}${coverSeg}${blockSeg}`;
+          }),
+          "",
+          `Your gold: ${p.gold} gp`,
+        ];
+        return {
+          responseType: "static",
+          staticResponse: lines.join("\n"),
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+          conversationNpcId: "armory_attendant",
+        };
+      }
+      return runMerchantPurchase(newState, "armory_attendant", buyRest);
     }
-    // Pots & Bobbles — Zim's static shop listing
-    if (p.currentRoom === "mage_school" && !buyRest) {
-      const zim = NPCS["zim_the_wizard"];
-      const zimItems = zim?.merchant?.inventory ?? [];
-      const lines = [
-        "╔══════════════════════════════════════╗",
-        "║      POTS & BOBBLES — ZIM            ║",
-        "╚══════════════════════════════════════╝",
-        "",
-        ...zimItems.map(iid => {
-          const item = ITEMS[iid];
-          if (!item) return iid;
-          const heal = item.stats?.healAmount;
-          const healSeg = heal != null ? ` [heals: ${heal}]` : "";
-          return `__CMD:BUY ${item.name.toUpperCase()}__ ${item.name} | ${item.value} gp${healSeg}`;
-        }),
-        "",
-        `Your gold: ${p.gold} gp`,
-      ];
-      return {
-        responseType: "static",
-        staticResponse: lines.join("\n"),
-        dynamicContext: null,
-        newState,
-        stateChanged: false,
-      };
+    // Pots & Bobbles — Zim's static shop (list + purchase)
+    if (p.currentRoom === "mage_school") {
+      if (!buyRest) {
+        const zim = NPCS["zim_the_wizard"];
+        const zimItems = zim?.merchant?.inventory ?? [];
+        const lines = [
+          "╔══════════════════════════════════════╗",
+          "║      POTS & BOBBLES — ZIM            ║",
+          "╚══════════════════════════════════════╝",
+          "",
+          ...zimItems.map(iid => {
+            const item = ITEMS[iid];
+            if (!item) return iid;
+            const desc = item.shortDescription ?? "";
+            const readMore = item.alchemicalDescription ? ` __ITEM:${item.id}__` : "";
+            return `__CMD:BUY ${item.name.toUpperCase()}__ | ${item.value} gp · ${desc}${readMore}`;
+          }),
+          "",
+          `Your gold: ${p.gold} gp`,
+        ];
+        return {
+          responseType: "static",
+          staticResponse: lines.join("\n"),
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+          conversationNpcId: "zim_the_wizard",
+        };
+      }
+      return runMerchantPurchase(newState, "zim_the_wizard", buyRest);
     }
     return {
       responseType: "dynamic",
@@ -4388,19 +5020,18 @@ If haggling is involved, this is dynamic.`,
   }
 
   if (first === "SELL") {
-    return {
-      responseType: "dynamic",
-      staticResponse: null,
-      dynamicContext: `Player wants to SELL from inventory. Input: "${trimmed}".
-Room: ${currentRoom?.name}. Gold: ${p.gold}.
-Merchants present: ${currentRoom?.npcs
-  .filter(id => NPCS[id]?.merchant)
-  .map(id => NPCS[id]?.name)
-  .join(", ") || "none"}.
-Negotiate sale; update gold/inventory if a deal completes.`,
-      newState,
-      stateChanged: false,
-    };
+    const sellRest = trimmed.slice(4).trim();
+    const merchantId = ROOM_MERCHANT_ID[p.currentRoom];
+    if (!merchantId) {
+      return {
+        responseType: "static",
+        staticResponse: "There is no one here to buy that.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    return runMerchantSell(newState, merchantId, sellRest);
   }
 
   if (first === "DEPOSIT" || first === "WITHDRAW") {
@@ -4427,7 +5058,7 @@ Negotiate sale; update gold/inventory if a deal completes.`,
 Adventure description: ${adv.description}
 Entrance text: ${adv.entrance}
 Difficulty: ${adv.difficulty}. Recommended level: ${adv.recommendedLevel}.
-Player current level/expertise: ${p.expertise}.
+Player mana pool: ${p.currentMana} / ${p.maxMana}.
 Present the entrance dramatically using the static entrance text, then begin the first room encounter.
 The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
           newState: {
@@ -4476,12 +5107,15 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
     }
     const alreadyVisitedAdv = newState.player.visitedRooms.includes(destinationId);
     newState = movePlayer(newState, destinationId);
+    const advRoomDesc = buildRoomDescription(newState, destinationId, alreadyVisitedAdv ? "nonverbose" : "semiverbose");
+    const advShopGreeting = SHOP_ROOM_GREETINGS[destinationId];
     return {
       responseType: "static",
-      staticResponse: buildRoomDescription(newState, destinationId, alreadyVisitedAdv ? "nonverbose" : "semiverbose"),
+      staticResponse: advShopGreeting ? advRoomDesc + "\n\n" + advShopGreeting : advRoomDesc,
       dynamicContext: null,
       newState,
       stateChanged: true,
+      conversationNpcId: SHOP_ROOM_NPC[destinationId] ?? null,
     };
   }
 

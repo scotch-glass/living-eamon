@@ -60,7 +60,7 @@ async function callGrokImagine(prompt: string): Promise<{
 }> {
   try {
     const imageResponse = await grok.images.generate({
-      model: "grok-imagine-image",
+      model: "grok-imagine-image-pro",
       prompt,
       response_format: "b64_json",
       // @ts-expect-error — xAI-specific parameter

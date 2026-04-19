@@ -2,6 +2,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { pregenerateSprites } from "../../../lib/spritePregenerate";
+import type { BloodSplatterState } from "../../../lib/gameState";
+
+// Trigger sprite pre-generation on first module load (server startup)
+pregenerateSprites();
 import {
   processInput,
   buildSituationBlock,
@@ -221,6 +226,7 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
 
 function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
   return {
+    barrelStock: state.barrelStock,
     id: state.player.id,
     name: state.player.name,
     hp: state.player.hp,
@@ -228,7 +234,8 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     strength: state.player.strength,
     dexterity: state.player.dexterity,
     charisma: state.player.charisma,
-    expertise: state.player.expertise,
+    maxMana: state.player.maxMana,
+    currentMana: state.player.currentMana,
     gold: state.player.gold,
     bankedGold: state.player.bankedGold,
     weapon: state.player.weapon,
@@ -253,11 +260,23 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     gorget: state.player.gorget ?? null,
     bodyArmor: state.player.bodyArmor ?? null,
     limbArmor: state.player.limbArmor ?? null,
+    boots: state.player.boots ?? null,
+    ringLeft: state.player.ringLeft ?? null,
+    ringRight: state.player.ringRight ?? null,
+    cuffLeft: state.player.cuffLeft ?? null,
+    cuffRight: state.player.cuffRight ?? null,
+    necklace: state.player.necklace ?? null,
     activeCombat: state.player.activeCombat ?? null,
+    activeEffects: state.player.activeEffects ?? [],
+    weaponPoisonCharges: state.player.weaponPoisonCharges ?? 0,
+    weaponPoisonSeverity: state.player.weaponPoisonSeverity ?? 0,
     mounted: state.player.mounted ?? false,
     remembersOwnName: state.player.remembersOwnName ?? false,
     metZim: state.player.metZim ?? false,
     weaponSkills: state.player.weaponSkills,
+    knownSpells: state.player.knownSpells ?? [],
+    knownDeities: state.player.knownDeities ?? [],
+    goreSplatters: state.player.goreSplatters ?? [],
   };
 }
 
@@ -309,7 +328,16 @@ export async function POST(request: NextRequest) {
                   ? (savedPlayer as { agility: number }).agility
                   : 10,
             charisma: savedPlayer.charisma,
-            expertise: savedPlayer.expertise,
+            maxMana:
+              typeof (savedPlayer as { max_mana?: number }).max_mana === "number"
+                ? (savedPlayer as { max_mana: number }).max_mana
+                : (savedPlayer.expertise ?? 10),
+            currentMana:
+              typeof (savedPlayer as { current_mana?: number }).current_mana === "number"
+                ? (savedPlayer as { current_mana: number }).current_mana
+                : (typeof (savedPlayer as { max_mana?: number }).max_mana === "number"
+                    ? (savedPlayer as { max_mana: number }).max_mana
+                    : (savedPlayer.expertise ?? 10)),
             gold: savedPlayer.gold,
             bankedGold: savedPlayer.banked_gold,
             weapon: savedPlayer.weapon,
@@ -333,6 +361,8 @@ export async function POST(request: NextRequest) {
               (savedPlayer as { known_spells?: string[] }).known_spells ?? [],
             knownDeities:
               (savedPlayer as { known_deities?: string[] }).known_deities ?? [],
+            goreSplatters:
+              (savedPlayer as Record<string, unknown>).gore_splatters as BloodSplatterState[] ?? [],
             receivedSamStarterOutfit:
               (savedPlayer as { received_sam_starter_outfit?: boolean })
                 .received_sam_starter_outfit ?? false,
@@ -351,9 +381,32 @@ export async function POST(request: NextRequest) {
               savedPlayer.armor ?? null,
             limbArmor:
               (savedPlayer as { limb_armor?: string | null }).limb_armor ?? null,
-            activeCombat:
-              (savedPlayer as { active_combat?: unknown }).active_combat as
-                import("../../../lib/combatTypes").ActiveCombatSession | null ?? null,
+            boots:
+              (savedPlayer as { boots?: string | null }).boots ?? null,
+            ringLeft:
+              (savedPlayer as { ring_left?: string | null }).ring_left ?? null,
+            ringRight:
+              (savedPlayer as { ring_right?: string | null }).ring_right ?? null,
+            cuffLeft:
+              (savedPlayer as { cuff_left?: string | null }).cuff_left ?? null,
+            cuffRight:
+              (savedPlayer as { cuff_right?: string | null }).cuff_right ?? null,
+            necklace:
+              (savedPlayer as { necklace?: string | null }).necklace ?? null,
+            activeCombat: (() => {
+              const ac = (savedPlayer as { active_combat?: Record<string, unknown> }).active_combat;
+              // Discard finished combat sessions that were persisted — they
+              // should have been cleared when the loot screen was dismissed.
+              if (ac?.finished) return null;
+              return (ac as unknown as import("../../../lib/combatTypes").ActiveCombatSession | null) ?? null;
+            })(),
+            activeEffects:
+              (savedPlayer as { active_effects?: unknown }).active_effects as
+                import("../../../lib/combatTypes").ActiveStatusEffect[] ?? [],
+            weaponPoisonCharges:
+              (savedPlayer as { weapon_poison_charges?: number }).weapon_poison_charges ?? 0,
+            weaponPoisonSeverity:
+              (savedPlayer as { weapon_poison_severity?: number }).weapon_poison_severity ?? 0,
             mounted: Boolean(
               (savedPlayer as { mounted?: boolean }).mounted
             ),
@@ -368,10 +421,21 @@ export async function POST(request: NextRequest) {
                 .weapon_skills ?? undefined
             ),
           },
+          barrelStock:
+            (savedPlayer as { barrel_stock?: { gowns?: number; charityClothes?: number } }).barrel_stock
+              ? {
+                  gowns: (savedPlayer as { barrel_stock: { gowns?: number } }).barrel_stock.gowns ?? 20,
+                  charityClothes: (savedPlayer as { barrel_stock: { charityClothes?: number } }).barrel_stock.charityClothes ?? 10,
+                }
+              : initial.barrelStock,
         };
 
-        // Client holds the live session; DB load can lag behind async savePlayer. Merge so BUY/inventory persists turn-to-turn.
+        // Client holds the live session; DB load can lag behind async savePlayer.
+        // Merge so BUY/inventory persists turn-to-turn.
+        // SKIP merge on session start (empty messages) — DB is the source of truth on refresh.
+        const isSessionStart = !messages || messages.length === 0;
         if (
+          !isSessionStart &&
           worldState &&
           typeof worldState === "object" &&
           worldState.player &&
@@ -384,6 +448,7 @@ export async function POST(request: NextRequest) {
             npcs: ws.npcs ?? state.npcs,
             activeEvents: ws.activeEvents ?? state.activeEvents,
             chronicleLog: ws.chronicleLog ?? state.chronicleLog,
+            vendorTempStock: ws.vendorTempStock ?? state.vendorTempStock,
             worldTurn: typeof ws.worldTurn === "number" ? ws.worldTurn : state.worldTurn,
             player: {
               ...state.player,
@@ -418,29 +483,38 @@ export async function POST(request: NextRequest) {
 
     const appendSituation = (body: string, newState: WorldState) => {
       const cleaned = stripTrailingSituationBlocks(body);
+      // During combat, the situation block (exits, room objects, NPCs) is
+      // suppressed — combat is its own context and the dedicated overlay
+      // shows the relevant info. Without this gate, the situation block
+      // leaks into the combat narration log.
+      if (newState.player?.activeCombat) {
+        return cleaned;
+      }
       return cleaned + "\n\n" + buildSituationBlock(newState);
     };
 
-    const sendResponse = (text: string, newState: WorldState) => {
+    /**
+     * Send a prescripted (static engine) response as JSON. The client
+     * renders JSON responses instantly (no character-by-character
+     * streaming), with a fade-in animation. Only Jane's dynamic
+     * content uses the ReadableStream text/plain path.
+     */
+    const sendResponse = (text: string, newState: WorldState, conversationNpcId?: string | null) => {
       // Save player to Supabase asynchronously
       if (resolvedPlayerId) {
         persistPlayer(newState).catch(console.error);
       }
 
-      const fullResponse = appendSituation(text, newState) + "\n\n__STATE__" + JSON.stringify({
-        ...newState,
-        playerId: resolvedPlayerId,
-      });
+      const responseText = appendSituation(text, newState);
 
-      return new Response(
-        new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(fullResponse));
-            controller.close();
-          },
-        }),
-        { headers: { "Content-Type": "text/plain; charset=utf-8", "X-Accel-Buffering": "no" } }
-      );
+      return Response.json({
+        response: responseText,
+        worldState: {
+          ...newState,
+          playerId: resolvedPlayerId,
+          conversationNpcId: conversationNpcId ?? null,
+        },
+      });
     };
 
     const streamJane = async (
@@ -449,7 +523,8 @@ export async function POST(request: NextRequest) {
       history: { role: string; content: string }[],
       echoPrefix?: string | null,
       /** When true and room is main_hall: return JSON instead of SSE-style stream (testing). */
-      asBufferedJson?: boolean
+      asBufferedJson?: boolean,
+      conversationNpcId?: string | null
     ) => {
       // Check Jane allocation
       if (resolvedPlayerId) {
@@ -494,6 +569,10 @@ export async function POST(request: NextRequest) {
 
       const readable = new ReadableStream({
         async start(controller) {
+          // Emit NPC token first so client can prefetch sprite
+          if (conversationNpcId) {
+            controller.enqueue(encoder.encode(`__NPC__${conversationNpcId}__`));
+          }
           if (echoPrefix) {
             controller.enqueue(encoder.encode(echoPrefix + "\n\n"));
           }
@@ -507,11 +586,14 @@ export async function POST(request: NextRequest) {
           } finally {
             reader.releaseLock();
           }
-          const situationSuffix = "\n\n" + buildSituationBlock(newState);
-          controller.enqueue(encoder.encode(situationSuffix));
+          if (!newState.player?.activeCombat) {
+            const situationSuffix = "\n\n" + buildSituationBlock(newState);
+            controller.enqueue(encoder.encode(situationSuffix));
+          }
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...newState,
             playerId: resolvedPlayerId,
+            conversationNpcId: conversationNpcId ?? null,
           })));
           controller.close();
         },
@@ -625,10 +707,24 @@ export async function POST(request: NextRequest) {
 
         // Use custom line builder if available, otherwise use static lines
         let responseLines: string[];
+        let responseNpcId: string | null = null;
         if (script.id === "barmaid_select_response") {
-          responseLines = getBarmaidResponseLines(pick);
+          const isFirstMeeting = state.player.remembersOwnName && !state.player.barmaidPreference;
+          const barmaidResult = getBarmaidResponseLines(pick, isFirstMeeting);
+          responseLines = barmaidResult.lines;
+          responseNpcId = barmaidResult.barmaidNpcId;
         } else if (script.id === "aldric_training_response") {
-          responseLines = getAldricTrainingLines(pick, state.player.name);
+          const trainingResult = getAldricTrainingLines(pick, state.player.name, state.player.weapon);
+          responseLines = trainingResult.lines;
+          responseNpcId = "old_mercenary";
+          // Give weapon if unarmed
+          if (trainingResult.giveWeapon) {
+            const inv = [...newState.player.inventory, { itemId: "short_sword", quantity: 1 }];
+            newState = {
+              ...newState,
+              player: { ...newState.player, weapon: "short_sword", inventory: inv },
+            };
+          }
           // YES moves player to courtyard
           if (pick === "YES") {
             newState = {
@@ -661,7 +757,9 @@ export async function POST(request: NextRequest) {
           responseLines = script.lines;
         }
 
-        return sendResponse(responseLines.join("\n"), newState);
+        // Prepend NPC token for sprite prefetch
+        const npcTokenPrefix = responseNpcId ? `__NPC__${responseNpcId}__` : "";
+        return sendResponse(npcTokenPrefix + responseLines.join("\n"), newState, responseNpcId);
       }
     }
 
@@ -674,7 +772,20 @@ export async function POST(request: NextRequest) {
 
     // STATIC — no API call unless narrative contains __CRITICAL__ (Jane rewrites crit line)
     if (engineResult.responseType === "static" && engineResult.staticResponse !== null) {
-      // Courtyard gets live weather injected
+
+      // ══════════════════════════════════════════════════════════════════════
+      // COMBAT FAST-PATH: when the player is in active combat, the engine's
+      // static response IS the combat narration (STRIKE result, CAST result,
+      // FLEE result, engage line, etc.). It must reach the client UNTOUCHED.
+      // No courtyard weather, no on_enter NPC scripts, no __CRITICAL__ Jane
+      // rewrite, no room descriptions — combat is its own isolated context.
+      // ══════════════════════════════════════════════════════════════════════
+      if (engineResult.newState.player.activeCombat || engineResult.staticResponse.includes("__COMBAT_END__")) {
+        return sendResponse(engineResult.staticResponse, engineResult.newState);
+      }
+
+      // Courtyard gets live weather injected (non-combat only — guard above
+      // already returned if activeCombat was set).
       if (engineResult.newState.player.currentRoom === "guild_courtyard") {
         const weather = await getCourtyardWeather();
         const fullDesc = buildCourtyardDescription(
@@ -760,7 +871,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return sendResponse(staticText, engineResult.newState);
+      // Prepend NPC token so client can prefetch sprite while text streams
+      const npcPrefix = engineResult.conversationNpcId
+        ? `__NPC__${engineResult.conversationNpcId}__`
+        : "";
+      return sendResponse(npcPrefix + staticText, engineResult.newState, engineResult.conversationNpcId);
     }
 
     // Check world object cache for examine actions
@@ -823,8 +938,10 @@ export async function POST(request: NextRequest) {
             ).catch(console.error);
             persistPlayer(engineResult.newState).catch(console.error);
           }
-          const examineSituationSuffix = "\n\n" + buildSituationBlock(engineResult.newState);
-          controller.enqueue(encoder.encode(examineSituationSuffix));
+          if (!engineResult.newState.player?.activeCombat) {
+            const examineSituationSuffix = "\n\n" + buildSituationBlock(engineResult.newState);
+            controller.enqueue(encoder.encode(examineSituationSuffix));
+          }
           controller.enqueue(encoder.encode("\n\n__STATE__" + JSON.stringify({
             ...engineResult.newState,
             playerId: resolvedPlayerId,
@@ -853,7 +970,8 @@ export async function POST(request: NextRequest) {
       engineResult.newState,
       messages,
       engineResult.echoPrefix ?? null,
-      bufferMainHallDynamic
+      bufferMainHallDynamic,
+      engineResult.conversationNpcId
     );
 
   } catch (error) {

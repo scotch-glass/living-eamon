@@ -354,25 +354,7 @@ export default function ScenePanel({
           }}
         />
 
-        {/* ── Room name pill ────────────────────────────────────────────── */}
-        {status === "loaded" && bgUrl && (
-          <span
-            style={{
-              position: "absolute",
-              bottom: 10,
-              left: 16,
-              color: "rgba(229,231,235,0.6)",
-              fontSize: 11,
-              fontFamily: "Georgia, serif",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              pointerEvents: "none",
-              zIndex: 2,
-            }}
-          >
-            {roomDisplayName}
-          </span>
-        )}
+        {/* Room name moved to page header bar */}
       </div>
     </>
   );

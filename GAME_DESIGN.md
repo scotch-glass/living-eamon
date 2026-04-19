@@ -2,6 +2,250 @@
 
 ---
 
+## ⚠️ READ BEFORE DESIGNING ANYTHING — PUBLIC-DOMAIN SAFETY
+
+Before using any name, creature, artifact, nation, magic school, or quoted
+prose in this document or in code, you **must** verify it against the
+public-domain rules. Most Conan-related material is **not** yet public
+domain — using it will expose Thot Technologies to a takedown or suit.
+
+**Required reading, in order:**
+
+1. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — **the
+   authoritative legal doc.** Full legal framework, trademark
+   restrictions, Always-Safe Corpus, future PD calendar, Phase 1 /
+   Phase 2 timeline. (As of April 19, 2026, this file consolidated
+   the former `lore/hyborian-pd/PD_RESEARCH.md` and that file was
+   deleted.)
+2. The Safe Harbor / Radioactive tables below in this document —
+   **name-by-name authoritative lookup.** Supersedes any other doc on
+   individual term status.
+3. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
+   methodology for converting PD stories into adventure modules.
+
+**Current PD corpus (verified April 2026):**
+
+- **"The Hyborian Age"** essay, *The Phantagraph* 1936 — fully PD. No
+  US copyright registration or renewal found. Project Gutenberg hosts
+  the full text. The entire Hyborian-Age geography, migrations,
+  cataclysms, named kingdoms, and peoples are freely usable.
+- **"Always Comes Evening"** poem, *The Phantagraph* Aug 1936 — fully PD.
+- **"Song at Midnight"** / **"Man, the Master"** poem, *The Phantagraph*
+  Aug 1940 — fully PD (posthumous).
+- **"The Shadow Kingdom"** *Weird Tales* Aug 1929 — fully PD.
+- **"The Mirrors of Tuzun Thune"** *Weird Tales* Sept 1929 — fully PD.
+- **"Kings of the Night"** *Weird Tales* Nov 1930 — fully PD.
+
+**Trademark-radioactive terms (apply forever, regardless of any PD
+claim):** "Conan," "Conan the Barbarian," "Cimmerian," "Cimmerians,"
+"Cimmeria," "Hyboria," "Hyborian Age," "Hyborian" as a marketing
+adjective. These are CPI-held trademarks or project-designated
+brand-marker avoids; they do not appear in player-facing pages,
+marketing, titles, meta tags, or alt text regardless of copyright
+status of the underlying essay.
+
+**Still copyright-protected until 2028–2032:** All Conan short-story
+content (Conan himself, Tarantia, Thoth-Amon, Bêlit, Valeria,
+Yag-Kosha) and *The Hour of the Dragon* content (Acheron, Xaltotun,
+Heart of Ahriman, Python). See the Radioactive table below.
+
+When in doubt, **ask before using.**
+
+---
+
+## Safe Harbor & Radioactive Terms — Authoritative Reference
+
+This is the canonical lookup table for every name, place, people, deity,
+artifact, or concept the project uses. It supersedes anything in
+`lore/**`, `CLAUDE_CONTEXT.md`, or memory if there is a conflict.
+
+Before using any proper noun in code, prose, player-facing copy, or
+design docs, check it against these tables. If it's not listed, treat
+it as **UNCERTAIN** and ask before using.
+
+### 🟢 SAFE HARBOR — Terms We Can Use
+
+Sources cited below:
+- **Essay** = *The Hyborian Age* essay, *The Phantagraph* 1936 (PD).
+- **Shadow Kingdom** = Kull story, *Weird Tales* Aug 1929 (PD).
+- **Mirrors** = *The Mirrors of Tuzun Thune*, *Weird Tales* Sept 1929 (PD).
+- **Kings** = *Kings of the Night*, *Weird Tales* Nov 1930 (PD).
+
+**Usage rule for all Safe Harbor terms:** free to use in player-facing
+narrative prose, room descriptions, item descriptions, NPC dialogue,
+and internal code. **Never use in marketing titles or slogans** if
+flagged with ⚠ — those are trademark-adjacent in the popular mind.
+
+#### Ages & Eras
+| Term | Source | Notes |
+|---|---|---|
+| The Hyborian Age (setting concept) | Essay | ⚠ Internal + in-game prose OK. **Never in marketing / splash / register / login / board / nav / meta tags** (CPI trademark concern). In marketing use "Thurian Age" or "sword & sorcery." |
+| Thurian Age | Essay + Shadow Kingdom | Pre-Cataclysmic era. **Preferred marketing label.** |
+| The Cataclysm | Essay | Great catastrophe ending the Thurian Age. |
+| Age after the Cataclysm | Essay | Substitute for "Hyborian Age" in marketing copy. |
+
+#### Nations & Kingdoms — Hyborian Era (post-Cataclysm, from Essay)
+| Term | Source | Notes |
+|---|---|---|
+| Aquilonia | Essay | Central western kingdom. Ostavar (our invented city) is visually styled after it. Usable in narrative. |
+| Argos | Essay | |
+| Asgard | Essay | Northern Aesir homeland. |
+| Border Kingdom | Essay | |
+| Brythunia | Essay | |
+| Corinthia | Essay | |
+| Gunderland | Essay | Sub-region of Aquilonia. |
+| Hyperborea | Essay | |
+| Hyrkania | Essay | |
+| Iranistan | Essay | |
+| Khauran | Essay | |
+| Khitai | Essay | |
+| Koth | Essay | |
+| Kush | Essay | |
+| Nemedia | Essay | |
+| Ophir | Essay | |
+| Pictish Wilderness | Essay + Kings | Picts appear in *Kings of the Night* as well. |
+| Poitain | Essay | |
+| Shem (incl. Pelishtia sub-region) | Essay | |
+| Stygia | Essay | Essay reference is safe. Don't import plot elements from copyrighted Conan stories. |
+| Turan | Essay | |
+| Vanaheim | Essay | Northern Vanir homeland. |
+| Vendhya | Essay | |
+| Zamora | Essay | |
+| Zingara | Essay | |
+
+#### Nations & Kingdoms — Thurian Age (pre-Cataclysm)
+| Term | Source | Notes |
+|---|---|---|
+| Atlantis | Essay + Shadow Kingdom | Kull's barbarian homeland. |
+| Valusia | Shadow Kingdom | Serpent-haunted empire where Kull reigns. |
+| Commoria | Essay | Lost pre-Cataclysmic kingdom. |
+| Grondar | Essay | Lost pre-Cataclysmic kingdom. |
+| Kamelia | Essay | Lost pre-Cataclysmic kingdom. |
+| Thule | Essay | Lost pre-Cataclysmic kingdom. |
+| Verulia | Essay | Lost pre-Cataclysmic kingdom. |
+
+#### Peoples, Tribes, Races
+| Term | Source | Notes |
+|---|---|---|
+| Aesir | Essay | People of Asgard. |
+| Vanir | Essay | People of Vanaheim. |
+| Picts | Essay + Kings | |
+| Hyborians (as a descent group) | Essay | Central post-Cataclysm civilizations. |
+| Shemites | Essay | |
+| Stygians | Essay | |
+| Hyrkanians | Essay | |
+| Khitans | Essay | |
+| Kushites | Essay | |
+| Zamorans | Essay | |
+| Lemurians | Essay | Ancient race. |
+| Atlanteans | Essay + Shadow Kingdom | Kull's people. |
+| Valusians | Shadow Kingdom | Decadent human empire. |
+| Serpent-Men | Shadow Kingdom | Shapeshifting race that ruled before humans. Core antagonist archetype. Full combat profile permissible. |
+
+#### Named Characters
+| Term | Source | Notes |
+|---|---|---|
+| Kull of Atlantis / Kull the Conqueror | Shadow Kingdom | Barbarian king of Valusia. Fully usable. |
+| Tuzun Thune | Mirrors | Ancient wizard. Preferred template for our ancient-sorcerer archetype. |
+| Bran Mak Morn | Kings | King of the Picts. May appear in person in modules. |
+
+#### Magic & Sorcery Concepts
+| Term | Source | Notes |
+|---|---|---|
+| Thurian sorcery / pre-Cataclysmic magic | Mirrors + Shadow Kingdom | Ancient, calmer, more philosophical than later necromancy. |
+| Mirror portals / alternate-reality visions | Mirrors | Mirrors show visions of alternate realities. Core mechanic for legacy-artifact use. |
+| Serpent-men shapeshifting / infiltration | Shadow Kingdom | Core antagonist mechanic. |
+| Time-bridging ritual summoning | Kings | Bran Mak Morn summons Kull across ages. |
+| "Ka nama kaa lajerama" | Shadow Kingdom | Canonical exposure phrase for identifying Serpent-Men imposters. Usable verbatim. |
+
+#### Locations & Ruins
+| Term | Source | Notes |
+|---|---|---|
+| Valusian stonework / Valusian ruins | Shadow Kingdom | Pre-human architecture. Usable as location description. |
+| Ruined towers of Valusia (post-Cataclysm dungeon) | MODULE_PLAN (derivative) | Our framing of Valusia as a ruin in the player's era. |
+| Mirror chamber of Tuzun Thune | Mirrors | Setting containing the mirrors. |
+
+#### Artifacts & Items
+| Term | Source | Notes |
+|---|---|---|
+| The mirrors of Tuzun Thune | Mirrors | Central legacy artifact. |
+| Serpent-Men poisoned fangs | Shadow Kingdom | Looted as artifact after combat. |
+
+#### Atmospheric / Quotable Material
+| Term | Source | Notes |
+|---|---|---|
+| Howard quotations up to ~200 words per module | Any of the 6 always-safe works | Always cite source. Use in room descriptions, item inscriptions, Chronicle entries. |
+| "Always Comes Evening" lines | *The Phantagraph* Aug 1936 poem | Quotable atmospheric verse. |
+| "Song at Midnight" / "Man, the Master" lines | *The Phantagraph* Aug 1940 poem | Quotable atmospheric verse. |
+
+#### Living Eamon Original Terms (our IP)
+| Term | Source | Notes |
+|---|---|---|
+| Aurelion | Public_Domain_Rules.md | Invented frame city for Phase 1 content. |
+| Ostavar | MODULE_PLAN + CLAUDE_CONTEXT | **Invented** city. Visually styled after Aquilonia but the name and all specifics are ours. |
+| Jane | Living Eamon original | The ancient intelligence / narrator. Our IP. |
+| The Eamon Chronicle | Living Eamon original | Persistent deed-log system. Our IP. |
+| The Order | Living Eamon original | Inquisition faction that prosecutes Occultists. Our IP. |
+| The Church of Perpetual Life | Living Eamon original | Respawn location. Our IP. |
+
+---
+
+### 🔴 RADIOACTIVE — Never Use
+
+Two categories live here:
+
+1. **Trademark-protected terms** — permanent. Forbidden in player-facing
+   pages, marketing, titles, meta tags, alt text, and branding
+   regardless of underlying copyright status. Held by Conan Properties
+   International (CPI) or designated project-radioactive by Scotch.
+2. **Copyright-protected terms from Conan stories (not yet PD)** —
+   these enter US public domain between 2028 and 2032, per story
+   publication date + 95 years. Do not use until their year passes.
+
+#### Trademark-radioactive (permanent; never use in player-facing content)
+| Term | Why | PD date |
+|---|---|---|
+| **Conan** | CPI trademark. Forbidden in titles, character names, branding, marketing. | Permanent TM (story PD 2028, TM forever) |
+| **Conan the Barbarian** | CPI trademark. | Permanent TM |
+| **Hyboria** | CPI trademark. | Permanent TM |
+| **Hyborian Age** | CPI trademark. Internal design docs + in-game prose may reference the concept; **never in marketing / splash / register / login / board / updates / legal / nav / meta tags.** Use "Thurian Age" or "age after the Cataclysm" in marketing. | Permanent TM |
+| **Hyborian** (as marketing adjective) | TM-adjacent. Never in splash, login, register, board, updates, legal, nav, or meta tags. | Permanent avoid |
+| **Cimmerian** | Iconic Conan-brand marker. Project-designated radioactive. Use a synonym ("highland barbarian," "mountain folk"). | Permanent avoid |
+| **Cimmerians** | Same as above. | Permanent avoid |
+| **Cimmeria** (place) | Technically PD-copyright via essay, but project-designated radioactive for brand reasons. | Permanent avoid |
+| "Conan universe" (colloquial) | TM via usage. | Permanent avoid |
+
+#### Copyright-radioactive — Conan-story content (enters PD 2028–2032)
+| Term | Source | Earliest PD date |
+|---|---|---|
+| Conan (character) | Any Conan story | 2028 |
+| Thoth-Amon | Copyrighted Conan stories | 2028+ |
+| Bêlit | *Queen of the Black Coast* (1934) | 2030 |
+| Valeria | *Red Nails* (1936) | 2032 |
+| Yag-Kosha | *The Tower of the Elephant* (1933) | 2029 |
+| Tarantia (Aquilonia's capital) | Copyrighted Conan stories | 2028+ |
+| Acheron (as named empire) | *The Hour of the Dragon* (1935–1936). Use **"Thurian"** as substitute. | 2031 |
+| Xaltotun | *The Hour of the Dragon*. Use **Tuzun Thune** as template. | 2031 |
+| Heart of Ahriman | *The Hour of the Dragon*. Use **mirror chamber** (from *Mirrors*). | 2031 |
+| Python (Acheronian capital) | *The Hour of the Dragon* | 2031 |
+| *The Hour of the Dragon* (novel title) | 1935–1936 serial | 2031 |
+| Any Conan short-story title (*"The Tower of the Elephant," "Queen of the Black Coast," "Red Nails," "Beyond the Black River," "Black Colossus,"* etc.) | Copyrighted. See `Public_Domain_Rules.md` §8 calendar. | 2028–2032 (varies per story) |
+
+---
+
+### 🟡 UNCERTAIN — Ask Scotch Before Using
+
+These require Scotch's explicit approval before they appear in code or
+copy.
+
+| Term | Issue |
+|---|---|
+| Stygia as used beyond essay-level reference | Essay reference is safe. Plot elements drawn from copyrighted Conan stories are not. Spot-check any Stygia-focused module prose. |
+| Connecting the three PD Thurian stories into a grand canon | The three PD stories (*Shadow Kingdom*, *Mirrors*, *Kings*) do not explicitly cross-reference each other in Howard's text. Building a unified canon that links them thematically risks creating derivative work beyond what's in the PD originals. Have Scotch review. |
+| Any Howard term not listed above | Treat as uncertain by default. |
+
+---
+
 ## 9. Magic — Two Systems
 
 ### Official Guild Magic (CAST command)
@@ -235,7 +479,481 @@ functions identically).
 
 ---
 
+## 10. Hyborian Age Lore — The Foundational Setting
+
+Living Eamon is set in **Robert E. Howard's Hyborian Age**. This
+is not generic fantasy. **All future adventures, story modules,
+Occult magic, monsters, enemies, and magical-item back-stories
+must descend from this canon** — either adapted directly from
+Howard's public-domain works, or invented in his voice and fitted
+to his geography and chronology.
+
+> ⚠️ **CRITICAL — PD STATUS:** Most of Howard's Conan corpus is
+> NOT yet in US public domain. The full PD-status framework and
+> calendar live in **`Public_Domain_Rules.md`** (repo root); the
+> name-by-name Safe Harbor / Radioactive lookup lives at the top
+> of this document. **Read both before designing anything new.**
+> This §10 references only PD-safe material. The full
+> module-creation methodology is in
+> **`lore/hyborian-pd/MODULE_PLAN.md`**.
+
+When a new adventure, NPC, or artifact is being designed, the
+writer must first ask: *Is this element verifiable as public
+domain per the Safe Harbor table above and `Public_Domain_Rules.md`?*
+If no, either find a PD-safe equivalent or wait until it enters PD
+(see PD calendar in `Public_Domain_Rules.md` §8 — most Conan stories
+enter 2028–2032).
+
+---
+
+### 10.1 The Setting in One Paragraph
+
+The Hyborian Age sits roughly **between the sinking of Atlantis
+and the dawn of recorded history** — Howard placed it ~12,000–10,000
+BC. It is a world of marble cities and naked barbarians; of
+decadent civilizations crusted over the ruins of older, blacker
+empires; of slow-grinding theocracies and lone-genius adventurers
+who topple them. The dominant powers are the Hyborian kingdoms of
+the west (Aquilonia, Nemedia, Brythunia), with serpent-haunted
+**Stygia** to the south, the **Black Kingdoms** beyond, and the
+ruins of the older **Thurian Age** beneath every well-traveled
+road. Magic exists, but it is rare, hated, and almost always evil
+at the edges. Heroes are mortal; the universe is indifferent.
+
+All kingdom names above are PD-safe via the *Hyborian Age* essay
+(1936, non-renewed).
+
+---
+
+### 10.2 The Thurian Age — The Pre-Cataclysmic Foundation
+
+The **Thurian Age** is the lost prehistoric epoch that preceded
+the Hyborian Age. It ended in the Cataclysm that sank Atlantis
+and reshaped the world. **The Thurian Age is the spine of Living
+Eamon's Occult magic** — its ruins, its forgotten races, and its
+buried artifacts are the natural source of the dark sorcery that
+seeps into the player's present.
+
+The Thurian Age is exceptionally well-suited to Living Eamon
+because **three Thurian-Age short stories by Howard are fully
+public domain** (see `Public_Domain_Rules.md` §5): *The Shadow Kingdom*,
+*The Mirrors of Tuzun Thune*, and *Kings of the Night*. These
+give us **named characters, named places, named magical
+phenomena, and named races** that we can use freely.
+
+**PD-safe Thurian elements (use freely):**
+
+- **Valusia** — the decadent serpent-haunted empire; pre-Cataclysmic
+  human civilization corrupted by Serpent-Men infiltration. Its
+  ruins exist in the Hyborian present as crumbling crypts and
+  half-buried temples.
+- **Atlantis** — the barbarian homeland of Kull; sank in the
+  Cataclysm. Atlantean ruins occasionally surface on remote
+  shores.
+- **Kull of Atlantis** — the barbarian who became king of Valusia.
+  Long dead by the Hyborian present, but his name persists in
+  legend and his deeds in carved stone.
+- **Tuzun Thune** — the ancient Valusian wizard whose **mirror
+  chamber** showed visions of alternate realities. His tower is
+  abandoned but sealed; his mirrors persist.
+- **Bran Mak Morn** — king of the Picts; known across both
+  Thurian and Hyborian eras through ritual time-bridges. Pictish
+  shamans still invoke his name.
+- **Serpent Men** — the ancient shapeshifting race that ruled
+  before humans. Most were destroyed at the Cataclysm; some
+  survived in deep places and can still infiltrate human courts
+  by mimicking faces. Speak the phrase *"Ka nama kaa lajerama"*
+  to expose them — they cannot say it.
+- **The Cataclysm** — the great sundering that sank Atlantis,
+  drowned Valusia, and ended the Thurian Age. The boundary
+  event between the two ages.
+
+**Thurian Aesthetic.** Ancient stonework predating any known
+script. Stepped pyramids and serpent-columns. Mirror chambers.
+Pre-human geometry that doesn't quite fit the human eye. Frazetta's
+oldest, most weathered ruins. Scenes lit by guttering torches in
+chambers that shouldn't have stood for ten thousand years.
+
+---
+
+### 10.3 Stygia and Set — The Living Serpent-Cult
+
+**Stygia** is the southern serpent-god-worshipping kingdom of the
+Hyborian Age — named in the *Hyborian Age* essay (PD-safe). Older
+than the Hyborian kingdoms, the cult of **Set** persists from
+Stygia south through the Black Kingdoms.
+
+Stygian sorcery is **the living tradition** that connects most
+directly to the lost Thurian magic. Where Thurian Serpent-Men
+ruled the world from Valusia, the Stygian serpent-priests rule a
+shrunken modern kingdom — but they remember much that should have
+died with the Cataclysm.
+
+**Game implication:** anywhere Thurian ruins appear, expect
+Stygian-style iconography (serpents, eyes of Set, black pearls
+used as scrying foci). Stygian assassins, snake-cultists, and
+suspected Serpent-Man infiltrators are the natural living
+antagonists who carry Thurian techniques forward into the
+player's present.
+
+> **Note on names:** "Stygia," "Set," "Khemi," "serpent-priests"
+> are all from the *Hyborian Age* essay (PD). "Thoth-Amon" and
+> other named Stygian sorcerers from the Conan stories remain
+> copyrighted until 2028+.
+
+---
+
+### 10.4 Aquilonia and Ostavar — The Civilized Present
+
+**Aquilonia** is the dominant Hyborian kingdom of the present —
+named in the *Hyborian Age* essay (PD-safe). Marble colonnades,
+gilt towers, silk banners, Frazetta/Brom interiors. It is the
+westernmost Hyborian power, civilized to the point of decadence,
+patrolling its border against serpentine Stygia to the south and
+Pictish wilderness to the west.
+
+**Ostavar — the player's starting hub — is styled after
+Aquilonia.** This is canonical (see CLAUDE_CONTEXT memory
+`project_ostavar_aquilonia.md`). The Guild Hall, Sam's Sharps,
+Pots & Bobbles, the Church of Perpetual Life — all read as
+late-Aquilonian civic architecture. **Tone for Ostavar is
+"aquilonian"** in the scene-image system.
+
+When future modules introduce other regions, use these tonal
+anchors:
+- **Aquilonia** → marble, gilt, civilized, Frazetta palace
+- **Stygia** → serpent stone, black basalt, Brom temple-interiors
+- **Thurian ruins** → ancient pre-human stonework, mirror chambers,
+  serpent-columns, Frazetta's oldest weathered crypts
+- **Cimmeria / barbarian frontier** → grey crags, snow, Conan-tone
+  (Cimmeria is named in the essay; Conan himself is NOT yet PD)
+- **Pictish Wilderness** → standing stones, dark forest, Bran Mak
+  Morn's heritage
+- **Black Kingdoms** → jungle, mud-brick, drum-haunted
+- **Vanaheim / Asgard** → ice, longships, Vendel-era
+
+---
+
+### 10.5 Tuzun Thune and the Mirror Chambers — The Template Artifact
+
+**Tuzun Thune** was an ancient Valusian wizard whose tower
+contained a chamber of mirrors that showed visions of alternate
+realities. From "The Mirrors of Tuzun Thune" (1929, PD): when
+Kull stared into the mirrors he saw himself living different
+lives, considered which was real, and almost lost himself to the
+visions.
+
+**This is the template for Living Eamon's permanent legacy
+artifacts.** Future modules should design artifacts in this mould:
+
+- **Discovered in Thurian ruins** (or comparable PD-derived
+  Thurian sites)
+- **Carries permanent power** the player can claim
+- **Carries permanent corruption / risk** the player must manage —
+  taint score, virtue ceiling shifts, profile-driven visions, NPC
+  reactions
+- **Recorded in the Eamon Chronicle forever** — even destroying
+  the artifact is a Chronicle event
+- **Has a verbatim Howard-style description** drawn from PD
+  prose where possible
+
+A **Tuzun-Thune-Mirror artifact** is the natural first legacy
+artifact for the player to encounter (see Module 1 in
+MODULE_PLAN.md). It can be claimed (powerful but mind-eating),
+destroyed (shatters with a sound nothing else makes), or returned
+sealed (forever findable by the next player who reaches the
+ruin).
+
+---
+
+### 10.6 The Outer Dark — Source of the Worst Knowledge
+
+The **Outer Dark** is Howard's term for the home of nameless
+horrors older than even the Thurian Age — the entities Thurian
+sorcerers and Serpent-Men bargained with for their most monstrous
+spells. Think H.P. Lovecraft's Outer Gods, but predating Lovecraft
+by a few years and grimmer in tone (Howard was Lovecraft's
+correspondent and influence ran both ways).
+
+> **PD note:** "The Outer Dark" as a phrase appears in multiple
+> Howard works including PD ones. Specific Outer Dark entities
+> named in copyrighted Conan stories should NOT be used by name
+> until those stories enter PD.
+
+**Game use:**
+- Highest-circle Occult spells (Circles 6–8) draw from the Outer
+  Dark and have permanent karmic costs
+- Summoning Outer Dark entities is the highest-tier Occult act —
+  realm-cataclysm scale (see §11 World Destruction)
+- Specific named Outer Dark beings should be invented fresh in
+  Howard's voice, NOT borrowed from copyrighted Conan stories
+- The Order's deepest fear is anyone who has made an Outer Dark
+  pact — they erase such practitioners and everyone who knew them
+
+---
+
+### 10.7 The Eight Reagents — Mapped to Hyborian Function
+
+The eight canonical reagents (see §9 Reagents) each have a
+specific Thurian / Stygian / Hyborian role. **All future Occult
+spell designs must respect these mappings:**
+
+| Reagent | Hyborian Function |
+|---------|-------------------|
+| **Black Pearl** | Stygian — scrying, mental domination, Set serpent rites. Coastal/sea-tomb origin. Opens the inner eye. |
+| **Blood Moss** | Sacrificial residue — clings to altars where blood has been spilled. Living evidence of pre-Cataclysmic atrocity. Only grows where men died screaming. |
+| **Garlic** | The **counter-reagent.** Wards against Thurian undead and Serpent-Men. Why protective NPCs hand it out. Why a Thurian remnant flinches near it. |
+| **Ginseng** | Vital-force fuel for resurrection rites. Sustains a corpse-vessel through the long restoration ritual. |
+| **Mandrake Root** | Necromancy catalyst — binds a soul to a corpse-vessel. Pulled from soil under pre-Cataclysmic altars; the loudest scream. |
+| **Nightshade** | Death-sleep / millennia-trance. The poison that wasn't death — used by Thurian sorcerers to wait out the centuries. |
+| **Spider's Silk** | Binding threads for **Outer Dark contracts.** Weaves the sorcerer's tether to summoned things. |
+| **Sulfurous Ash** | Destruction, daemon trace — the **signature** the Order smells. Ash from Thurian altars is the most potent grade. |
+
+A **reagent quality flag** is on the roadmap: same `itemId`,
+additive `quality` field. Common-grade reagents are found
+everywhere; **Thurian-grade** reagents (only from pre-Cataclysmic
+ruins) multiply effect *and* multiply Order-detection probability.
+Clearing a real Thurian ruin should be a meaningful reagent reward.
+
+---
+
+### 10.8 Module & NPC Hooks
+
+**See `lore/hyborian-pd/MODULE_PLAN.md` for the canonical near-term
+module roster, build order, and full conversion methodology.**
+Summary here:
+
+**First three modules** (all built from Thurian-Age PD source
+stories — see `Public_Domain_Rules.md` §5 for verification):
+
+1. **The Mirrors of Tuzun Thune** — ruined Thurian tower with the
+   wizard's mirror chamber. Profile-driven visions. Low combat,
+   dynamic-heavy. **First module to build.**
+2. **The Serpent in the Court** — Serpent-Man infiltration of a
+   Hyborian-era noble court. Investigation + moderate combat to
+   advance weapon skills + earn gold for training.
+3. **The Pictish Time-Tomb** — Bran Mak Morn-style time-bridge
+   ritual opens a Thurian tomb. Player aids or opposes. Battle
+   climax with Stygian raiders standing in for the Romans of
+   Howard's original story.
+
+**NPC archetypes** that should recur:
+
+- **Thurian remnant cultist** — last survivor of a forgotten
+  pre-Cataclysmic temple, trying to revive ancient rites on a
+  small scale. Low-level necromancer with a personal grimoire.
+- **Serpent-Man infiltrator** — ancient shapeshifter wearing a
+  human face. Use the *"Ka nama kaa lajerama"* phrase from
+  *The Shadow Kingdom* as the canonical exposure mechanic.
+- **Stygian assassin / snake-cultist** — Set-priest with poisoned
+  blade and serpentine charisma. The Painful Poison and Quick
+  Death the player can buy from Zim are also what these enemies
+  use.
+- **Hyborian inquisitor / Order agent** — descends on suspected
+  Occult practitioners. Erases practitioners AND witnesses.
+- **Cimmerian / barbarian wanderer** — high-DEX unarmored archetype
+  the player can hire or fight. (Cimmerian as a *people* is
+  PD-safe via the essay; specific named Cimmerian heroes from
+  Conan stories are NOT.)
+- **Pictish shaman** — Bran Mak Morn lineage; wields ancient
+  ritual magic distinct from the serpent-cult tradition.
+- **Aquilonian noble** — civilized but possibly decadent;
+  patron of legitimate adventures.
+
+**Magical-item back-stories** must place each artifact on the
+Hyborian/Thurian timeline:
+- *"This blade was forged in lost Valusia in the reign of the
+  Serpent-Kings."*
+- *"The serpent-priests of Khemi sealed this scroll under wax in
+  the days when Set walked among kings."*
+- *"This mirror was salvaged from the wreck of Tuzun Thune's
+  tower after the Cataclysm took the rest."*
+
+Generic D&D-style flavor ("a magical sword from the Old Kingdom")
+is forbidden. Every artifact must have a **specific Hyborian or
+Thurian provenance** that traces to a PD-safe source.
+
+---
+
+### 10.9 Public Domain Sources & Voice Notes
+
+The currently usable Robert E. Howard works (US public domain)
+are:
+
+- **The Hyborian Age essay** (1936) — non-renewed. The geographic
+  and historical skeleton of the entire setting. Does NOT name
+  individual heroes.
+- **The Shadow Kingdom** (Weird Tales, August 1929) — Kull,
+  Valusia, Serpent-Men, the *"Ka nama kaa lajerama"* phrase.
+- **The Mirrors of Tuzun Thune** (Weird Tales, September 1929) —
+  Tuzun Thune, his mirror chamber, alternate-reality visions.
+- **Kings of the Night** (Weird Tales, November 1930) — Bran Mak
+  Morn, Pictish ritual time-bridges, Kull summoned across eras.
+
+> **`Public_Domain_Rules.md` (repo root) is the authoritative source
+> on what's PD and when more works enter (mostly 2028–2032).**
+
+**Voice when writing in this canon:**
+- Spare, Anglo-Saxon-rooted vocabulary
+- "Lone genius vs ancient evil" arc, never chosen-one
+- Civilization is decadent; barbarism is honest
+- Magic is hated, rare, and almost always evil at the edges
+- Survival is the mechanic; death is permanent consequence
+- Annalist voice for Chronicle entries (per §6 above) — terse,
+  factual, Glen-Cook-flavored
+
+When in doubt, ask: *"Would Howard publish this in a 1934
+Weird Tales issue?"* If the answer is no, rewrite. Then ask:
+*"Is every named element PD-verified per the Safe Harbor table at
+the top of this doc and `Public_Domain_Rules.md`?"* If no, rewrite
+again.
+
+---
+
+### 10.10 The PD Calendar — Future Module Pipeline
+
+The Conan corpus enters PD on a rolling annual schedule starting
+**January 2028.** When that begins, we will be able to add full
+Conan modules using copyrighted-today material:
+
+- **2028:** First two Conan stories enter PD (1932 publications:
+  *The Phoenix on the Sword*, *The Scarlet Citadel*). At this
+  point, **Conan himself becomes PD** as a named character.
+- **2029–2030:** The bulk of the classic Conan short stories enter
+  PD wave by wave.
+- **2031:** *The Hour of the Dragon* (the only full Conan novel)
+  enters PD — finally unlocking **Acheron, Xaltotun, the Heart of
+  Ahriman, and the city of Python** for use in Living Eamon prose
+  and modules.
+
+When 2028 arrives, **revisit `Public_Domain_Rules.md` §8 and
+MODULE_PLAN.md together** and queue Conan modules. Treat the unlock
+as a deliberate design event, not an automatic batch import — each
+newly-unlocked story should be reviewed for fit and only the
+best-fitting are converted to modules.
+
+The full PD entry calendar is maintained in **`Public_Domain_Rules.md`
+§8**.
+
+---
+
 ## 12. Planned Core Systems *(Phase 2 unless noted)*
+
+### Inventory & Equipment UI *(High Priority — April 2026)*
+
+Ratified April 14, 2026. This section records the canonical
+design decisions for item interaction, inspection, comparison,
+vendor integration, and equipment slot expansion.
+
+**Item Action Menu (right-click / click):**
+- Click any item icon (in pack, gear, shop, or any future
+  clickable context) → contextual verb menu anchored to the tile.
+- Verbs are context-sensitive:
+  - **In pack, not in shop:** Equip / Drink / Apply / Inspect / Drop
+  - **In pack, in a shop room:** Equip / Drink / Apply / Inspect / **Sell** (replaces Drop)
+  - **Equipped (GEAR tab):** Unequip / Inspect (no Sell — must
+    unequip first)
+- Equip and Drop execute **instantly with no confirmation dialog.**
+  Players live with mistakes.
+- "Apply to Blade" (for Painful Poison, Quick Death) generates
+  `APPLY [poison] TO [weapon]` — works on any weapon including
+  bow and crossbow. Response text reflects arrows/bolts for
+  ranged weapons. The poison item is consumed; the weapon gains
+  `weaponPoisonCharges` and `weaponPoisonSeverity`, decremented
+  per combat hit.
+- **The right-click / action-menu pattern applies to ALL clickable
+  objects across the game.** Implement as new clickable surfaces
+  are added.
+
+**Inspect Popup — Two Visual Styles:**
+1. **Alchemical Book style** — the existing Thurian-codex parchment
+   layout (Linear B, Cedarville Cursive, illuminated margins).
+   Used **only for books, scrolls, and grimoires.** Not for
+   general items.
+2. **Standard Inspection style** — item sprite (from the icon
+   pipeline) displayed large on the **left third** of a dark
+   translucent container, positioned **vertically** (e.g., a sword
+   stands upright). The **right two-thirds** holds scrollable
+   long-form text (description, stats, lore). No parchment
+   texture. Clean dark glassmorphism.
+
+**COMPARE Popup:**
+- For weapons, rings, amulets/necklaces, and armor in a shop or
+  hero inventory (not equipped): shows a **side-by-side comparison**
+  against whatever is currently equipped in the relevant slot.
+- Layout: small popup with a 2-column table. Left column head =
+  equipped item icon + "(equipped)" label. Right column head =
+  the inspected/shop item icon. Rows below: comparable attributes
+  (damage, speed, armor coverage, magical properties, etc.).
+- Triggered via "Compare" verb in the action menu, or
+  automatically on hover/inspect in shop context.
+
+**Bulk Sell + Vendor Temp Inventory:**
+- SELL in a vendor room → opens a sell menu with **checkboxes**
+  so the player can sell multiple items at once.
+- When an item is sold to a vendor, it enters the **vendor's
+  temporary inventory for 100 turns**. The player can buy it
+  back at **double the sale price** (i.e., the original item.value
+  — since they sold it at half, buying it back costs the full
+  price, netting a 50% loss on the round trip).
+- After 100 turns the item leaves the vendor's stock permanently.
+- Vendor temp inventory stored as `vendorTempStock[]` on
+  WorldState (per vendor NPC id).
+
+**Expanded Equipment Slots (HWRR-aligned):**
+- Current: weapon, shield, helmet, gorget, bodyArmor, limbArmor (6)
+- Adding: **2 ring slots per hand** (4 ring slots total),
+  **necklace/medallion** (1 slot), **waist/belt with pouches**
+  (1 slot).
+- Total: 12 slots. Research HWRR `.rpy` files for exact slot
+  layout before implementing.
+- EquipmentGrid layout will need redesign to accommodate 12 slots
+  (probably 4×3 grid).
+
+---
+
+### Critical Fail System *(Combat — April 2026)*
+
+The opposite of a Critical Hit. When a combatant rolls poorly
+enough, a Critical Fail occurs — the most dramatic being
+**dropping the weapon.**
+
+**Design rules:**
+- Critical Fail chance mirrors the Critical Hit algorithm
+  (inverse conditions — low roll on the attack, modified by
+  weapon skill).
+- **Masters are immune.** A true master of a weapon skill
+  (e.g., 200+ swordsmanship) NEVER critically fails with that
+  weapon type. The threshold scales with skill: high skill
+  progressively reduces Critical Fail probability until it
+  reaches zero.
+- **Weapon drop** is the primary Critical Fail consequence.
+  Dropped weapon goes to the floor of the combat room; the
+  combatant must fight unarmed until they retrieve it (costs
+  a combat turn) or switch to a backup weapon.
+- Critical Fail narration pools should be added to
+  `combatZoneNarration.ts` alongside the existing hit/block/
+  evade narration pools.
+- Enemies can also Critical Fail. An enemy dropping their
+  weapon creates a tactical opening.
+
+---
+
+### Prescripted Text Display *(UI — April 2026)*
+
+**Prescripted (static engine) text displays instantly** — no
+character-by-character streaming. The appearance effect is a
+**fade-in** (opacity 0→1 over ~300ms).
+
+**Only Jane's dynamic content streams** (character-by-character
+animation). This gives the player:
+1. No waiting for room descriptions, vendor menus, combat logs,
+   HEALTH output, or any other prescripted response.
+2. A clear visual signal of which text is Jane (streams in) vs.
+   engine (appears instantly) — useful for development debugging
+   and for player awareness of when the AI is speaking.
+
+---
 
 ### Stamina System *(High Priority)*
 
@@ -260,6 +978,40 @@ movement, and survival.
   to drain slowly
 
 **Stamina display:** Shown in the sidebar as a bar, similar to HP.
+
+---
+
+### Campfire System *(Phase 2)*
+
+A campfire can be built anywhere there is solid ground (not in
+water, not in rooms with active enemies). Buildings are fair
+game — but doing it in town has consequences.
+
+**Requirements:**
+- 5 wood shavings (consumed on use)
+- Command: `MAKE CAMPFIRE` or `BUILD FIRE`
+
+**Effects while campfire is burning:**
+- **Double healing rate** when well-fed (stamina above 50%):
+  HP regen doubles from 1/turn to 2/turn
+- Campfire lasts 50 turns before dying out
+- Provides light (equivalent to a torch) in dark areas
+- Some NPCs and animals are attracted to or repelled by fire
+- **In town/buildings:** NPCs are furious. They stamp it out
+  immediately (fire is destroyed, shavings consumed). Player
+  loses 1 Honor. Narration reflects the social disgrace.
+
+**Wood shavings sources:**
+- Training dummies drop 1–4 on destruction
+- Found as adventure loot in forests, workshops, carpenter areas
+- Purchased cheaply from general goods vendors (when implemented)
+
+**Design intent:** Wood shavings are a common, low-value material
+with genuine tactical use. The campfire is a survival tool for
+dungeon expeditions — the player who carries wood shavings can
+rest more efficiently than one who does not. Combined with food,
+a campfire rest stop becomes a meaningful tactical decision:
+stop and heal, or push forward wounded.
 
 ---
 

@@ -391,10 +391,17 @@ const ENEMY_ZONE_HIT: ZoneEnemyHitPool = {
 
 // ── INJURY NARRATION ────────────────────────────────────────
 
-const INJURY_NARRATION: Record<StatusEffectType, string[]> = {
+// Partial record — spell-driven status effects (haste, shield_aura, etc.)
+// don't have injury narration; combat spells produce their own narration
+// in combatEngine.resolveCombatSpell.
+const INJURY_NARRATION: Partial<Record<StatusEffectType, string[]>> = {
   bleed: [
     "Blood flows freely from the {zone} wound.",
     "The {zone} wound opens — bright blood starts to seep.",
+  ],
+  poison: [
+    "The {zone} wound darkens. Black veins spider out from the cut.",
+    "A chill spreads from the {zone}. The blood there runs sluggish and wrong.",
   ],
   concussion: [
     "The blow rattles {defender}'s brain. Eyes glaze. Concussion.",
@@ -439,8 +446,140 @@ const CRITICAL_PREFIXES: Record<BodyZone, string[]> = {
   limbs: ["The limb is fully exposed!", "CRITICAL — a clean, devastating hit to the limb!"],
 };
 
+// ── CRITICAL FAIL NARRATION ─────────────────────────────────
+
+/** Fumble without weapon drop — just a clumsy miss. */
+const CRITICAL_FAIL_STUMBLE: string[] = [
+  "{attacker} overcommits — the swing goes wide and leaves them staggering.",
+  "{attacker}'s footing fails. A wild, clumsy swing at nothing.",
+  "A terrible swing. {attacker} nearly trips over their own feet.",
+  "{attacker} misjudges the distance badly — the strike whistles past {defender}'s ear and throws {attacker} off-balance.",
+];
+
+/** Fumble WITH weapon drop. */
+const CRITICAL_FAIL_DROP: string[] = [
+  "FUMBLE! {attacker}'s {weapon} slips from sweaty hands and clatters to the ground!",
+  "FUMBLE! The grip fails — {attacker}'s {weapon} spins away across the floor!",
+  "FUMBLE! {attacker}'s fingers lose the {weapon}. It hits the ground with a ring of iron. {attacker} is unarmed!",
+  "FUMBLE! A miserable swing — {attacker}'s {weapon} flies from their hand and skids across the stone!",
+];
+
 // ── NARRATIVE BUILDER ───────────────────────────────────────
 // Replaces the simple string in resolveStrike() with rich zone narration.
+
+// ── DUFUS POOLS — humorous narration for the training dummy ─
+
+/** Player misses Dufus. He never moves. He just judges. */
+const DUFUS_MISS_POOL: string[] = [
+  "Dufus stands perfectly still and you somehow miss him entirely.",
+  "Dufus looks at you like you're the dummy.",
+  "Your strike whiffs past Dufus. He has not moved. He never moves.",
+  "You miss a wooden post that does not move. Aldric coughs somewhere.",
+  "Dufus's painted-on face manages to look disappointed.",
+  "The blade sails wide. Dufus would shake his head if he had a neck that worked.",
+  "You swing. Dufus does not. Dufus wins this round morally.",
+  "The strike misses. Dufus's permanent expression of resigned disappointment somehow deepens.",
+  "Even Dufus seems embarrassed for you, and Dufus is a sack of straw.",
+  "Wide miss. Somewhere, a real enemy is laughing.",
+];
+
+/** Player hits Dufus. He takes it. He always takes it. */
+const DUFUS_HIT_POOL: string[] = [
+  "Dufus takes the hit like a champ.",
+  "Dufus just stands there like a dummy. The blow lands square.",
+  "You strike Dufus. Dufus accepts this, as he accepts all things.",
+  "The blow connects. Straw puffs out. Dufus is unbothered.",
+  "Solid hit. Dufus says nothing. Dufus has never said anything.",
+  "Your weapon bites into the wood. Dufus has been here longer than you. He will outlast this too.",
+  "Clean strike. A small chip of Dufus joins the pile of older Dufus on the ground.",
+  "You land a good one. Dufus sways slightly, then settles back into resignation.",
+  "The hit lands. Aldric was right — Dufus does not complain.",
+  "Strike connects. The DUFUS carved into his forehead remains legible.",
+  "Direct hit. Dufus's charcoal frown does not change. It never changes.",
+  "Wood thunks. Straw drifts. Dufus endures.",
+  "You strike true. The dummy creaks once and goes silent again.",
+  "The blow lands. Somewhere, the carpenter who patches Dufus sighs.",
+  "Solid contact. Dufus has been hit harder by smaller heroes. He remembers all of them.",
+];
+
+// ── Blood splatter narration — zone-specific gore lines ──
+// Appended after a successful hit lands. Tier-gated: glancing = nothing,
+// solid = short, devastating/crit = vivid.
+
+const BLOOD_SPLATTER: Record<BodyZone, { solid: string[]; devastating: string[] }> = {
+  head: {
+    solid: [
+      "Blood runs from the wound, streaking down {defender}'s face.",
+      "A red line opens across {defender}'s brow. Blood wells fast.",
+      "The cut weeps crimson down {defender}'s cheek.",
+    ],
+    devastating: [
+      "Blood sprays from {defender}'s skull in a hot arc. Bone shows white beneath.",
+      "The blow splits {defender}'s scalp wide. Blood sheets down, blinding one eye.",
+      "{defender}'s head snaps sideways and a curtain of blood follows.",
+      "A red mist hangs where {defender}'s head was a moment ago.",
+    ],
+  },
+  neck: {
+    solid: [
+      "A red line opens across {defender}'s throat. Blood beads along it.",
+      "The blade draws a wet streak across {defender}'s neck.",
+      "Blood seeps from the wound, staining {defender}'s collar dark.",
+    ],
+    devastating: [
+      "Blood erupts from {defender}'s neck in a pressurized gout.",
+      "The strike opens {defender}'s throat. Blood pumps in rhythm with a dying heartbeat.",
+      "{defender}'s neck parts like meat on a butcher's block. Arterial spray paints the ground.",
+      "A hot red sheet pours from {defender}'s opened throat.",
+    ],
+  },
+  torso: {
+    solid: [
+      "The wound opens and blood darkens {defender}'s clothing.",
+      "A wet stain spreads across {defender}'s midsection.",
+      "Blood seeps from the gash, soaking into {defender}'s gear.",
+    ],
+    devastating: [
+      "The blow cleaves through muscle. Blood splashes across the stone in a wide fan.",
+      "{defender}'s torso opens like a split melon. Something inside glistens.",
+      "A gout of hot blood sprays from {defender}'s chest. Ribs show through the ruin.",
+      "The wound is terrible. Blood pours freely, pooling at {defender}'s feet.",
+    ],
+  },
+  limbs: {
+    solid: [
+      "Blood runs down {defender}'s arm, dripping from the fingertips.",
+      "The wound weeps. {defender}'s leg darkens with spreading blood.",
+      "A red line opens along {defender}'s forearm. Blood wells immediately.",
+    ],
+    devastating: [
+      "The limb splits open to the bone. Blood sprays in a wide arc across the ground.",
+      "{defender}'s arm hangs at a wrong angle, blood pouring from the wound like a tap.",
+      "The strike nearly severs the limb. Arterial blood jets in rhythmic spurts.",
+      "Meat and muscle part. {defender}'s blood splatters across {attacker}'s face and arms.",
+    ],
+  },
+};
+
+/** Crit-specific gore — attacker gets splattered. */
+const CRIT_ATTACKER_GORE: Record<BodyZone, string[]> = {
+  head:  [
+    "Hot blood spatters across {attacker}'s face and chest.",
+    "{attacker} tastes copper. {defender}'s blood is everywhere.",
+  ],
+  neck:  [
+    "Arterial spray catches {attacker} full in the face. Vision goes red.",
+    "The gout drenches {attacker}'s weapon arm to the elbow.",
+  ],
+  torso: [
+    "{attacker}'s arms are slick to the shoulder with {defender}'s blood.",
+    "The spray catches {attacker} across the chest. Warmth soaks through.",
+  ],
+  limbs: [
+    "Blood flecks spatter across {attacker}'s hands and forearms.",
+    "{attacker} is painted red from the spray. It will not wash easily.",
+  ],
+};
 
 export function buildZoneStrikeNarrative(
   strike: StrikeResolution,
@@ -461,8 +600,22 @@ export function buildZoneStrikeNarrative(
     zone,
   };
 
-  // Evasion
+  // ── Dufus override — humorous flat narration regardless of zone/weapon ──
+  // Only fires when the player is attacking Dufus (not the other way around,
+  // since Dufus never strikes back). Bypasses normal hit/miss prose.
+  if (isPlayerAttacking && defenderName === "Dufus") {
+    if (strike.evaded || strike.armorStopped || strike.blocked) {
+      return pick(DUFUS_MISS_POOL);
+    }
+    return pick(DUFUS_HIT_POOL);
+  }
+
+  // Evasion (possibly with critical fail)
   if (strike.evaded) {
+    if (strike.isCriticalFail) {
+      const pool = strike.weaponDropped ? CRITICAL_FAIL_DROP : CRITICAL_FAIL_STUMBLE;
+      return fill(pick(EVASION_POOLS[zone]), vars) + " " + fill(pick(pool), vars);
+    }
     return fill(pick(EVASION_POOLS[zone]), vars);
   }
 
@@ -506,6 +659,22 @@ export function buildZoneStrikeNarrative(
     const injuryPool = INJURY_NARRATION[strike.injuryInflicted];
     if (injuryPool) {
       parts.push(fill(pick(injuryPool), vars));
+    }
+  }
+
+  // Blood splatter narration — solid and devastating hits get gore lines.
+  // Crits additionally describe blood hitting the attacker.
+  if (tier !== "glancing") {
+    const bloodTier = tier === "devastating" || strike.isCritical ? "devastating" : "solid";
+    const bloodPool = BLOOD_SPLATTER[zone]?.[bloodTier];
+    if (bloodPool) {
+      parts.push(fill(pick(bloodPool), vars));
+    }
+    if (strike.isCritical) {
+      const critGore = CRIT_ATTACKER_GORE[zone];
+      if (critGore) {
+        parts.push(fill(pick(critGore), vars));
+      }
     }
   }
 

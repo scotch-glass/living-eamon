@@ -10,173 +10,190 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <div style={{ width: "100%", maxWidth: 400 }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#030712",
+        backgroundImage: "url(/login-bg.jpg)",
+        backgroundAttachment: "fixed",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0 24px",
+        position: "relative",
+      }}
+    >
+      {/* Dark overlay — 50% opacity black */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Login form */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          maxWidth: 380,
+          background: "rgba(12, 6, 2, 0.85)",
+          border: "1px solid rgba(146, 64, 14, 0.4)",
+          borderRadius: 12,
+          padding: 32,
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+        }}
+      >
         <h1
           style={{
-            fontSize: 40,
-            fontWeight: "bold",
+            fontSize: 24,
+            fontWeight: 700,
             color: "#fbbf24",
             fontFamily: "Georgia, serif",
-            marginBottom: 4,
+            textAlign: "center",
+            marginBottom: 24,
             letterSpacing: "0.05em",
           }}
         >
-          LIVING EAMON
+          ENTER
         </h1>
-        <p
-          style={{
-            color: "#92400e",
-            fontSize: 11,
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-          }}
-        >
-          One Hero. Infinite Realms.
-        </p>
-        <div
-          style={{
-            width: 64,
-            height: 1,
-            backgroundColor: "#92400e",
-            margin: "16px auto 0",
-          }}
-        />
-      </div>
 
-      {/* Error */}
-      {error && (
-        <div
-          style={{
-            backgroundColor: "#450a0a",
-            border: "1px solid #7f1d1d",
-            color: "#fca5a5",
-            padding: "12px 16px",
-            borderRadius: 6,
-            fontSize: 13,
-            marginBottom: 20,
-            textAlign: "center",
-          }}
+        {error && (
+          <div
+            style={{
+              backgroundColor: "#450a0a",
+              border: "1px solid #7f1d1d",
+              color: "#fca5a5",
+              padding: "12px 16px",
+              borderRadius: 6,
+              fontSize: 13,
+              marginBottom: 20,
+              textAlign: "center",
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            {error === "auth_callback_failed" ? "Authentication failed. Please try again." : error}
+          </div>
+        )}
+
+        <form
+          action={loginAction}
+          onSubmit={() => setLoading(true)}
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
         >
-          {error === "auth_callback_failed"
-            ? "Authentication failed. Please try again."
-            : error}
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            required
+            autoComplete="email"
+            style={{
+              backgroundColor: "#111827",
+              border: "1px solid #374151",
+              color: "#e5e7eb",
+              padding: "12px 16px",
+              borderRadius: 6,
+              fontSize: 14,
+              outline: "none",
+              fontFamily: "Georgia, serif",
+            }}
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            required
+            autoComplete="current-password"
+            style={{
+              backgroundColor: "#111827",
+              border: "1px solid #374151",
+              color: "#e5e7eb",
+              padding: "12px 16px",
+              borderRadius: 6,
+              fontSize: 14,
+              outline: "none",
+              fontFamily: "Georgia, serif",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              backgroundColor: "#92400e",
+              color: "#fef3c7",
+              padding: "12px 16px",
+              borderRadius: 6,
+              fontSize: 14,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.6 : 1,
+              fontFamily: "Georgia, serif",
+              fontWeight: 600,
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#a84d10";
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#92400e";
+            }}
+          >
+            {loading ? "Entering..." : "Enter the Realm"}
+          </button>
+        </form>
+
+        <div style={{ textAlign: "center", marginTop: 20 }}>
+          <a
+            href="/register"
+            style={{
+              color: "#6b7280",
+              fontSize: 13,
+              textDecoration: "none",
+              fontFamily: "Georgia, serif",
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#92400e")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
+          >
+            New adventurer? →
+            </a>
         </div>
-      )}
-
-      {/* Email/Password form */}
-      <form
-        action={loginAction}
-        onSubmit={() => setLoading(true)}
-        style={{ display: "flex", flexDirection: "column", gap: 12 }}
-      >
-        <input
-          name="email"
-          type="email"
-          placeholder="Email address"
-          required
-          autoComplete="email"
-          style={{
-            backgroundColor: "#111827",
-            border: "1px solid #374151",
-            color: "#e5e7eb",
-            padding: "12px 16px",
-            borderRadius: 6,
-            fontSize: 14,
-            outline: "none",
-            fontFamily: "Georgia, serif",
-          }}
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-          autoComplete="current-password"
-          style={{
-            backgroundColor: "#111827",
-            border: "1px solid #374151",
-            color: "#e5e7eb",
-            padding: "12px 16px",
-            borderRadius: 6,
-            fontSize: 14,
-            outline: "none",
-            fontFamily: "Georgia, serif",
-          }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            backgroundColor: "#92400e",
-            color: "#fef3c7",
-            padding: "12px 16px",
-            borderRadius: 6,
-            fontSize: 14,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            border: "none",
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.6 : 1,
-            fontFamily: "Georgia, serif",
-          }}
-        >
-          {loading ? "Entering..." : "Enter the Realm"}
-        </button>
-      </form>
-
-      {/* Footer links */}
-      <div style={{ textAlign: "center", marginTop: 20 }}>
-        <a
-          href="/register"
-          style={{
-            color: "#6b7280",
-            fontSize: 13,
-            textDecoration: "none",
-            fontFamily: "Georgia, serif",
-          }}
-        >
-          New adventurer? Create an account →
-        </a>
       </div>
-
-      <p
-        style={{
-          color: "#1f2937",
-          fontSize: 11,
-          textAlign: "center",
-          marginTop: 32,
-          fontFamily: "Georgia, serif",
-        }}
-      >
-        she is watching
-      </p>
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#030712",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 24px",
-      }}
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            backgroundColor: "#030712",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6b7280",
+            fontFamily: "Georgia, serif",
+          }}
+        >
+          Loading…
+        </div>
+      }
     >
-      <Suspense
-        fallback={
-          <div style={{ width: "100%", maxWidth: 400, textAlign: "center", color: "#6b7280" }}>
-            Loading…
-          </div>
-        }
-      >
-        <LoginContent />
-      </Suspense>
-    </div>
+      <LoginContent />
+    </Suspense>
   );
 }

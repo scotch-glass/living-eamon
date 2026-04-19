@@ -30,7 +30,8 @@ export const ZONE_EVASION_PENALTY: Record<BodyZone, number> = {
 // ── Status Effects ──────────────────────────────────────────
 
 export type StatusEffectType =
-  | "bleed"             // Ongoing HP loss per round
+  | "bleed"             // Ongoing HP loss per round/turn
+  | "poison"            // Ongoing HP loss per round/turn until cured (turnsRemaining = -1)
   | "concussion"        // Head — reduced hit chance
   | "damaged_eye"       // Head — significant accuracy penalty
   | "severed_artery"    // Neck — heavy bleed
@@ -38,17 +39,28 @@ export type StatusEffectType =
   | "pierced_lung"      // Torso — reduced effectiveness
   | "cracked_ribs"      // Torso — pain on exertion
   | "broken_arm"        // Limbs — weapon skill penalty
-  | "broken_leg";       // Limbs — cannot flee
+  | "broken_leg"        // Limbs — cannot flee
+  // ── Spell-driven buffs / debuffs (combat-only) ──
+  | "haste"             // +10 effective agility (SPEED, POWER:Quickening)
+  | "shield_aura"       // +20 cover on every body zone (POWER:Silver Aura)
+  | "invisible"         // Defender auto-evades for one round (POWER:Untouchable)
+  | "feared_skip"       // Combatant skips next strike (POWER:Dread → on enemy)
+  | "numb_hand"         // Attacker auto-misses next strike (POWER:Numb Hand → on self)
+  | "hiccups"           // -3 effective agility, comic (POWER:Hiccups → on self)
+  | "tongue_tied"       // Next CAST fizzles (POWER:Tongue-Tied → on self)
+  | "marked_by_set";    // Next enemy strike +15 accuracy (POWER:Smelled By Set → on self)
 
 export interface ActiveStatusEffect {
   type: StatusEffectType;
   zone: BodyZone;
   severity: number;         // 1-3, affects magnitude
   turnsRemaining: number;   // -1 = until healed
-  bleedPerTurn?: number;    // For bleed-type effects
+  bleedPerTurn?: number;    // For bleed/poison-type effects (HP per tick)
 }
 
-/** Which injuries can occur per zone. */
+/** Which injuries can occur per zone. Poison is NOT included — it only
+ *  comes from poisoned weapons (weaponPoisonCharges) or NPC poisonOnHit,
+ *  never randomly from a clean blade. */
 export const ZONE_INJURY_TABLE: Record<BodyZone, StatusEffectType[]> = {
   head: ["concussion", "damaged_eye", "bleed"],
   neck: ["severed_artery", "crushed_windpipe", "bleed"],
@@ -97,6 +109,9 @@ export interface CombatantState {
   shieldMaxDurability: number;
   // Offense
   weaponId: string;
+  /** If non-null, the combatant dropped this weapon via critical fail and
+   *  will auto-retrieve it at the start of the next round. */
+  droppedWeaponId: string | null;
   weaponSkillValue: number;
   // Stats
   dexterity: number;
@@ -117,6 +132,11 @@ export interface StrikeResolution {
   injuryInflicted: StatusEffectType | null;
   injurySeverity: number;        // 0 if no injury, 1-3
   isCritical: boolean;
+  /** Critical fail — attacker fumbled. True when the attacker's strike
+   *  was evaded AND the crit-fail roll fired. */
+  isCriticalFail: boolean;
+  /** True if the critical fail caused the attacker to drop their weapon. */
+  weaponDropped: boolean;
   narrative: string;
 }
 

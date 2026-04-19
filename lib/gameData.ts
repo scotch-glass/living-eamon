@@ -36,6 +36,8 @@ export interface NPC {
   combatProfile?: NPCCombatProfile;
   /** Grok Imagine portrait prompt — used for character image generation. */
   portraitPrompt?: string;
+  /** Grok Imagine sprite prompt — full-body on WHITE background, for transparent PNG conversion. */
+  spritePrompt?: string;
   merchant?: {
     inventory: string[];     // Item ids for sale
     haggleModifier: number;  // -1 easy to haggle, +1 hard
@@ -49,6 +51,14 @@ export interface Item {
   description: string;
   /** Nonverbose — short phrase for inventory lists. */
   glance?: string;
+  /** One-line shop chip description (e.g. "Restores moderate health."). */
+  shortDescription?: string;
+  /** Thurian codex entry — short alchemical flavor for shop popup. */
+  alchemicalDescription?: string;
+  /** Grok Imagine prompt for the alchemical-book-page background image. */
+  bookPagePrompt?: string;
+  /** Grok Imagine prompt for the inventory icon (square, transparent PNG via rembg). */
+  iconPrompt?: string;
   type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key";
   value: number;             // Gold value
   stats?: {
@@ -65,6 +75,9 @@ export interface Item {
     // Shield stats
     shieldBlockChance?: number;  // 0-100
     shieldDurability?: number;
+    // Player-applied poison (Phase B reads these in APPLY POISON TO WEAPON)
+    poisonSeverity?: number;     // 1-3, maps to HP/turn on poisoned target
+    poisonCharges?: number;      // Number of strikes the coating lasts
   };
   isCarryable: boolean;
 }
@@ -143,6 +156,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Hokas Tokas",
     description: "A rotund, cheerful man whose braided beard is threaded with small silver bells that chime when he moves. His eyes are sharp despite his jovial manner — he's seen thirty years of adventurers come and go.",
     glance: "The innkeeper, silver bells in his beard.",
+    spritePrompt: "Full-body character illustration of a rotund, cheerful medieval innkeeper. Braided beard threaded with tiny silver bells. Warm eyes, ruddy cheeks, thick arms. Wearing a stained leather apron over a linen shirt, sleeves rolled up. Holding a polished tankard. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `The silver bells in Hokas's beard chime as he looks up. Something flickers behind his eyes — recognition, concern — but he smooths it over with professional ease.\n\n"Ah. There you are. Sit, sit. What'll it be — ale, information, or both? Both is the popular choice."`,
     personality: "Hokas is warm, generous, and deeply fond of adventurers — he was one himself, long ago. He knows every rumor in the city. He responds in Universal Common, always cheerful unless the hall has been damaged, in which case he is barely civil until repairs are paid for.",
     isHostile: false,
@@ -158,6 +172,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Sam Slicker",
     description: "A thin man in a patched leather coat who always seems to be examining something with one eye closed. His weapons are of questionable provenance but undeniable quality.",
     glance: "The arms dealer, one eye on a blade.",
+    spritePrompt: "Full-body character illustration of a thin, sharp-faced medieval arms dealer. Patched leather coat, one eye squinted closed, examining a dagger. Wiry build, sly half-smile. Belt with small tools and sheaths. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Sam glances up from a dagger he's been examining. His eyes narrow for half a second — he knows you, but he's not going to make a thing of it.\n\n"Back again." He spreads his hands over the velvet. "I've got things that need buying, and you look like someone who needs things. What's your pleasure?"`,
     personality: "Sam is a morally flexible weapons dealer who speaks in Universal Common with a slightly oily charm. He will haggle, he will hint at illegal goods if the player seems trustworthy, and he always knows more than he lets on. He never breaks character as a merchant.",
     isHostile: false,
@@ -174,6 +189,7 @@ export const NPCS: Record<string, NPC> = {
     description:
       "A weathered man with a grey beard and a prosthetic left hand carved from dark wood. He carries himself like someone who has survived things he refuses to discuss. His eyes miss nothing.",
     glance: "The old mercenary, nursing his ale in the corner.",
+    spritePrompt: "Full-body character illustration of a weathered old mercenary veteran. Grey beard, prosthetic left hand carved from dark wood, scarred face, watchful eyes. Wearing worn chainmail over leather, a heavy cloak. Holding a tankard in his good hand. Standing pose, leaning slightly, facing left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Aldric glances over as you enter. He takes in the whole situation — the gown, the empty hands, the look on your face — in about two seconds. Something heavy passes behind his eyes, but he doesn't say what.\n\n"Sit down," he says. Not unkindly. "You look like you could use some answers. Ask me anything. I've been here long enough."`,
     personality: `Aldric the Veteran is the most talkative and forthcoming NPC in the Guild Hall. He is a retired adventurer who genuinely cares whether the hero survives. He speaks more than anyone else in the room — freely, warmly, and at length. He is direct but never condescending. He buys the hero drinks without being asked. He knows the hero from before the amnesia and is quietly heartbroken about the memory loss but covers it with gruff practicality. He knows the rules, the secrets, the dangers, and the shortcuts. He speaks in plain Universal Common. He proactively offers information, advice, and his topic list whenever the player seems lost. He trains weapon skills in the courtyard for gold. He fondly calls the training dummy "Dufus." He is the most reliably useful person in the Main Hall.`,
     isHostile: false,
@@ -186,6 +202,7 @@ export const NPCS: Record<string, NPC> = {
     description:
       "A small, tightly built young woman with pale skin, honey-blonde hair that falls past her shoulders, narrow shoulders, a flat stomach, and long lean legs. She moves between the tables with a dancer's economy — no wasted step, no wasted motion. She is small and athletic, with the quiet confidence of someone who could outrun anything in this room.",
     glance: "A petite blonde barmaid, quick on her feet.",
+    spritePrompt: "Full-body character illustration of a very petite young barmaid, barely five feet tall. Pale skin, honey-blonde hair past shoulders, impish grin, tiny delicate frame. Carrying a tankard. Wearing a laced bodice tavern dress with flowing skirt. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Lira sets a tankard down without spilling a drop, already moving to the next table. She catches your eye on the way past and gives a quick half-smile — there and gone. "Need something?"`,
     personality:
       "Lira is impish, quick-witted, and full of bouncy energy — she teases the adventurers she serves, steals bites off their plates, and laughs too loud for her size. She is fearless in a way that has nothing to do with fighting. She warms up fast and says exactly what she's thinking, often before she's finished thinking it.",
@@ -201,6 +218,7 @@ export const NPCS: Record<string, NPC> = {
     description:
       "A full-figured woman with pale skin, golden-blonde curling hair that falls past her shoulders, and a wide, easy smile. She carries tankards on a tray balanced against one hip, moving with a comfortable, unhurried sway. Her bodice is laced snug and her skirts are practical but flattering. She is voluptuous and entirely at ease with it — the kind of woman who makes a room feel warmer just by being in it.",
     glance: "A golden-haired barmaid with a warm smile and a tray of tankards.",
+    spritePrompt: "Full-body character illustration of a voluptuous barmaid. Pale skin, golden-blonde curling hair past shoulders, generous hourglass figure, warm inviting smile. Carrying a tray of tankards against one hip. Wearing a laced bodice tavern dress with flowing skirt. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Mavia leans one hip against the table edge and sets down two tankards she wasn't asked to bring. "You look thirsty. And hungry. And like you haven't slept in a week." She smiles. "I can fix at least two of those."`,
     personality:
       "Mavia is warm, maternal, and flirtatious without being cheap. She genuinely cares about the people she serves and remembers their names and their stories. She is the emotional center of the Main Hall — everyone talks to Mavia. She speaks in warm, unhurried Universal Common.",
@@ -216,6 +234,7 @@ export const NPCS: Record<string, NPC> = {
     description:
       "A tall, slender woman with pale skin, ash-blonde hair that falls past her shoulders, narrow hips, and an elegant bearing. Her features are fine and angular. She carries herself with a quiet grace, unhurried and self-possessed. She has a gentle, knowing smile that suggests she finds the world privately amusing.",
     glance: "A tall, elegant barmaid moving through the room unhurried.",
+    spritePrompt: "Full-body character illustration of a tall slender barmaid. Pale skin, ash-blonde hair past shoulders, fine angular features, gentle knowing smile, elegant bearing. Very narrow hips, long lean silhouette. Wearing a laced bodice tavern dress with flowing skirt. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Seraine arrives at your table and sets a drink down with easy precision. She meets your eyes and smiles — a small, unhurried thing. "There you are. Let me know if you need anything else."`,
     personality:
       "Seraine is gentle, poised, and quietly warm. She speaks softly and what she says is thoughtful. She has an elegant bearing but it makes people feel at ease rather than judged. There is a mystery about her past but she wears it lightly. She speaks in warm, measured Universal Common.",
@@ -230,6 +249,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Brunt",
     description: "A dwarf of few words and maximum suspicion. His handshake could crush stone.",
     glance: "The dwarf banker, eyes on his ledger.",
+    spritePrompt: "Full-body character illustration of a heavyset dwarf banker. Short, broad, immensely strong hands. Bald head, thick eyebrows, suspicious expression. Wearing a leather vest over a sturdy shirt, a coin purse on his belt. Arms crossed. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `"Name. Account number. Business." He doesn't look up from his ledger.`,
     personality: "Brunt is a dwarf banker of absolute honesty and zero warmth. He handles all banking transactions — deposits, withdrawals, account creation. He speaks in clipped Universal Common. He cannot be bribed, charmed, or intimidated. He has seen it all.",
     isHostile: false,
@@ -241,6 +261,7 @@ export const NPCS: Record<string, NPC> = {
     name: "Pip",
     description: "A young guild apprentice assigned to armory duty as punishment for something they won't discuss.",
     glance: "The apprentice, polishing something that doesn't need it.",
+    spritePrompt: "Full-body character illustration of a young nervous guild apprentice. Teenage, gangly, slightly hunched. Holding a polishing cloth and an iron helmet. Wearing a plain tunic with a guild badge. Eager expression. Standing pose, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Pip sets down the helmet they were polishing and stands up straight. "Guild members get the standard rate. Non-members pay double. You look like a member. Probably."`,
     personality: "Pip is young, slightly nervous, and desperately wants to be an adventurer themselves. They will chatter about the available adventures and offer genuine if naive advice. Speaks in Universal Common with occasional modern slip-ups they immediately correct.",
     isHostile: false,
@@ -269,8 +290,9 @@ export const NPCS: Record<string, NPC> = {
     id: "zim_the_wizard",
     name: "Zim",
     description:
-      "A tall, gangly young man who gives the impression of a heron that learned to read. His robes are covered in ink stains, scorch marks, and what might be mustard. His eyes are bright and move constantly — tracking things you can't see. His fingers are long and never still, tapping, sketching invisible diagrams in the air, adjusting spectacles that keep sliding down his nose. He is simultaneously the most knowledgeable person you've met and the least capable of not saying the wrong thing.",
-    glance: "The gangly young wizard, nose in three books at once.",
+      "A tall, slim young man in a dark blue wizard's robe that falls to his ankles. The robe has many pockets — some bulging with vials, others with folded notes. A wide leather belt cinched at the waist holds pouches, a small mortar, and what appears to be a compass that points in no particular direction. His spectacles are slightly crooked. His eyes are bright and attentive — the eyes of someone who genuinely wants to help and knows exactly how. He looks young and healthy, with the focused energy of a person who has read every book in this room and remembers all of them.",
+    glance: "The young wizard in dark blue robes, bright-eyed and eager.",
+    spritePrompt: "Full-body character illustration of a young male wizard, tall and slim but healthy-looking. Wearing a dark blue wizard's robe that falls to his ankles, with many small pockets visible. A wide brown leather utility belt at the waist with pouches and small tools. Slightly crooked spectacles. Bright intelligent eyes, friendly helpful expression, slight smile. Holding an open book in one hand. Clean-shaven, short brown hair. Standing upright, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: `Zim looks up from his books, adjusts his spectacles, and opens his mouth. Then closes it. Then opens it again.\n\n"Oh," he says. "Oh, you're — yes. Hello. Welcome to Pots and Bobbles. Potions, scrolls, identification services, magical training — I do all of it. Well, most of it. The advanced summoning is on hold because of the incident. Never mind the incident."\n\nHe hops off his stool. "What do you need?"`,
     personality:
       `Zim is a young wizard who runs Pots & Bobbles — the Guild's mage school and magical supply shop. He is brilliant, awkward, and pathologically incapable of filtering his thoughts before they exit his mouth. He has autistic hyperfocus on magical topics and will lecture at length about anything arcane without noticing whether anyone is listening. He is overly helpful to the point of being exhausting — he genuinely wants the hero to succeed and will give unsolicited advice, warnings, and tangential trivia. He has high-energy ADD — he starts sentences, abandons them, picks up new ones, circles back. He speaks in rapid Universal Common with occasional technical terms he forgets to explain. He recognizes the hero from before the amnesia and feels terrible about the memory loss. He crosses himself (shoulder-shoulder, forehead, heart, kiss) when mentioning dark forces. He sells potions, buys herbs and curiosities, identifies magical items for a fee, and trains magic for gold. He warns about cursed items and corrupted artifacts. He refers to adventuring as "out in the field."`,
@@ -295,11 +317,13 @@ export const NPCS: Record<string, NPC> = {
     description:
       "A man-shaped wooden post wrapped in old rope and stuffed burlap. Generations of sword cuts have chipped away at its torso. Someone has carved the name DUFUS into its forehead in rough, deep letters — the oldest mark on it. Below that, a crude charcoal face has been drawn and redrawn so many times the features have blurred into a permanent expression of resigned disappointment. Dried straw leaks from a gash where the neck meets the shoulder. It has been repaired so many times that very little of the original wood remains.",
     glance: "Dufus the training dummy. DUFUS carved into its forehead.",
+    spritePrompt: "Full-body illustration of a humanoid medieval training dummy. A man-shaped wooden post wrapped tightly in weathered, fraying rope and stuffed grimy burlap, sword-chipped torso leaking dried straw at a torn gash where the neck meets the shoulder. A round burlap-bag head with the name DUFUS carved into its wooden forehead in deep, crude letters; below that a re-drawn charcoal face with a permanent resigned-disappointed frown — eyes are smudged Xs. Stout post legs end in a heavy wooden cross-base. No arms, no weapon, no armor. Painted in the style of Frank Frazetta. Full body from head to base, entire figure must be visible including the wooden cross-base, base at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
     greeting: "Dufus says nothing. He has heard it all before.",
     personality: "It is a wooden post named Dufus. It does not speak. It does not move. It takes the hit.",
     isHostile: false,
     isTrainingDummy: true,
-    stats: { hp: 50, armor: 0, damage: "0" },
+    // TEMP: 150 HP for blood/gore testing (was 50)
+    stats: { hp: 150, armor: 0, damage: "0" },
     combatProfile: {
       agility: 0,
       weaponSkill: 0,
@@ -315,6 +339,25 @@ export const NPCS: Record<string, NPC> = {
   },
 };
 
+// ============================================================
+// HERO SPRITES — for the player character. Looked up by lowercase
+// `character_name`. Each entry follows the NPC `spritePrompt` rules
+// (full body, white background, no shadow, Frazetta painted style)
+// so the existing /api/npc-image cutout pipeline can be reused.
+// ============================================================
+
+export interface HeroSprite {
+  id: string;
+  spritePrompt: string;
+}
+
+export const HEROES: Record<string, HeroSprite> = {
+  george: {
+    id: "george",
+    spritePrompt: "Full-body character illustration of a young medieval Hyborian-Age hero named George. Lean, wiry build, mid-twenties, dark tousled hair, alert eyes, faintly amnesiac thousand-yard stare. Wearing a plain undyed linen shirt, simple wool trousers, a plain leather belt with a dull buckle, scuffed nondescript leather shoes. Holding a polished katana — curved single-edged blade, eastern-style hilt — held casually at his side, point down. No armor, no helmet, no cloak. Standing pose, weight slightly back, facing slightly left. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.",
+  },
+};
+
 export const PRIEST_SILENCE_RESPONSES: string[] = [
   "The priest raises a single finger to their lips. The silence continues.",
   "The priest turns toward you with calm eyes and says nothing. The gesture is not unkind.",
@@ -327,6 +370,7 @@ export const PRIEST_SILENCE_RESPONSES: string[] = [
   "They are aware of you. They are not troubled by you. They simply do not speak.",
   "The priest places a hand briefly over their heart and looks at you. That is all.",
 ];
+
 
 export const REBIRTH_NARRATIVES: string[] = [
   "Dark. Then cold. Then the ceiling of the Church of Perpetual Life, which is white, and a priest who is watching you without expression. You are alive. You remember everything.",
@@ -411,7 +455,7 @@ export const ALDRIC_OPENING_LINES: string[] = [
 
 export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
   survival: [
-    `"First things first," Aldric says.\n\n"If you're wearing that gray robe — " he gestures at the south wall " — charity barrel. Take the clothes. The robe tears off, that's normal. Goes in the gown barrel next to it."\n\n"Second: weapon. If you're empty-handed, say __CMD:BEG SAM__ — he'll give you a rusty sword — or __CMD:BEG HOKAS__ for a butcher knife. Either kills."\n\n"Third: __CMD:GO DOWN__ to the vault. Talk to Brunt. __CMD:DEPOSIT__ every coin you don't want to lose. What's in your pockets dies with you. What's in the vault doesn't."\n\n"Fourth: notice board. __CMD:GO EAST__ from here. Three contracts posted — start with the Cave."\n\nHe taps the table. "Also — there's a row of iron chests along the wall. Your key opens one of them. __CMD:USE KEY__. Might be something useful inside."\n\nAnything else? __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__ __CMD:TELL Aldric training__`,
+    `"First things first," Aldric says.\n\n"If you're wearing that gray robe — " he gestures at the south wall " — charity barrel. Take the clothes. The robe tears off, that's normal. Goes in the gown barrel next to it."\n\n"Second: weapon. If you're empty-handed, say __CMD:BEG SAM__ — he'll give you a rusty sword — or __CMD:BEG HOKAS__ for a butcher knife. Either kills."\n\n"Third: __CMD:GO DOWN__ to the bank. Talk to Brunt. __CMD:DEPOSIT__ every coin you don't want to lose. What's in your pockets dies with you. What's in the bank doesn't."\n\n"Fourth: notice board. __CMD:GO EAST__ from here. Three contracts posted — start with the Cave."\n\nHe taps the table. "Also — there's a row of iron chests along the wall. Your key opens one of them. __CMD:USE KEY__. Might be something useful inside."\n\nAnything else? __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__ __CMD:TELL Aldric training__`,
   ],
   combat: [
     `"Fighting's changed since you forgot," Aldric says. He leans forward.\n\n"You start a fight with __CMD:ATTACK DUFUS__ — or whatever you're fighting. That locks you in. From there, you pick a body part to hit every round:"\n\n__CMD:STRIKE TORSO__ __CMD:STRIKE LIMBS__ __CMD:STRIKE HEAD__ __CMD:STRIKE NECK__\n\n"Torso's the easy shot — big target, hard to miss. Limbs are a little harder. Head is genuinely difficult. Neck?" He draws a finger across his throat. "Double damage. But you'll miss more than you hit unless you're very good or very lucky."\n\n"Every round: you pick a zone, they pick a zone. Initiative decides who swings first. Three things can stop your strike — they dodge it, their shield catches it, or their armor turns it. If it gets through all three, it lands."\n\nHe flexes his wooden hand. "Injuries happen. Head shots cause concussions. Neck hits sever arteries. Break a man's leg and he can't flee. Break his arm and he can't swing straight."\n\n"If it goes badly: __CMD:FLEE__. No shame in living."\n\nMore? __CMD:TELL Aldric training__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric survival__`,
@@ -426,7 +470,7 @@ export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
     `"Go east from this hall to the notice-board room," Aldric says. "__CMD:GO EAST__. Three contracts on Guild parchment:"\n\n"The Beginner's Cave — goblin infestation north of the city. Novice difficulty. Start here."\n\n"The Thieves Guild — social infiltration. Moderate. Not for the clumsy."\n\n"The Haunted Manor — if you've said goodbye to everyone you love."\n\n"__CMD:READ__ the board in that room for the full postings. When you're ready, the posting tells you the exact command — ENTER THE BEGINNER'S CAVE, and so on. Spell it like the posting says."\n\nHe leans in. "Start with the Cave unless you enjoy being a cautionary tale."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__`,
   ],
   world: [
-    `"You're in the Guild of Free Adventurers," Aldric says. "This is where everything starts and everything returns to."\n\n"Main Hall — company, drink, me. __CMD:GO EAST__ for the notice board. __CMD:GO NORTH__ for the armory — Pip's got basic gear. __CMD:GO DOWN__ for the vault — Brunt banks your gold. __CMD:GO SOUTH__ for the courtyard — fresh air, Sam's weapon shop to the north of it, and Dufus the training dummy."\n\n"The Church of Perpetual Life is west from the courtyard. You came from there. You'll go back. It brings you back when you die — stripped of everything except what's in the vault."\n\n"Hokas runs the bar here. Buy food from him — it heals. Treat him well; he remembers."\n\n"The city outside Ostavar is a conversation for another day."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__`,
+    `"You're in the Guild of Free Adventurers," Aldric says. "This is where everything starts and everything returns to."\n\n"Main Hall — company, drink, me. __CMD:GO EAST__ for the notice board. __CMD:GO NORTH__ for the armory — Pip's got basic gear. __CMD:GO DOWN__ for the bank — Brunt banks your gold. __CMD:GO SOUTH__ for the courtyard — fresh air, Sam's weapon shop to the north of it, and Dufus the training dummy."\n\n"The Church of Perpetual Life is west from the courtyard. You came from there. You'll go back. It brings you back when you die — stripped of everything except what's in the bank."\n\n"Hokas runs the bar here. Buy food from him — it heals. Treat him well; he remembers."\n\n"The city outside Ostavar is a conversation for another day."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__`,
   ],
   magic: [
     `"Guild-sanctioned magic is __CMD:CAST__ — BLAST, HEAL, LIGHT, SPEED — once you know them," Aldric says. "That's the safe, documented kind."\n\n"PRAY reaches gods whose names you earn in play. Don't embarrass yourself with empty invocations — learn a name first, then pray to it."\n\n"What you must not shout about in here is INVOKE." His voice drops. "Occult. Rare. Not my business in public."\n\nHe spreads his hands. "Stay inside CAST until you know what you're doing."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric secrets__ __CMD:TELL Aldric world__`,
@@ -442,6 +486,139 @@ export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
 // ============================================================
 // ITEMS
 // ============================================================
+
+/**
+ * Build a Grok Imagine prompt for a square inventory icon.
+ * All icons share the same template so the inventory grid reads
+ * cohesively. The `subject` should be a concrete physical
+ * description of the OBJECT the player is holding — NEVER the
+ * lore name (e.g. "small wooden cup of murky brown brew with a
+ * sprig of black willow bark beside it" — NOT "Nimble Toes",
+ * because Grok will draw feet).
+ *
+ * Used by the icon pregen pipeline. Items can override per-item
+ * via the `ITEM_ICON_PROMPTS` map below; otherwise we fall back
+ * to `buildItemIconPrompt(item.name)` (which works for items
+ * whose name IS already a concrete object, e.g. "Short Sword").
+ */
+export function buildItemIconPrompt(subject: string): string {
+  return (
+    `A single ${subject}, centered, painted in the style of a Hyborian-Age ` +
+    `inventory illustration — Frazetta/Brom medieval painted realism, weathered ` +
+    `but iconic, slightly desaturated colors. Pure clean white background, no ` +
+    `shadow, no ground, no border, no text, no labels, no other objects. Square ` +
+    `composition, the subject fills 70% of the frame, viewed from a slightly ` +
+    `elevated three-quarter angle. ` +
+    `If the subject is a long weapon (sword, axe, polearm, spear, staff, bow, ` +
+    `crossbow), it should lie diagonally from LOWER-LEFT to UPPER-RIGHT — ` +
+    `grip/hilt/handle at the lower-left, blade-tip/head/business-end at the ` +
+    `upper-right.`
+  );
+}
+
+/**
+ * Per-item icon subject overrides. Each entry is the SUBJECT
+ * passed to buildItemIconPrompt — describes the physical object,
+ * not the lore name. Items not in this map fall back to their
+ * `name` (which works for items like "Short Sword" or "Healing
+ * Potion" where the name is already a concrete object).
+ *
+ * Add a new entry whenever an item's name doesn't visually
+ * describe the item itself (renamed potions, lore-named loot,
+ * etc.) or when the default rendering came out wrong.
+ */
+export const ITEM_ICON_PROMPTS: Record<string, string> = {
+  // ── Weapons ────────────────────────────────────────────────
+  // Most weapon names ARE the object — use defaults. Override
+  // only where the name is ambiguous or the default came out wrong.
+  battle_axe: "heavy two-handed iron battle axe with a long wooden haft, lying diagonally with the wooden grip at the lower-left and the broad iron axe-head at the upper-right",
+  scimitar: "curved single-edged scimitar with a leather-wrapped grip, lying diagonally with the hilt at the lower-left and the curved blade-tip at the upper-right",
+  rusty_shortsword: "rusty pitted iron short sword with a weathered leather-wrapped grip and a notched dull edge",
+  butcher_knife: "heavy-bladed kitchen butcher knife, single-edged, wooden handle, slightly stained blade",
+  black_staff: "dark length of polished black hardwood, six feet long, slight taper, banded with a single dull-iron ring near one end",
+  gnarled_staff: "twisted gnarled hardwood quarterstaff, knotted and bark-stripped, six feet long",
+  castoff_short_sword: "old worn short sword, pitted blade, loose grip wrapping, bent crossguard",
+  quarter_staff: "smooth straight hardwood quarterstaff, six feet long, banded at both ends with iron rings",
+  pitchfork: "rusted three-tined iron pitchfork on a long wooden haft",
+  bow: "simple curved hunting longbow of yew with a hempen string",
+  crossbow: "heavy wooden crossbow with iron prod and a hempen string, mounted on a polished stock",
+  repeating_crossbow: "compact wooden repeating crossbow with a vertical magazine box on top of the stock",
+  spear: "iron-tipped wooden spear, leaf-shaped blade, six feet long",
+  war_fork: "long-hafted weapon with twin curved iron prongs at the head, pole-arm length",
+
+  // ── Clothing — charity barrel + Sam outfit + Hokas pity gift ─
+  gray_robe: "thin pale-gray cloth robe with no back, hanging limp and shapeless, plain shoulders",
+  moth_eaten_woolen_shirt: "dingy gray woolen shirt riddled with small moth-holes, folded loosely",
+  threadbare_linen_shirt: "thin pale linen shirt worn nearly transparent in places, folded loosely",
+  stained_canvas_tunic: "heavy off-white canvas tunic with brown and dark stains down the front, drawstring neck",
+  homespun_pants: "rough undyed linen trousers, plain and short-cut, folded",
+  patched_wool_breeches: "brown wool breeches covered in mismatched patches of darker cloth, folded",
+  rough_canvas_trousers: "stiff pale canvas trousers, slightly creased, folded",
+  cloth_shoes: "pair of soft pale cloth slippers with thin leather soles",
+  worn_leather_sandals: "pair of well-worn brown leather sandals with twine-mended straps",
+  mismatched_boots: "a pair of two clearly different leather boots, one taller than the other, different shades of brown",
+  worn_leather_belt: "creased brown leather belt with a plain dull bronze buckle",
+  fraying_rope_belt: "length of brown hempen rope tied as a belt, with knotted frayed ends",
+  cracked_hide_strap: "wide strip of dark hide leather, cracked and dry, with a simple iron buckle",
+  plain_shirt: "coarse undyed linen shirt, plain and unmarked, folded",
+  plain_trousers: "simple gray-brown wool trousers, plain and undecorated, folded",
+  plain_belt: "plain narrow brown leather belt with a small dull iron buckle",
+  plain_shoes: "pair of plain brown leather shoes, slightly scuffed, low-cut",
+  ragged_shirt: "threadbare pale linen shirt with three visible mended patches, folded",
+  ragged_trousers: "faded gray-brown wool trousers worn thin at the knees, folded",
+  ragged_belt: "cracked dark leather belt with a tarnished bronze buckle",
+  ragged_shoes: "pair of soft-soled tan leather shoes, well-worn",
+
+  // ── Armor (zone-tagged) ────────────────────────────────────
+  leather_armor: "studded brown leather chest cuirass with shoulder straps and a buckle at the side, lacing visible",
+  chain_mail: "interlocking iron chain-mail hauberk torso, draped, slight weathering",
+  buckler: "small round metal-rimmed wooden buckler shield, central iron boss, leather grip strap on the back",
+  leather_cap: "simple brown leather skullcap with a chinstrap, low-profile, plain",
+  iron_helm: "open-faced iron skull-helm with a riveted brow band and a leather chinstrap",
+  leather_gorget: "high stiff brown leather gorget collar that wraps the throat, with side buckles",
+  chain_coif: "iron chain-mail coif (head and neck covering), draped on a wooden form",
+  leather_greaves: "pair of brown leather greaves shaped to cover shins and knees, with side lacing",
+  chain_greaves: "pair of iron chain-mail leg greaves, draped",
+  plate_helm: "polished steel close-helm with cheek-plates and a slim eye-slit, full plate construction",
+  plate_gorget: "polished steel articulated gorget collar with overlapping plates and rivets",
+  plate_cuirass: "polished steel breastplate cuirass with shoulder pauldrons, full plate construction",
+  plate_greaves: "pair of polished steel articulated leg greaves with knee cops and rivets",
+
+  // ── Consumables / Potions / Cures ──────────────────────────
+  healing_potion: "small glass vial of deep red liquid with a cork stopper, slightly luminous",
+  greater_healing_potion: "tall slender glass flask of brilliant scarlet liquid with a wax-sealed cork, faintly pulsing",
+  mana_potion: "crystal vial of iridescent blue liquid with a silver cap, faint glow",
+  stamina_brew: "small wooden cup of murky brown brew with a sprig of dark willow bark beside it",
+  fatigue_brew: "tall narrow glass vial of thick dark green draught with a wax-sealed cork",
+  antidote: "small glass vial of chalky white suspension with a cork stopper",
+  strong_antidote: "small glass vial of vivid yellow potion with a cork stopper, slightly cloudy",
+  bandage: "a roll of clean white linen bandage, neatly wrapped",
+  tourniquet: "a thick brown leather strap with a small iron windlass rod attached, coiled neatly",
+  unreliable_poison: "small dark glass bottle of yellowish liquid with a black cork, dim and slightly murky",
+  strong_poison: "small black glass bottle with a wax-sealed cork, the wax dark crimson, slightly sinister",
+
+  // ── Reagents (sold to Zim) ─────────────────────────────────
+  mandrake_root: "gnarled forked mandrake root shaped uncomfortably like a small screaming human figure, dirt clinging to it",
+  black_pearl: "single large lustrous black pearl, slightly iridescent, resting on its side",
+  nightshade: "small sprig of dark green nightshade with a cluster of black-purple berries",
+  ginseng: "forked tan ginseng root with fine wispy rootlets, knobbled and aged",
+  blood_moss: "small clump of crimson creeping moss, vivid red and slightly damp",
+  spider_silk: "loose skein of pale silvery spider silk, glossy threads gathered in a small bundle",
+  sulfurous_ash: "small heap of grey-yellow sulfurous ash piled loose, slightly crystalline",
+  mysterious_bauble: "a small unidentified ornate metal trinket, vaguely amulet-shaped, dark patina, intricate filigree",
+
+  // ── Misc consumables / treasure / keys ─────────────────────
+  torch: "wooden torch with a pitch-soaked head wrapped in cloth, unlit",
+  rope: "coiled length of thick brown hempen rope, tightly wound",
+  rations: "small bundle of dried hard travel rations wrapped in waxed cloth, tied with twine",
+  members_note: "small folded scrap of parchment with a broken wax seal",
+  ale: "wooden tankard of dark frothy ale",
+  hearty_meal: "wooden trencher with a thick stew, a hunk of dark bread, and a wedge of cheese",
+  rumor_token: "small bronze guild token stamped with an unreadable sigil",
+  notice_board_key: "small brass key with a notched bit and a leather thong loop",
+  goblin_ear: "severed pointed grey-green goblin ear with traces of dried blood",
+  cave_treasure: "small pile of mixed gold coins and a single gem, suggesting a modest hoard",
+};
 
 export const ITEMS: Record<string, Item> = {
   short_sword: {
@@ -680,7 +857,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A thin gray robe with no back. Standard issue for the recently reborn. The draft it provides is considerable. The dignity it provides is not.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   moth_eaten_woolen_shirt: {
@@ -689,7 +866,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A grey woolen shirt with several moth holes that let in more air than is comfortable. It smells of cedar and long storage.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   threadbare_linen_shirt: {
@@ -697,7 +874,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Threadbare Linen Shirt",
     description: "A linen shirt worn so thin in places you can read through it. Still, it covers.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   stained_canvas_tunic: {
@@ -706,7 +883,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A heavy canvas tunic with stains of uncertain origin and a drawstring that has been retied so many times the knot is now structural.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   homespun_pants: {
@@ -714,7 +891,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Homespun Pants",
     description: "Rough homespun trousers, undyed, slightly too short. Functional.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   patched_wool_breeches: {
@@ -722,7 +899,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Patched Wool Breeches",
     description: "Wool breeches with patches on the patches. Someone put real effort into keeping these alive.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   rough_canvas_trousers: {
@@ -730,7 +907,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Rough Canvas Trousers",
     description: "Canvas trousers stiff enough to stand up on their own. They will soften eventually. Probably.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   cloth_shoes: {
@@ -739,7 +916,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "Soft-soled cloth shoes, the kind worn by people who are mostly indoors. Outdoors they are optimistic.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   worn_leather_sandals: {
@@ -748,7 +925,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "Leather sandals that have walked a long way and show it. The straps have been mended with twine.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   mismatched_boots: {
@@ -757,7 +934,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "Two boots. They are both boots. That is where the agreement ends — different heights, different leather, different opinions about your left foot.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   worn_leather_belt: {
@@ -765,7 +942,7 @@ export const ITEMS: Record<string, Item> = {
     name: "Worn Leather Belt",
     description: "A leather belt creased in three places from years of use. It works.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   fraying_rope_belt: {
@@ -774,7 +951,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A length of rope repurposed as a belt. The fraying ends have been knotted to slow the entropy.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   cracked_hide_strap: {
@@ -783,7 +960,7 @@ export const ITEMS: Record<string, Item> = {
     description:
       "A wide strap of hide, cracked from drying out too many times. Still holds trousers up, which is the job.",
     type: "clothing",
-    value: 0,
+    value: 1,
     isCarryable: true,
   },
   plain_shirt: {
@@ -992,6 +1169,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Healing Potion",
     description: "A small glass vial of deep red liquid. It tastes like copper and warmth. Restores a moderate amount of health.",
     glance: "A red vial. Heals wounds.",
+    shortDescription: "Restores moderate health.",
+    alchemicalDescription: "Of the simplest healing tincture: distil one part mandrake root with three parts blood-moss in a copper alembic at moonrise. The flesh remembers what it was, and so returns. Thurian surgeons carried it in war.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a small glass vial of deep red liquid, a curling mandrake root, and a clump of dark blood-moss. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a coiled serpent for Set, a small purple-tower silhouette of fallen Valusia, a heart-shaped sigil. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia, rust, and oxblood tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 25,
     stats: { healAmount: 15 },
@@ -1002,6 +1182,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Greater Healing Potion",
     description: "A larger flask of brilliant scarlet liquid that seems to pulse faintly. Restores a significant amount of health.",
     glance: "A pulsing scarlet flask. Serious healing.",
+    shortDescription: "Restores significant health.",
+    alchemicalDescription: "The greater draught uses a black pearl ground to powder and the fresh heart-blood beast. It pulses in the vial. The essence of life. Thurian war-priests brewed it for reviving the fallen mid-battle.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a tall scarlet flask pulsing with light, a small black pearl, and a copper alembic. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a heart-shaped ruby sigil from the old Thurian rites, a beast-skull, war-priest glyphs, a small purple-tower silhouette of fallen Valusia. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia, deep crimson, and oxblood tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 60,
     stats: { healAmount: 35 },
@@ -1012,24 +1195,33 @@ export const ITEMS: Record<string, Item> = {
     name: "Mana Potion",
     description: "An iridescent blue liquid in a crystal vial. It hums when you hold it. Restores magical energy.",
     glance: "A humming blue vial. Restores mana.",
+    shortDescription: "Restores magical energy.",
+    alchemicalDescription: "The blue draught is distilled lightning, caught in a crystal vessel under a storm and tempered with seven drops of moon-wine. To drink it is to remember, briefly, what the soul knew before it was bound to flesh. The Thurian mages drank it without ceremony.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a crystal vial of iridescent blue liquid, a stylized lightning bolt, and a crescent moon. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a third-eye glyph, a coiled serpent for Set, fragments of unreadable Words of Power. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and rust tones with hints of deep indigo. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 30,
     isCarryable: true,
   },
   stamina_brew: {
     id: "stamina_brew",
-    name: "Stamina Brew",
-    description: "A murky brown liquid that smells like wet bark and tastes worse. Instantly restores stamina and clears fatigue.",
-    glance: "A foul brown brew. Restores stamina.",
+    name: "Nimble Toes",
+    description: "A murky brown liquid that smells like wet bark and tastes worse. Quickens the feet and sharpens reflexes.",
+    glance: "A foul brown brew. Quickens the feet.",
+    shortDescription: "Boosts dexterity briefly.",
+    alchemicalDescription: "Bark of black willow, ginseng root, and the marrow of a running beast — simmered to a boil and strained through linen. The body forgets it is tired. The Thurian legions drank it ladled from giant cauldrons before battle.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a wooden cup of brown liquid, a strip of black willow bark, and a forked ginseng root. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a running deer, a marching legion-spear, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and earthy brown tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 20,
     isCarryable: true,
   },
   fatigue_brew: {
     id: "fatigue_brew",
-    name: "Fatigue Recovery Brew",
-    description: "A thick green draught. One swallow and the exhaustion lifts like a curtain. Expensive because the ingredients are rare.",
-    glance: "A thick green draught. Clears deep exhaustion.",
+    name: "Silent Shadow",
+    description: "A thick green draught. One swallow and the step turns soundless, the hand unerring.",
+    glance: "A thick green draught. Greater quickness.",
+    shortDescription: "Boosts dexterity significantly.",
+    alchemicalDescription: "When Nimble Toes fails, this remains. The greater draught requires moon-grown moss, the breath of a sleeping mountain, and ginseng aged seven winters. Thurian assassins carried a single vial each, for feet like wings.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a tall vial of thick green draught, a tuft of pale moon-grown moss, and a withered ginseng root. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a sleeping mountain silhouette, a crescent moon, a hunting owl. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and verdant green tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 40,
     isCarryable: true,
@@ -1039,6 +1231,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Antidote",
     description: "A chalky white suspension that neutralizes mild poisons. Tastes like crushed limestone and regret.",
     glance: "A white vial. Cures mild poisoning.",
+    shortDescription: "Cures mild poisoning.",
+    alchemicalDescription: "Powdered limestone, ash of nightshade burned to nothing, and milk of the white spider. The poison that wishes to remain in the blood is reasoned with, then escorted out. Thurian banquet-tasters drank it before every meal.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a small vial of chalky white liquid, a piece of limestone, and a stylized white spider. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a balance scale, a coiled viper turned away, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and bone-white tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 10,
     isCarryable: true,
@@ -1048,6 +1243,9 @@ export const ITEMS: Record<string, Item> = {
     name: "Strong Antidote",
     description: "A vivid yellow potion that can neutralize even serious toxins. Burns going down.",
     glance: "A yellow vial. Cures serious poisoning.",
+    shortDescription: "Cures serious poisoning.",
+    alchemicalDescription: "Saffron of the southern hills, distilled in a copper still under sunlight, with one drop of the venom it must oppose. The poison teaches the body its own shape, and the body refuses it. Drink steadily; it burns the throat clean.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a vial of brilliant yellow potion, a bundle of saffron threads, and a copper distillation still. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a sun-disc, a saffron crocus, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and golden-yellow tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 30,
     isCarryable: true,
@@ -1057,8 +1255,11 @@ export const ITEMS: Record<string, Item> = {
     name: "Bandage",
     description: "Clean linen strips. Stops light bleeding when applied to a wound.",
     glance: "Clean linen. Stops bleeding.",
+    shortDescription: "Stops light bleeding.",
+    alchemicalDescription: "Linen woven on a birch frame, washed seven times in salt water. Pressed firmly to a wound, it remembers the shape of the body and refuses the blood passage. Thurian surgeons carried bundles sewn into their cloaks.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a roll of clean linen bandage neatly folded, a small wooden cross of birch, and a salt crystal. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, an open healer's hand, a knotted cord, an Aquilonian rosette. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and pale linen tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
-    value: 5,
+    value: 1,
     isCarryable: true,
   },
   tourniquet: {
@@ -1066,26 +1267,37 @@ export const ITEMS: Record<string, Item> = {
     name: "Tourniquet",
     description: "A thick leather strap with a tightening mechanism. Stops even severe bleeding immediately. Painful but effective.",
     glance: "A leather strap. Stops severe bleeding.",
+    shortDescription: "Stops severe bleeding immediately.",
+    alchemicalDescription: "A strap of cured ox-leather with a small iron windlass. Tighten above the wound and turn until the blood remembers to stay within. It hurts. It works. Thurian field-surgeons fitted them above severed limbs without ceremony.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a leather tourniquet strap with a small iron windlass rod, coiled neatly. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, an iron knot-sigil, a war-surgeon's glyph, a small purple-tower silhouette of fallen Valusia. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and dark leather tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
-    value: 15,
+    value: 2,
     isCarryable: true,
   },
   unreliable_poison: {
     id: "unreliable_poison",
-    name: "Unreliable Poison",
-    description: "A small bottle of yellowish liquid. Apply to a blade for weak poison damage over 3 rounds. The 'unreliable' part is honest.",
+    name: "Painful Poison",
+    description: "A small bottle of yellowish liquid. Apply to a blade for weak poison damage over 3 rounds. Lives up to the name.",
     glance: "A weak blade poison. 3 charges.",
+    shortDescription: "Weak blade poison. 3 charges.",
+    alchemicalDescription: "Crushed nightshade berries, fermented spider silk, a pinch of grave-soil. Smear it on a blade's edge and pray the cut goes deep. Thurian assassins called it 'the wager' — sometimes it killed, sometimes nothing at all.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a small dark bottle of yellowish poison, a sprig of nightshade berries, and a curl of spider silk. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a pair of dice for the assassin's wager, a stylized spider, a coiled serpent for Set. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and sickly yellow-green tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
-    value: 20,
+    value: 10,
+    stats: { poisonSeverity: 1, poisonCharges: 3 },
     isCarryable: true,
   },
   strong_poison: {
     id: "strong_poison",
-    name: "Strong Homebrew Poison",
+    name: "Quick Death",
     description: "A dark bottle with a cork sealed in wax. Serious poison damage over 3 rounds. Don't get it on your hands.",
     glance: "A potent blade poison. 3 charges.",
+    shortDescription: "Potent blade poison. 3 charges.",
+    alchemicalDescription: "A patient distillation of nightshade, viper-marrow, and resin from one black tree in one valley. Three coats and the wound becomes a slow argument the body cannot win. Thurian court-poisoners signed their work with this.",
+    bookPagePrompt: "Aged blood-stained parchment manuscript page floating on a PURE MATTE BLACK background, 4:3 aspect ratio, frayed worn edges visible against the black void surrounding the page on all sides. In the UPPER-LEFT QUADRANT only, a hand-drawn medieval ink sketch of a black bottle with wax-sealed cork, a coiled viper, and a drop of black resin. An illuminated manuscript border runs along the TOP edge and LEFT edge of the page only — twisting vines, angular Hyborian runes, a black tree, a court-poisoner's signet ring, a small purple-tower silhouette of fallen Valusia. The RIGHT TWO-THIRDS and the BOTTOM HALF of the page is intentionally CLEAN BLANK PARCHMENT — no artwork, no marginalia, no symbols there — reserved for a scribe's writing. Sepia and deep black-purple tones. No modern text, no English letters, no Latin script, no Greek letters — only decorative sigils. Style of an illuminated medieval monk's manuscript page crossed with a Hyborian-Age alchemical codex.",
     type: "consumable",
     value: 50,
+    stats: { poisonSeverity: 3, poisonCharges: 3 },
     isCarryable: true,
   },
 
@@ -1273,6 +1485,19 @@ export const ITEMS: Record<string, Item> = {
     type: "armor",
     value: 1250,
     stats: { zoneSlot: "limbs", zoneCover: 80, zoneDurability: 60, dexPenalty: 10, mountedDexPenalty: 3, customFit: true },
+    isCarryable: true,
+  },
+
+  // ── Materials / Crafting ──
+
+  wood_shavings: {
+    id: "wood_shavings",
+    name: "Wood Shavings",
+    description: "Dry curls of wood, light as breath. Five handfuls will start a campfire anywhere there is ground to burn on.",
+    glance: "A handful of dry wood shavings.",
+    shortDescription: "Campfire fuel. 5 required.",
+    type: "treasure",
+    value: 1,
     isCarryable: true,
   },
 };

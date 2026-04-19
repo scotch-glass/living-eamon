@@ -68,8 +68,8 @@ async function main() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      // Use "grok-imagine-image-pro" for higher quality (~$0.07 per image)
-      model: "grok-imagine-image",
+      // Project mandate: always use grok-imagine-image-pro. Never downgrade.
+      model: "grok-imagine-image-pro",
       prompt: PROMPT,
       n: 1,
       response_format: "b64_json",

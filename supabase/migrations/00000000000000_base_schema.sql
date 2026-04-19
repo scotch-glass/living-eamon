@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS scene_image_cache (
   room_state text DEFAULT 'normal',
   tone text,
   image_url text NOT NULL,
-  prompt text,
+  prompt_used text,
   approved boolean DEFAULT false,
   deleted_at timestamptz,
   created_at timestamptz DEFAULT now()
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS scene_image_cache (
 CREATE TABLE IF NOT EXISTS grok_imagine_error_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   room_id text,
-  prompt text,
+  prompt_used text,
   error_message text,
   created_at timestamptz DEFAULT now()
 );

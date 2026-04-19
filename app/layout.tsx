@@ -25,8 +25,37 @@ const cedarville = Cedarville_Cursive({
 });
 
 export const metadata: Metadata = {
-  title: "Living Eamon — One Hero. Infinite Realms.",
-  description: "An AI-driven persistent text adventure in the tradition of Robert E. Howard's sword & sorcery and the classic Eamon system. Claim your legend.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://living-eamon.vercel.app"
+  ),
+  title: "Living Eamon — One Hero. A Thousand Realms.",
+  description:
+    "An AI-driven persistent text adventure. Inspired by Robert E. Howard's tales of sword and sorcery.",
+  openGraph: {
+    title: "Living Eamon",
+    description:
+      "One Hero. A thousand realms. Inspired by Robert E. Howard's tales of sword and sorcery.",
+    url: "/",
+    siteName: "Living Eamon",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Living Eamon — a barbarian, a rescued woman, Persian warriors, a lich, and a distant flying saucer under a stormy sky",
+        type: "image/jpeg",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Living Eamon — One Hero. A Thousand Realms.",
+    description:
+      "Inspired by Robert E. Howard's tales of sword and sorcery.",
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({

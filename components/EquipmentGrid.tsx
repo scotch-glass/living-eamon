@@ -11,6 +11,12 @@ export interface EquipmentGridProps {
   gorgetId: string | null;
   bodyArmorId: string | null;
   limbArmorId: string | null;
+  bootsId: string | null;
+  ringLeftId: string | null;
+  ringRightId: string | null;
+  cuffLeftId: string | null;
+  cuffRightId: string | null;
+  necklaceId: string | null;
   weaponIsTwoHanded?: boolean;
   iconSize?: number;
   onItemClick?: (item: Item, rect: DOMRect) => void;
@@ -31,12 +37,19 @@ export default function EquipmentGrid({
   gorgetId,
   bodyArmorId,
   limbArmorId,
+  bootsId,
+  ringLeftId,
+  ringRightId,
+  cuffLeftId,
+  cuffRightId,
+  necklaceId,
   weaponIsTwoHanded = false,
   iconSize = 40,
   onItemClick,
 }: EquipmentGridProps) {
   const slots: SlotConfig[] = [
     { key: "weapon", label: "Weapon", itemId: weaponId === "unarmed" ? null : weaponId, emptyAllowed: true },
+    { key: "helmet", label: "Head", itemId: helmetId, emptyAllowed: true },
     {
       key: "shield",
       label: "Shield",
@@ -44,10 +57,15 @@ export default function EquipmentGrid({
       emptyAllowed: true,
       forcedEmptyMsg: weaponIsTwoHanded ? "two-handed" : undefined,
     },
-    { key: "helmet", label: "Head", itemId: helmetId, emptyAllowed: true },
     { key: "gorget", label: "Neck", itemId: gorgetId, emptyAllowed: true },
+    { key: "necklace", label: "Amulet", itemId: necklaceId, emptyAllowed: true },
+    { key: "boots", label: "Feet", itemId: bootsId, emptyAllowed: true },
     { key: "bodyArmor", label: "Body", itemId: bodyArmorId, emptyAllowed: true },
+    { key: "ringLeft", label: "Ring L", itemId: ringLeftId, emptyAllowed: true },
+    { key: "ringRight", label: "Ring R", itemId: ringRightId, emptyAllowed: true },
     { key: "limbArmor", label: "Limbs", itemId: limbArmorId, emptyAllowed: true },
+    { key: "cuffLeft", label: "Cuff L", itemId: cuffLeftId, emptyAllowed: true },
+    { key: "cuffRight", label: "Cuff R", itemId: cuffRightId, emptyAllowed: true },
   ];
 
   return (

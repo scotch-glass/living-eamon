@@ -223,6 +223,12 @@ export interface PlayerState {
   gorget: string | null;       // Neck protection
   bodyArmor: string | null;    // Torso protection
   limbArmor: string | null;    // Limb protection
+  boots: string | null;        // Feet protection
+  ringLeft: string | null;     // Ring (left hand)
+  ringRight: string | null;    // Ring (right hand)
+  cuffLeft: string | null;     // Cuff (left arm)
+  cuffRight: string | null;    // Cuff (right arm)
+  necklace: string | null;     // Necklace or medallion
   inventory: PlayerInventoryItem[];
 
   // Virtues (tracked silently by Jane)
@@ -569,6 +575,12 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       gorget: null,
       bodyArmor: null,
       limbArmor: null,
+      boots: null,
+      ringLeft: null,
+      ringRight: null,
+      cuffLeft: null,
+      cuffRight: null,
+      necklace: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
 
       virtues: {
@@ -949,6 +961,12 @@ export function applyPlayerDeath(
       gorget: null,
       bodyArmor: null,
       limbArmor: null,
+      boots: null,
+      ringLeft: null,
+      ringRight: null,
+      cuffLeft: null,
+      cuffRight: null,
+      necklace: null,
       activeCombat: null,
       activeEffects: [],
       goreSplatters: [],

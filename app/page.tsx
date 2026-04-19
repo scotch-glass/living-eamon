@@ -951,6 +951,12 @@ export default function Home() {
               player.gorget,
               player.bodyArmor,
               player.limbArmor,
+              player.boots,
+              player.ringLeft,
+              player.ringRight,
+              player.cuffLeft,
+              player.cuffRight,
+              player.necklace,
             ].filter((id): id is string => id !== null && id !== "unarmed").includes(actionMenu.item.id)
           )}
           anchorRect={actionMenu.rect}
@@ -1166,6 +1172,12 @@ export default function Home() {
                   gorgetId={player.gorget}
                   bodyArmorId={player.bodyArmor}
                   limbArmorId={player.limbArmor}
+                  bootsId={player.boots}
+                  ringLeftId={player.ringLeft}
+                  ringRightId={player.ringRight}
+                  cuffLeftId={player.cuffLeft}
+                  cuffRightId={player.cuffRight}
+                  necklaceId={player.necklace}
                   weaponIsTwoHanded={weaponIsTwoHanded}
                   iconSize={56}
                   onItemClick={(item, rect) => setActionMenu({ item, context: "equipped", rect })}
@@ -1183,6 +1195,12 @@ export default function Home() {
                       player.gorget,
                       player.bodyArmor,
                       player.limbArmor,
+                      player.boots,
+                      player.ringLeft,
+                      player.ringRight,
+                      player.cuffLeft,
+                      player.cuffRight,
+                      player.necklace,
                     ].filter((id): id is string => id !== null && id !== "unarmed")
                   )}
                   iconSize={40}

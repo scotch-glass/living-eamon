@@ -260,6 +260,12 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     gorget: state.player.gorget ?? null,
     bodyArmor: state.player.bodyArmor ?? null,
     limbArmor: state.player.limbArmor ?? null,
+    boots: state.player.boots ?? null,
+    ringLeft: state.player.ringLeft ?? null,
+    ringRight: state.player.ringRight ?? null,
+    cuffLeft: state.player.cuffLeft ?? null,
+    cuffRight: state.player.cuffRight ?? null,
+    necklace: state.player.necklace ?? null,
     activeCombat: state.player.activeCombat ?? null,
     activeEffects: state.player.activeEffects ?? [],
     weaponPoisonCharges: state.player.weaponPoisonCharges ?? 0,
@@ -375,6 +381,18 @@ export async function POST(request: NextRequest) {
               savedPlayer.armor ?? null,
             limbArmor:
               (savedPlayer as { limb_armor?: string | null }).limb_armor ?? null,
+            boots:
+              (savedPlayer as { boots?: string | null }).boots ?? null,
+            ringLeft:
+              (savedPlayer as { ring_left?: string | null }).ring_left ?? null,
+            ringRight:
+              (savedPlayer as { ring_right?: string | null }).ring_right ?? null,
+            cuffLeft:
+              (savedPlayer as { cuff_left?: string | null }).cuff_left ?? null,
+            cuffRight:
+              (savedPlayer as { cuff_right?: string | null }).cuff_right ?? null,
+            necklace:
+              (savedPlayer as { necklace?: string | null }).necklace ?? null,
             activeCombat: (() => {
               const ac = (savedPlayer as { active_combat?: Record<string, unknown> }).active_combat;
               // Discard finished combat sessions that were persisted — they

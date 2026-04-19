@@ -71,25 +71,10 @@ export default function SplashPage() {
             flexDirection: "column",
             gap: 60,
             alignItems: "center",
-            paddingTop: 20,
           }}
         >
-          {/* Tavern Sign Logo */}
-          <img
-            src="/eamon-sign-logo.png"
-            alt="Living Eamon Sign Logo"
-            style={{
-              width: "100%",
-              maxWidth: 280,
-              height: "auto",
-              objectFit: "contain",
-              filter: "drop-shadow(0 0 15px rgba(146, 64, 14, 0.6))",
-              marginBottom: 20,
-            }}
-          />
-
           {/* LEFT: World Promises */}
-          <div style={{ width: "100%", textAlign: "center" }}>
+          <div style={{ width: "100%", textAlign: "center", maxWidth: 900, margin: "0 auto" }}>
 
             <h2
               style={{

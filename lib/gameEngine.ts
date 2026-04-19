@@ -2782,7 +2782,13 @@ function isItemEquipped(player: PlayerState, itemId: string): boolean {
     player.helmet === itemId ||
     player.gorget === itemId ||
     player.bodyArmor === itemId ||
-    player.limbArmor === itemId
+    player.limbArmor === itemId ||
+    player.boots === itemId ||
+    player.ringLeft === itemId ||
+    player.ringRight === itemId ||
+    player.cuffLeft === itemId ||
+    player.cuffRight === itemId ||
+    player.necklace === itemId
   );
 }
 

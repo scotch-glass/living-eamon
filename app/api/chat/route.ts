@@ -448,6 +448,7 @@ export async function POST(request: NextRequest) {
             npcs: ws.npcs ?? state.npcs,
             activeEvents: ws.activeEvents ?? state.activeEvents,
             chronicleLog: ws.chronicleLog ?? state.chronicleLog,
+            vendorTempStock: ws.vendorTempStock ?? state.vendorTempStock,
             worldTurn: typeof ws.worldTurn === "number" ? ws.worldTurn : state.worldTurn,
             player: {
               ...state.player,

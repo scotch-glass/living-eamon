@@ -353,6 +353,16 @@ export interface WorldState {
     gowns: number;
     charityClothes: number;
   };
+
+  /**
+   * Vendor temporary inventory. Keyed by vendor NPC id.
+   * Items sold to vendors stay for 100 turns, then expire.
+   * Player can buy back at double the sale price.
+   */
+  vendorTempStock: Record<string, Array<{
+    itemId: string;
+    expiresAtTurn: number;
+  }>>;
 }
 
 // ============================================================
@@ -637,6 +647,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       gowns: 20,
       charityClothes: 10,
     },
+
+    vendorTempStock: {},
   };
 }
 
@@ -811,6 +823,23 @@ export function addBounty(
       ...state.player,
       bounty: state.player.bounty + amount,
       isWanted: state.player.bounty + amount > 0,
+    },
+  };
+}
+
+export function addToVendorTempStock(
+  state: WorldState,
+  vendorId: string,
+  itemId: string
+): WorldState {
+  const existingStock = state.vendorTempStock[vendorId] ?? [];
+  const expiresAtTurn = state.worldTurn + 100;
+
+  return {
+    ...state,
+    vendorTempStock: {
+      ...state.vendorTempStock,
+      [vendorId]: [...existingStock, { itemId, expiresAtTurn }],
     },
   };
 }
@@ -1085,6 +1114,15 @@ export function tickWorldState(state: WorldState): WorldState {
       },
     };
   }
+
+  // Expire vendor temp stock items after 100 turns
+  const updatedVendorStock: Record<string, Array<{ itemId: string; expiresAtTurn: number }>> = {};
+  for (const [vendorId, items] of Object.entries(newState.vendorTempStock)) {
+    updatedVendorStock[vendorId] = items.filter(
+      (item) => item.expiresAtTurn > newState.worldTurn
+    );
+  }
+  newState = { ...newState, vendorTempStock: updatedVendorStock };
 
   return newState;
 }

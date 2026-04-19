@@ -33,7 +33,7 @@ const FEATURES: { title: string; body: string }[] = [
   },
   {
     title: "Destructible Environments, Permanent Ruins",
-    body: "Burn a building and it stays burnt — in this realm and in the Chronicle. Survivors become refugees, reagent markets collapse, the Order investigates. Circle-7 rituals can ruin a city entirely.",
+    body: "Burn a building and it stays burnt — in this realm and in the Chronicle. Survivors become refugees, reagent markets collapse, the Order investigates. Eighth-circle rituals can ruin a city entirely.",
   },
   {
     title: "Death Is Costly. Be prepared to pay the price.",

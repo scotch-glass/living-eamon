@@ -161,13 +161,19 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - Highlights improvements in green (e.g., higher damage)
 - Centered modal with close button
 
-**Pass H — Vendor Temporary Inventory (Data Model)**
+**Pass H — Vendor Temporary Inventory + Bulk Sell**
 - Added `vendorTempStock` to WorldState: `Record<vendorId, Array<{ itemId, expiresAtTime }>>`
 - Items sold to vendors stay for **72 hours of server time** (supports multiplayer)
 - Expiration stored as ISO 8601 timestamp, checked in `tickWorldState` (not turn-based)
 - Helper function `addToVendorTempStock(state, vendorId, itemId)` adds items to temp stock
+- **BulkSellPopup component** (`components/BulkSellPopup.tsx`): checkbox-based selection, shows prices + total
+- "Bulk Sell" action added to ItemActionMenu in vendor rooms (opens popup)
+- **SELL command refactored** to support multiple items: `SELL ITEM1 ITEM2 ITEM3` (comma or space separated)
+  - Validates all items before sale
+  - Adds all items to vendor temp stock
+  - Calculates total gold at half-price
+  - Shows 72-hour buyback window confirmation
 - Items can be repurchased at double the sale price (original item.value)
-- Pending: bulk sell UI component, SELL command refactor for multiple items
 
 §5.17 — Inspect Popup Redesign / Pass E + Dufus Narration (April 14-15, 2026)
 

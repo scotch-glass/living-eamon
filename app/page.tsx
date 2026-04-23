@@ -20,7 +20,24 @@ import BackpackPanel from "../components/BackpackPanel";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
 import ComparePopup from "../components/ComparePopup";
 import BulkSellPopup from "../components/BulkSellPopup";
+import HeroScenePortrait, { type HeroEquipment } from "../components/HeroScenePortrait";
 import { getRoom } from "../lib/adventures/registry";
+
+/**
+ * Derive the visible equipment state from player state, for picking the
+ * right hero sprite variation. v1 cases:
+ *   - gray_robe in inventory → "gray_robe" (hospital-gown rebirth garment)
+ *   - otherwise → "loincloth" (canonical master, no generation cost)
+ * More cases (leather armor, chain, plate) will be added once per-armor
+ * sprite pipelines land.
+ */
+function deriveEquipment(player: {
+  inventory?: { itemId: string; quantity: number }[] | null;
+}): HeroEquipment {
+  const inv = player.inventory ?? [];
+  if (inv.some((i) => i.itemId === "gray_robe")) return "gray_robe";
+  return "loincloth";
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -113,6 +130,22 @@ export default function Home() {
   useEffect(() => {
     const t = setTimeout(() => setSidebarOpen(false), 5000);
     return () => clearTimeout(t);
+  }, []);
+  // The player's chosen hero master — used by HeroScenePortrait to render
+  // the hero on every non-combat screen. Fetched once on mount from
+  // /api/my-hero-master.
+  const [heroMasterId, setHeroMasterId] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/my-hero-master")
+      .then((r) => r.json())
+      .then((d: { heroMasterId: string | null }) => {
+        if (!cancelled) setHeroMasterId(d.heroMasterId ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const [sidebarTab, setSidebarTab] = useState<"stats" | "gear" | "pack">("stats");
   const [actionMenu, setActionMenu] = useState<{
@@ -1341,6 +1374,30 @@ export default function Home() {
           fullScreen
         />
       </div>
+      {/* Hero scene portrait — shown on every non-combat screen, positioned
+          in the same left-slot the hero occupies during combat. Equipment
+          state derives from player inventory (gray robe while wearing the
+          Church garment, loincloth once it's shed). */}
+      {!inCombat && player && heroMasterId && (
+        <div
+          style={{
+            position: "fixed",
+            left: sidebarOpen ? 256 : 48,
+            bottom: 0,
+            height: "70vh",
+            width: "min(40vh, 40vw)",
+            zIndex: 1,
+            pointerEvents: "none",
+            transition: "left 0.3s ease",
+          }}
+        >
+          <HeroScenePortrait
+            heroMasterId={heroMasterId}
+            equipment={deriveEquipment(player) satisfies HeroEquipment}
+            stance="casual"
+          />
+        </div>
+      )}
       {!inCombat && (
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", position: "relative", zIndex: 2, order: 0 }}>
         <span style={{ color: "#b45309", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>

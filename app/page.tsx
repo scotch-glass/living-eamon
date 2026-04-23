@@ -1107,7 +1107,7 @@ export default function Home() {
               </div>
               <h2 style={{ color: "#fbbf24", fontWeight: "600", fontSize: 15, marginBottom: 2, fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{player.name}</h2>
               <p style={{ color: "#aaaaaa", fontSize: 11, marginBottom: 4, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", whiteSpace: "nowrap" }}>Hero of the Realm</p>
-              {player.knownAs && <p style={{ color: "#92400e", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>"{player.knownAs}"</p>}
+              {player.knownAs && <p style={{ color: "#aaaaaa", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>"{player.knownAs}"</p>}
               {player.bounty > 0 && (
                 <p style={{ color: "#ef4444", fontSize: 11, marginBottom: 12, backgroundColor: "#1a0000", padding: "4px 8px", borderRadius: 4 }}>⚠ Bounty: {player.bounty}g</p>
               )}
@@ -1125,7 +1125,7 @@ export default function Home() {
               {/* Active status effects (bleed, poison, broken_leg, etc.) */}
               {(player.activeEffects?.length ?? 0) > 0 && (
                 <div style={{ marginBottom: 12, fontSize: 11, fontFamily: "Georgia, serif" }}>
-                  <div style={{ color: "#92400e", fontSize: 9, letterSpacing: "0.1em", marginBottom: 4, fontWeight: 600 }}>STATUS</div>
+                  <div style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", marginBottom: 4, fontWeight: 600 }}>STATUS</div>
                   {player.activeEffects.map((e, i) => {
                     const glyph =
                       e.type === "bleed" || e.type === "severed_artery" ? "♦" :
@@ -1142,7 +1142,7 @@ export default function Home() {
                     return (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2, color: "#cdb78a" }}>
                         <span style={{ color }}>
-                          {glyph} {e.type.replace(/_/g, " ")} <span style={{ color: "#5a4a3a", fontSize: 9 }}>({e.zone})</span>
+                          {glyph} {e.type.replace(/_/g, " ")} <span style={{ color: "#aaaaaa", fontSize: 9 }}>({e.zone})</span>
                         </span>
                         <span style={{ color, fontSize: 9, letterSpacing: "0.1em" }}>{dots}</span>
                       </div>
@@ -1183,7 +1183,7 @@ export default function Home() {
                         background: active ? "linear-gradient(180deg, #2a1d0e 0%, #1a120a 100%)" : "transparent",
                         border: "none",
                         borderBottom: active ? "2px solid #92400e" : "2px solid transparent",
-                        color: active ? "#fbbf24" : "#5a4a3a",
+                        color: active ? "#fbbf24" : "#aaaaaa",
                         fontFamily: "Georgia, serif",
                         fontSize: 10,
                         letterSpacing: "0.15em",
@@ -1193,10 +1193,10 @@ export default function Home() {
                         transition: "color 0.15s, background 0.15s, border-color 0.15s",
                       }}
                       onMouseEnter={e => {
-                        if (!active) (e.currentTarget as HTMLButtonElement).style.color = "#92400e";
+                        if (!active) (e.currentTarget as HTMLButtonElement).style.color = "#fbbf24";
                       }}
                       onMouseLeave={e => {
-                        if (!active) (e.currentTarget as HTMLButtonElement).style.color = "#5a4a3a";
+                        if (!active) (e.currentTarget as HTMLButtonElement).style.color = "#aaaaaa";
                       }}
                     >
                       {tab}
@@ -1211,18 +1211,18 @@ export default function Home() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11, marginBottom: 14 }}>
                     {[["STR", player.strength], ["DEX", player.dexterity], ["CHA", player.charisma]].map(([label, val]) => (
                       <div key={label as string} style={{ backgroundColor: "#0d0a06", padding: "6px 4px", borderRadius: 3, border: "1px solid #2a1d0e", textAlign: "center" }}>
-                        <div style={{ color: "#92400e", fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600 }}>{label}</div>
+                        <div style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600 }}>{label}</div>
                         <div style={{ color: "#fbbf24", fontWeight: "600", fontSize: 15, fontFamily: "Georgia, serif" }}>{val}</div>
                       </div>
                     ))}
                   </div>
                   <div style={{ fontSize: 11, marginBottom: 14 }}>
-                    <div style={{ color: "#92400e", marginBottom: 2, fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600, whiteSpace: "nowrap" }}>GOLD · CARRIED / BANKED</div>
+                    <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600, whiteSpace: "nowrap" }}>GOLD · CARRIED / BANKED</div>
                     <div style={{ color: "#facc15", fontWeight: "bold", fontSize: 15, fontFamily: "Georgia, serif" }}>⚜ {player.gold} / {player.bankedGold}</div>
                   </div>
                   {topVirtues.length > 0 && (
                     <div style={{ fontSize: 11, marginBottom: 12 }}>
-                      <div style={{ color: "#92400e", marginBottom: 6, fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600 }}>VIRTUES</div>
+                      <div style={{ color: "#aaaaaa", marginBottom: 6, fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600 }}>VIRTUES</div>
                       {topVirtues.map(([name, val]) => (
                         <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontFamily: "Georgia, serif" }}>
                           <span style={{ color: "#cdb78a" }}>{name}</span>

@@ -108,5 +108,115 @@
     "facialHair": "full_beard",
     "eyeColor": "brown",
     "id": "04f205b9-cb35-438f-9566-fdc83f983b75"
+  },
+  {
+    "slug": "talon",
+    "heroName": "Talon",
+    "ageBand": "grizzled",
+    "skinTone": "tan",
+    "hairColor": "black",
+    "hairLength": "bald",
+    "facialHair": "clean",
+    "eyeColor": "amber",
+    "id": "5e905f56-4a52-4d47-b937-3bf2487a3e27"
+  },
+  {
+    "slug": "aldan",
+    "heroName": "Aldan",
+    "ageBand": "middle",
+    "skinTone": "pale",
+    "hairColor": "brown",
+    "hairLength": "long",
+    "facialHair": "stubble",
+    "eyeColor": "blue",
+    "id": "d58ee631-171f-4a9e-abb7-c44c547966c2"
+  },
+  {
+    "slug": "rurik",
+    "heroName": "Rurik",
+    "ageBand": "young",
+    "skinTone": "bronze",
+    "hairColor": "blond",
+    "hairLength": "short",
+    "facialHair": "clean",
+    "eyeColor": "amber",
+    "id": "b437a5d0-ba9e-4b5f-a6c0-41d095b93b8f"
+  },
+  {
+    "slug": "thane",
+    "heroName": "Thane",
+    "ageBand": "middle",
+    "skinTone": "olive",
+    "hairColor": "grey",
+    "hairLength": "medium",
+    "facialHair": "beard",
+    "eyeColor": "grey",
+    "id": "c1b1871f-b21e-4762-86bc-5b9dd7070245"
+  },
+  {
+    "slug": "karn",
+    "heroName": "Karn",
+    "ageBand": "grizzled",
+    "skinTone": "tan",
+    "hairColor": "white",
+    "hairLength": "long",
+    "facialHair": "beard",
+    "eyeColor": "blue",
+    "id": "5dd11338-54ad-40e0-9d0b-56aba730fde4"
+  },
+  {
+    "slug": "hollan",
+    "heroName": "Hollan",
+    "ageBand": "young",
+    "skinTone": "pale",
+    "hairColor": "brown",
+    "hairLength": "short",
+    "facialHair": "clean",
+    "eyeColor": "grey",
+    "id": "53d7abcd-ae9c-4600-a94f-35ae3bf83b82"
+  },
+  {
+    "slug": "lev",
+    "heroName": "Lev",
+    "ageBand": "middle",
+    "skinTone": "weathered_tan",
+    "hairColor": "black",
+    "hairLength": "bald",
+    "facialHair": "stubble",
+    "eyeColor": "green",
+    "id": "3e1ef1b1-b37c-409d-aa72-18701b039035"
+  },
+  {
+    "slug": "seward",
+    "heroName": "Seward",
+    "ageBand": "grizzled",
+    "skinTone": "olive",
+    "hairColor": "red",
+    "hairLength": "short",
+    "facialHair": "full_beard",
+    "eyeColor": "green",
+    "id": "d6021ef4-ec6d-4b48-9646-ccb6ac1d94cc"
+  },
+  {
+    "slug": "ivorn",
+    "heroName": "Ivorn",
+    "ageBand": "middle",
+    "skinTone": "bronze",
+    "hairColor": "blond",
+    "hairLength": "medium",
+    "facialHair": "beard",
+    "eyeColor": "violet",
+    "id": "18f4a777-31f5-4fa5-b772-51b2f1b2bb2d"
+  },
+  {
+    "slug": "draxan",
+    "heroName": "Draxan",
+    "ageBand": "young",
+    "skinTone": "tan",
+    "hairColor": "brown",
+    "hairLength": "long",
+    "facialHair": "stubble",
+    "eyeColor": "brown",
+    "id": "11c562b3-bd58-4e81-bc8a-4d8a8ebab967"
   }
 ]

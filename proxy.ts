@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { createMiddlewareSupabase } from "./lib/supabaseAuthServer";
+
+// Service-role client for reading players.hero_master_id during the
+// character-creation gate check. Scoped to middleware only.
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
@@ -29,10 +37,25 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Protected routes (the game itself) — redirect unauthenticated users to splash
+  // Protected routes — redirect unauthenticated users to splash
   if (!user) {
     const splashUrl = new URL("/splash", request.url);
     return NextResponse.redirect(splashUrl);
+  }
+
+  // Character-creation gate: authenticated users without a chosen hero
+  // master go to the wizard. The wizard itself is allowed through.
+  if (pathname.startsWith("/forge-avatar")) {
+    return response;
+  }
+  const { data: player } = await supabaseAdmin
+    .from("players")
+    .select("hero_master_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!player?.hero_master_id) {
+    const wizardUrl = new URL("/forge-avatar", request.url);
+    return NextResponse.redirect(wizardUrl);
   }
 
   return response;

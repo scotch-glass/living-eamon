@@ -31,6 +31,7 @@ interface Props {
 
 const HEROES_PER_PAGE = 10;
 const BACKSTORIES_PER_PAGE = 6;
+type Step = 1 | 2 | 3;
 
 function tagSummary(h: HeroMaster): string {
   const c = h.customization_vector || {};
@@ -47,12 +48,11 @@ function tagSummary(h: HeroMaster): string {
 
 function alignmentColor(a: BackstoryAlignment): string {
   switch (a) {
-    case "blessing": return "#86efac"; // green
-    case "curse": return "#fca5a5";    // red
-    case "ambiguous": return "#c5ad75"; // amber
+    case "blessing": return "#86efac";
+    case "curse": return "#fca5a5";
+    case "ambiguous": return "#c5ad75";
   }
 }
-
 function alignmentLabel(a: BackstoryAlignment): string {
   switch (a) {
     case "blessing": return "Blessing";
@@ -62,18 +62,18 @@ function alignmentLabel(a: BackstoryAlignment): string {
 }
 
 export default function WizardClient({ masters, error }: Props) {
-  // ── Hero selection state ──────────────────────────────────
+  const [step, setStep] = useState<Step>(1);
+
+  // Hero
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [heroPage, setHeroPage] = useState(0);
 
-  // ── Name state ────────────────────────────────────────────
-  // nameIsAutoFilled = true means the hero-select handler may overwrite
-  // the field when user picks a new hero. The user typing in the field
-  // flips this to false so their custom name sticks.
+  // Name — always starts empty. The library's hero_name is an internal
+  // admin label and never pre-populates this field (per the
+  // name-face decoupling rule: we don't want a hundred Kanes).
   const [heroName, setHeroName] = useState<string>("");
-  const [nameIsAutoFilled, setNameIsAutoFilled] = useState<boolean>(true);
 
-  // ── Backstory state ───────────────────────────────────────
+  // Backstory
   const [backstoryTemplateId, setBackstoryTemplateId] = useState<string | null>(null);
   const [backstoryText, setBackstoryText] = useState<string>("");
   const [backstoryFilter, setBackstoryFilter] = useState<BackstoryAlignment | "all">("all");
@@ -83,7 +83,12 @@ export default function WizardClient({ masters, error }: Props) {
 
   const selected = masters.find((m) => m.id === selectedId) || null;
 
-  // ── Hero pagination ───────────────────────────────────────
+  function goto(s: Step) {
+    setStep(s);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── Hero step ────────────────────────────────────────────
   const heroPageCount = Math.max(1, Math.ceil(masters.length / HEROES_PER_PAGE));
   const heroesOnPage = masters.slice(
     heroPage * HEROES_PER_PAGE,
@@ -92,20 +97,13 @@ export default function WizardClient({ masters, error }: Props) {
 
   function pickMaster(m: HeroMaster) {
     setSelectedId(m.id);
-    // Overwrite the name with this hero's suggested name UNLESS the user
-    // has manually typed their own. The user-typing path flips
-    // nameIsAutoFilled to false.
-    if (nameIsAutoFilled) {
-      setHeroName(m.hero_name);
-    }
   }
 
   function onNameInput(v: string) {
     setHeroName(v);
-    setNameIsAutoFilled(false);
   }
 
-  // ── Backstory pagination ──────────────────────────────────
+  // ── Backstory step ───────────────────────────────────────
   const filteredBackstories = useMemo(
     () => backstoriesByAlignment(backstoryFilter),
     [backstoryFilter]
@@ -129,7 +127,7 @@ export default function WizardClient({ masters, error }: Props) {
     setBackstoryPage(0);
   }
 
-  // ── Error copy ────────────────────────────────────────────
+  // ── Error ───────────────────────────────────────────────
   const errorMsg =
     error === "missing_fields"
       ? "Please select a hero and give thy legend a name."
@@ -157,7 +155,7 @@ export default function WizardClient({ masters, error }: Props) {
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(3, 7, 18, 0.85)",
+          background: "rgba(3, 7, 18, 0.88)",
           pointerEvents: "none",
         }}
       />
@@ -172,7 +170,7 @@ export default function WizardClient({ masters, error }: Props) {
         }}
       >
         {/* Header */}
-        <header style={{ textAlign: "center", marginBottom: 48 }}>
+        <header style={{ textAlign: "center", marginBottom: 32 }}>
           <p
             style={{
               color: "#fbbf24",
@@ -188,28 +186,30 @@ export default function WizardClient({ masters, error }: Props) {
           <h1
             style={{
               color: "#fef3c7",
-              fontSize: "clamp(2rem, 4vw, 3rem)",
+              fontSize: "clamp(1.875rem, 3.5vw, 2.5rem)",
               fontWeight: 700,
-              margin: "0 0 16px 0",
-              lineHeight: 1.1,
+              margin: "0 0 8px 0",
+              lineHeight: 1.15,
             }}
           >
-            Choose the face of thy Perpetual Hero
+            {step === 1 && "Choose the face of thy Perpetual Hero"}
+            {step === 2 && "Name thy hero"}
+            {step === 3 && "Speak thy last memory"}
           </h1>
-          <p
-            style={{
-              color: "#a8a097",
-              fontSize: 16,
-              maxWidth: 720,
-              margin: "0 auto",
-              lineHeight: 1.6,
-            }}
-          >
-            Each face is a vessel that will carry thy deeds across a thousand realms.
-            Pick one. Name it. Recall — dimly — what touched thee before thou awoke on
-            the church floor. Thy legend begins the moment thou dost step out the door.
-          </p>
         </header>
+
+        {/* Step indicator */}
+        <StepIndicator
+          step={step}
+          onJump={(s) => {
+            // Allow jumping backward freely; forward only if prior steps are satisfied.
+            if (s < step) goto(s);
+            else if (s === 2 && selected) goto(2);
+            else if (s === 3 && selected && heroName.trim()) goto(3);
+          }}
+          canReachStep2={!!selected}
+          canReachStep3={!!selected && heroName.trim().length > 0}
+        />
 
         {errorMsg && (
           <div
@@ -220,409 +220,745 @@ export default function WizardClient({ masters, error }: Props) {
               padding: "12px 20px",
               borderRadius: 6,
               fontSize: 14,
-              marginBottom: 24,
+              margin: "0 auto 24px",
               textAlign: "center",
+              maxWidth: 720,
             }}
           >
             {errorMsg}
           </div>
         )}
 
-        {/* ─── Section: Hero face ─── */}
-        <section style={{ marginBottom: 48 }}>
-          <SectionHeading
-            step="I"
-            title="The Face"
-            subtitle={
-              masters.length > HEROES_PER_PAGE
-                ? `Page ${heroPage + 1} of ${heroPageCount} · ${masters.length} faces in the library`
-                : `${masters.length} faces in the library`
-            }
-          />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 20,
-              marginBottom: 16,
-            }}
-          >
-            {heroesOnPage.map((m) => {
-              const isSelected = m.id === selectedId;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => pickMaster(m)}
-                  style={{
-                    background: "rgba(45, 22, 0, 0.55)",
-                    border: isSelected
-                      ? "2px solid #fbbf24"
-                      : "1px solid rgba(146, 64, 14, 0.4)",
-                    boxShadow: isSelected
-                      ? "0 0 0 3px rgba(251, 191, 36, 0.2), 0 8px 32px rgba(0,0,0,0.6)"
-                      : "none",
-                    borderRadius: 10,
-                    padding: 0,
-                    cursor: "pointer",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                    transition: "transform 0.15s, border-color 0.15s",
-                    fontFamily: "Georgia, serif",
-                    color: "inherit",
-                    textAlign: "left",
-                    transform: isSelected ? "translateY(-2px)" : "none",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "relative",
-                      aspectRatio: "3 / 4",
-                      background: "linear-gradient(180deg, #1a1208 0%, #000 100%)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <img
-                      src={m.master_image_url}
-                      alt={m.hero_name}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        objectPosition: "center bottom",
-                        filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.6))",
-                      }}
-                    />
-                  </div>
-                  <div style={{ padding: "12px 16px 14px" }}>
-                    <div
-                      style={{
-                        color: "#fef3c7",
-                        fontSize: "1rem",
-                        fontWeight: 700,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {m.hero_name}
-                    </div>
-                    <div
-                      style={{
-                        color: "#a8a097",
-                        fontSize: 12,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {tagSummary(m)}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {heroPageCount > 1 && (
-            <Pagination
-              page={heroPage}
-              pageCount={heroPageCount}
-              onChange={setHeroPage}
+        {/* ═══ STEP 1 — THE FACE ═══ */}
+        {step === 1 && (
+          <section>
+            <SectionHeading
+              step="I"
+              title="The Face"
+              subtitle={
+                masters.length > HEROES_PER_PAGE
+                  ? `Page ${heroPage + 1} of ${heroPageCount} · ${masters.length} faces in the library`
+                  : `${masters.length} faces in the library`
+              }
             />
-          )}
-        </section>
 
-        {/* ─── Section: Name ─── */}
-        <section style={{ maxWidth: 640, margin: "0 auto 48px" }}>
-          <SectionHeading
-            step="II"
-            title="The Name"
-            subtitle={
-              selected
-                ? `Suggested from ${selected.hero_name}, but name thy hero as thou wilt.`
-                : "Pick a face above first."
-            }
-          />
-          <input
-            name="heroNameDisplay"
-            value={heroName}
-            onChange={(e) => onNameInput(e.target.value)}
-            required
-            maxLength={40}
-            placeholder={selected ? "Type a name" : "Select a face first"}
-            disabled={!selected}
-            style={{
-              width: "100%",
-              background: "#111827",
-              border: "1px solid #374151",
-              color: "#e5e7eb",
-              padding: "14px 18px",
-              borderRadius: 6,
-              fontSize: 18,
-              fontFamily: "Georgia, serif",
-              outline: "none",
-              opacity: selected ? 1 : 0.4,
-              letterSpacing: "0.02em",
-            }}
-          />
-        </section>
-
-        {/* ─── Section: Backstory ─── */}
-        <section style={{ marginBottom: 48 }}>
-          <SectionHeading
-            step="III"
-            title="The Last Memory"
-            subtitle="Something touched thee before thou awokest. Choose a memory, or speak thine own."
-          />
-
-          {/* Filter chips */}
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              marginBottom: 20,
-              justifyContent: "center",
-            }}
-          >
-            {(["all", "blessing", "curse", "ambiguous"] as const).map((f) => {
-              const active = backstoryFilter === f;
-              return (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => onFilterChange(f)}
-                  style={{
-                    background: active
-                      ? "rgba(251, 191, 36, 0.18)"
-                      : "rgba(45, 22, 0, 0.4)",
-                    color: active ? "#fbbf24" : "#a8a097",
-                    border: active
-                      ? "1px solid #fbbf24"
-                      : "1px solid rgba(146, 64, 14, 0.4)",
-                    borderRadius: 999,
-                    padding: "6px 16px",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    cursor: "pointer",
-                    fontFamily: "Georgia, serif",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {f === "all" ? `All (${HERO_BACKSTORIES.length})` : alignmentLabel(f)}
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: 16,
-              marginBottom: 16,
-            }}
-          >
-            {backstoriesOnPage.map((t) => {
-              const isSelected = t.id === backstoryTemplateId;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => pickBackstory(t)}
-                  style={{
-                    background: "rgba(12, 6, 2, 0.7)",
-                    border: isSelected
-                      ? "2px solid #fbbf24"
-                      : "1px solid rgba(146, 64, 14, 0.4)",
-                    boxShadow: isSelected
-                      ? "0 0 0 3px rgba(251, 191, 36, 0.2)"
-                      : "none",
-                    borderRadius: 10,
-                    padding: "16px 18px",
-                    cursor: "pointer",
-                    fontFamily: "Georgia, serif",
-                    color: "inherit",
-                    textAlign: "left",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    transition: "border-color 0.15s, box-shadow 0.15s",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "baseline",
-                      gap: 12,
-                    }}
-                  >
-                    <h3
-                      style={{
-                        color: "#fef3c7",
-                        fontSize: "1.0625rem",
-                        fontWeight: 700,
-                        margin: 0,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {t.title}
-                    </h3>
-                    <span
-                      style={{
-                        color: alignmentColor(t.alignment),
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: "0.15em",
-                        textTransform: "uppercase",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {alignmentLabel(t.alignment)}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      color: "#a8a097",
-                      fontSize: 13,
-                      margin: 0,
-                      lineHeight: 1.5,
-                      fontStyle: "italic",
-                    }}
-                  >
-                    {t.preview}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          {backstoryPageCount > 1 && (
-            <Pagination
-              page={backstoryPage}
-              pageCount={backstoryPageCount}
-              onChange={setBackstoryPage}
-            />
-          )}
-        </section>
-
-        {/* ─── Commit form ─── */}
-        <form
-          action={commitHero}
-          onSubmit={() => setSubmitting(true)}
-          style={{
-            maxWidth: 720,
-            margin: "0 auto",
-            background: "rgba(12, 6, 2, 0.85)",
-            border: "1px solid rgba(146, 64, 14, 0.4)",
-            borderRadius: 12,
-            padding: 32,
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-          }}
-        >
-          {/* Hidden fields submit everything to the server action */}
-          <input type="hidden" name="masterId" value={selectedId ?? ""} />
-          <input type="hidden" name="heroName" value={heroName} />
-
-          <p
-            style={{
-              color: "#fbbf24",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              margin: "0 0 8px 0",
-            }}
-          >
-            Final: the memory as thou dost tell it
-          </p>
-          <p
-            style={{
-              color: "#a8a097",
-              fontSize: 13,
-              margin: "0 0 12px 0",
-              lineHeight: 1.5,
-            }}
-          >
-            Edit the chosen memory below, or replace it entirely with words of thine own.
-            Leave it blank if thou art not ready to speak. The Chronicle has patience.
-          </p>
-          <textarea
-            name="backstory"
-            value={backstoryText}
-            onChange={(e) => setBackstoryText(e.target.value)}
-            maxLength={800}
-            rows={5}
-            placeholder="The memory, in thine own words…"
-            disabled={!selected}
-            style={{
-              width: "100%",
-              background: "#111827",
-              border: "1px solid #374151",
-              color: "#e5e7eb",
-              padding: "12px 16px",
-              borderRadius: 6,
-              fontSize: 14,
-              fontFamily: "Georgia, serif",
-              outline: "none",
-              resize: "vertical",
-              opacity: selected ? 1 : 0.4,
-              lineHeight: 1.6,
-              marginBottom: 24,
-            }}
-          />
-
-          <button
-            type="submit"
-            disabled={!selected || !heroName.trim() || submitting}
-            style={{
-              width: "100%",
-              backgroundColor:
-                !selected || !heroName.trim() || submitting ? "#4a2e15" : "#92400e",
-              color: "#fef3c7",
-              padding: "16px 24px",
-              borderRadius: 8,
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              border:
-                "1px solid " +
-                (!selected || !heroName.trim() || submitting ? "#6b3a1a" : "#fbbf24"),
-              cursor: !selected || !heroName.trim() || submitting ? "not-allowed" : "pointer",
-              opacity: !selected || !heroName.trim() || submitting ? 0.5 : 1,
-              fontFamily: "Georgia, serif",
-              transition: "background 0.2s",
-            }}
-          >
-            {submitting ? "Forging the Legend…" : "Begin the Legend"}
-          </button>
-
-          {!selected && (
-            <p
+            <div
               style={{
-                textAlign: "center",
-                color: "#8a7a60",
-                fontSize: 12,
-                margin: "16px 0 0 0",
-                fontStyle: "italic",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 20,
+                marginBottom: 16,
               }}
             >
-              Choose a face above to awaken.
-            </p>
-          )}
-        </form>
+              {heroesOnPage.map((m) => {
+                const isSelected = m.id === selectedId;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => pickMaster(m)}
+                    style={{
+                      background: "rgba(45, 22, 0, 0.55)",
+                      border: isSelected
+                        ? "2px solid #fbbf24"
+                        : "1px solid rgba(146, 64, 14, 0.4)",
+                      boxShadow: isSelected
+                        ? "0 0 0 3px rgba(251, 191, 36, 0.2), 0 8px 32px rgba(0,0,0,0.6)"
+                        : "none",
+                      borderRadius: 10,
+                      padding: 0,
+                      cursor: "pointer",
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      transition: "transform 0.15s, border-color 0.15s",
+                      fontFamily: "Georgia, serif",
+                      color: "inherit",
+                      textAlign: "left",
+                      transform: isSelected ? "translateY(-2px)" : "none",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        aspectRatio: "3 / 4",
+                        background: "linear-gradient(180deg, #1a1208 0%, #000 100%)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <img
+                        src={m.master_image_url}
+                        alt={m.hero_name}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          objectPosition: "center bottom",
+                          filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.6))",
+                        }}
+                      />
+                    </div>
+                    <div style={{ padding: "12px 16px 14px" }}>
+                      <div
+                        style={{
+                          color: "#a8a097",
+                          fontSize: 12,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {tagSummary(m)}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {heroPageCount > 1 && (
+              <Pagination
+                page={heroPage}
+                pageCount={heroPageCount}
+                onChange={setHeroPage}
+              />
+            )}
+
+            <StepFooter
+              rightButton={
+                <WizardButton
+                  primary
+                  disabled={!selected}
+                  onClick={() => selected && goto(2)}
+                  hint={!selected ? "Pick a face to continue" : undefined}
+                >
+                  Continue → Name
+                </WizardButton>
+              }
+            />
+          </section>
+        )}
+
+        {/* ═══ STEP 2 — THE NAME ═══ */}
+        {step === 2 && selected && (
+          <section style={{ maxWidth: 720, margin: "0 auto" }}>
+            <SectionHeading
+              step="II"
+              title="The Name"
+              subtitle="The face thou hast chosen has no name of its own. Give it thy hero's name — one not yet known in the realms."
+            />
+
+            <SelectedHeroPreview hero={selected} />
+
+            <label style={{ display: "block", margin: "28px 0 16px" }}>
+              <span
+                style={{
+                  display: "block",
+                  color: "#fbbf24",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  marginBottom: 8,
+                }}
+              >
+                Hero Name
+              </span>
+              <input
+                autoFocus
+                value={heroName}
+                onChange={(e) => onNameInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && heroName.trim()) {
+                    e.preventDefault();
+                    goto(3);
+                  }
+                }}
+                maxLength={40}
+                placeholder="Type a name"
+                style={{
+                  width: "100%",
+                  background: "#111827",
+                  border: "1px solid #374151",
+                  color: "#e5e7eb",
+                  padding: "14px 18px",
+                  borderRadius: 6,
+                  fontSize: 20,
+                  fontFamily: "Georgia, serif",
+                  outline: "none",
+                  letterSpacing: "0.02em",
+                }}
+              />
+            </label>
+
+            <StepFooter
+              leftButton={
+                <WizardButton onClick={() => goto(1)}>
+                  ← Back to Face
+                </WizardButton>
+              }
+              rightButton={
+                <WizardButton
+                  primary
+                  disabled={!heroName.trim()}
+                  onClick={() => heroName.trim() && goto(3)}
+                  hint={!heroName.trim() ? "Name thy hero first" : undefined}
+                >
+                  Continue → Memory
+                </WizardButton>
+              }
+            />
+          </section>
+        )}
+
+        {/* ═══ STEP 3 — THE LAST MEMORY ═══ */}
+        {step === 3 && selected && (
+          <section>
+            <SectionHeading
+              step="III"
+              title="The Last Memory"
+              subtitle="Something touched thee before thou awokest. Choose a memory — or speak thine own."
+            />
+
+            <div style={{ maxWidth: 720, margin: "0 auto 24px" }}>
+              <SelectedHeroPreview hero={selected} nameOverride={heroName} />
+            </div>
+
+            {/* Filter chips */}
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                marginBottom: 20,
+                justifyContent: "center",
+              }}
+            >
+              {(["all", "blessing", "curse", "ambiguous"] as const).map((f) => {
+                const active = backstoryFilter === f;
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => onFilterChange(f)}
+                    style={{
+                      background: active
+                        ? "rgba(251, 191, 36, 0.18)"
+                        : "rgba(45, 22, 0, 0.4)",
+                      color: active ? "#fbbf24" : "#a8a097",
+                      border: active
+                        ? "1px solid #fbbf24"
+                        : "1px solid rgba(146, 64, 14, 0.4)",
+                      borderRadius: 999,
+                      padding: "6px 16px",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      cursor: "pointer",
+                      fontFamily: "Georgia, serif",
+                    }}
+                  >
+                    {f === "all" ? `All (${HERO_BACKSTORIES.length})` : alignmentLabel(f)}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: 16,
+                marginBottom: 16,
+              }}
+            >
+              {backstoriesOnPage.map((t) => {
+                const isSelected = t.id === backstoryTemplateId;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => pickBackstory(t)}
+                    style={{
+                      background: "rgba(12, 6, 2, 0.7)",
+                      border: isSelected
+                        ? "2px solid #fbbf24"
+                        : "1px solid rgba(146, 64, 14, 0.4)",
+                      boxShadow: isSelected
+                        ? "0 0 0 3px rgba(251, 191, 36, 0.2)"
+                        : "none",
+                      borderRadius: 10,
+                      padding: "16px 18px",
+                      cursor: "pointer",
+                      fontFamily: "Georgia, serif",
+                      color: "inherit",
+                      textAlign: "left",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                        gap: 12,
+                      }}
+                    >
+                      <h3
+                        style={{
+                          color: "#fef3c7",
+                          fontSize: "1.0625rem",
+                          fontWeight: 700,
+                          margin: 0,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {t.title}
+                      </h3>
+                      <span
+                        style={{
+                          color: alignmentColor(t.alignment),
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {alignmentLabel(t.alignment)}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        color: "#a8a097",
+                        fontSize: 13,
+                        margin: 0,
+                        lineHeight: 1.5,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {t.preview}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {backstoryPageCount > 1 && (
+              <Pagination
+                page={backstoryPage}
+                pageCount={backstoryPageCount}
+                onChange={setBackstoryPage}
+              />
+            )}
+
+            {/* Commit form */}
+            <form
+              action={commitHero}
+              onSubmit={() => setSubmitting(true)}
+              style={{
+                maxWidth: 720,
+                margin: "32px auto 0",
+                background: "rgba(12, 6, 2, 0.85)",
+                border: "1px solid rgba(146, 64, 14, 0.4)",
+                borderRadius: 12,
+                padding: 32,
+              }}
+            >
+              <input type="hidden" name="masterId" value={selectedId ?? ""} />
+              <input type="hidden" name="heroName" value={heroName} />
+
+              <p
+                style={{
+                  color: "#fbbf24",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  margin: "0 0 8px 0",
+                }}
+              >
+                The memory as thou dost tell it
+              </p>
+              <p
+                style={{
+                  color: "#a8a097",
+                  fontSize: 13,
+                  margin: "0 0 12px 0",
+                  lineHeight: 1.5,
+                }}
+              >
+                Edit the chosen memory below, or replace it with words of thine own.
+                Leave it blank if thou art not ready to speak — the Chronicle has patience.
+              </p>
+              <textarea
+                name="backstory"
+                value={backstoryText}
+                onChange={(e) => setBackstoryText(e.target.value)}
+                maxLength={800}
+                rows={5}
+                placeholder="The memory, in thine own words…"
+                style={{
+                  width: "100%",
+                  background: "#111827",
+                  border: "1px solid #374151",
+                  color: "#e5e7eb",
+                  padding: "12px 16px",
+                  borderRadius: 6,
+                  fontSize: 14,
+                  fontFamily: "Georgia, serif",
+                  outline: "none",
+                  resize: "vertical",
+                  lineHeight: 1.6,
+                  marginBottom: 24,
+                }}
+              />
+
+              <button
+                type="submit"
+                disabled={!heroName.trim() || submitting}
+                style={{
+                  width: "100%",
+                  backgroundColor:
+                    !heroName.trim() || submitting ? "#4a2e15" : "#92400e",
+                  color: "#fef3c7",
+                  padding: "16px 24px",
+                  borderRadius: 8,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  border:
+                    "1px solid " +
+                    (!heroName.trim() || submitting ? "#6b3a1a" : "#fbbf24"),
+                  cursor: !heroName.trim() || submitting ? "not-allowed" : "pointer",
+                  opacity: !heroName.trim() || submitting ? 0.5 : 1,
+                  fontFamily: "Georgia, serif",
+                  transition: "background 0.2s",
+                }}
+              >
+                {submitting ? "Forging the Legend…" : "Begin the Legend"}
+              </button>
+            </form>
+
+            <StepFooter
+              leftButton={
+                <WizardButton onClick={() => goto(2)}>← Back to Name</WizardButton>
+              }
+            />
+          </section>
+        )}
       </main>
     </div>
   );
 }
 
-// ── Pagination control ────────────────────────────────────────────
+// ════ Subcomponents ════════════════════════════════════════════════
+
+function StepIndicator({
+  step,
+  onJump,
+  canReachStep2,
+  canReachStep3,
+}: {
+  step: Step;
+  onJump: (s: Step) => void;
+  canReachStep2: boolean;
+  canReachStep3: boolean;
+}) {
+  const labels: [Step, string, boolean][] = [
+    [1, "The Face", true],
+    [2, "The Name", canReachStep2],
+    [3, "The Memory", canReachStep3],
+  ];
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 14,
+        marginBottom: 40,
+        flexWrap: "wrap",
+      }}
+    >
+      {labels.map(([n, label, reachable], idx) => {
+        const active = n === step;
+        const passed = n < step;
+        const clickable = reachable;
+        return (
+          <div key={n} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <button
+              type="button"
+              onClick={() => clickable && onJump(n)}
+              disabled={!clickable}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                background: active
+                  ? "rgba(251, 191, 36, 0.16)"
+                  : passed
+                    ? "rgba(146, 64, 14, 0.25)"
+                    : "rgba(45, 22, 0, 0.4)",
+                border: active
+                  ? "1px solid #fbbf24"
+                  : "1px solid rgba(146, 64, 14, 0.35)",
+                color: active ? "#fbbf24" : passed ? "#c5ad75" : "#8a7a60",
+                padding: "8px 16px",
+                borderRadius: 999,
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                fontFamily: "Georgia, serif",
+                cursor: clickable ? "pointer" : "not-allowed",
+                opacity: clickable ? 1 : 0.55,
+              }}
+            >
+              <span
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: active
+                    ? "#fbbf24"
+                    : passed
+                      ? "#92400e"
+                      : "rgba(146, 64, 14, 0.4)",
+                  color: active ? "#030712" : "#fef3c7",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  letterSpacing: 0,
+                }}
+              >
+                {n}
+              </span>
+              {label}
+            </button>
+            {idx < labels.length - 1 && (
+              <span
+                style={{
+                  width: 18,
+                  height: 1,
+                  background: "rgba(146, 64, 14, 0.5)",
+                }}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SelectedHeroPreview({
+  hero,
+  nameOverride,
+}: {
+  hero: HeroMaster;
+  nameOverride?: string;
+}) {
+  const displayName = nameOverride?.trim();
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 20,
+        background: "rgba(45, 22, 0, 0.55)",
+        border: "1px solid rgba(146, 64, 14, 0.4)",
+        borderRadius: 10,
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          width: 72,
+          height: 96,
+          flexShrink: 0,
+          position: "relative",
+          background: "linear-gradient(180deg, #1a1208 0%, #000 100%)",
+          borderRadius: 6,
+          overflow: "hidden",
+        }}
+      >
+        <img
+          src={hero.master_image_url}
+          alt="Chosen hero"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            objectPosition: "center bottom",
+          }}
+        />
+      </div>
+      <div>
+        <div
+          style={{
+            color: displayName ? "#fef3c7" : "#8a7a60",
+            fontSize: "1.125rem",
+            fontWeight: displayName ? 700 : 500,
+            marginBottom: 4,
+            fontStyle: displayName ? "normal" : "italic",
+          }}
+        >
+          {displayName || "Unnamed as yet"}
+        </div>
+        <div style={{ color: "#a8a097", fontSize: 12, lineHeight: 1.4 }}>
+          {tagSummary(hero)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeading({
+  step,
+  title,
+  subtitle,
+}: {
+  step: string;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div style={{ marginBottom: 24, textAlign: "center" }}>
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 16,
+          marginBottom: 6,
+        }}
+      >
+        <span
+          style={{
+            color: "#92400e",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: "0.3em",
+            fontFamily: "Georgia, serif",
+          }}
+        >
+          {step}
+        </span>
+        <h2
+          style={{
+            color: "#fef3c7",
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            margin: 0,
+            letterSpacing: "0.03em",
+          }}
+        >
+          {title}
+        </h2>
+      </div>
+      {subtitle && (
+        <p
+          style={{
+            color: "#a8a097",
+            fontSize: 13,
+            margin: 0,
+            fontStyle: "italic",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function StepFooter({
+  leftButton,
+  rightButton,
+}: {
+  leftButton?: React.ReactNode;
+  rightButton?: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        maxWidth: 720,
+        margin: "32px auto 0",
+        gap: 16,
+      }}
+    >
+      <div>{leftButton}</div>
+      <div>{rightButton}</div>
+    </div>
+  );
+}
+
+function WizardButton({
+  primary,
+  disabled,
+  onClick,
+  hint,
+  children,
+}: {
+  primary?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        style={{
+          background: primary
+            ? disabled
+              ? "#4a2e15"
+              : "#92400e"
+            : "rgba(45, 22, 0, 0.4)",
+          color: primary ? "#fef3c7" : "#c5ad75",
+          padding: primary ? "14px 28px" : "12px 22px",
+          borderRadius: 8,
+          fontSize: primary ? 15 : 13,
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          border:
+            "1px solid " +
+            (primary
+              ? disabled
+                ? "#6b3a1a"
+                : "#fbbf24"
+              : "rgba(146, 64, 14, 0.4)"),
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          fontFamily: "Georgia, serif",
+          transition: "background 0.2s",
+        }}
+      >
+        {children}
+      </button>
+      {hint && (
+        <span style={{ color: "#8a7a60", fontSize: 11, fontStyle: "italic" }}>
+          {hint}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function Pagination({
   page,
@@ -679,7 +1015,8 @@ function paginationBtnStyle(disabled: boolean): React.CSSProperties {
   return {
     background: disabled ? "rgba(45, 22, 0, 0.3)" : "rgba(146, 64, 14, 0.3)",
     color: disabled ? "#5a4a3a" : "#fbbf24",
-    border: "1px solid " + (disabled ? "rgba(146, 64, 14, 0.2)" : "rgba(251, 191, 36, 0.4)"),
+    border:
+      "1px solid " + (disabled ? "rgba(146, 64, 14, 0.2)" : "rgba(251, 191, 36, 0.4)"),
     padding: "8px 16px",
     borderRadius: 6,
     fontSize: 13,
@@ -689,66 +1026,5 @@ function paginationBtnStyle(disabled: boolean): React.CSSProperties {
     cursor: disabled ? "not-allowed" : "pointer",
     fontFamily: "Georgia, serif",
     opacity: disabled ? 0.5 : 1,
-    transition: "background 0.15s",
   };
-}
-
-// ── Section heading ──────────────────────────────────────────────
-
-function SectionHeading({
-  step,
-  title,
-  subtitle,
-}: {
-  step: string;
-  title: string;
-  subtitle?: string;
-}) {
-  return (
-    <div style={{ marginBottom: 20, textAlign: "center" }}>
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 16,
-          marginBottom: 6,
-        }}
-      >
-        <span
-          style={{
-            color: "#92400e",
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: "0.3em",
-            fontFamily: "Georgia, serif",
-          }}
-        >
-          {step}
-        </span>
-        <h2
-          style={{
-            color: "#fef3c7",
-            fontSize: "1.5rem",
-            fontWeight: 700,
-            margin: 0,
-            letterSpacing: "0.03em",
-          }}
-        >
-          {title}
-        </h2>
-      </div>
-      {subtitle && (
-        <p
-          style={{
-            color: "#a8a097",
-            fontSize: 13,
-            margin: 0,
-            fontStyle: "italic",
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
-    </div>
-  );
 }

@@ -20,8 +20,25 @@ export interface HeroBackstoryTemplate {
   full: string;
 }
 
+/**
+ * Ordering note: when the player is on the "all" filter in the wizard,
+ * the list is sliced 5-at-a-time. The order below is deliberately
+ * interleaved so each page of 5 contains at least one curse and at
+ * least one ambiguous ("unknown") memory — players never have to click
+ * through a page of pure blessings to see the dangerous options.
+ *
+ * Per-page layout (5 per page, 4 pages):
+ *   Page 1: 3 blessings · 1 curse · 1 ambiguous
+ *   Page 2: 2 blessings · 2 curses · 1 ambiguous
+ *   Page 3: 3 blessings · 1 curse · 1 ambiguous
+ *   Page 4: 2 blessings · 2 curses · 1 ambiguous
+ *
+ * When the player applies a specific-alignment filter, the usual
+ * ordering for that alignment reappears (filtered + paginated
+ * naturally).
+ */
 export const HERO_BACKSTORIES: HeroBackstoryTemplate[] = [
-  // ── Blessings ─────────────────────────────────────────────
+  // ── Page 1 ────────────────────────────────────────────────
   {
     id: "pillar_of_white_fire",
     title: "Pillar of White Fire",
@@ -44,6 +61,22 @@ export const HERO_BACKSTORIES: HeroBackstoryTemplate[] = [
     full: "A winged shape of pale light passed over you in a black field you cannot name. It touched your chest on the downstroke. You breathe easier than a mortal should when you are afraid.",
   },
   {
+    id: "black_flame_shadow",
+    title: "The Stolen Shadow",
+    alignment: "curse",
+    preview: "Black flame tore your shadow loose and swallowed it.",
+    full: "A shape of black flame tore your shadow loose and swallowed it. You cast a new shadow now. It is not the same shape as you, and at noon it points the wrong way.",
+  },
+  {
+    id: "violet_hands",
+    title: "The Cold and Hot Hand",
+    alignment: "ambiguous",
+    preview: "A violet being laid one hot, one cold hand on you.",
+    full: "A being of pale violet light laid a cold hand on your chest and a hot hand on your back. Something moved between them, through you. You do not know yet which hand gave and which hand took.",
+  },
+
+  // ── Page 2 ────────────────────────────────────────────────
+  {
     id: "rope_of_living_fire",
     title: "The Binding Rope",
     alignment: "blessing",
@@ -57,6 +90,29 @@ export const HERO_BACKSTORIES: HeroBackstoryTemplate[] = [
     preview: "A face of blue flame wept onto your eyes.",
     full: "A face of blue flame wept silver tears onto your eyes. They did not burn. You see a little further in the dark than other men, and the dark sees you less clearly for it.",
   },
+  {
+    id: "cold_blue_question",
+    title: "The Unanswered Question",
+    alignment: "curse",
+    preview: "A cold-lit figure asked a question you could not answer.",
+    full: "A figure of cold blue light asked you a question in a language you knew for a moment. You could not answer. It cut you a small mark beneath your ribs that weeps a little salt when you lie.",
+  },
+  {
+    id: "counted_breaths",
+    title: "The Counted Breaths",
+    alignment: "curse",
+    preview: "An orange flame counted your breaths and stopped.",
+    full: "A being of orange fire counted your breaths aloud. It stopped at one hundred and twenty-three thousand. You do not know how many you have used since, and you do not know what happens when the count runs out.",
+  },
+  {
+    id: "bronze_sigil_eyelids",
+    title: "The Sigil on the Eyelid",
+    alignment: "ambiguous",
+    preview: "A bronze shape wrote a sigil inside your eyelids.",
+    full: "A shape of molten bronze wrote a sigil on the inside of your eyelids. When you sleep, the sigil shines behind your closed eyes. You do not sleep as deeply now, but you do not remember your dreams either.",
+  },
+
+  // ── Page 3 ────────────────────────────────────────────────
   {
     id: "spear_of_light_worm",
     title: "The Grey Worm",
@@ -79,6 +135,22 @@ export const HERO_BACKSTORIES: HeroBackstoryTemplate[] = [
     full: "Six shapes of pale fire stood at the six corners of a cave that had only four. The one to the north hid your shadow behind its own. Your shadow answers to you a little differently now.",
   },
   {
+    id: "white_serpent_heel",
+    title: "The Wayward Foot",
+    alignment: "curse",
+    preview: "A serpent of white light bit your heel.",
+    full: "A serpent of white light bit your heel and left no puncture. Sometimes, now, your right foot will not take you where you meant to go. It takes you somewhere else. Sometimes you are glad.",
+  },
+  {
+    id: "white_flame_friend",
+    title: "The Named Friend",
+    alignment: "ambiguous",
+    preview: "A white flame asked you to name a friend. You did.",
+    full: "A column of white flame asked you to name a friend. You named one. The friend is not where you remember leaving him, and no one you ask remembers him either.",
+  },
+
+  // ── Page 4 ────────────────────────────────────────────────
+  {
     id: "wind_of_white_light",
     title: "The Lifting Wind",
     alignment: "blessing",
@@ -91,36 +163,6 @@ export const HERO_BACKSTORIES: HeroBackstoryTemplate[] = [
     alignment: "blessing",
     preview: "A green flame sank through your chest without burning.",
     full: "A single drop of green fire landed on your chest and sank through it without burning. It did not leave. Something in your heart is not entirely yours anymore, and it answers calls you do not make.",
-  },
-
-  // ── Curses ────────────────────────────────────────────────
-  {
-    id: "black_flame_shadow",
-    title: "The Stolen Shadow",
-    alignment: "curse",
-    preview: "Black flame tore your shadow loose and swallowed it.",
-    full: "A shape of black flame tore your shadow loose and swallowed it. You cast a new shadow now. It is not the same shape as you, and at noon it points the wrong way.",
-  },
-  {
-    id: "cold_blue_question",
-    title: "The Unanswered Question",
-    alignment: "curse",
-    preview: "A cold-lit figure asked a question you could not answer.",
-    full: "A figure of cold blue light asked you a question in a language you knew for a moment. You could not answer. It cut you a small mark beneath your ribs that weeps a little salt when you lie.",
-  },
-  {
-    id: "counted_breaths",
-    title: "The Counted Breaths",
-    alignment: "curse",
-    preview: "An orange flame counted your breaths and stopped.",
-    full: "A being of orange fire counted your breaths aloud. It stopped at one hundred and twenty-three thousand. You do not know how many you have used since, and you do not know what happens when the count runs out.",
-  },
-  {
-    id: "white_serpent_heel",
-    title: "The Wayward Foot",
-    alignment: "curse",
-    preview: "A serpent of white light bit your heel.",
-    full: "A serpent of white light bit your heel and left no puncture. Sometimes, now, your right foot will not take you where you meant to go. It takes you somewhere else. Sometimes you are glad.",
   },
   {
     id: "silver_flame_death",
@@ -135,29 +177,6 @@ export const HERO_BACKSTORIES: HeroBackstoryTemplate[] = [
     alignment: "curse",
     preview: "A yellow pillar burnt your true name out of you.",
     full: "A pillar of yellow fire burnt your true name out of you. What you call yourself now is not your true name, and you know it. You do not know what is. Some nights you almost remember.",
-  },
-
-  // ── Ambiguous ─────────────────────────────────────────────
-  {
-    id: "violet_hands",
-    title: "The Cold and Hot Hand",
-    alignment: "ambiguous",
-    preview: "A violet being laid one hot, one cold hand on you.",
-    full: "A being of pale violet light laid a cold hand on your chest and a hot hand on your back. Something moved between them, through you. You do not know yet which hand gave and which hand took.",
-  },
-  {
-    id: "bronze_sigil_eyelids",
-    title: "The Sigil on the Eyelid",
-    alignment: "ambiguous",
-    preview: "A bronze shape wrote a sigil inside your eyelids.",
-    full: "A shape of molten bronze wrote a sigil on the inside of your eyelids. When you sleep, the sigil shines behind your closed eyes. You do not sleep as deeply now, but you do not remember your dreams either.",
-  },
-  {
-    id: "white_flame_friend",
-    title: "The Named Friend",
-    alignment: "ambiguous",
-    preview: "A white flame asked you to name a friend. You did.",
-    full: "A column of white flame asked you to name a friend. You named one. The friend is not where you remember leaving him, and no one you ask remembers him either.",
   },
   {
     id: "light_voice_choice",

@@ -19,10 +19,14 @@ export async function commitHero(formData: FormData): Promise<void> {
 
   const masterId = (formData.get("masterId") as string | null)?.trim() ?? "";
   const heroName = (formData.get("heroName") as string | null)?.trim() ?? "";
+  const backstoryTemplateIdRaw =
+    (formData.get("backstoryTemplateId") as string | null)?.trim() ?? "";
   const backstoryRaw = (formData.get("backstory") as string | null)?.trim() ?? "";
+  const backstoryTemplateId =
+    backstoryTemplateIdRaw.length > 0 ? backstoryTemplateIdRaw : null;
   const backstory = backstoryRaw.length > 0 ? backstoryRaw : null;
 
-  if (!masterId || !heroName) {
+  if (!masterId || !heroName || !backstoryTemplateId) {
     redirect("/forge-avatar?error=missing_fields");
   }
 
@@ -46,6 +50,7 @@ export async function commitHero(formData: FormData): Promise<void> {
     hero_master_id: masterId,
     character_name: heroName,
     backstory,
+    backstory_template_id: backstoryTemplateId,
     hp: 20,
     max_hp: 20,
     strength: 12,

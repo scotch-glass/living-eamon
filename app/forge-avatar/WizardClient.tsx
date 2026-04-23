@@ -30,7 +30,7 @@ interface Props {
 }
 
 const HEROES_PER_PAGE = 10;
-const BACKSTORIES_PER_PAGE = 6;
+const BACKSTORIES_PER_PAGE = 5;
 type Step = 1 | 2 | 3;
 
 function tagSummary(h: HeroMaster): string {
@@ -73,9 +73,10 @@ export default function WizardClient({ masters, error }: Props) {
   // name-face decoupling rule: we don't want a hundred Kanes).
   const [heroName, setHeroName] = useState<string>("");
 
-  // Backstory
+  // Backstory — player must pick one of the prescripted templates. No
+  // free-text option. Each template is a canonical memory we can wire
+  // into Jane's narration and side quests.
   const [backstoryTemplateId, setBackstoryTemplateId] = useState<string | null>(null);
-  const [backstoryText, setBackstoryText] = useState<string>("");
   const [backstoryFilter, setBackstoryFilter] = useState<BackstoryAlignment | "all">("all");
   const [backstoryPage, setBackstoryPage] = useState(0);
 
@@ -119,8 +120,11 @@ export default function WizardClient({ masters, error }: Props) {
 
   function pickBackstory(t: HeroBackstoryTemplate) {
     setBackstoryTemplateId(t.id);
-    setBackstoryText(t.full);
   }
+
+  const selectedBackstory = backstoryTemplateId
+    ? HERO_BACKSTORIES.find((t) => t.id === backstoryTemplateId) ?? null
+    : null;
 
   function onFilterChange(f: BackstoryAlignment | "all") {
     setBackstoryFilter(f);
@@ -417,7 +421,7 @@ export default function WizardClient({ masters, error }: Props) {
             <SectionHeading
               step="III"
               title="The Last Memory"
-              subtitle="Something touched thee before thou awokest. Choose a memory — or speak thine own."
+              subtitle="Something touched thee before thou awokest. Choose the memory that shall haunt or shield thee — each draws its own thread through the realms."
             />
 
             <div style={{ maxWidth: 720, margin: "0 auto 24px" }}>
@@ -570,6 +574,16 @@ export default function WizardClient({ masters, error }: Props) {
             >
               <input type="hidden" name="masterId" value={selectedId ?? ""} />
               <input type="hidden" name="heroName" value={heroName} />
+              <input
+                type="hidden"
+                name="backstoryTemplateId"
+                value={backstoryTemplateId ?? ""}
+              />
+              <input
+                type="hidden"
+                name="backstory"
+                value={selectedBackstory?.full ?? ""}
+              />
 
               <p
                 style={{
@@ -581,49 +595,96 @@ export default function WizardClient({ masters, error }: Props) {
                   margin: "0 0 8px 0",
                 }}
               >
-                The memory as thou dost tell it
+                Thy chosen memory
               </p>
-              <p
-                style={{
-                  color: "#a8a097",
-                  fontSize: 13,
-                  margin: "0 0 12px 0",
-                  lineHeight: 1.5,
-                }}
-              >
-                Edit the chosen memory below, or replace it with words of thine own.
-                Leave it blank if thou art not ready to speak — the Chronicle has patience.
-              </p>
-              <textarea
-                name="backstory"
-                value={backstoryText}
-                onChange={(e) => setBackstoryText(e.target.value)}
-                maxLength={800}
-                rows={5}
-                placeholder="The memory, in thine own words…"
-                style={{
-                  width: "100%",
-                  background: "#111827",
-                  border: "1px solid #374151",
-                  color: "#e5e7eb",
-                  padding: "12px 16px",
-                  borderRadius: 6,
-                  fontSize: 14,
-                  fontFamily: "Georgia, serif",
-                  outline: "none",
-                  resize: "vertical",
-                  lineHeight: 1.6,
-                  marginBottom: 24,
-                }}
-              />
+
+              {selectedBackstory ? (
+                <div
+                  style={{
+                    background: "rgba(30, 18, 6, 0.6)",
+                    border: "1px solid rgba(251, 191, 36, 0.25)",
+                    borderRadius: 8,
+                    padding: "16px 20px",
+                    marginBottom: 24,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "baseline",
+                      gap: 12,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <h4
+                      style={{
+                        color: "#fef3c7",
+                        fontSize: "1.0625rem",
+                        fontWeight: 700,
+                        margin: 0,
+                      }}
+                    >
+                      {selectedBackstory.title}
+                    </h4>
+                    <span
+                      style={{
+                        color: alignmentColor(selectedBackstory.alignment),
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {alignmentLabel(selectedBackstory.alignment)}
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      color: "#e8d4a0",
+                      fontSize: 14,
+                      lineHeight: 1.65,
+                      margin: 0,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {selectedBackstory.full}
+                  </p>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    background: "rgba(30, 18, 6, 0.4)",
+                    border: "1px dashed rgba(146, 64, 14, 0.4)",
+                    borderRadius: 8,
+                    padding: "20px 20px",
+                    marginBottom: 24,
+                    textAlign: "center",
+                  }}
+                >
+                  <p
+                    style={{
+                      color: "#8a7a60",
+                      fontSize: 13,
+                      margin: 0,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Choose a memory from the cards above. Each shapes what thou dost
+                    carry into the Church of Perpetual Life.
+                  </p>
+                </div>
+              )}
 
               <button
                 type="submit"
-                disabled={!heroName.trim() || submitting}
+                disabled={!heroName.trim() || !backstoryTemplateId || submitting}
                 style={{
                   width: "100%",
                   backgroundColor:
-                    !heroName.trim() || submitting ? "#4a2e15" : "#92400e",
+                    !heroName.trim() || !backstoryTemplateId || submitting
+                      ? "#4a2e15"
+                      : "#92400e",
                   color: "#fef3c7",
                   padding: "16px 24px",
                   borderRadius: 8,
@@ -633,15 +694,34 @@ export default function WizardClient({ masters, error }: Props) {
                   textTransform: "uppercase",
                   border:
                     "1px solid " +
-                    (!heroName.trim() || submitting ? "#6b3a1a" : "#fbbf24"),
-                  cursor: !heroName.trim() || submitting ? "not-allowed" : "pointer",
-                  opacity: !heroName.trim() || submitting ? 0.5 : 1,
+                    (!heroName.trim() || !backstoryTemplateId || submitting
+                      ? "#6b3a1a"
+                      : "#fbbf24"),
+                  cursor:
+                    !heroName.trim() || !backstoryTemplateId || submitting
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity:
+                    !heroName.trim() || !backstoryTemplateId || submitting ? 0.5 : 1,
                   fontFamily: "Georgia, serif",
                   transition: "background 0.2s",
                 }}
               >
                 {submitting ? "Forging the Legend…" : "Begin the Legend"}
               </button>
+              {!backstoryTemplateId && (
+                <p
+                  style={{
+                    textAlign: "center",
+                    color: "#8a7a60",
+                    fontSize: 12,
+                    margin: "12px 0 0 0",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Select one of the memories above to begin.
+                </p>
+              )}
             </form>
 
             <StepFooter

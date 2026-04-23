@@ -108,6 +108,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [worldState, setWorldState] = useState<WorldState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // On mount, auto-collapse the sidebar after 5 seconds so the player sees
+  // it exists and how it expands, then gets it out of the way.
+  useEffect(() => {
+    const t = setTimeout(() => setSidebarOpen(false), 5000);
+    return () => clearTimeout(t);
+  }, []);
   const [sidebarTab, setSidebarTab] = useState<"stats" | "gear" | "pack">("stats");
   const [actionMenu, setActionMenu] = useState<{
     item: import("../lib/gameData").Item;

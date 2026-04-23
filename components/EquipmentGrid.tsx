@@ -72,7 +72,7 @@ export default function EquipmentGrid({
     <div>
       <div
         style={{
-          color: "#92400e",
+          color: "#aaaaaa",
           fontSize: 9,
           letterSpacing: "0.1em",
           marginBottom: 6,
@@ -110,7 +110,7 @@ export default function EquipmentGrid({
               <div
                 style={{
                   fontSize: 8,
-                  color: "#5a4a3a",
+                  color: "#aaaaaa",
                   fontFamily: "Georgia, serif",
                   letterSpacing: "0.05em",
                   textAlign: "center",

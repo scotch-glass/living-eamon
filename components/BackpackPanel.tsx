@@ -22,7 +22,7 @@ export default function BackpackPanel({
     return (
       <div
         style={{
-          color: "#5a4a3a",
+          color: "#aaaaaa",
           fontSize: 11,
           fontStyle: "italic",
           fontFamily: "Georgia, serif",
@@ -39,7 +39,7 @@ export default function BackpackPanel({
     <div>
       <div
         style={{
-          color: "#92400e",
+          color: "#aaaaaa",
           fontSize: 9,
           letterSpacing: "0.1em",
           marginBottom: 6,

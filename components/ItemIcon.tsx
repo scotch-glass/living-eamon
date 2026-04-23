@@ -147,7 +147,7 @@ export default function ItemIcon({
       ) : (
         <span
           style={{
-            color: "#5a4a3a",
+            color: "#aaaaaa",
             fontSize: Math.floor(size * 0.5),
             fontFamily: "Georgia, serif",
             opacity: loading ? 0.7 : 0.4,

@@ -1072,17 +1072,19 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 ---
 
-## ⚡ Most recent session (2026-05-01) — Sprint 7 vocabulary swap (partial; Outer Dark + Circles 5–8 still deferred)
+## ⚡ Most recent session (2026-05-01) — Sprint 7 vocabulary swap shipped; Sprint 7a Sorcery bedrock confirmed already on prod
 
-**The day's headline:** the legacy third-party Words-of-Power vocabulary that the Eight Circles inherited from a CRPG ancestor was replaced wholesale with an original Latinate compositional system. **No engine code changed.** Mechanics, mana costs, reagents, and Illumination cost-curve are unchanged; only the in-fiction language is new. Sprint 7's larger scope (Outer Dark patron-response, Circle 5–8 implementation, witness/Order combat hookup) remains deferred until Sprint 8 ships.
+**The day's headline:** Sprint 7 jumped its place in the queue. The legacy third-party Words-of-Power vocabulary was replaced wholesale with an original Latinate compositional system (`ea02d20` → merged `c953c23`). On hydration the next sub-sprint after that — **Sprint 7a, the full INVOKE bedrock (registry of all 64 spells, parser, Circle/mana/reagent/Illumination gates, `unlockCircle` quest reward wiring, 23-case test suite)** — was already shipped on commit `aab3eed` (merged into main as `6940c48`). The previous session built and committed it but did not update CLAUDE_CONTEXT.md to reflect the ship; **always re-check `git log --oneline --all --graph | head -20` against the most-recent-session block at the top of this file when hydrating, since the block can lag actual repo state.**
 
-### Shipped on dev (commit `ea02d20`, not yet pushed/merged)
+### Magic-system state on prod (main `6940c48`)
 
-- **`SORCERY.md`** — new §5b "Words of Power — Vocabulary" documenting 12 operators (Aug, Min, Mag, Crea, Solv, Mut, Tra, Ten, Lib, Dur, Vel, Pluv) and 30+ element roots (Ign, Aqu, Aer, Terr, Vit, Mort, Mens, Cor, Tox, Via, Ict, Sag, Pot, Dex, Aeg, Mur, Camp, Ful, Bes, Sig, Loc, Fer, Arc, etc.). Grammar: `[operator] [element]` with `Mag` stacking in front to amplify. All 64 spells across the 8 circles retabled with unique non-colliding phrases.
-- **`GAME_DESIGN.md`** lines 1115/1118/1120 — Mark/Recall/Gate Travel rune references updated to new phrases (`Crea Sig Loc` / `Crea Tra Via` / `Mag Mut Via`).
-- **Verification:** zero matches for legacy vocabulary tokens (Uus/Mani/Ylem/Sanct/Flam/Nox/Grav/Hur/Xen/Quas/Ort/Wis/Jux/Vas/Des/Kal/Rel/Lor/Por/Corp) in either magic-spec doc.
+- **Words of Power** — original Latinate vocabulary canonicalized in SORCERY.md §5b. 12 operators (Aug, Min, Mag, Crea, Solv, Mut, Tra, Ten, Lib, Dur, Vel, Pluv) + 30+ elements (Ign, Aqu, Aer, Terr, Vit, Mort, Mens, Cor, Tox, Via, Ict, Sag, Pot, Dex, Aeg, Mur, Camp, Ful, Bes, Sig, Loc, Fer, Arc, …). Grammar: `[operator] [element]` with `Mag` stacking. All 64 spell phrases unique.
+- **`lib/sorcery/`** — `types.ts` (Spell shape, CIRCLE_ILLUMINATION_DRAIN/MANA_COST/NARRATIVE_WARNING tables, InvokeOutcome union) · `registry.ts` (64-spell SPELL_REGISTRY + lookups by id/words/circle) · `invoke.ts` (`handleInvoke` parser + dispatcher with Circle→mana→reagent→Illum cascade, `composeInvokeResponse` for every outcome kind).
+- **`PlayerState.knownCircles: number[]`** in `lib/gameState.ts` — set by quest reward `unlockCircle` via `lib/quests/engine.ts:applyReward`. Idempotent, sorted ascending, persists across rebirth.
+- **`lib/gameEngine.ts`** — INVOKE prefix routes to `handleInvoke`; unrecognized/empty falls through to Jane for atmospheric fizzle, structured outcomes render via `composeInvokeResponse`.
+- **`__tests__/sorcery/sprint-7a.test.ts`** — 23 cases covering registry shape, parser case/order rules, all gate-cascade outcomes, success path with reagent consumption, narrative warnings at C2/C3, Illumination drain at C4 (−2) and C8 (−30), unlockCircle idempotency.
 
-### Sample mappings (legacy → new)
+### Sample vocabulary mappings (legacy → new)
 
 | Spell | Was | Now |
 |-------|-----|-----|
@@ -1092,13 +1094,22 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 | Resurrection | `An Corp` | `Solv Mort` |
 | Summon Daemon | `Kal Vas Xen Corp` | `Crea Bes Mort` |
 
-### Why now
+### What's still ahead in Sprint 7
 
-The previous vocabulary was lifted directly from a third-party property. Living Eamon needed its own Old Tongue **before** any in-fiction prose, NPC dialogue, scroll, or scroll-of-Thoth riddle quotes a spell aloud. Once content starts citing Words of Power by name, retroactive renaming gets expensive. Sprint 7 vocabulary was promoted out of its original scope and shipped early.
+| Sub-sprint | Scope | State |
+|---|---|---|
+| 7-vocab + 7a | Vocabulary, registry, INVOKE handler, gates | ✅ shipped (this session) |
+| 7b | Numeric effect dispatch — damage/heal/buff/debuff actually fire (today's INVOKE success only emits chronicle text + description) | ❌ stubbed, explicitly TODO in invoke.ts/registry.ts |
+| 7c | Outer Dark patron-response — low-Illumination amplifies subsequent INVOKE attempts (SORCERY.md §7) | ❌ design-only |
+| 7d | The Order witness mechanic — public-room casting probability spike → investigation thread (SORCERY.md §4) | ❌ Phase 2 per spec |
+
+### Hydration discipline (lesson from this session)
+
+The most-recent-session block at the top of this file **can lag actual repo state by one or more sprints**. When hydrating a new session, always run `git log --oneline --all --graph | head -20` and compare to what this section claims is shipped. If the log shows a sprint commit that this section doesn't mention, treat the log as authoritative and update this section before proceeding — the session that shipped that sprint forgot to update CLAUDE_CONTEXT.md. Sprint 7a was shipped this way and almost caused this session to re-do it.
 
 ### Next
 
-Push `dev` and merge `dev` → `main` (held back pending Scotch's eyeball — content overhaul of canonical doc). Then resume the planned order: **Sprint 8e** (Stobaean fragments + Logos Teleios) is still next per the original plan; the rest of Sprint 7 (Outer Dark, Circles 5–8 implementation) stays deferred until Sprint 8 finishes.
+Sprint 7b (numeric effect dispatch) is the natural next chunk: turning successful INVOKE outcomes from chronicle-only flavor into actual numeric effects per `effectKind` (damage spells deal HP damage, heal spells restore HP, buffs/debuffs apply temporary stat modifiers, summons add allies, fields persist for turns). The TODO is explicit in `lib/sorcery/invoke.ts` and `lib/sorcery/registry.ts` comments.
 
 ---
 

@@ -31,13 +31,30 @@ export interface NPC {
   isTrainingDummy?: boolean;
   /** Combat narration; omit for humanoid (default) */
   bodyType?: NPCBodyType;
+  /**
+   * Karma-relevant tags read by Sprint 5's combat-PICSSI deltas.
+   * Multiple tags allowed.
+   *   "dark"     — demon, dark cultist, dark sorceror; killing → +Illumination toward Light
+   *   "undead"   — animated dead; treated as dark for Illumination purposes
+   *   "demon"    — outer-dark spawn; treated as dark
+   *   "sorceror" — Occult practitioner the Order would also hunt; treated as dark
+   *   "innocent" — non-combatant peasant / child / unarmed civilian; killing → −Illumination + −Standing
+   *   "friendly" — Way ally, named hub NPC, training dummy. Killing one is the catastrophic-delta path.
+   *   "serpent"  — Serpent-Man infiltrator (also "dark" for Illumination)
+   * KARMA_SYSTEM.md §4c.
+   */
+  tags?: Array<"dark" | "undead" | "demon" | "sorceror" | "innocent" | "friendly" | "serpent">;
   stats: { hp: number; armor: number; damage: string };
-  /** HWRR-style per-zone armor + AI targeting. Auto-derived from flat armor if absent. */
+  /** body-zone-style per-zone armor + AI targeting. Auto-derived from flat armor if absent. */
   combatProfile?: NPCCombatProfile;
   /** Grok Imagine portrait prompt — used for character image generation. */
   portraitPrompt?: string;
   /** Grok Imagine sprite prompt — full-body on WHITE background, for transparent PNG conversion. */
   spritePrompt?: string;
+  /** Creature scale category for canonical sprite framing.
+   *  Defaults to "medium" (human-sized) when omitted. Use "small"
+   *  for dwarves/gnomes/halflings and "large" for trolls/giants/ogres. */
+  spriteSize?: import("./spriteFraming").SpriteSize;
   merchant?: {
     inventory: string[];     // Item ids for sale
     haggleModifier: number;  // -1 easy to haggle, +1 hard
@@ -65,7 +82,7 @@ export interface Item {
     damage?: string;         // e.g. "1d6+2"
     armorClass?: number;     // LEGACY flat AC — still used by old armor
     healAmount?: number;
-    // Per-zone armor stats (HWRR-style)
+    // Per-zone armor stats (body-zone-style)
     zoneSlot?: BodyZone;     // Which body zone this armor covers
     zoneCover?: number;      // 0-100, % chance to block
     zoneDurability?: number; // Starting durability
@@ -105,36 +122,9 @@ export interface SamShopRow {
 }
 
 export const SAM_INVENTORY: SamShopRow[] = [
-  { key: "dagger", displayName: "Dagger", price: 8 },
   { key: "short_sword", displayName: "Short Sword", price: 15 },
   { key: "long_sword", displayName: "Long Sword", price: 30 },
-  { key: "katana", displayName: "Katana", price: 90 },
-  { key: "kryss", displayName: "Kryss", price: 35 },
-  { key: "war_axe", displayName: "War Axe", price: 70 },
-  { key: "mace", displayName: "Mace", price: 45 },
-  { key: "scepter", displayName: "Scepter", price: 50 },
-  { key: "scimitar", displayName: "Scimitar", price: 55 },
-  { key: "cutlass", displayName: "Cutlass", price: 50 },
-  { key: "skinning_knife", displayName: "Skinning Knife", price: 10 },
-  { key: "halberd", displayName: "Halberd", price: 100 },
-  { key: "battle_axe", displayName: "Battle Axe", price: 95 },
-  { key: "war_hammer", displayName: "War Hammer", price: 110 },
-  { key: "maul", displayName: "Maul", price: 95 },
-  { key: "bardiche", displayName: "Bardiche", price: 100 },
-  { key: "executioners_axe", displayName: "Executioner's Axe", price: 120 },
-  { key: "large_battle_axe", displayName: "Large Battle Axe", price: 115 },
-  { key: "spear", displayName: "Spear", price: 75 },
-  { key: "war_fork", displayName: "War Fork", price: 70 },
-  { key: "black_staff", displayName: "Black Staff", price: 40 },
-  { key: "gnarled_staff", displayName: "Gnarled Staff", price: 35 },
-  { key: "quarter_staff", displayName: "Quarter Staff", price: 25 },
-  { key: "pitchfork", displayName: "Pitchfork", price: 30 },
-  { key: "bow", displayName: "Bow", price: 80 },
-  { key: "crossbow", displayName: "Crossbow", price: 45 },
-  { key: "repeating_crossbow", displayName: "Repeating Crossbow", price: 90 },
-  { key: "leather_armor", displayName: "Leather Armor", price: 20 },
-  { key: "chain_mail", displayName: "Chain Mail", price: 60 },
-  { key: "buckler", displayName: "Buckler", price: 30 },
+  { key: "great_sword", displayName: "Great Sword", price: 80 },
 ];
 
 // ============================================================
@@ -267,7 +257,12 @@ export const NPCS: Record<string, NPC> = {
     isHostile: false,
     stats: { hp: 15, armor: 1, damage: "1d4" },
     merchant: {
-      inventory: ["short_sword", "leather_armor", "buckler", "torch", "rope", "rations"],
+      inventory: [
+        "old_leather_armor",
+        "old_iron_helm",
+        "old_leather_gorget",
+        "old_wooden_shield",
+      ],
       haggleModifier: -1,
     },
   },
@@ -461,13 +456,13 @@ export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
     `"Fighting's changed since you forgot," Aldric says. He leans forward.\n\n"You start a fight with __CMD:ATTACK DUFUS__ — or whatever you're fighting. That locks you in. From there, you pick a body part to hit every round:"\n\n__CMD:STRIKE TORSO__ __CMD:STRIKE LIMBS__ __CMD:STRIKE HEAD__ __CMD:STRIKE NECK__\n\n"Torso's the easy shot — big target, hard to miss. Limbs are a little harder. Head is genuinely difficult. Neck?" He draws a finger across his throat. "Double damage. But you'll miss more than you hit unless you're very good or very lucky."\n\n"Every round: you pick a zone, they pick a zone. Initiative decides who swings first. Three things can stop your strike — they dodge it, their shield catches it, or their armor turns it. If it gets through all three, it lands."\n\nHe flexes his wooden hand. "Injuries happen. Head shots cause concussions. Neck hits sever arteries. Break a man's leg and he can't flee. Break his arm and he can't swing straight."\n\n"If it goes badly: __CMD:FLEE__. No shame in living."\n\nMore? __CMD:TELL Aldric training__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric survival__`,
   ],
   training: [
-    `"Two ways to get better with a weapon," Aldric says.\n\n"First way: hit things. Every time you land a real hit, your weapon skill ticks up one point. Slow. Cheap. Effective."\n\n"Second way: pay me." He almost smiles. "Say __CMD:TRAIN__ and the skill you want — SWORDSMANSHIP, MACE, FENCING, ARCHERY, and so on. I charge by how good you already are:"\n\n"Skill 0–19: twenty-five gold, I put five points in. 20–49: a hundred gold, ten points. 50–99: three hundred, fifteen points. 100–199: seven-fifty, twenty points. Past two hundred? Find a better teacher."\n\n"Total skill across all nine tracks caps at seven hundred. Push past it and something else drops a point to make room."\n\n"No gold at all? Go south to the courtyard. __CMD:ATTACK DUFUS__. The training dummy teaches basics for free — up to twenty-five points in whatever you're swinging. After that you need real enemies or real gold."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric adventures__`,
+    `"Two ways to get better with a weapon," Aldric says.\n\n"First way: hit things. Every time you land a real hit, your weapon skill ticks up one point. Slow. Cheap. Effective."\n\n"Second way: pay me." He almost smiles. "Say __CMD:TRAIN__ and the skill you want — SWORDSMANSHIP, ARMOR, SHIELD, and so on. I charge by how good you already are:"\n\n"Skill 0–19: twenty-five gold, I put five points in. 20–49: a hundred gold, ten points. 50–99: three hundred, fifteen points. 100–199: seven-fifty, twenty points. Past two hundred? Find a better teacher."\n\n"Total skill across all six tracks caps at seven hundred. Push past it and something else drops a point to make room."\n\n"No gold at all? Go south to the courtyard. __CMD:ATTACK DUFUS__. The training dummy teaches basics for free — up to twenty-five points in whatever you're swinging. After that you need real enemies or real gold."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric adventures__`,
   ],
   skills: [
-    `"Nine tracks," Aldric says, ticking them off. "Swordsmanship, Mace Fighting, Fencing, Archery, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery."\n\n"Your weapon skill does two things in a fight. First — dexterous fighters are harder to hit, and your dexterity helps you land hits too. Skill doesn't change that. What skill does is increase your chance of a critical hit — a rare, ugly thing — and it's what I train for gold."\n\n"Here's the important part: armor makes you slower. Every piece of steel you strap on costs you agility. Leather costs a little. Chain costs more. Plate?" He shakes his head. "Plate is for men on horses, not men in caves."\n\n"A fast fighter in no armor who knows how to move — that's the hardest thing to kill in a dungeon. A slow fighter in full chain gets hit by everything but shrugs most of it off. Different path, same survival. Pick one."\n\n"__CMD:STATS__ shows your sheet. __CMD:INVENTORY__ shows your gear."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__ __CMD:TELL Aldric adventures__`,
+    `"Six tracks," Aldric says, ticking them off. "Swordsmanship, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery."\n\n"Your weapon skill does two things in a fight. First — dexterous fighters are harder to hit, and your dexterity helps you land hits too. Skill doesn't change that. What skill does is increase your chance of a critical hit — a rare, ugly thing — and it's what I train for gold."\n\n"Here's the important part: armor makes you slower. Every piece of steel you strap on costs you agility. Leather costs a little. Chain costs more. Plate?" He shakes his head. "Plate is for men on horses, not men in caves."\n\n"A fast fighter in no armor who knows how to move — that's the hardest thing to kill in a dungeon. A slow fighter in full chain gets hit by everything but shrugs most of it off. Different path, same survival. Pick one."\n\n"__CMD:STATS__ shows your sheet. __CMD:INVENTORY__ shows your gear."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__ __CMD:TELL Aldric adventures__`,
   ],
   adventures: [
-    `"Go east from this hall to the notice-board room," Aldric says. "__CMD:GO EAST__. Three contracts on Guild parchment:"\n\n"The Beginner's Cave — goblin infestation north of the city. Novice difficulty. Start here."\n\n"The Thieves Guild — social infiltration. Moderate. Not for the clumsy."\n\n"The Haunted Manor — if you've said goodbye to everyone you love."\n\n"__CMD:READ__ the board in that room for the full postings. When you're ready, the posting tells you the exact command — ENTER THE BEGINNER'S CAVE, and so on. Spell it like the posting says."\n\nHe leans in. "Start with the Cave unless you enjoy being a cautionary tale."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__`,
+    `"Go east from this hall to the notice-board room," Aldric says. "__CMD:GO EAST__. Three contracts on Guild parchment:"\n\n"The Mirrors of Tuzun Thune — a sealed wizard's tower out west. Light fighting, mostly poking around in the dark. Start there."\n\n"The Serpent in the Court — a noble's house two days north has gone strange. Cleverer work, but you'll bleed in it."\n\n"The Pictish Time-Tomb — if you've said your goodbyes."\n\n"__CMD:READ__ the board in that room for the full postings. When you're ready, the posting tells you the exact command — ENTER THE MIRRORS OF TUZUN THUNE, and so on. Spell it like the posting says."\n\nHe leans in. "Start with the Mirrors unless you enjoy being a cautionary tale."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__`,
   ],
   world: [
     `"You're in the Guild of Free Adventurers," Aldric says. "This is where everything starts and everything returns to."\n\n"Main Hall — company, drink, me. __CMD:GO EAST__ for the notice board. __CMD:GO NORTH__ for the armory — Pip's got basic gear. __CMD:GO DOWN__ for the bank — Brunt banks your gold. __CMD:GO SOUTH__ for the courtyard — fresh air, Sam's weapon shop to the north of it, and Dufus the training dummy."\n\n"The Church of Perpetual Life is west from the courtyard. You came from there. You'll go back. It brings you back when you die — stripped of everything except what's in the bank."\n\n"Hokas runs the bar here. Buy food from him — it heals. Treat him well; he remembers."\n\n"The city outside Ostavar is a conversation for another day."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric adventures__`,
@@ -531,20 +526,7 @@ export const ITEM_ICON_PROMPTS: Record<string, string> = {
   // ── Weapons ────────────────────────────────────────────────
   // Most weapon names ARE the object — use defaults. Override
   // only where the name is ambiguous or the default came out wrong.
-  battle_axe: "heavy two-handed iron battle axe with a long wooden haft, lying diagonally with the wooden grip at the lower-left and the broad iron axe-head at the upper-right",
-  scimitar: "curved single-edged scimitar with a leather-wrapped grip, lying diagonally with the hilt at the lower-left and the curved blade-tip at the upper-right",
-  rusty_shortsword: "rusty pitted iron short sword with a weathered leather-wrapped grip and a notched dull edge",
-  butcher_knife: "heavy-bladed kitchen butcher knife, single-edged, wooden handle, slightly stained blade",
-  black_staff: "dark length of polished black hardwood, six feet long, slight taper, banded with a single dull-iron ring near one end",
-  gnarled_staff: "twisted gnarled hardwood quarterstaff, knotted and bark-stripped, six feet long",
-  castoff_short_sword: "old worn short sword, pitted blade, loose grip wrapping, bent crossguard",
-  quarter_staff: "smooth straight hardwood quarterstaff, six feet long, banded at both ends with iron rings",
-  pitchfork: "rusted three-tined iron pitchfork on a long wooden haft",
-  bow: "simple curved hunting longbow of yew with a hempen string",
-  crossbow: "heavy wooden crossbow with iron prod and a hempen string, mounted on a polished stock",
-  repeating_crossbow: "compact wooden repeating crossbow with a vertical magazine box on top of the stock",
-  spear: "iron-tipped wooden spear, leaf-shaped blade, six feet long",
-  war_fork: "long-hafted weapon with twin curved iron prongs at the head, pole-arm length",
+  great_sword: "massive two-handed great sword with a long straight double-edged steel blade, leather-wrapped grip with a heavy steel pommel and a long crossguard, lying diagonally with the hilt at the lower-left and the blade-tip at the upper-right",
 
   // ── Clothing — charity barrel + Sam outfit + Hokas pity gift ─
   gray_robe: "thin pale-gray cloth robe with no back, hanging limp and shapeless, plain shoulders",
@@ -570,19 +552,10 @@ export const ITEM_ICON_PROMPTS: Record<string, string> = {
   ragged_shoes: "pair of soft-soled tan leather shoes, well-worn",
 
   // ── Armor (zone-tagged) ────────────────────────────────────
-  leather_armor: "studded brown leather chest cuirass with shoulder straps and a buckle at the side, lacing visible",
-  chain_mail: "interlocking iron chain-mail hauberk torso, draped, slight weathering",
-  buckler: "small round metal-rimmed wooden buckler shield, central iron boss, leather grip strap on the back",
-  leather_cap: "simple brown leather skullcap with a chinstrap, low-profile, plain",
-  iron_helm: "open-faced iron skull-helm with a riveted brow band and a leather chinstrap",
-  leather_gorget: "high stiff brown leather gorget collar that wraps the throat, with side buckles",
-  chain_coif: "iron chain-mail coif (head and neck covering), draped on a wooden form",
-  leather_greaves: "pair of brown leather greaves shaped to cover shins and knees, with side lacing",
-  chain_greaves: "pair of iron chain-mail leg greaves, draped",
-  plate_helm: "polished steel close-helm with cheek-plates and a slim eye-slit, full plate construction",
-  plate_gorget: "polished steel articulated gorget collar with overlapping plates and rivets",
-  plate_cuirass: "polished steel breastplate cuirass with shoulder pauldrons, full plate construction",
-  plate_greaves: "pair of polished steel articulated leg greaves with knee cops and rivets",
+  old_leather_armor: "studded brown leather chest cuirass with shoulder straps and a buckle at the side, lacing visible, scuffed and weathered",
+  old_wooden_shield: "small round wooden shield with an iron rim and a central iron boss, leather grip strap on the back, battered with sword-marks",
+  old_iron_helm: "open-faced iron skull-helm with a riveted brow band and a leather chinstrap, dented and weathered",
+  old_leather_gorget: "high stiff brown leather neckguard collar that wraps the throat, with side buckles, scuffed",
 
   // ── Consumables / Potions / Cures ──────────────────────────
   healing_potion: "small glass vial of deep red liquid with a cork stopper, slightly luminous",
@@ -631,224 +604,24 @@ export const ITEMS: Record<string, Item> = {
     stats: { damage: "1d6" },
     isCarryable: true,
   },
-  rusty_shortsword: {
-    id: "rusty_shortsword",
-    name: "Rusty Short Sword",
-    description:
-      "A short sword that has seen better decades. The blade is pitted with rust and the edge is uneven, but it is heavier than a fist and that is the point.",
-    glance: "A pitted, rusty blade. Better than fists.",
-    type: "weapon",
-    value: 1,
-    stats: { damage: "1d4" },
-    isCarryable: true,
-  },
-  butcher_knife: {
-    id: "butcher_knife",
-    name: "Butcher Knife",
-    description:
-      "A heavy-bladed kitchen knife, well-used and not recently cleaned. It was made for cutting meat and it will do that regardless of what kind of meat is in front of it.",
-    glance: "A heavy kitchen knife. Not recently cleaned.",
-    type: "weapon",
-    value: 2,
-    stats: { damage: "2-14" },
-    isCarryable: true,
-  },
   long_sword: {
     id: "long_sword",
     name: "Long Sword",
     description: "A proper sword for proper heroics. Heavier than a short sword, but the extra reach has saved many lives.",
+    glance: "A long sword with reach.",
     type: "weapon",
     value: 30,
     stats: { damage: "1d8+1" },
     isCarryable: true,
   },
-  dagger: {
-    id: "dagger",
-    name: "Dagger",
-    description: "Small, concealable, and surprisingly effective at close range. Also useful for eating.",
+  great_sword: {
+    id: "great_sword",
+    name: "Great Sword",
+    description: "A two-handed great sword — long, heavy, and built to end fights in a single committed swing.",
+    glance: "A massive two-handed great sword.",
     type: "weapon",
-    value: 8,
-    stats: { damage: "1d4+1" },
-    isCarryable: true,
-  },
-  crossbow: {
-    id: "crossbow",
-    name: "Crossbow",
-    description: "A heavy crossbow with a box of twenty bolts. Requires two hands and time to reload, but hits hard.",
-    type: "weapon",
-    value: 45,
-    stats: { damage: "5-14" },
-    isCarryable: true,
-  },
-  katana: {
-    id: "katana",
-    name: "Katana",
-    description: "A curved single-edged blade in the eastern style.",
-    type: "weapon",
-    value: 90,
-    stats: { damage: "4-15" },
-    isCarryable: true,
-  },
-  kryss: {
-    id: "kryss",
-    name: "Kryss",
-    description: "A slender wavy-bladed thrusting blade.",
-    type: "weapon",
-    value: 35,
-    stats: { damage: "2-13" },
-    isCarryable: true,
-  },
-  war_axe: {
-    id: "war_axe",
-    name: "War Axe",
-    description: "A one-handed axe balanced for war.",
-    type: "weapon",
-    value: 70,
-    stats: { damage: "5-15" },
-    isCarryable: true,
-  },
-  mace: {
-    id: "mace",
-    name: "Mace",
-    description: "A flanged head on a stout handle — armor's worst friend.",
-    type: "weapon",
-    value: 45,
-    stats: { damage: "4-14" },
-    isCarryable: true,
-  },
-  scepter: {
-    id: "scepter",
-    name: "Scepter",
-    description: "An ornamental weapon that still cracks skulls.",
-    type: "weapon",
-    value: 50,
-    stats: { damage: "4-14" },
-    isCarryable: true,
-  },
-  scimitar: {
-    id: "scimitar",
-    name: "Scimitar",
-    description: "A curved scimitar that sings when it cuts.",
-    type: "weapon",
-    value: 55,
-    stats: { damage: "3-14" },
-    isCarryable: true,
-  },
-  cutlass: {
-    id: "cutlass",
-    name: "Cutlass",
-    description: "A sailor's favorite — short, sturdy, vicious.",
-    type: "weapon",
-    value: 50,
-    stats: { damage: "3-14" },
-    isCarryable: true,
-  },
-  skinning_knife: {
-    id: "skinning_knife",
-    name: "Skinning Knife",
-    description: "A small curved blade; useful in camp or in a tight fight.",
-    type: "weapon",
-    value: 10,
-    stats: { damage: "1-9" },
-    isCarryable: true,
-  },
-  halberd: {
-    id: "halberd",
-    name: "Halberd",
-    description: "Axe, spike, and hook on a long shaft — a footman's terror.",
-    type: "weapon",
-    value: 100,
-    stats: { damage: "5-17" },
-    isCarryable: true,
-  },
-  battle_axe: {
-    id: "battle_axe",
-    name: "Battle Axe",
-    description: "A heavy two-handed axe meant to split shields.",
-    type: "weapon",
-    value: 95,
-    stats: { damage: "6-18" },
-    isCarryable: true,
-  },
-  war_hammer: {
-    id: "war_hammer",
-    name: "War Hammer",
-    description: "A massive two-handed hammer for crushing plate.",
-    type: "weapon",
-    value: 110,
-    stats: { damage: "7-19" },
-    isCarryable: true,
-  },
-  maul: {
-    id: "maul",
-    name: "Maul",
-    description: "A brutal two-handed maul — simple and overwhelming.",
-    type: "weapon",
-    value: 95,
-    stats: { damage: "6-18" },
-    isCarryable: true,
-  },
-  bardiche: {
-    id: "bardiche",
-    name: "Bardiche",
-    description: "A long poleaxe with a sweeping blade.",
-    type: "weapon",
-    value: 100,
-    stats: { damage: "5-17" },
-    isCarryable: true,
-  },
-  executioners_axe: {
-    id: "executioners_axe",
-    name: "Executioner's Axe",
-    description: "An enormous axe — grim purpose, undeniable reach.",
-    type: "weapon",
-    value: 120,
-    stats: { damage: "7-19" },
-    isCarryable: true,
-  },
-  large_battle_axe: {
-    id: "large_battle_axe",
-    name: "Large Battle Axe",
-    description: "Even larger than a battle axe; a strength test with a handle.",
-    type: "weapon",
-    value: 115,
-    stats: { damage: "7-21" },
-    isCarryable: true,
-  },
-  spear: {
-    id: "spear",
-    name: "Spear",
-    description: "Reach and simplicity — the oldest argument in war.",
-    type: "weapon",
-    value: 75,
-    stats: { damage: "5-15" },
-    isCarryable: true,
-  },
-  war_fork: {
-    id: "war_fork",
-    name: "War Fork",
-    description: "Twin prongs on a pole — catch, twist, ruin the day.",
-    type: "weapon",
-    value: 70,
-    stats: { damage: "4-15" },
-    isCarryable: true,
-  },
-  black_staff: {
-    id: "black_staff",
-    name: "Black Staff",
-    description: "A dark length of wood that hums faintly when swung.",
-    type: "weapon",
-    value: 40,
-    stats: { damage: "4-14" },
-    isCarryable: true,
-  },
-  gnarled_staff: {
-    id: "gnarled_staff",
-    name: "Gnarled Staff",
-    description: "Twisted roots shaped into a fighting staff.",
-    type: "weapon",
-    value: 35,
-    stats: { damage: "4-14" },
+    value: 80,
+    stats: { damage: "2d8+2" },
     isCarryable: true,
   },
   gray_robe: {
@@ -1029,74 +802,19 @@ export const ITEMS: Record<string, Item> = {
     value: 0,
     isCarryable: true,
   },
-  castoff_short_sword: {
-    id: "castoff_short_sword",
-    name: "Cast-Off Short Sword",
-    description:
-      "An old, worthless short sword — notched, loose in the grip, more club than blade. Still heavier than a fist.",
-    type: "weapon",
-    value: 0,
-    stats: { damage: "1d4" },
-    isCarryable: true,
-  },
-  quarter_staff: {
-    id: "quarter_staff",
-    name: "Quarter Staff",
-    description: "Straight hardwood; in trained hands, a blur.",
-    type: "weapon",
-    value: 25,
-    stats: { damage: "4-14" },
-    isCarryable: true,
-  },
-  pitchfork: {
-    id: "pitchfork",
-    name: "Pitchfork",
-    description: "Farm tool or improvised polearm — Sam doesn't ask.",
-    type: "weapon",
-    value: 30,
-    stats: { damage: "4-12" },
-    isCarryable: true,
-  },
-  bow: {
-    id: "bow",
-    name: "Bow",
-    description: "A sturdy bow; string it and keep your distance.",
-    type: "weapon",
-    value: 80,
-    stats: { damage: "6-17" },
-    isCarryable: true,
-  },
-  repeating_crossbow: {
-    id: "repeating_crossbow",
-    name: "Repeating Crossbow",
-    description: "A crossbow with a bolt box — rapid, heavy, expensive.",
-    type: "weapon",
-    value: 90,
-    stats: { damage: "4-12" },
-    isCarryable: true,
-  },
-  leather_armor: {
-    id: "leather_armor",
-    name: "Leather Armor",
-    description: "Boiled leather armor that provides basic protection without slowing you down.",
+  old_leather_armor: {
+    id: "old_leather_armor",
+    name: "Old Leather Armor",
+    description: "Boiled leather armor — scuffed, patched, but still serviceable. A guild apprentice's first cuirass.",
     type: "armor",
     value: 20,
     stats: { armorClass: 2, zoneSlot: "torso", zoneCover: 40, zoneDurability: 30, dexPenalty: 2 },
     isCarryable: true,
   },
-  chain_mail: {
-    id: "chain_mail",
-    name: "Chain Mail",
-    description: "Interlocking iron rings that stop blades and arrows alike. Heavy, but worth it.",
-    type: "armor",
-    value: 60,
-    stats: { armorClass: 4, zoneSlot: "torso", zoneCover: 65, zoneDurability: 50, dexPenalty: 5 },
-    isCarryable: true,
-  },
-  buckler: {
-    id: "buckler",
-    name: "Buckler",
-    description: "A small steel buckler, light enough to parry and turn a blade without tiring the arm.",
+  old_wooden_shield: {
+    id: "old_wooden_shield",
+    name: "Old Wooden Shield",
+    description: "A round wooden shield with iron rim and leather grip. Battered, but the boards are sound.",
     type: "armor",
     value: 30,
     stats: { armorClass: 1, shieldBlockChance: 25, shieldDurability: 20, dexPenalty: 1 },
@@ -1391,100 +1109,23 @@ export const ITEMS: Record<string, Item> = {
     isCarryable: false,
   },
 
-  // ── Per-Zone Armor (HWRR-style) ────────────────────────────
-  leather_cap: {
-    id: "leather_cap",
-    name: "Leather Cap",
-    description: "A hardened leather skullcap. Won't stop a mace, but it's better than nothing.",
-    type: "armor",
-    value: 12,
-    stats: { zoneSlot: "head", zoneCover: 30, zoneDurability: 15, dexPenalty: 1 },
-    isCarryable: true,
-  },
-  iron_helm: {
-    id: "iron_helm",
-    name: "Iron Helm",
-    description: "A dented iron helm with a nasal guard. Solid protection for the skull.",
+  // ── Per-Zone Armor (body-zone-style) ────────────────────────────
+  old_iron_helm: {
+    id: "old_iron_helm",
+    name: "Old Iron Helm",
+    description: "A dented iron helm with a nasal guard. Solid protection for the skull, despite a few hard knocks.",
     type: "armor",
     value: 40,
     stats: { zoneSlot: "head", zoneCover: 55, zoneDurability: 35, dexPenalty: 3 },
     isCarryable: true,
   },
-  leather_gorget: {
-    id: "leather_gorget",
-    name: "Leather Gorget",
-    description: "A stiff leather collar that protects the throat. Not fashionable. Functional.",
+  old_leather_gorget: {
+    id: "old_leather_gorget",
+    name: "Old Leather Neckguard",
+    description: "A stiff leather collar that protects the throat. Worn smooth at the buckles. Not fashionable. Functional.",
     type: "armor",
     value: 10,
     stats: { zoneSlot: "neck", zoneCover: 25, zoneDurability: 12, dexPenalty: 1 },
-    isCarryable: true,
-  },
-  chain_coif: {
-    id: "chain_coif",
-    name: "Chain Coif",
-    description: "A hood of interlocking iron rings that drapes over the neck and shoulders.",
-    type: "armor",
-    value: 35,
-    stats: { zoneSlot: "neck", zoneCover: 45, zoneDurability: 25, dexPenalty: 2 },
-    isCarryable: true,
-  },
-  leather_greaves: {
-    id: "leather_greaves",
-    name: "Leather Greaves",
-    description: "Hardened leather guards for the arms and shins. Scarred by previous owners.",
-    type: "armor",
-    value: 15,
-    stats: { zoneSlot: "limbs", zoneCover: 35, zoneDurability: 20, dexPenalty: 1 },
-    isCarryable: true,
-  },
-  chain_greaves: {
-    id: "chain_greaves",
-    name: "Chain Greaves",
-    description: "Chainmail sleeves and leg guards. Heavy but effective against slashing attacks.",
-    type: "armor",
-    value: 45,
-    stats: { zoneSlot: "limbs", zoneCover: 55, zoneDurability: 40, dexPenalty: 3 },
-    isCarryable: true,
-  },
-
-  // ── Plate Armor (custom-fit, mounted combat) ──────────────
-  // On foot: crippling dex penalty. Mounted: comparable to chain.
-  // Cost = 100 good swords. Cannot be looted or traded.
-
-  plate_helm: {
-    id: "plate_helm",
-    name: "Plate Helm",
-    description: "A full-faced steel helm with a riveted visor. Custom-forged to fit one head. On foot you can barely see; on horseback it is a steel skull.",
-    type: "armor",
-    value: 1250,
-    stats: { zoneSlot: "head", zoneCover: 85, zoneDurability: 60, dexPenalty: 8, mountedDexPenalty: 3, customFit: true },
-    isCarryable: true,
-  },
-  plate_gorget: {
-    id: "plate_gorget",
-    name: "Plate Gorget",
-    description: "Articulated steel plates that encase the throat and collar. You cannot turn your head quickly, but nothing short of a war hammer is getting through.",
-    type: "armor",
-    value: 1000,
-    stats: { zoneSlot: "neck", zoneCover: 75, zoneDurability: 50, dexPenalty: 6, mountedDexPenalty: 2, customFit: true },
-    isCarryable: true,
-  },
-  plate_cuirass: {
-    id: "plate_cuirass",
-    name: "Plate Cuirass",
-    description: "A breastplate and backplate of hammered Aquilonian steel, fitted to one torso. The weight is tremendous. Kings wear this to war; no one wears it anywhere else.",
-    type: "armor",
-    value: 1500,
-    stats: { zoneSlot: "torso", zoneCover: 90, zoneDurability: 80, dexPenalty: 12, mountedDexPenalty: 5, customFit: true },
-    isCarryable: true,
-  },
-  plate_greaves: {
-    id: "plate_greaves",
-    name: "Plate Greaves",
-    description: "Steel cuisses, jambes, and sollerets. Your legs become pillars of metal. Walking is labor; riding is empire.",
-    type: "armor",
-    value: 1250,
-    stats: { zoneSlot: "limbs", zoneCover: 80, zoneDurability: 60, dexPenalty: 10, mountedDexPenalty: 3, customFit: true },
     isCarryable: true,
   },
 
@@ -1820,174 +1461,10 @@ export {
 // ============================================================
 
 export const ADVENTURES: Record<string, Adventure> = {
-  beginners_cave: {
-    id: "beginners_cave",
-    name: "The Beginner's Cave",
-    description: "A cave system north of the city known to be infested with goblins. Experienced adventurers call it 'training.' The Guild offers a standard bounty on goblin ears plus any treasure recovered.",
-    entrance: `The cave mouth yawns in the hillside like a bad tooth — dark, damp, and smelling of goblin. Crude scratches above the entrance might be a warning or might be goblin art. It's hard to tell. Inside, you can hear the distant sound of arguing in a language made entirely of consonants. Your torch catches the glint of something on the cave floor — an old copper coin, perhaps dropped by a previous adventurer. Or a lure.`,
-    difficulty: "novice",
-    recommendedLevel: 0,
-    rooms: [
-      {
-        id: "cave_entrance",
-        name: "Cave Entrance",
-        description: "The first chamber of the cave. Low ceiling, wet walls, and the smell of something that hasn't bathed since birth. Two passages lead deeper — one to the north, one to the east. A crude wooden cage in the corner holds nothing but old bones.",
-        exits: { north: "cave_main_chamber", east: "cave_side_passage", south: "main_hall" },
-        stateModifiers: {
-          dark: {
-            description: "Without a torch, the cave entrance is nearly pitch black. You can hear things moving in the dark but cannot see them.",
-            dangerLevel: 2,
-          },
-        },
-        npcs: ["goblin_scout"],
-        items: ["copper_coin"],
-      },
-      {
-        id: "cave_main_chamber",
-        name: "The Main Chamber",
-        description: "A large natural cavern lit by bioluminescent fungus that casts everything in pale blue light. Three goblins are arguing over a pile of stolen goods in the center of the room. They haven't noticed you yet.",
-        exits: { south: "cave_entrance", north: "cave_treasure_room" },
-        stateModifiers: {},
-        npcs: ["goblin_warrior", "goblin_warrior_2", "goblin_shaman"],
-        items: ["stolen_goods"],
-      },
-      {
-        id: "cave_side_passage",
-        name: "The Side Passage",
-        description: "A narrow crack in the rock that opens into a small chamber. A single goblin sits here eating something best not identified. The chamber dead-ends, but there's a loose stone in the wall that looks interesting.",
-        exits: { west: "cave_entrance" },
-        stateModifiers: {},
-        npcs: ["goblin_lone"],
-        items: ["loose_stone", "hidden_cache"],
-      },
-      {
-        id: "cave_treasure_room",
-        name: "The Treasure Room",
-        description: "A chamber that smells of old iron and goblin greed. An iron chest sits against the far wall, secured with a heavy padlock. The Goblin King — larger than the others, wearing a dented crown — sits on a throne made of stolen furniture, watching the entrance with small, cunning eyes.",
-        exits: { south: "cave_main_chamber" },
-        stateModifiers: {},
-        npcs: ["goblin_king"],
-        items: ["cave_treasure", "goblin_crown"],
-      },
-    ],
-    monsters: [
-      {
-        id: "goblin_scout",
-        name: "Goblin Scout",
-        description: "A small, wiry goblin with beady eyes and a rusty knife. Looks startled to see you.",
-        greeting: "The goblin lets out a screech and raises its knife.",
-        personality: "Cowardly. Will flee if reduced below half HP unless cornered.",
-        isHostile: true,
-        stats: { hp: 8, armor: 0, damage: "1d4" },
-        combatProfile: {
-          agility: 35,
-          weaponSkill: 15,
-          zones: {
-            head: { cover: 0, durability: 0 },
-            neck: { cover: 0, durability: 0 },
-            torso: { cover: 0, durability: 0 },
-            limbs: { cover: 0, durability: 0 },
-          },
-          shieldBlockChance: 0,
-          shieldDurability: 0,
-        },
-      },
-      {
-        id: "goblin_warrior",
-        name: "Goblin Warrior",
-        description: "A stockier goblin in scavenged leather armor, carrying a short sword that's too big for it.",
-        greeting: "The goblin warrior snarls and charges.",
-        personality: "Aggressive but not clever. Fights until dead.",
-        isHostile: true,
-        stats: { hp: 12, armor: 1, damage: "1d6" },
-        combatProfile: {
-          agility: 20,
-          weaponSkill: 25,
-          zones: {
-            head: { cover: 0, durability: 0 },
-            neck: { cover: 0, durability: 0 },
-            torso: { cover: 15, durability: 8 },
-            limbs: { cover: 0, durability: 0 },
-          },
-          shieldBlockChance: 0,
-          shieldDurability: 0,
-        },
-      },
-      {
-        id: "goblin_warrior_2",
-        name: "Goblin Warrior",
-        description: "Another goblin warrior, identical to its companion except for a notch in its ear.",
-        greeting: "The goblin bares its teeth.",
-        personality: "Fights alongside its companion. Flees if companion dies.",
-        isHostile: true,
-        stats: { hp: 12, armor: 1, damage: "1d6" },
-        combatProfile: {
-          agility: 20,
-          weaponSkill: 25,
-          zones: {
-            head: { cover: 0, durability: 0 },
-            neck: { cover: 0, durability: 0 },
-            torso: { cover: 15, durability: 8 },
-            limbs: { cover: 0, durability: 0 },
-          },
-          shieldBlockChance: 0,
-          shieldDurability: 0,
-        },
-      },
-      {
-        id: "goblin_shaman",
-        name: "Goblin Shaman",
-        description: "A goblin draped in bones and feathers, muttering something under its breath.",
-        greeting: `The shaman points a bony finger at you and shrieks "Interloper!"`,
-        personality: "Casts minor curses (-1 to player rolls) and heals other goblins. Cowardly, stays at range.",
-        isHostile: true,
-        stats: { hp: 10, armor: 0, damage: "1d4+curse" },
-        combatProfile: {
-          agility: 30,
-          weaponSkill: 10,
-          zones: {
-            head: { cover: 0, durability: 0 },
-            neck: { cover: 0, durability: 0 },
-            torso: { cover: 0, durability: 0 },
-            limbs: { cover: 0, durability: 0 },
-          },
-          shieldBlockChance: 0,
-          shieldDurability: 0,
-        },
-      },
-      {
-        id: "goblin_lone",
-        name: "Lone Goblin",
-        description: "A goblin eating alone. It looks up at you with something between terror and resignation.",
-        greeting: "The goblin holds up its food as if offering it to you.",
-        personality: "This goblin is terrified and will surrender immediately if given the chance. It knows where the treasure room is and will trade that information for its life. This is a mercy/compassion virtue moment.",
-        isHostile: false,
-        stats: { hp: 6, armor: 0, damage: "1d3" },
-      },
-      {
-        id: "goblin_king",
-        name: "The Goblin King",
-        description: "A goblin twice the size of the others, wearing a dented tin crown and carrying a morning star. Its eyes hold a cunning intelligence unusual for its kind.",
-        greeting: `"So," the Goblin King says in surprisingly clear speech, "another hero comes to steal my crown. How tedious."`,
-        personality: "The Goblin King is intelligent and will attempt to negotiate before fighting. He will offer a share of the treasure if the player agrees to leave. This is a significant moral choice moment — killing him is easier but choosing negotiation shows Mercy and Justice.",
-        isHostile: false,
-        stats: { hp: 30, armor: 3, damage: "1d8+2" },
-        combatProfile: {
-          agility: 25,
-          weaponSkill: 45,
-          zones: {
-            head: { cover: 20, durability: 10 },
-            neck: { cover: 10, durability: 5 },
-            torso: { cover: 35, durability: 20 },
-            limbs: { cover: 15, durability: 12 },
-          },
-          shieldBlockChance: 15,
-          shieldDurability: 10,
-        },
-      },
-    ],
-    loot: ["goblin_ear", "cave_treasure", "goblin_crown"],
-  },
+  // First adventure removed 2026-04-28; replacement TBD.
+  // Goblin NPCs (goblin_scout, goblin_warrior, goblin_warrior_2,
+  // goblin_shaman, goblin_lone, goblin_king) remain available for reuse —
+  // see NPCS map elsewhere in this file.
 };
 
 // ============================================================

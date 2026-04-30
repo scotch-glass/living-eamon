@@ -1,0 +1,51 @@
+{
+  "id": "charity-gowns-barrel-steal",
+  "title": "Take a gray robe from the gowns barrel (to sell or wear)",
+  "pdSource": "original-living-eamon",
+  "pdSafe": true,
+  "patternType": "slow-pressure",
+  "tags": ["tavern", "main-hall", "ostavar", "petty-theft", "honor-decay", "low-stakes-but-cumulative"],
+  "triggers": [
+    { "type": "examine-object", "target": "gowns_barrel" }
+  ],
+  "prerequisites": [
+    { "type": "flag-set", "value": "in_main_hall" }
+  ],
+  "prompt": "A second barrel sits beside the charity-clothes barrel, this one marked: USED GOWNS ONLY — DO NOT PUT FOOD IN HERE. It is a quiet thing, half-hidden against the south wall. The lid is loose. No one is watching.",
+  "pacing": {
+    "duration": "instant",
+    "affect": { "dread": 0.2, "excitement": 0.2 }
+  },
+  "choices": [
+    {
+      "id": "take-robe",
+      "label": "Take a gray robe (to sell or wear furtively)",
+      "command": "TAKE GRAY ROBE",
+      "karma": {
+        "Integrity": -1,
+        "Standing": -1
+      },
+      "affect": {
+        "dread": 0.2,
+        "excitement": 0.1,
+        "melancholy": 0.1
+      },
+      "goldDelta": 0,
+      "itemsGained": ["gray_robe"],
+      "flagsSet": ["took_charity_gown"],
+      "resolutionHint": "The robe goes into the pack. While worn, the small humiliation compounds — Honor decays each ten turns it stays in inventory. The world will notice eventually."
+    },
+    {
+      "id": "leave-it",
+      "label": "Leave the barrel alone",
+      "command": "LEAVE",
+      "karma": {
+        "Integrity": 1
+      },
+      "affect": {
+        "dread": -0.1
+      },
+      "resolutionHint": "The hand drops. Some things aren't worth the gold."
+    }
+  ]
+}

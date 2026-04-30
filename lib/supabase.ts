@@ -41,13 +41,52 @@ export async function savePlayer(player: Record<string, unknown>) {
     charisma: player.charisma,
     max_mana: player.maxMana ?? 10,
     current_mana: player.currentMana ?? player.maxMana ?? 0,
+    stamina:
+      typeof player.stamina === "number" ? player.stamina : 55,
+    max_stamina:
+      typeof player.maxStamina === "number" ? player.maxStamina : 55,
+    fatigue_pool:
+      typeof player.fatiguePool === "number" ? player.fatiguePool : 0,
+    action_budget:
+      typeof player.actionBudget === "number" ? player.actionBudget : 25,
     gold: player.gold,
     banked_gold: player.bankedGold,
     weapon: player.weapon,
     armor: player.bodyArmor ?? player.armor ?? null,
     shield: player.shield,
     inventory: player.inventory,
-    virtues: player.virtues,
+    // PICSSI virtues (KARMA Sprint 2 — virtues column dropped).
+    picssi_passion:
+      typeof player.picssi_passion === "number" ? player.picssi_passion : 0,
+    picssi_integrity:
+      typeof player.picssi_integrity === "number" ? player.picssi_integrity : 0,
+    picssi_courage:
+      typeof player.picssi_courage === "number" ? player.picssi_courage : 0,
+    picssi_standing:
+      typeof player.picssi_standing === "number" ? player.picssi_standing : 0,
+    picssi_spirituality:
+      typeof player.picssi_spirituality === "number"
+        ? player.picssi_spirituality
+        : 0,
+    picssi_illumination:
+      typeof player.picssi_illumination === "number"
+        ? player.picssi_illumination
+        : 0,
+    combat_victories:
+      typeof player.combat_victories === "number" ? player.combat_victories : 0,
+    vd_active: Boolean(player.vd_active),
+    scrolls_read:
+      (player.scrolls_read as Record<string, unknown> | undefined) ?? {},
+    pending_riddle: player.pending_riddle ?? null,
+    npc_affection:
+      (player.npc_affection as Record<string, unknown> | undefined) ?? {},
+    flags_life:
+      (player.flags_life as Record<string, unknown> | undefined) ?? {},
+    flags_legacy:
+      (player.flags_legacy as Record<string, unknown> | undefined) ?? {},
+    pending_atom: player.pending_atom ?? null,
+    karma_log: (player.karma_log as unknown[] | undefined) ?? [],
+    quests: (player.quests as Record<string, unknown> | undefined) ?? {},
     reputation_score: player.reputationScore,
     reputation_level: player.reputationLevel,
     known_as: player.knownAs,

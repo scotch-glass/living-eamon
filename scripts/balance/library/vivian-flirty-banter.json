@@ -1,0 +1,67 @@
+{
+  "id": "vivian-flirty-banter",
+  "title": "Vivian — recurring flirty banter (post-bond)",
+  "pdSource": "original-living-eamon",
+  "pdSafe": true,
+  "patternType": "witness-moment",
+  "tags": ["vivian", "social", "flirt", "recurring", "low-stakes", "affection-builder"],
+  "triggers": [
+    { "type": "talk-to-npc", "target": "vivian" }
+  ],
+  "prerequisites": [
+    { "type": "flag-set", "value": "vivian_cave_bond" }
+  ],
+  "prompt": "Vivian leans against a doorframe, watching the hero with that small slow smile she gets when she's thinking three things at once. \"You look like a man with a problem. Or a question. Or — \" she tilts her head — \"some money you don't know what to do with. I can help with all three.\"",
+  "pacing": {
+    "duration": "instant",
+    "affect": { "wonder": 0.2, "eros": 0.3, "excitement": 0.2 }
+  },
+  "choices": [
+    {
+      "id": "flirt-back",
+      "label": "Flirt back",
+      "karma": {
+        "Passion": 1,
+        "Standing": 1
+      },
+      "affect": {
+        "eros": 0.3,
+        "wonder": 0.1
+      },
+      "npcAffection": {
+        "vivian": 3
+      },
+      "resolutionHint": "Banter for a beat. She enjoys it. He enjoys it. Nothing happens — but something is being built."
+    },
+    {
+      "id": "ask-for-help",
+      "label": "Ask her for advice or help",
+      "karma": {
+        "Integrity": 1,
+        "Standing": -1
+      },
+      "affect": {
+        "wonder": 0.2
+      },
+      "npcAffection": {
+        "vivian": 2
+      },
+      "resolutionHint": "She gives a real answer. The flirt drops; the trust deposits."
+    },
+    {
+      "id": "brush-her-off",
+      "label": "Tell her you're busy and walk past",
+      "karma": {
+        "Standing": 1,
+        "Passion": -1
+      },
+      "affect": {
+        "melancholy": 0.3
+      },
+      "npcAffection": {
+        "vivian": -2
+      },
+      "resolutionHint": "Her smile cools by half a degree. She doesn't push. But the next time she sees him she'll smile a fraction less."
+    }
+  ]
+}

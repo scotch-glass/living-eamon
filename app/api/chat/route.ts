@@ -19,7 +19,22 @@ import {
   WorldState,
   normalizeWeaponSkills,
 } from "../../../lib/gameState";
+import { recomputeDerivedStats } from "../../../lib/karma/recompute";
 import { NPCS, ITEMS } from "../../../lib/gameData";
+import { WEAPON_DATA } from "../../../lib/uoData";
+
+// Sanitize equipment slots loaded from the DB. Items removed from the
+// registry (e.g. legacy weapons after the 2026-04-28 simplification)
+// would otherwise resurface as orphaned ids on player load.
+function sanitizeWeaponSlot(weapon: string | null | undefined): string {
+  if (!weapon || weapon === "unarmed") return "unarmed";
+  if (WEAPON_DATA[weapon]) return weapon;
+  return "unarmed";
+}
+function sanitizeItemSlot(itemId: string | null | undefined): string | null {
+  if (!itemId) return null;
+  return ITEMS[itemId] ? itemId : null;
+}
 import { ALL_ROOMS as MAIN_HALL_ROOMS, getRoom, getScriptsForRoom } from "../../../lib/adventures/registry";
 import { getBarmaidResponseLines, getAldricWelcomeLines, getAldricTrainingLines, getZimWelcomeLines, getZimHealResponseLines } from "../../../lib/adventures/guild-hall-npcs";
 import {
@@ -191,7 +206,9 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
     return name + " (" + inner + ")";
   }).join(", ") || "none";
 
-  const virtueList = Object.entries(player.virtues)
+  // PICSSI virtue summary for Jane prompt context. Includes Illumination's
+  // bipolar sign so the narrator knows which way the soul tilts.
+  const virtueList = Object.entries(player.picssi)
     .filter(function(entry) { return entry[1] !== 0; })
     .map(function(entry) { return entry[0] + ": " + (entry[1] > 0 ? "+" : "") + entry[1]; })
     .join(", ") || "all neutral";
@@ -242,7 +259,23 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     armor: state.player.armor,
     shield: state.player.shield,
     inventory: state.player.inventory,
-    virtues: state.player.virtues,
+    // PICSSI virtues (KARMA Sprint 2 — virtues column dropped).
+    picssi_passion: state.player.picssi.passion,
+    picssi_integrity: state.player.picssi.integrity,
+    picssi_courage: state.player.picssi.courage,
+    picssi_standing: state.player.picssi.standing,
+    picssi_spirituality: state.player.picssi.spirituality,
+    picssi_illumination: state.player.picssi.illumination,
+    combat_victories: state.player.combatVictories,
+    vd_active: state.player.vdActive,
+    scrolls_read: state.player.scrollsRead,
+    pending_riddle: state.player.pendingRiddle,
+    npc_affection: state.player.npcAffection,
+    flags_life: state.player.flagsLife,
+    flags_legacy: state.player.flagsLegacy,
+    pending_atom: state.player.pendingAtom,
+    karma_log: state.player.karmaLog,
+    quests: state.player.quests,
     reputationScore: state.player.reputationScore,
     reputationLevel: state.player.reputationLevel,
     knownAs: state.player.knownAs,
@@ -277,6 +310,10 @@ function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
     knownSpells: state.player.knownSpells ?? [],
     knownDeities: state.player.knownDeities ?? [],
     goreSplatters: state.player.goreSplatters ?? [],
+    stamina: state.player.stamina,
+    maxStamina: state.player.maxStamina,
+    fatiguePool: state.player.fatiguePool,
+    actionBudget: state.player.actionBudget,
   };
 }
 
@@ -340,11 +377,40 @@ export async function POST(request: NextRequest) {
                     : (savedPlayer.expertise ?? 10)),
             gold: savedPlayer.gold,
             bankedGold: savedPlayer.banked_gold,
-            weapon: savedPlayer.weapon,
-            armor: savedPlayer.armor,
-            shield: (savedPlayer as { shield?: string | null }).shield ?? null,
-            inventory: savedPlayer.inventory ?? [],
-            virtues: savedPlayer.virtues,
+            weapon: sanitizeWeaponSlot(savedPlayer.weapon),
+            armor: sanitizeItemSlot(savedPlayer.armor),
+            shield: sanitizeItemSlot(
+              (savedPlayer as { shield?: string | null }).shield
+            ),
+            inventory: (savedPlayer.inventory ?? []).filter(
+              (e: { itemId: string }) => Boolean(ITEMS[e.itemId])
+            ),
+            picssi: {
+              passion:
+                (savedPlayer as { picssi_passion?: number }).picssi_passion ?? 0,
+              integrity:
+                (savedPlayer as { picssi_integrity?: number }).picssi_integrity ?? 0,
+              courage:
+                (savedPlayer as { picssi_courage?: number }).picssi_courage ?? 0,
+              standing:
+                (savedPlayer as { picssi_standing?: number }).picssi_standing ?? 0,
+              spirituality:
+                (savedPlayer as { picssi_spirituality?: number }).picssi_spirituality ?? 0,
+              illumination:
+                (savedPlayer as { picssi_illumination?: number }).picssi_illumination ?? 0,
+            },
+            combatVictories:
+              typeof (savedPlayer as { combat_victories?: number }).combat_victories === "number"
+                ? (savedPlayer as { combat_victories: number }).combat_victories
+                : Math.max(0, ((savedPlayer.max_mana ?? 10) - 10)),
+            // *_effective fields are recomputed at end-of-load by
+            // recomputeDerivedStats; seed with the base values for now.
+            strengthEffective: savedPlayer.strength,
+            dexterityEffective:
+              typeof (savedPlayer as { dexterity?: number }).dexterity === "number"
+                ? (savedPlayer as { dexterity: number }).dexterity
+                : 10,
+            charismaEffective: savedPlayer.charisma,
             reputationScore: savedPlayer.reputation_score,
             reputationLevel: savedPlayer.reputation_level,
             knownAs: savedPlayer.known_as,
@@ -372,15 +438,19 @@ export async function POST(request: NextRequest) {
             barmaidPreference:
               (savedPlayer as { barmaid_preference?: string | null })
                 .barmaid_preference ?? null,
-            helmet:
-              (savedPlayer as { helmet?: string | null }).helmet ?? null,
-            gorget:
-              (savedPlayer as { gorget?: string | null }).gorget ?? null,
-            bodyArmor:
+            helmet: sanitizeItemSlot(
+              (savedPlayer as { helmet?: string | null }).helmet
+            ),
+            gorget: sanitizeItemSlot(
+              (savedPlayer as { gorget?: string | null }).gorget
+            ),
+            bodyArmor: sanitizeItemSlot(
               (savedPlayer as { body_armor?: string | null }).body_armor ??
-              savedPlayer.armor ?? null,
-            limbArmor:
-              (savedPlayer as { limb_armor?: string | null }).limb_armor ?? null,
+                savedPlayer.armor
+            ),
+            limbArmor: sanitizeItemSlot(
+              (savedPlayer as { limb_armor?: string | null }).limb_armor
+            ),
             boots:
               (savedPlayer as { boots?: string | null }).boots ?? null,
             ringLeft:
@@ -420,6 +490,46 @@ export async function POST(request: NextRequest) {
               (savedPlayer as { weapon_skills?: Record<string, number> | null })
                 .weapon_skills ?? undefined
             ),
+            // KARMA Sprint 1 — stamina/fatigue/actionBudget. Existing
+            // rows pre-dating the migration get safe defaults so the
+            // load never blows up on undefined.
+            stamina:
+              typeof (savedPlayer as { stamina?: number }).stamina === "number"
+                ? (savedPlayer as { stamina: number }).stamina
+                : 55,
+            maxStamina:
+              typeof (savedPlayer as { max_stamina?: number }).max_stamina === "number"
+                ? (savedPlayer as { max_stamina: number }).max_stamina
+                : 55,
+            fatiguePool:
+              typeof (savedPlayer as { fatigue_pool?: number }).fatigue_pool === "number"
+                ? (savedPlayer as { fatigue_pool: number }).fatigue_pool
+                : 0,
+            actionBudget:
+              typeof (savedPlayer as { action_budget?: number }).action_budget === "number"
+                ? (savedPlayer as { action_budget: number }).action_budget
+                : 25,
+            vdActive: Boolean(
+              (savedPlayer as { vd_active?: boolean }).vd_active
+            ),
+            scrollsRead:
+              ((savedPlayer as { scrolls_read?: Record<string, { firstReadAt: string; riddlesPassed: string[] }> })
+                .scrolls_read) ?? {},
+            pendingRiddle:
+              ((savedPlayer as { pending_riddle?: { scrollId: string; riddleIdx: number; prompt: string } | null })
+                .pending_riddle) ?? null,
+            npcAffection:
+              ((savedPlayer as { npc_affection?: Record<string, number> }).npc_affection) ?? {},
+            flagsLife:
+              ((savedPlayer as { flags_life?: Record<string, boolean> }).flags_life) ?? {},
+            flagsLegacy:
+              ((savedPlayer as { flags_legacy?: Record<string, boolean> }).flags_legacy) ?? {},
+            pendingAtom:
+              ((savedPlayer as { pending_atom?: { atomId: string; presentedAt: number } | null }).pending_atom) ?? null,
+            karmaLog:
+              ((savedPlayer as { karma_log?: Array<{ at: string; delta: Record<string, number>; source: string }> }).karma_log) ?? [],
+            quests:
+              ((savedPlayer as { quests?: Record<string, import("../../../lib/quests/types").QuestState> }).quests) ?? {},
           },
           barrelStock:
             (savedPlayer as { barrel_stock?: { gowns?: number; charityClothes?: number } }).barrel_stock
@@ -480,6 +590,11 @@ export async function POST(request: NextRequest) {
     } else {
       state = worldState ?? createInitialWorldState();
     }
+
+    // KARMA Sprint 1 — anchor derived stats (maxStamina from STR) on
+    // every load, then clamp current stamina to the new cap. Sprint 2
+    // will extend this with PICSSI-driven STR/DEX/maxHP/maxMana.
+    state = { ...state, player: recomputeDerivedStats(state.player) };
 
     const appendSituation = (body: string, newState: WorldState) => {
       const cleaned = stripTrailingSituationBlocks(body);

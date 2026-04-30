@@ -1,0 +1,54 @@
+{
+  "id": "hokas-pity-gift",
+  "title": "Hokas Tokas — pity gift to an unarmed beggar",
+  "pdSource": "original-living-eamon",
+  "pdSafe": true,
+  "patternType": "moral-fork",
+  "tags": ["tavern", "main-hall", "ostavar", "pity", "unarmed", "low-stakes"],
+  "triggers": [
+    { "type": "talk-to-npc", "target": "hokas_tokas" }
+  ],
+  "prerequisites": [
+    { "type": "lacks-item", "value": "any-weapon" }
+  ],
+  "prompt": "Hokas notices the empty hands and the wreck of a man before him. He buries the worry behind his usual gruff manner, disappears behind the bar, and comes back with a worn short sword in a plain scabbard. He sets it on the bar with a solid thunk. \"I don't need it anymore. Don't tell me what you do with it. Don't bring it back.\"",
+  "pacing": {
+    "duration": "short",
+    "affect": { "melancholy": 0.4, "wonder": 0.1 }
+  },
+  "choices": [
+    {
+      "id": "accept-gift",
+      "label": "Accept the sword (publicly receive charity)",
+      "command": "TAKE SWORD",
+      "karma": {
+        "Standing": -1,
+        "Integrity": -1,
+        "Spirituality": 1
+      },
+      "affect": {
+        "melancholy": 0.2,
+        "fear": -0.1
+      },
+      "itemsGained": ["short_sword"],
+      "flagsSet": ["received_hokas_unarmed_gift"],
+      "resolutionHint": "Hero takes the blade. Hokas pretends not to notice the moment of weight. Standing erodes a touch — the room saw — but the soul receives the kindness."
+    },
+    {
+      "id": "refuse-gift",
+      "label": "Refuse the sword (preserve dignity)",
+      "command": "REFUSE",
+      "karma": {
+        "Standing": 1,
+        "Courage": 1,
+        "Integrity": 1,
+        "Spirituality": -1
+      },
+      "affect": {
+        "melancholy": 0.3,
+        "dread": 0.2
+      },
+      "resolutionHint": "Hero walks out unarmed. Hokas watches the door for a long moment after."
+    }
+  ]
+}

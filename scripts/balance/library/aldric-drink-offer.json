@@ -1,0 +1,47 @@
+{
+  "id": "aldric-drink-offer",
+  "title": "Aldric the Veteran offers a free drink",
+  "pdSource": "the-stag-company",
+  "pdSafe": true,
+  "patternType": "moral-fork",
+  "tags": ["tavern", "main-hall", "ostavar", "veteran-mercenary", "low-stakes", "social"],
+  "triggers": [
+    { "type": "talk-to-npc", "target": "old_mercenary" }
+  ],
+  "prompt": "Aldric the Veteran takes in the whole situation — the gown, the empty hands, the look on the face — in about two seconds. Something heavy passes behind his eyes, but he doesn't say what. He waves the barmaid over. \"Sit down. You look like you could use answers and ale, in that order. The drink's on me.\"",
+  "pacing": {
+    "duration": "short",
+    "affect": { "melancholy": 0.2, "wonder": 0.1 }
+  },
+  "choices": [
+    {
+      "id": "accept-drink",
+      "label": "Accept the drink and sit",
+      "command": "SIT",
+      "karma": {
+        "Standing": 1,
+        "Passion": 1
+      },
+      "affect": {
+        "melancholy": -0.1,
+        "wonder": 0.2
+      },
+      "resolutionHint": "Hero sits. Aldric talks. Something of the old life surfaces — a fragment, not the whole. Standing rises in his presence."
+    },
+    {
+      "id": "refuse-drink",
+      "label": "Refuse politely and walk out",
+      "command": "LEAVE",
+      "karma": {
+        "Integrity": 1,
+        "Courage": 1,
+        "Standing": -1
+      },
+      "affect": {
+        "melancholy": 0.3,
+        "dread": 0.1
+      },
+      "resolutionHint": "Hero declines. Aldric watches him go without rancor. A small dignity preserved at the cost of an offered hand."
+    }
+  ]
+}

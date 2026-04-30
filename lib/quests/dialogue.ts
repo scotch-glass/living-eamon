@@ -74,6 +74,11 @@ export function getQuestDialogue(npcId: string): QuestNPCDialogue | null {
   return REGISTRY[npcId] ?? null;
 }
 
+/** All registered NPC dialogues — for tooling / registry-dump scripts. */
+export function allQuestDialogues(): QuestNPCDialogue[] {
+  return Object.values(REGISTRY);
+}
+
 /** Test-only: clear the registry between cases. */
 export function _resetQuestDialogueRegistry(): void {
   for (const k of Object.keys(REGISTRY)) delete REGISTRY[k];

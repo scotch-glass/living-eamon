@@ -86,6 +86,7 @@ import {
 import type { KarmaDelta } from "./karma/types";
 import { emitQuestEvent } from "./quests/engine";
 import { resolveQuestDialogue } from "./quests/dialogue";
+import { handleInvoke, composeInvokeResponse } from "./sorcery/invoke";
 import { renderActiveQuests, renderQuestLog } from "./quests/log";
 import "./quests/load"; // side-effect: registers all quest line modules
 import {
@@ -2889,17 +2890,36 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
     };
   }
 
-  // ── 1. PREFIX: INVOKE ──────────────────────────────────
+  // ── 1. PREFIX: INVOKE — Sorcery dispatch (KARMA Sprint 7a) ──
+  // Routes to lib/sorcery/invoke.ts. Recognized spells go through
+  // the structured Circle/mana/reagent gate; unknown invocations
+  // fall through to Jane for atmospheric fizzle narration (preserves
+  // SORCERY.md §3 — Words of Power must be discovered in-game).
   if (first === "INVOKE") {
     const rest = trimmed.slice(6).trim();
-    return {
-      responseType: "dynamic",
-      staticResponse: null,
-      dynamicContext: `Occult / forbidden INVOKE attempt: "${rest || "(unspecified)"}"
+    const result = handleInvoke(newState, rest);
+
+    if (
+      result.outcome.kind === "unrecognized" ||
+      result.outcome.kind === "fizzle-no-reagents"
+    ) {
+      return {
+        responseType: "dynamic",
+        staticResponse: null,
+        dynamicContext: `Occult / forbidden INVOKE attempt: "${rest || "(unspecified)"}"
 Room: ${currentRoom?.name}. State: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}.
-This is dangerous, rare magic — never listed in UI. Describe tension, risk, and what stirs (or does not).`,
-      newState,
-      stateChanged: false,
+The player invoked unknown Words of Power. Describe a fizzle — nothing happens, a faint sulfur stench, perhaps something noticed nearby. Tension without effect.`,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    return {
+      responseType: "static",
+      staticResponse: composeInvokeResponse(result.outcome),
+      dynamicContext: null,
+      newState: result.state,
+      stateChanged: result.outcome.kind === "success",
     };
   }
 

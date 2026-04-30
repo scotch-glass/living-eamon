@@ -18,7 +18,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 const ROOT = process.cwd();
-const TESTS_DIR = path.join(ROOT, "__tests__", "quests");
+const TESTS_DIR = path.join(ROOT, "__tests__");
 
 interface FileResult {
   file: string;
@@ -31,11 +31,18 @@ interface FileResult {
 
 function discoverTestFiles(): string[] {
   if (!fs.existsSync(TESTS_DIR)) return [];
-  return fs
-    .readdirSync(TESTS_DIR)
-    .filter(f => /\.test\.ts$/.test(f))
-    .sort()
-    .map(f => path.join(TESTS_DIR, f));
+  // Walk __tests__/ recursively. Any *.test.ts file in any subfolder
+  // is picked up — quests/, sorcery/, karma/, etc.
+  const out: string[] = [];
+  function walk(dir: string): void {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && /\.test\.ts$/.test(entry.name)) out.push(full);
+    }
+  }
+  walk(TESTS_DIR);
+  return out.sort();
 }
 
 // Each test file uses the project's `caseName` idiom which prints

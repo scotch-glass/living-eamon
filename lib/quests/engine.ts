@@ -368,14 +368,25 @@ export function applyReward(
     next = addToChronicle(next, reward.legacyChronicle, true);
   }
 
-  // 10. unlockCircle — Sprint 7 Sorcery reads this. Sprint 8 logs
-  //     to chronicle; the actual Circle-unlock state lives elsewhere.
+  // 10. unlockCircle — Sprint 7: set knownCircles + log to chronicle.
+  //     Idempotent (re-granting the same circle is a no-op).
   if (reward.unlockCircle) {
-    next = addToChronicle(
-      next,
-      `Circle ${reward.unlockCircle} of Sorcery has been revealed.`,
-      true
-    );
+    const circle = reward.unlockCircle;
+    const known = next.player.knownCircles ?? [];
+    if (!known.includes(circle)) {
+      next = {
+        ...next,
+        player: {
+          ...next.player,
+          knownCircles: [...known, circle].sort((a, b) => a - b),
+        },
+      };
+      next = addToChronicle(
+        next,
+        `Circle ${circle} of Sorcery has been revealed.`,
+        true
+      );
+    }
   }
 
   return next;

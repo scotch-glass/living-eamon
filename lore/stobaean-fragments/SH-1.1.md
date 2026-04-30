@@ -11,9 +11,14 @@ note: |
   Original Living Eamon prose. The ancient Hermetic ideas
   are themselves in the public domain by antiquity. No modern
   translator's text is reproduced here.
-deliveryNpc: old_mercenary
+deliveryNpc: tbd-pd-module
 deliveryStep: scroll-5
 deliveryVector: sword-pommel-engraving
+deliveryNote: |
+  TBD pending main-adventure-line authoring (decision 2026-04-30).
+  Originally drafted as Aldric (old_mercenary) in the Guild Hall;
+  reverted per Scotch's directive that epic-quest seeds belong in
+  remote NPCs / PD Howard adventure modules, not main-hall fixtures.
 themes: [courage, remaining, soldier-immortality]
 illuminationDelta: 1
 ---

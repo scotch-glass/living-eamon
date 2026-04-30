@@ -116,6 +116,43 @@ caseName("returns fallback when NPC is registered but no branch matches", () => 
   eq(result!.lines, dialogue3Stage().fallback, "fallback lines");
 });
 
+// Extension pattern: fallback omitted → resolver returns null on
+// non-matching turns so the caller falls through to legacy NPCScript.
+caseName("returns null when fallback is omitted and no branch matches (extension pattern)", () => {
+  registerQuestDialogue({
+    npcId: "extension_npc",
+    branches: [
+      {
+        id: "stage-1",
+        when: { questId: "q", onStep: "s" },
+        lines: ["fragment delivered"],
+      },
+    ],
+    // fallback omitted on purpose
+  });
+  // No quest accepted → branch doesn't match → resolver returns null
+  const state = fixtureState();
+  isNull(resolveQuestDialogue(state, "extension_npc"), "fall-through to legacy");
+});
+
+caseName("returns branch lines when fallback is omitted but a branch matches", () => {
+  registerQuestDialogue({
+    npcId: "extension_npc",
+    branches: [
+      {
+        id: "stage-1",
+        when: { questId: "q", onStep: "s" },
+        lines: ["fragment delivered"],
+      },
+    ],
+    // fallback omitted
+  });
+  const state = fixtureState({ questId: "q", step: "s" });
+  const result = resolveQuestDialogue(state, "extension_npc");
+  truthy(result, "branch matched");
+  eq(result!.lines, ["fragment delivered"], "branch lines returned");
+});
+
 caseName("stage-aware: matches step-1 branch when currentStep === step-1", () => {
   registerQuestDialogue(dialogue3Stage());
   const state = fixtureState({ questId: "way-of-thoth", step: "step-1" });

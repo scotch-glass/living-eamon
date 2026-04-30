@@ -1,6 +1,6 @@
 // ============================================================
 // LIVING EAMON — Zone-Specific Combat Narration
-// Extends combatNarrationPools.ts with HWRR body-zone awareness.
+// Extends combatNarrationPools.ts with body-zone body-zone awareness.
 // Template vars: {attacker}, {defender}, {weapon}, {damage}, {zone}
 // ============================================================
 

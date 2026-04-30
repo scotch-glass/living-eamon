@@ -8,6 +8,7 @@
 
 import { RoomState } from "./gameData";
 import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
+import type { PicssiState } from "./karma/types";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -31,6 +32,20 @@ export const HP_REGEN_PER_TURN = 1;
 export const MANA_REGEN_PER_TURN = 1;
 /** −1 Honor every N turns the player still has the gray church robe. */
 export const GRAY_ROBE_HONOR_DECAY_INTERVAL = 10;
+
+// ============================================================
+// STAMINA + FATIGUE + ACTION BUDGET CONSTANTS
+// body-zone-derived per KARMA_SYSTEM.md §2.3 / §4a.
+// Sprint 1 — stamina/fatigue bedrock; PICSSI-driven STR_eff lands in Sprint 2.
+// ============================================================
+/** maxStamina = STAMINA_BASE + STAMINA_PER_STR · STR. Default STR 10 → 55. */
+export const STAMINA_BASE = 35;
+export const STAMINA_PER_STR = 2;
+/** Default per-adventure budget (moderate tier). Sprint 3 scales 20/25/30. */
+export const ACTION_BUDGET_DEFAULT = 25;
+/** Per-tier hit-chance bonus the enemy gets against a fatigued player.
+ *  the source combat model — +15% per tier; tier 4 caps at 60%. */
+export const FATIGUE_TIER_EVASION_PENALTY = 15;
 
 // ============================================================
 // TYPES
@@ -142,9 +157,6 @@ export interface PlayerInventoryItem {
 
 export interface WeaponSkills {
   swordsmanship: number;
-  mace_fighting: number;
-  fencing: number;
-  archery: number;
   armor_expertise: number;
   shield_expertise: number;
   stealth: number;
@@ -156,9 +168,6 @@ export const SKILL_CAP = 700;
 
 export const SKILL_NAMES: Record<keyof WeaponSkills, string> = {
   swordsmanship: "Swordsmanship",
-  mace_fighting: "Mace Fighting",
-  fencing: "Fencing",
-  archery: "Archery",
   armor_expertise: "Armor Expertise",
   shield_expertise: "Shield Expertise",
   stealth: "Stealth",
@@ -168,9 +177,6 @@ export const SKILL_NAMES: Record<keyof WeaponSkills, string> = {
 
 export const DEFAULT_WEAPON_SKILLS: WeaponSkills = {
   swordsmanship: 0,
-  mace_fighting: 0,
-  fencing: 0,
-  archery: 0,
   armor_expertise: 0,
   shield_expertise: 0,
   stealth: 0,
@@ -203,9 +209,50 @@ export interface PlayerState {
   currentMana: number;
   /** Maximum mana pool. Grows +1 on each combat victory. */
   maxMana: number;
+  /** STR base — pre-PICSSI value. PICSSI Passion adds up to +10 on top. */
   strength: number;
   dexterity: number;
   charisma: number;
+  /**
+   * PICSSI-augmented effective stats. Recomputed every load via
+   * recomputeDerivedStats (lib/karma/recompute.ts). KARMA Sprint 2.
+   *   STR_eff = STR + min(10, floor(passion/10))
+   *   DEX_eff = DEX + min(10, floor(courage/10))
+   *   CHA_eff = CHA + min(10, floor(standing/10))
+   * Persisted for fast reads but always re-derived on load — never
+   * mutate directly.
+   */
+  strengthEffective: number;
+  dexterityEffective: number;
+  charismaEffective: number;
+  /**
+   * Cumulative combat-victory counter. Drives maxMana via
+   * KARMA_SYSTEM.md §2.2: maxMana = 10 + |illumination|/2 + combatVictories.
+   * Replaces the old "maxMana++ per kill" mutation pattern.
+   */
+  combatVictories: number;
+
+  /**
+   * body-zone-style dual-pool stamina (KARMA Sprint 1, KARMA_SYSTEM.md §2.3).
+   *   stamina      — current pool, drains per swing in combat,
+   *                  resets to maxStamina at fight-end.
+   *   maxStamina   — STAMINA_BASE + STAMINA_PER_STR · STR. Recomputed via
+   *                  recomputeDerivedStats(); persisted for fast reads.
+   *   fatiguePool  — persistent accumulator. Negative; tiers at
+   *                  −maxStamina × {1,2,3,4}. Tier 4 blocks player turn.
+   */
+  stamina: number;
+  maxStamina: number;
+  fatiguePool: number;
+
+  /**
+   * Per-adventure activity budget (KARMA_SYSTEM.md §4c). Sprint 3's
+   * activity dispatcher (PRAY/DRINK/etc.) decrements this; tier scaling
+   * 20 (novice) / 25 (moderate) / 30 (deadly). Reset at hub return + on
+   * rebirth at the Church. Sprint 1 sets the field; consumption lands
+   * in Sprint 3.
+   */
+  actionBudget: number;
 
   /** Per-category skill values. Total capped at SKILL_CAP. */
   weaponSkills: WeaponSkills;
@@ -218,7 +265,7 @@ export interface PlayerState {
   weapon: string;              // Item id of equipped weapon
   armor: string | null;        // LEGACY — mapped to bodyArmor on load
   shield: string | null;       // Item id of equipped shield (off-hand)
-  // Per-zone armor slots (HWRR-style)
+  // Per-zone armor slots (body-zone-style)
   helmet: string | null;       // Head protection
   gorget: string | null;       // Neck protection
   bodyArmor: string | null;    // Torso protection
@@ -231,19 +278,17 @@ export interface PlayerState {
   necklace: string | null;     // Necklace or medallion
   inventory: PlayerInventoryItem[];
 
-  // Virtues (tracked silently by Jane)
-  virtues: {
-    Honesty: number;
-    Compassion: number;
-    Valor: number;
-    Justice: number;
-    Sacrifice: number;
-    Honor: number;
-    Spirituality: number;
-    Humility: number;
-    Grace: number;
-    Mercy: number;
-  };
+  /**
+   * PICSSI — the canonical six-dimensional character scoring system.
+   * GAME_DESIGN.md §11 + KARMA_SYSTEM.md §2. Replaced the legacy
+   * 10-virtue ledger in KARMA Sprint 2 (2026-04-30 / migration
+   * 20260501100000_picssi_bedrock_and_legacy_drop.sql).
+   *
+   * Five virtues run 0..100; Illumination runs −100..+100 (bipolar —
+   * both saintly and demonic ends grow maxMana). Mutate via
+   * applyKarma() in lib/karma/recompute.ts; never write directly.
+   */
+  picssi: PicssiState;
 
   // Reputation
   reputationScore: number;     // Numeric score
@@ -253,7 +298,17 @@ export interface PlayerState {
   // Adventure tracking
   currentAdventure: string | null;  // Adventure id if in an adventure
   completedAdventures: string[];
-  activeQuests: string[];
+
+  /**
+   * KARMA Sprint 8a — Quest Engine state. Per-quest runtime info
+   * (status, currentStep, completedSteps, scratch). Authoring lives
+   * in `lib/quests/lines/<id>.ts`; this map is the player-side
+   * runtime state. Replaces the inert `activeQuests: string[]`.
+   *
+   * Scope-filtered on rebirth: life-scope quests wipe; legacy-scope
+   * quests survive death. See lib/quests/engine.ts:filterQuestsByScope.
+   */
+  quests: Record<string, import("./quests/types").QuestState>;
 
   // Consequences
   bounty: number;              // Gold bounty on player's head (0 = none)
@@ -306,7 +361,79 @@ export interface PlayerState {
 
   /** False until first visit to Pots & Bobbles. Zim's intro fires once. */
   metZim: boolean;
+
+  // ── KARMA Sprint 3 — activity / brothel / scrolls state ──────────
+  /**
+   * Active venereal disease flag (KARMA_SYSTEM.md §2.13a / GAME_DESIGN.md §12).
+   * Set by BROTHEL side effect (~7.5% per visit). Cured by HEAL spell,
+   * the fertility temple (high chance, Spirituality-scaled), or a
+   * generic temple PRAY (lower chance). While active, recompute
+   * subtracts 2 from STR_eff (floor 6) per KARMA_SYSTEM.md.
+   */
+  vdActive: boolean;
+
+  /**
+   * Scrolls of Thoth read-tracking. Keyed by scroll id ("thoth-1"..).
+   * `riddlesPassed` is the list of riddle answers the player has
+   * verified — Illumination is awarded on FIRST riddle pass per scroll.
+   * Per-life: cleared on rebirth at the Church.
+   */
+  scrollsRead: Record<string, { firstReadAt: string; riddlesPassed: string[] }>;
+
+  /**
+   * Open riddle gate. Set when the player reads a scroll; their next
+   * command is taken as the answer. null = no pending riddle.
+   * Persisted so a page refresh doesn't lose the prompt.
+   */
+  pendingRiddle: { scrollId: string; riddleIdx: number; prompt: string } | null;
+
+  // ── KARMA Sprint 4 — encounter atom world state ───────────────
+  /**
+   * Hidden 0..100 affection meter per recurring NPC. Drives gift-
+   * giving, recurring encounter unlocks, eros progression, and grief
+   * reach on NPC death. Atoms write deltas; engine clamps to 0..100.
+   * Per-life: cleared on rebirth at the Church.
+   */
+  npcAffection: Record<string, number>;
+
+  /**
+   * Per-life narrative flags consumed by atom prerequisites and
+   * future quest steps. Strings are arbitrary; atoms set them via
+   * `flagsSet` in their Choice schema. Wiped on rebirth.
+   */
+  flagsLife: Record<string, boolean>;
+
+  /**
+   * Legacy flags that survive death — used for "you've done this
+   * before" gates in future-life encounters. Authored explicitly per
+   * atom; default behavior is to set into flagsLife.
+   */
+  flagsLegacy: Record<string, boolean>;
+
+  /**
+   * Open atom gate. Set when an encounter atom has been presented to
+   * the player and is awaiting a numbered choice. The next non-bypass
+   * command is taken as the choice index (1, 2, 3...). null = no
+   * pending atom. Persisted across refresh.
+   */
+  pendingAtom: { atomId: string; presentedAt: number } | null;
+
+  /**
+   * KARMA Sprint 6 — tail-buffer of recent PICSSI deltas. Each entry
+   * carries a timestamp, the delta applied, and a one-line source
+   * tag ("combat: defeated goblin", "atom: vivian-meet", etc.).
+   * Trimmed to the last KARMA_LOG_MAX entries on every write.
+   * Surfaced in the STATS panel's karma history view.
+   */
+  karmaLog: Array<{
+    at: string;          // ISO 8601
+    delta: Partial<Record<"passion" | "integrity" | "courage" | "standing" | "spirituality" | "illumination", number>>;
+    source: string;
+  }>;
 }
+
+/** KARMA Sprint 6 — cap the size of the per-player karma log. */
+export const KARMA_LOG_MAX = 50;
 
 // ============================================================
 // WORLD STATE
@@ -565,13 +692,26 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       previousRoom: null,
       visitedRooms: ["church_of_perpetual_life"],
 
-      hp: 20,
-      maxHp: 20,
+      // KARMA_SYSTEM.md §2.1: maxHP = 50 + 2·integrity → 50 at midline.
+      // Sprint 2 raised the base from the legacy 20; existing rows get
+      // recomputed up on next load.
+      hp: 50,
+      maxHp: 50,
       strength: 12,
       dexterity: 10,
       charisma: 10,
+      strengthEffective: 12,   // recomputeDerivedStats reconfirms on load
+      dexterityEffective: 10,
+      charismaEffective: 10,
+      combatVictories: 0,
       maxMana: 10,
       currentMana: 10,
+      // Stamina derived from STR via STAMINA_BASE + 2·STR (Sprint 1).
+      // STR 12 → 35 + 24 = 59. recomputeDerivedStats() will reconfirm at load.
+      stamina: STAMINA_BASE + STAMINA_PER_STR * 12,
+      maxStamina: STAMINA_BASE + STAMINA_PER_STR * 12,
+      fatiguePool: 0,
+      actionBudget: ACTION_BUDGET_DEFAULT,
 
       weaponSkills: { ...DEFAULT_WEAPON_SKILLS },
 
@@ -593,17 +733,13 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       necklace: null,
       inventory: [{ itemId: "gray_robe", quantity: 1 }],
 
-      virtues: {
-        Honesty: 0,
-        Compassion: 0,
-        Valor: 0,
-        Justice: 0,
-        Sacrifice: 0,
-        Honor: 0,
-        Spirituality: 0,
-        Humility: 0,
-        Grace: 0,
-        Mercy: 0,
+      picssi: {
+        passion: 0,
+        integrity: 0,
+        courage: 0,
+        standing: 0,
+        spirituality: 0,
+        illumination: 0,
       },
 
       reputationScore: 0,
@@ -612,7 +748,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
 
       currentAdventure: null,
       completedAdventures: [],
-      activeQuests: [],
+      quests: {},
 
       bounty: 0,
       isWanted: false,
@@ -635,6 +771,14 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       mounted: false,
       remembersOwnName: false,
       metZim: false,
+      vdActive: false,
+      scrollsRead: {},
+      pendingRiddle: null,
+      npcAffection: {},
+      flagsLife: {},
+      flagsLegacy: {},
+      pendingAtom: null,
+      karmaLog: [],
     },
 
     activeEvents: [],
@@ -737,19 +881,26 @@ export function updatePlayerHP(
   };
 }
 
-export function updateVirtue(
-  state: WorldState,
-  virtue: keyof WorldState["player"]["virtues"],
-  delta: number
-): WorldState {
-  const newScore = state.player.virtues[virtue] + delta;
+/**
+ * Bump PICSSI Standing by `delta`, clamped to 0..100. Replaces all
+ * legacy Honor mutations as of 2026-04-29 per Scotch's deprecation
+ * directive. Standing is unipolar: a fresh hero (Standing 0) cannot
+ * go negative; loss-events at Standing 0 clamp silently.
+ *
+ * See KARMA_SYSTEM.md §2.8 (Standing) for canonical growth/loss
+ * sources and tier scaling.
+ */
+export function bumpStanding(state: WorldState, delta: number): WorldState {
+  const current = state.player.picssi.standing;
+  const next = Math.max(0, Math.min(100, current + delta));
+  if (next === current) return state;
   return {
     ...state,
     player: {
       ...state.player,
-      virtues: {
-        ...state.player.virtues,
-        [virtue]: newScore,
+      picssi: {
+        ...state.player.picssi,
+        standing: next,
       },
     },
   };
@@ -1010,6 +1161,45 @@ export function applyPlayerDeath(
       receivedHokasUnarmedGift: false,
       currentRoom: "church_of_perpetual_life",
       previousRoom: state.player.currentRoom,
+      // Rebirth wipes fatigue + refills stamina + resets the activity budget.
+      stamina: state.player.maxStamina,
+      fatiguePool: 0,
+      actionBudget: ACTION_BUDGET_DEFAULT,
+      // PICSSI is per-life (KARMA_SYSTEM.md §11 / GAME_DESIGN.md §11) —
+      // every death resets virtues to midline. The Perpetual Hero
+      // re-enters the world morally fresh.
+      picssi: {
+        passion: 0,
+        integrity: 0,
+        courage: 0,
+        standing: 0,
+        spirituality: 0,
+        illumination: 0,
+      },
+      // Combat-victory mana growth is also per-life. Recompute will
+      // collapse maxMana back to the 10-base on first post-rebirth load.
+      combatVictories: 0,
+      // Per-life: VD heals, scroll-knowledge fades, dangling riddles drop.
+      vdActive: false,
+      scrollsRead: {},
+      pendingRiddle: null,
+      // Per-life: affection + life-flags wipe; legacy flags carry forward.
+      npcAffection: {},
+      flagsLife: {},
+      // flagsLegacy: preserved (intentionally not reset)
+      pendingAtom: null,
+      // Per-life: karma history begins fresh on rebirth.
+      karmaLog: [],
+      // Sprint 8a: scope-filter quests — life-scope wipe, legacy survive.
+      // Inlined to avoid circular import with lib/quests/engine.ts.
+      // Engine's `filterQuestsByScope` is the canonical version; this
+      // mirrors its data-only semantics (reads QuestState.scope which
+      // is denormalized at acceptance time).
+      quests: Object.fromEntries(
+        Object.entries(state.player.quests ?? {}).filter(
+          ([, qs]) => qs.scope === "legacy"
+        )
+      ),
     },
   };
 
@@ -1055,10 +1245,17 @@ export function tickWorldState(state: WorldState): WorldState {
       };
     }
 
-    // Passive regen — HP + mana (gated by activeCombat above)
-    const nextHp = Math.min(p.maxHp, p.hp + HP_REGEN_PER_TURN);
+    // Passive regen — HP + mana (gated by activeCombat above + stamina>0).
+    // KARMA_SYSTEM.md §2.3: a body whose stamina pool is empty stops
+    // healing — it has nothing left to spend on repair. Eat, drink,
+    // sleep, or pray to recover. Sprint 1 wires the gate; Sprint 3's
+    // activity dispatcher will provide the rest paths.
+    const regenActive = p.stamina > 0;
+    const nextHp = regenActive ? Math.min(p.maxHp, p.hp + HP_REGEN_PER_TURN) : p.hp;
     const maxMana = p.maxMana ?? 0;
-    const nextMana = Math.min(maxMana, (p.currentMana ?? maxMana) + MANA_REGEN_PER_TURN);
+    const nextMana = regenActive
+      ? Math.min(maxMana, (p.currentMana ?? maxMana) + MANA_REGEN_PER_TURN)
+      : (p.currentMana ?? maxMana);
     if (nextHp !== p.hp || nextMana !== p.currentMana || p !== newState.player) {
       newState = {
         ...newState,
@@ -1066,17 +1263,18 @@ export function tickWorldState(state: WorldState): WorldState {
       };
     }
 
-    // Gray-robe Honor decay — wearing the church's robe is shameful for
-    // anyone past the moment of rebirth. −1 Honor every 10 turns it stays
+    // Gray-robe Standing decay — wearing the church's robe is shameful for
+    // anyone past the moment of rebirth. −1 Standing every 10 turns it stays
     // in inventory. Stops as soon as the robe is removed (e.g., after Sam's
     // outfit purchase or the charity-barrel dressing ceremony).
+    // (Was Honor pre-2026-04-29; deprecated to PICSSI Standing.)
     const wearingRobe = newState.player.inventory.some(e => e.itemId === "gray_robe");
     if (
       wearingRobe &&
       newState.worldTurn > 0 &&
       newState.worldTurn % GRAY_ROBE_HONOR_DECAY_INTERVAL === 0
     ) {
-      newState = updateVirtue(newState, "Honor", -1);
+      newState = bumpStanding(newState, -1);
       newState = addToChronicle(
         newState,
         "Wore the gray church robe for another ten turns.",

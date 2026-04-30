@@ -1,0 +1,77 @@
+{
+  "id": "vivian-first-adventure-rescue-bond",
+  "title": "Vivian — first-adventure rescue (Stage 2 — the bond)",
+  "pdSource": "original-living-eamon",
+  "pdSafe": true,
+  "patternType": "witness-moment",
+  "tags": ["thurian-adventure", "vivian", "first-bond", "combat-aftermath", "high-stakes-emotional", "gift", "eros"],
+  "triggers": [
+    { "type": "enter-room", "target": "TBD_first_adventure_chamber_2" }
+  ],
+  "prerequisites": [
+    { "type": "flag-set", "value": "vivian_first_met" },
+    { "type": "flag-unset", "value": "vivian_cave_bond" }
+  ],
+  "prompt": "Three serpent-cult footmen. Narrow stone corridor. No back-step. The hero squares his stance — and a knife flicks past from the dark above and takes the front man in the throat. Vivian drops from a ledge above, lands light as a cat, plants her short sword in the second man's kidney before he turns. \"Don't just stand there, soldier.\" The third she leaves for the hero. After — she crouches at a small iron-bound chest, picks the lock in a dozen heartbeats, lifts out a healing potion and tosses it to him without looking. \"You looked thirsty.\" Then she's gone again, into the next chamber, scouting ahead.",
+  "pacing": {
+    "duration": "medium",
+    "affect": { "fear": 0.5, "excitement": 0.7, "wonder": 0.4, "eros": 0.3 }
+  },
+  "choices": [
+    {
+      "id": "thank-her",
+      "label": "Thank her, sincerely",
+      "karma": {
+        "Integrity": 1,
+        "Spirituality": 1
+      },
+      "affect": {
+        "wonder": 0.3,
+        "eros": 0.2,
+        "melancholy": 0.1
+      },
+      "npcAffection": {
+        "vivian": 20
+      },
+      "itemsGained": ["healing_potion"],
+      "flagsSet": ["vivian_cave_bond", "vivian_gave_first_gift"],
+      "resolutionHint": "She catches the thank-you over her shoulder, smiles to herself in the dark, and keeps walking. He has the potion. She has the look on his face. Bond formed."
+    },
+    {
+      "id": "play-it-cool",
+      "label": "Pocket the potion without comment, follow her",
+      "karma": {
+        "Standing": 1,
+        "Courage": 1
+      },
+      "affect": {
+        "excitement": 0.2,
+        "eros": 0.2
+      },
+      "npcAffection": {
+        "vivian": 15
+      },
+      "itemsGained": ["healing_potion"],
+      "flagsSet": ["vivian_cave_bond", "vivian_gave_first_gift", "vivian_first_meet_played_it_cool"],
+      "resolutionHint": "He pockets the potion and falls in behind her. No words. She'll respect that — she's the same way. Bond formed, slightly cooler in tone."
+    },
+    {
+      "id": "ask-her-name-again",
+      "label": "Pretend not to remember her name",
+      "karma": {
+        "Standing": -1,
+        "Passion": -1
+      },
+      "affect": {
+        "melancholy": 0.3,
+        "dread": 0.2
+      },
+      "npcAffection": {
+        "vivian": 0
+      },
+      "itemsGained": ["healing_potion"],
+      "flagsSet": ["vivian_cave_bond", "vivian_gave_first_gift", "vivian_first_meet_pretended_to_forget"],
+      "resolutionHint": "He says \"What was your name again?\" Her smile flickers. \"Vivian. The girl who just saved your life.\" She's gone before he can correct it. The bond forms anyway — she finishes the run with him — but a small cold thing has been deposited that won't entirely leave."
+    }
+  ]
+}

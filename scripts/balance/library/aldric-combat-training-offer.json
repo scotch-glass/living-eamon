@@ -1,0 +1,84 @@
+{
+  "id": "aldric-combat-training-offer",
+  "title": "Aldric the Veteran — offers to teach you to fight",
+  "pdSource": "the-stag-company",
+  "pdSafe": true,
+  "patternType": "graduated-test",
+  "tags": ["main-hall", "ostavar", "aldric", "tutorial", "combat", "first-meeting", "early-game"],
+  "triggers": [
+    { "type": "talk-to-npc", "target": "old_mercenary" }
+  ],
+  "prerequisites": [
+    { "type": "flag-set", "value": "aldric_remembers_player_name" },
+    { "type": "flag-unset", "value": "aldric_offered_combat_training" }
+  ],
+  "prompt": "Aldric tilts his prosthetic-handed pour into a fresh cup. \"Last time we met, you came back through the Church door with your eyes empty and the gown still wet. Whatever happened in there — \" he stops, doesn't finish. \"You don't remember the sword. I'd lay coin on it. Want me to remind you? Three ways to do this. Free in the courtyard with Dufus the dummy. Cheap and rough with me, ten gold and a bruise. Or formal, fifty gold, in the courtyard with timed drills. Your call.\"",
+  "pacing": {
+    "duration": "short",
+    "affect": { "melancholy": 0.3, "wonder": 0.2 }
+  },
+  "choices": [
+    {
+      "id": "free-courtyard-dufus",
+      "label": "Free — train against Dufus in the courtyard",
+      "command": "GO COURTYARD",
+      "karma": {
+        "Courage": 1,
+        "Integrity": 1
+      },
+      "affect": {
+        "excitement": 0.2,
+        "wonder": 0.1
+      },
+      "flagsSet": ["aldric_offered_combat_training", "took_dufus_path"],
+      "resolutionHint": "Aldric nods, walks him to the courtyard, introduces Dufus. Free path. Slow but honest. Can grind to skill 25 against the dummy with no gold."
+    },
+    {
+      "id": "cheap-rough-aldric",
+      "label": "Cheap — pay 10 gold, train rough with Aldric directly",
+      "command": "PAY ALDRIC 10",
+      "karma": {
+        "Courage": 2,
+        "Standing": 1
+      },
+      "affect": {
+        "fear": 0.3,
+        "excitement": 0.4
+      },
+      "goldDelta": -10,
+      "flagsSet": ["aldric_offered_combat_training", "took_aldric_rough_training"],
+      "resolutionHint": "Aldric grins like a man who hasn't grinned in months. He hits hard. The hero limps out with skill +5 and a deep respect."
+    },
+    {
+      "id": "formal-fifty-gold",
+      "label": "Formal — pay 50 gold, take the timed-drill course",
+      "command": "PAY ALDRIC 50",
+      "karma": {
+        "Standing": 2,
+        "Integrity": 1
+      },
+      "affect": {
+        "wonder": 0.3,
+        "excitement": 0.2
+      },
+      "goldDelta": -50,
+      "flagsSet": ["aldric_offered_combat_training", "took_aldric_formal_training"],
+      "resolutionHint": "Aldric raises an eyebrow at the gold — most newcomers don't have it — and walks the hero through the proper drills. Skill +15. The other adventurers in the hall watch, register the seriousness."
+    },
+    {
+      "id": "refuse",
+      "label": "Refuse all three (handle it yourself)",
+      "karma": {
+        "Courage": 1,
+        "Standing": 1,
+        "Spirituality": -1
+      },
+      "affect": {
+        "dread": 0.4,
+        "melancholy": 0.2
+      },
+      "flagsSet": ["aldric_offered_combat_training", "refused_aldric_training"],
+      "resolutionHint": "Aldric shrugs, doesn't argue. \"Suit yourself.\" He goes back to his ale. The hero has saved no money, learned no skill, and made the hardest path his own."
+    }
+  ]
+}

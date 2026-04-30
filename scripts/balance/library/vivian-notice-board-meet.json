@@ -1,0 +1,55 @@
+{
+  "id": "vivian-notice-board-meet",
+  "title": "Vivian — first meeting at the Notice Board (Stage 1)",
+  "pdSource": "original-living-eamon",
+  "pdSafe": true,
+  "patternType": "witness-moment",
+  "tags": ["ostavar", "notice-board", "vivian", "first-meeting", "social", "low-stakes", "exposition"],
+  "triggers": [
+    { "type": "enter-room", "target": "notice_board" }
+  ],
+  "prerequisites": [
+    { "type": "flag-unset", "value": "vivian_first_met" }
+  ],
+  "prompt": "A young woman is already at the Notice Board, leaning against the marble alcove wall, reading a posting. She glances over at the sound of the door — takes in the gray gown, the empty hands, the whole situation — in about a second. \"Pulling a contract, are we? Brave.\" She tilts her head, a small grin spreading. \"You're new-new. Just up from the Church floor?\" Before he can answer she's already moving past him. \"Don't worry, soldier — everyone gets a first time. I'm Vivian. I might see you out there. Try not to die in the first room.\" She's gone before he can find a word for her.",
+  "pacing": {
+    "duration": "short",
+    "affect": { "wonder": 0.4, "excitement": 0.3, "eros": 0.2 }
+  },
+  "choices": [
+    {
+      "id": "watch-her-go",
+      "label": "Watch her leave (witness — no spoken response)",
+      "karma": {
+        "Passion": 1
+      },
+      "affect": {
+        "wonder": 0.2,
+        "eros": 0.1,
+        "melancholy": 0.1
+      },
+      "npcAffection": {
+        "vivian": 5
+      },
+      "flagsSet": ["vivian_first_met", "knows_vivian_name"],
+      "resolutionHint": "Hero says nothing. Vivian's already gone. The room feels smaller now without her. First flicker of affection registered (she liked that he didn't try to be clever)."
+    },
+    {
+      "id": "call-after-her",
+      "label": "Call after her — try to be clever",
+      "karma": {
+        "Passion": 1,
+        "Standing": -1
+      },
+      "affect": {
+        "wonder": 0.3,
+        "eros": 0.1
+      },
+      "npcAffection": {
+        "vivian": 2
+      },
+      "flagsSet": ["vivian_first_met", "knows_vivian_name", "vivian_first_meet_called_after"],
+      "resolutionHint": "Hero says something — anything — too late and too loud. Vivian's laugh floats back from the corridor. She liked it less than the silence would have, but she liked it."
+    }
+  ]
+}

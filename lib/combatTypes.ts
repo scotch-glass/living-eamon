@@ -1,6 +1,6 @@
 // ============================================================
 // LIVING EAMON — Combat System Types
-// HWRR-style body-part targeting with 3-roll resolution.
+// Body-part targeting with 3-roll resolution.
 // All combat-specific types live here to keep gameState and
 // gameData clean.
 // ============================================================
@@ -19,7 +19,7 @@ export const ZONE_DAMAGE_MULTIPLIER: Record<BodyZone, number> = {
   limbs: 0.8,
 };
 
-/** Evasion penalty per zone (HWRR-style). Smaller zones are harder to hit. */
+/** Evasion penalty per zone (body-zone-style). Smaller zones are harder to hit. */
 export const ZONE_EVASION_PENALTY: Record<BodyZone, number> = {
   torso: 0,
   limbs: 10,
@@ -117,6 +117,15 @@ export interface CombatantState {
   dexterity: number;
   strength: number;
   agility: number;              // Evasion stat
+  /**
+   * body-zone fatigue tier (0–4) per KARMA_SYSTEM.md §2.3 / §4a. Set on the
+   * player's combatant by buildCombatantFromPlayer; enemies leave it
+   * undefined. resolveStrike adds tier × FATIGUE_TIER_EVASION_PENALTY
+   * to the attacker's hit chance when this defender carries it.
+   * Refreshed before each round in gameEngine.ts so mid-fight drain
+   * reflects on the next swing. (Sprint 1.)
+   */
+  fatigueTier?: number;
 }
 
 // ── Strike Resolution ───────────────────────────────────────

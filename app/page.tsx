@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { WorldState, createInitialWorldState } from "../lib/gameState";
+import { fatigueLevel, fatigueTierLabel } from "../lib/karma/recompute";
 import { ITEMS, NPCS, type Item } from "../lib/gameData";
 import { isTwoHanded } from "../lib/uoData";
 import CommandInput, { type CommandInputHandle } from "../components/CommandInput";
@@ -20,21 +21,38 @@ import BackpackPanel from "../components/BackpackPanel";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
 import ComparePopup from "../components/ComparePopup";
 import BulkSellPopup from "../components/BulkSellPopup";
-import HeroScenePortrait, { type HeroEquipment } from "../components/HeroScenePortrait";
+import HeroScenePortrait, {
+  type HeroEquipment,
+  type HeroWeaponCarry,
+} from "../components/HeroScenePortrait";
+import { getWeaponCarry } from "../lib/weaponCarry";
 import { getRoom } from "../lib/adventures/registry";
 
 /**
  * Derive the visible equipment state from player state, for picking the
- * right hero sprite variation. v1 cases:
- *   - gray_robe in inventory → "gray_robe" (hospital-gown rebirth garment)
- *   - otherwise → "loincloth" (canonical master, no generation cost)
- * More cases (leather armor, chain, plate) will be added once per-armor
- * sprite pipelines land.
+ * right hero sprite variation. Precedence: armored body slot beats any
+ * carried clothes; clothes (Hokas rags / Sam outfit / charity barrel)
+ * beat the gray robe; the robe beats the loincloth master default.
+ *
+ * Common-clothes detection is by item id prefix ("plain_"/"ragged_") plus
+ * the charity-barrel variants — none of which live in a dedicated slot,
+ * so we infer "wearing clothes" from carried inventory.
  */
+const COMMON_CLOTHES_IDS = new Set<string>([
+  "plain_shirt", "plain_trousers", "plain_belt", "plain_shoes",
+  "ragged_shirt", "ragged_trousers", "ragged_belt", "ragged_shoes",
+  "moth_eaten_wool_shirt", "threadbare_linen_shirt", "heavy_canvas_tunic",
+  "homespun_pants", "patched_wool_breeches", "rough_canvas_trousers",
+  "cloth_shoes", "leather_sandals", "mismatched_boots",
+]);
+
 function deriveEquipment(player: {
   inventory?: { itemId: string; quantity: number }[] | null;
+  bodyArmor?: string | null;
 }): HeroEquipment {
+  if (player.bodyArmor === "old_leather_armor") return "leather_armor";
   const inv = player.inventory ?? [];
+  if (inv.some((i) => COMMON_CLOTHES_IDS.has(i.itemId))) return "common_clothes";
   if (inv.some((i) => i.itemId === "gray_robe")) return "gray_robe";
   return "loincloth";
 }
@@ -897,12 +915,6 @@ export default function Home() {
 
   const player = worldState?.player;
   const weaponIsTwoHanded = player?.weapon ? isTwoHanded(player.weapon) : false;
-  const topVirtues = player
-    ? Object.entries(player.virtues)
-        .filter(([, v]) => v !== 0)
-        .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
-        .slice(0, 5)
-    : [];
 
   // Sync inCombat from worldState on rehydration
   useEffect(() => {
@@ -942,6 +954,35 @@ export default function Home() {
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#000000", color: "#e5e7eb", position: "relative" }}>
       {/* NPC conversation sprite */}
       {!inCombat && <NPCSprite npcId={conversationNpcId} />}
+
+      {/* Hero scene portrait — mounted as a root-level sibling of
+          NPCSprite so it escapes any deeper overflow/containing-block
+          ancestors and sizes against the viewport. Left anchor shifts
+          with the sidebar collapse. */}
+      {!inCombat && player && heroMasterId && (
+        <div
+          style={{
+            position: "fixed",
+            left: sidebarOpen ? 256 : 48,
+            top: 0,
+            bottom: 0,
+            overflow: "visible",
+            pointerEvents: "none",
+            zIndex: 3,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "flex-start",
+            transition: "left 0.3s ease",
+          }}
+        >
+          <HeroScenePortrait
+            heroMasterId={heroMasterId}
+            equipment={deriveEquipment(player) satisfies HeroEquipment}
+            weapon={getWeaponCarry(player.weapon) satisfies HeroWeaponCarry}
+            stance="casual"
+          />
+        </div>
+      )}
 
       {/* Loot screen (post-combat) */}
       {lootScreen && (
@@ -1259,17 +1300,162 @@ export default function Home() {
                     <div style={{ color: "#aaaaaa", marginBottom: 2, fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600, whiteSpace: "nowrap" }}>GOLD · CARRIED / BANKED</div>
                     <div style={{ color: "#facc15", fontWeight: "bold", fontSize: 15, fontFamily: "Georgia, serif" }}>⚜ {player.gold} / {player.bankedGold}</div>
                   </div>
-                  {topVirtues.length > 0 && (
-                    <div style={{ fontSize: 11, marginBottom: 12 }}>
-                      <div style={{ color: "#aaaaaa", marginBottom: 6, fontSize: 9, letterSpacing: "0.1em", fontFamily: "Georgia, serif", fontWeight: 600 }}>VIRTUES</div>
-                      {topVirtues.map(([name, val]) => (
-                        <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontFamily: "Georgia, serif" }}>
-                          <span style={{ color: "#cdb78a" }}>{name}</span>
-                          <span style={{ color: (val as number) > 0 ? "#4ade80" : "#f87171" }}>{(val as number) > 0 ? "+" : ""}{val}</span>
+                  {/* KARMA Sprint 1+3 — stamina, fatigue tier, action budget, afflictions */}
+                  {(() => {
+                    const tier = fatigueLevel(player);
+                    const tierColor = tier === 0 ? "#86efac" : tier === 4 ? "#f87171" : tier >= 2 ? "#fbbf24" : "#cdb78a";
+                    return (
+                      <div style={{ fontSize: 11, marginBottom: 14, fontFamily: "Georgia, serif" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>STAMINA</span>
+                          <span style={{ color: "#cdb78a" }}>{player.stamina} / {player.maxStamina}</span>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <div
+                          style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}
+                          title={`Fatigue tier ${tier} — enemy hit chance +${tier * 15}%${tier === 4 ? " · cannot strike" : ""}`}
+                        >
+                          <span style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>FATIGUE</span>
+                          <span style={{ color: tierColor }}>{fatigueTierLabel(tier)}{tier > 0 ? ` · t${tier}` : ""}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: player.vdActive || player.pendingRiddle ? 4 : 0 }}>
+                          <span style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>ACTIONS</span>
+                          <span style={{ color: "#cdb78a" }}>{player.actionBudget} / 25</span>
+                        </div>
+                        {player.vdActive && (
+                          <div
+                            style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}
+                            title="Venereal disease — STR_eff −2. Cured by HEAL spell, fertility temple, or temple PRAY (lower chance)."
+                          >
+                            <span style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>AFFLICTION</span>
+                            <span style={{ color: "#f87171" }}>Disease (−2 STR)</span>
+                          </div>
+                        )}
+                        {player.pendingRiddle && (
+                          <div
+                            style={{ display: "flex", justifyContent: "space-between" }}
+                            title="A scroll-of-Thoth riddle awaits. Your next command is taken as the answer."
+                          >
+                            <span style={{ color: "#aaaaaa", fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>RIDDLE</span>
+                            <span style={{ color: "#fbbf24" }}>Awaiting answer</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  {/* KARMA Sprint 6 — PICSSI panel: 5 unipolar bars + 1 bipolar Illumination */}
+                  <div style={{ fontSize: 11, marginBottom: 12, fontFamily: "Georgia, serif" }}>
+                    <div style={{ color: "#aaaaaa", marginBottom: 6, fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>PICSSI</div>
+                    {([
+                      ["Passion",      player.picssi.passion,      "#dc2626", "Drive, fervor → STR bonus & lusty NPC attraction"],
+                      ["Integrity",    player.picssi.integrity,    "#3b82f6", "Keeping promises → maxHP + wise NPC attraction"],
+                      ["Courage",      player.picssi.courage,      "#f97316", "Standing into danger → DEX bonus + romantic NPC attraction"],
+                      ["Standing",     player.picssi.standing,     "#facc15", "Public stature → CHA bonus + lusty NPC attraction"],
+                      ["Spirituality", player.picssi.spirituality, "#a855f7", "Reverence → mana regen + HEAL strength"],
+                    ] as Array<[string, number, string, string]>).map(([name, val, hue, tip]) => (
+                      <div key={name} title={tip} style={{ marginBottom: 4 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                          <span style={{ color: "#cdb78a" }}>{name}</span>
+                          <span style={{ color: "#cdb78a", fontSize: 10 }}>{val}</span>
+                        </div>
+                        <div style={{ position: "relative", height: 5, backgroundColor: "#1a1108", borderRadius: 2, border: "1px solid #2a1d0e", overflow: "hidden" }}>
+                          <div style={{ position: "absolute", inset: 0, width: `${Math.max(0, Math.min(100, val))}%`, backgroundColor: hue, opacity: 0.85 }} />
+                        </div>
+                      </div>
+                    ))}
+                    {/* Bipolar Illumination — center marker, fills outward from middle */}
+                    {(() => {
+                      const ill = player.picssi.illumination;
+                      const isDark = ill < 0;
+                      const magnitude = Math.abs(ill);
+                      const tip = `Illumination ${ill > 0 ? "+" : ""}${ill} — ${isDark ? "Darkness" : ill > 0 ? "Light" : "midline"}. Drives maxMana via |Illumination|/2.`;
+                      return (
+                        <div title={tip} style={{ marginTop: 6 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                            <span style={{ color: "#cdb78a" }}>Illumination</span>
+                            <span style={{ color: isDark ? "#a78bfa" : ill > 0 ? "#fde047" : "#cdb78a", fontSize: 10 }}>
+                              {ill > 0 ? "+" : ""}{ill}
+                            </span>
+                          </div>
+                          <div style={{ position: "relative", height: 6, backgroundColor: "#1a1108", borderRadius: 2, border: "1px solid #2a1d0e", overflow: "hidden" }}>
+                            {/* center tick */}
+                            <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, backgroundColor: "#3a2c14", zIndex: 2 }} />
+                            {/* fill */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                bottom: 0,
+                                left: isDark ? `${50 - magnitude / 2}%` : "50%",
+                                width: `${magnitude / 2}%`,
+                                background: isDark
+                                  ? "linear-gradient(90deg, #6b21a8 0%, #a78bfa 100%)"
+                                  : "linear-gradient(90deg, #fde047 0%, #fef3c7 100%)",
+                                opacity: 0.9,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* KARMA Sprint 6 — Affection panel: NPCs with non-zero affection */}
+                  {(() => {
+                    const aff = Object.entries(player.npcAffection ?? {})
+                      .filter(([, v]) => v !== 0)
+                      .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number))
+                      .slice(0, 6);
+                    if (aff.length === 0) return null;
+                    return (
+                      <div style={{ fontSize: 11, marginBottom: 12, fontFamily: "Georgia, serif" }}>
+                        <div style={{ color: "#aaaaaa", marginBottom: 6, fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>AFFECTION</div>
+                        {aff.map(([npcId, value]) => {
+                          const v = value as number;
+                          const display = (NPCS[npcId]?.name ?? npcId).replace(/_/g, " ");
+                          const hue = v >= 80 ? "#fb7185" : v >= 50 ? "#fbbf24" : v >= 20 ? "#facc15" : "#cdb78a";
+                          return (
+                            <div key={npcId} style={{ marginBottom: 4 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                                <span style={{ color: "#cdb78a", textTransform: "capitalize" }}>{display}</span>
+                                <span style={{ color: hue, fontSize: 10 }}>{v}</span>
+                              </div>
+                              <div style={{ position: "relative", height: 4, backgroundColor: "#1a1108", borderRadius: 2, border: "1px solid #2a1d0e", overflow: "hidden" }}>
+                                <div style={{ position: "absolute", inset: 0, width: `${Math.max(0, Math.min(100, v))}%`, backgroundColor: hue, opacity: 0.85 }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* KARMA Sprint 6 — recent karma history (last 8 entries, newest first) */}
+                  {(() => {
+                    const log = (player.karmaLog ?? []).slice(-8).reverse();
+                    if (log.length === 0) return null;
+                    return (
+                      <div style={{ fontSize: 10, marginBottom: 12, fontFamily: "Georgia, serif" }}>
+                        <div style={{ color: "#aaaaaa", marginBottom: 6, fontSize: 9, letterSpacing: "0.1em", fontWeight: 600 }}>RECENT KARMA</div>
+                        {log.map((entry, idx) => {
+                          const parts = (Object.entries(entry.delta) as Array<[string, number]>)
+                            .filter(([, v]) => v !== 0)
+                            .map(([k, v]) => (
+                              <span key={k} style={{ color: v > 0 ? "#4ade80" : "#f87171", marginRight: 4 }}>
+                                {k.charAt(0).toUpperCase()}{v > 0 ? "+" : ""}{v}
+                              </span>
+                            ));
+                          return (
+                            <div key={`${entry.at}-${idx}`} style={{ marginBottom: 3, lineHeight: 1.3 }} title={entry.source + " · " + new Date(entry.at).toLocaleString()}>
+                              <div style={{ color: "#8a7757", fontSize: 9, fontStyle: "italic", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {entry.source}
+                              </div>
+                              <div>{parts}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </>
               )}
 
@@ -1374,30 +1560,6 @@ export default function Home() {
           fullScreen
         />
       </div>
-      {/* Hero scene portrait — shown on every non-combat screen, positioned
-          in the same left-slot the hero occupies during combat. Equipment
-          state derives from player inventory (gray robe while wearing the
-          Church garment, loincloth once it's shed). */}
-      {!inCombat && player && heroMasterId && (
-        <div
-          style={{
-            position: "fixed",
-            left: sidebarOpen ? 256 : 48,
-            bottom: 0,
-            height: "70vh",
-            width: "min(40vh, 40vw)",
-            zIndex: 1,
-            pointerEvents: "none",
-            transition: "left 0.3s ease",
-          }}
-        >
-          <HeroScenePortrait
-            heroMasterId={heroMasterId}
-            equipment={deriveEquipment(player) satisfies HeroEquipment}
-            stance="casual"
-          />
-        </div>
-      )}
       {!inCombat && (
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", position: "relative", zIndex: 2, order: 0 }}>
         <span style={{ color: "#b45309", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>

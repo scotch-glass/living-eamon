@@ -5,47 +5,19 @@ import type { NPCBodyType } from "./npcBodyType";
 // ── WEAPON CATEGORIES ───────────────────────────────────────
 
 export const WEAPON_SLASH_KEYS = new Set([
-  "long_sword",
   "short_sword",
-  "katana",
-  "scimitar",
-  "cutlass",
-  "halberd",
-  "bardiche",
-  "battle_axe",
-  "war_axe",
-  "large_battle_axe",
-  "executioners_axe",
+  "long_sword",
+  "great_sword",
 ]);
 
-export const WEAPON_PIERCE_KEYS = new Set([
-  "dagger",
-  "kryss",
-  "skinning_knife",
-  "spear",
-  "war_fork",
-  "pitchfork",
-]);
-
-export const WEAPON_BLUNT_KEYS = new Set([
-  "mace",
-  "maul",
-  "scepter",
-  "black_staff",
-  "gnarled_staff",
-  "quarter_staff",
-  "war_hammer",
-]);
-
-export const WEAPON_RANGED_KEYS = new Set(["bow", "crossbow", "repeating_crossbow"]);
+export const WEAPON_PIERCE_KEYS = new Set<string>([]);
+export const WEAPON_BLUNT_KEYS = new Set<string>([]);
+export const WEAPON_RANGED_KEYS = new Set<string>([]);
 
 export type WoundTier = "glancing" | "solid" | "devastating";
 export type WeaponCategory = "slash" | "pierce" | "blunt" | "ranged";
 
-export function getWeaponCategory(weaponKey: string): WeaponCategory {
-  if (WEAPON_RANGED_KEYS.has(weaponKey)) return "ranged";
-  if (WEAPON_PIERCE_KEYS.has(weaponKey)) return "pierce";
-  if (WEAPON_BLUNT_KEYS.has(weaponKey)) return "blunt";
+export function getWeaponCategory(_weaponKey: string): WeaponCategory {
   return "slash";
 }
 
@@ -292,29 +264,21 @@ export const ENEMY_HIT_DESCRIPTIONS: Record<WoundTier, string[]> = {
 // {enemy} {armor} placeholders
 
 export const ARMOR_ABSORB_DESCRIPTIONS: Record<string, string[]> = {
-  buckler: [
-    "Your buckler takes the brunt of the {enemy}'s blow — your arm aches from the impact but the wound is nothing.",
-    "The {enemy}'s weapon hammers into your buckler, the force traveling up your arm. The steel holds.",
-    "Your buckler absorbs the {enemy}'s strike — you feel every ounce of it, but the metal takes the damage.",
-    "The {enemy} drives into your buckler with full force. Your buckler wins.",
-    "Your buckler soaks the {enemy}'s blow. Your arm is bruised. Your flesh is not.",
-    "The {enemy}'s weapon buries itself in your buckler momentarily before you shove it away.",
+  old_wooden_shield: [
+    "Your wooden shield takes the brunt of the {enemy}'s blow — your arm aches from the impact but the wound is nothing.",
+    "The {enemy}'s weapon hammers into your shield, the force traveling up your arm. The boards hold.",
+    "Your shield absorbs the {enemy}'s strike — you feel every ounce of it, but the wood takes the damage.",
+    "The {enemy} drives into your shield with full force. The iron rim wins.",
+    "Your shield soaks the {enemy}'s blow. Your arm is bruised. Your flesh is not.",
+    "The {enemy}'s weapon buries itself in your shield momentarily before you shove it away.",
   ],
-  leather_armor: [
+  old_leather_armor: [
     "The {enemy}'s blow lands squarely on your leather armor — the boiled hide distributes the force across your torso.",
     "Your leather armor takes the {enemy}'s strike and gives a little, absorbing most of the damage into the hide.",
     "The {enemy} hits hard but your leather armor was made for this — it creaks and flexes, protecting the flesh beneath.",
     "Your leather pauldron catches the worst of the {enemy}'s blow, the thick hide compressing under the impact.",
     "The {enemy}'s attack lands on your leather armor — you feel it as pressure, not pain.",
     "Your leather armor absorbs the strike, the layers of treated hide doing their job.",
-  ],
-  chain_mail: [
-    "The {enemy}'s weapon grinds across your chain mail — iron rings take the damage that your flesh does not.",
-    "Your chain mail absorbs the {enemy}'s blow completely, the interlocked rings spreading force across your torso.",
-    "The {enemy} strikes hard but your chain mail was designed for harder — the rings hold.",
-    "Iron rings flex and compress under the {enemy}'s strike, absorbing the impact before it reaches skin.",
-    "Your chain mail takes a direct hit from the {enemy} — you feel the weight of it but the links do not give.",
-    "The {enemy}'s blow is largely eaten by your chain mail. You'll have a bruise. Nothing more.",
   ],
   default: [
     "Your armor absorbs the force of the {enemy}'s blow — you feel the impact but not the full wound.",
@@ -327,20 +291,15 @@ export const ARMOR_ABSORB_DESCRIPTIONS: Record<string, string[]> = {
 };
 
 export const ARMOR_FULL_ABSORB_DESCRIPTIONS: Record<string, string[]> = {
-  buckler: [
-    "The {enemy}'s full blow lands on your buckler — absorbed completely. Not a scratch reaches you.",
-    "Your buckler takes everything the {enemy} had. Zero damage gets through.",
-    "The {enemy} strikes your buckler with full force. Your buckler wins completely.",
+  old_wooden_shield: [
+    "The {enemy}'s full blow lands on your wooden shield — absorbed completely. Not a scratch reaches you.",
+    "Your shield takes everything the {enemy} had. Zero damage gets through.",
+    "The {enemy} strikes your shield with full force. The iron-rimmed wood wins completely.",
   ],
-  leather_armor: [
+  old_leather_armor: [
     "The {enemy}'s attack is swallowed entirely by your leather armor. The hide took it all.",
     "Full impact absorbed by your leather armor — the blow spent itself against treated hide.",
     "Your leather armor absorbs the {enemy}'s strike completely. Nothing reaches flesh.",
-  ],
-  chain_mail: [
-    "Your chain mail absorbs the {enemy}'s blow entirely — every ring held, nothing got through.",
-    "The {enemy} strikes your chain mail with full force. The rings eat it completely.",
-    "Full absorption — your chain mail takes everything the {enemy} delivered.",
   ],
   default: [
     "Your armor absorbs the {enemy}'s attack completely — zero damage reaches you.",

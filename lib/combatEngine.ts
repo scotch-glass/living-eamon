@@ -1,5 +1,5 @@
 // ============================================================
-// LIVING EAMON — HWRR-Style Combat Engine
+// LIVING EAMON — Body-Zone Combat Engine
 // Pure functions. No side effects. No state mutation.
 // Three-roll resolution: Evasion → Shield Block → Armor Pen.
 // ============================================================
@@ -27,7 +27,9 @@ import { rollWeaponDamage, getDexReactionBonus, getWeaponSkillKey, WEAPON_DATA }
 import { getWeaponCategory, type WeaponCategory, type WoundTier } from "./combatNarrationPools";
 import { buildZoneStrikeNarrative } from "./combatZoneNarration";
 import type { WorldState } from "./gameState";
+import { FATIGUE_TIER_EVASION_PENALTY } from "./gameState";
 import { NPCS, ITEMS, getEnemyDeathPool } from "./gameData";
+import { fatigueLevel } from "./karma/recompute";
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -232,9 +234,19 @@ export function resolveStrike(
     narrative: "",
   };
 
-  // ── Roll 1: Evasion (+ zone accuracy penalty) ──
+  // ── Roll 1: Evasion (+ zone accuracy penalty + fatigue penalty) ──
+  // Fatigue makes the defender easier to hit. the source combat model
+  // adds +15% enemy hit chance per tier — modeled here as a flat
+  // reduction in the defender's evasion roll (mathematically equivalent).
+  // Player carries fatigueTier; enemies leave it undefined (no penalty).
   const baseEvasion = calculateEvasionChance(defender, attacker);
-  const evasionChance = clamp(baseEvasion + ZONE_EVASION_PENALTY[targetZone], 0, 95);
+  const fatiguePenalty =
+    (defender.fatigueTier ?? 0) * FATIGUE_TIER_EVASION_PENALTY;
+  const evasionChance = clamp(
+    baseEvasion + ZONE_EVASION_PENALTY[targetZone] - fatiguePenalty,
+    0,
+    95
+  );
   if (Math.random() * 100 < evasionChance) {
     // ── Critical Fail check (only on evaded strikes) ──
     // Masters (200+ skill) never fumble. Untrained fighters fumble ~5%.
@@ -543,6 +555,7 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
     dexterity: p.dexterity,
     strength: p.strength,
     agility: effectiveAgility, // Dexterity minus cumulative armor penalties
+    fatigueTier: fatigueLevel(p),
   };
 }
 
@@ -990,11 +1003,15 @@ const POWER_OUTCOMES: PowerOutcome[] = [
   {
     weight: 3, name: "An Unwanted Vision", tier: "bad",
     apply: ctx => {
-      // Shows the enemy as a child. -1 Honor — empathy is heavy.
-      ctx.state = updateVirtueLite(ctx.state, "Honor", -1);
+      // Shows the enemy as a child. −1 Standing — empathy in the killing
+      // moment is socially read as weakness in this culture. (Was Honor
+      // pre-2026-04-29; deprecated to PICSSI Standing per the Honor →
+      // Standing rewire. Sprint 5 may retune to Spirituality / Illumination
+      // if the empathy framing fits those better.)
+      ctx.state = bumpStandingLite(ctx.state, -1);
       ctx.log.push(
         "You see your foe as they were as a child — small, frightened of nothing in particular. " +
-        "Your hands shake. (−1 Honor)"
+        "Your hands shake. (−1 Standing)"
       );
     },
   },
@@ -1094,17 +1111,20 @@ function addStatusEffect(c: CombatantState, effect: ActiveStatusEffect): Combata
   return { ...c, activeEffects: [...c.activeEffects, effect] };
 }
 
-/** Tiny inline virtue-update — keeps the spell engine free of a gameState
- *  import cycle. Mirrors the canonical `updateVirtue` shape. */
-function updateVirtueLite(state: WorldState, virtue: string, delta: number): WorldState {
-  const current = (state.player.virtues as Record<string, number>)[virtue] ?? 0;
+/** Tiny inline Standing-update — keeps the spell engine free of a gameState
+ *  import cycle. Mirrors the canonical `bumpStanding` shape with 0..100 clamping.
+ *  (Replaced `updateVirtueLite` 2026-04-29 per Honor → Standing deprecation.) */
+function bumpStandingLite(state: WorldState, delta: number): WorldState {
+  const current = state.player.picssi.standing;
+  const next = Math.max(0, Math.min(100, current + delta));
+  if (next === current) return state;
   return {
     ...state,
     player: {
       ...state.player,
-      virtues: {
-        ...state.player.virtues,
-        [virtue]: current + delta,
+      picssi: {
+        ...state.player.picssi,
+        standing: next,
       },
     },
   };
@@ -1178,12 +1198,27 @@ export function resolveCombatSpell(
   // ── Per-spell logic ──
   switch (upper) {
     case "HEAL": {
-      const heal = randInt(18, 32);
+      // Spirituality scales the heal per KARMA_SYSTEM.md §2.1:
+      // +0.5% per Spirituality point. Saint at Spirit 100 → 1.5× base.
+      const baseHeal = randInt(18, 32);
+      const spiritMult = 1 + 0.005 * state.player.picssi.spirituality;
+      const heal = Math.round(baseHeal * spiritMult);
       const before = ctx.caster.hp;
       ctx.caster = { ...ctx.caster, hp: Math.min(ctx.caster.maxHp, ctx.caster.hp + heal) };
       const gained = ctx.caster.hp - before;
+      // KARMA Sprint 3: HEAL also cures VD. The light burns the disease out.
+      const wasVd = ctx.state.player.vdActive;
+      if (wasVd) {
+        ctx.state = {
+          ...ctx.state,
+          player: { ...ctx.state.player, vdActive: false },
+        };
+      }
       outcomeLabel = "Heal";
-      ctx.log.push(`A warmth spreads through your wounds. The flesh remembers what it was. (+${gained} HP)`);
+      ctx.log.push(
+        `A warmth spreads through your wounds. The flesh remembers what it was. (+${gained} HP)` +
+          (wasVd ? "\nThe disease in you burns away with the light." : "")
+      );
       break;
     }
     case "BLAST": {

@@ -140,6 +140,15 @@ export function acceptQuest(state: WorldState, questId: string): WorldState {
  * event, and fire `completeStep`. Iteration order: by quest id, by
  * branch declaration order; first matching branch wins per step.
  *
+ * Phase 1 (auto-accept): for any registered quest the player hasn't
+ * accepted yet, if `acceptanceTrigger` matches the event and
+ * `acceptancePrerequisites` pass, accept the quest. The newly-active
+ * quest then participates in Phase 2 on the same event — so a single
+ * event can both accept a quest AND complete its first step (e.g.
+ * reading thoth-1 both accepts Way-of-Thoth and completes step 1).
+ *
+ * Phase 2 walks active quests on the post-Phase-1 state.
+ *
  * Depth-capped at 8 to prevent quest-step-done re-emission cycles.
  */
 export function emitQuestEvent(
@@ -149,6 +158,17 @@ export function emitQuestEvent(
 ): WorldState {
   if (depth >= 8) return state; // cycle guard
   let next = state;
+
+  // Phase 1: auto-accept any registered quest whose acceptanceTrigger matches.
+  for (const quest of allQuests()) {
+    if (next.player.quests?.[quest.id]) continue;
+    if (!quest.acceptanceTrigger) continue;
+    if (!triggerMatches(quest.acceptanceTrigger, event, next)) continue;
+    if (!checkPrerequisites(next, quest.acceptancePrerequisites)) continue;
+    next = acceptQuest(next, quest.id);
+  }
+
+  // Phase 2: walk now-active quests for step triggers.
   const quests = next.player.quests ?? {};
   for (const [questId, qs] of Object.entries(quests)) {
     if (qs.status !== "active") continue;
@@ -383,7 +403,7 @@ export function filterQuestsByScope(
 
 // ── Internals ─────────────────────────────────────────────────
 
-function checkPrerequisites(
+export function checkPrerequisites(
   state: WorldState,
   prereqs: QuestPrerequisite[] | undefined
 ): boolean {

@@ -85,7 +85,9 @@ import {
 } from "./karma/combat-deltas";
 import type { KarmaDelta } from "./karma/types";
 import { emitQuestEvent } from "./quests/engine";
+import { resolveQuestDialogue } from "./quests/dialogue";
 import { renderActiveQuests, renderQuestLog } from "./quests/log";
+import "./quests/load"; // side-effect: registers all quest line modules
 import {
   SITUATION_BLOCK_LINE,
   exitDestinationLabel,
@@ -2597,6 +2599,28 @@ function processInputCore(
       newState,
       stateChanged: false,
     };
+  }
+
+  // ── 1. PREFIX: TALK → quest dialogue resolver runs FIRST (Sprint 8c) ─
+  // Quest-bound NPCs opt into stage-aware dialogue via
+  // `registerQuestDialogue` in their quest line module. When the NPC
+  // is registered, the resolver owns the response (lines or fallback);
+  // when not registered, we fall through to the legacy paths below.
+  if (first === "TALK") {
+    const questNpcId = npcIdFromTalk(trimmed, newState);
+    if (questNpcId) {
+      const resolved = resolveQuestDialogue(newState, questNpcId);
+      if (resolved) {
+        return {
+          responseType: "static",
+          staticResponse: resolved.lines.join("\n"),
+          dynamicContext: null,
+          newState: resolved.state,
+          stateChanged: resolved.state !== newState,
+          conversationNpcId: questNpcId,
+        };
+      }
+    }
   }
 
   // ── 1. PREFIX: TALK → Aldric topic list (before SAY alias) ─

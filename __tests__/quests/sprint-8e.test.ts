@@ -92,14 +92,14 @@ caseName("all 11 new-NPC fragment dialogues are registered", () => {
   }
 });
 
-caseName("Sprint-8f extension NPCs are registered with fallback omitted (extension-style)", () => {
-  // Sprint 8f wired Aldric/Hokas/Vivian as extension-style dialogues:
-  // they are registered, but `fallback` is undefined so the resolver
-  // falls through to the legacy NPCScript matcher on non-matching turns.
+caseName("Guild Hall NPCs (Aldric/Hokas/Vivian) are NOT registered (per Scotch redirect 2026-04-30)", () => {
+  // The Way of Thoth is PICSSI's spine through the main adventure
+  // line, not a side-quest rooted in the Guild Hall. Aldric, Hokas,
+  // and Vivian are main-hall fixtures — wrong place to seed an epic
+  // quest. SH 1.1 / 18.3 / 19.7 are TBD pending main-adventure-line
+  // authoring. See the TODO block at the bottom of way-of-thoth.ts.
   for (const id of ["old_mercenary", "hokas_tokas", "vivian"]) {
-    const d = getQuestDialogue(id);
-    truthy(d, `${id} registered`);
-    eq(d!.fallback, undefined, `${id} fallback omitted (extension-style)`);
+    eq(getQuestDialogue(id), null, `${id} not registered (Guild Hall fixture)`);
   }
 });
 

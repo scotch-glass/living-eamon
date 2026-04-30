@@ -42,7 +42,7 @@ export default function PublicNav({ currentPage }: PublicNavProps) {
         onMouseLeave={(e) => (e.currentTarget.style.color = "#fbbf24")}
       >
         <img
-          src="/logo.png"
+          src="/art/brand/logo.png"
           alt="Living Eamon"
           style={{
             width: 32,

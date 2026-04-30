@@ -84,10 +84,10 @@ const LAUNCH_ADVENTURES: { title: string; hook: string }[] = [
 
 const PROGRESS_ITEMS = [
   "Body-zone combat with bleed, poison & wound effects",
-  "Persistent hero with name, virtues, Chronicle across realms",
+  "Persistent hero with name, PICSSI virtue scores, Chronicle across realms",
   "Guild magic & Occult sorcery — four Guild spells, sorcery circles 1–4 coded",
   "Living-world database: NPCs remember, rooms remember",
-  "Ten-virtue moral tracking & Honor system",
+  "PICSSI six-dimensional virtue system — drives NPC attraction, prayer reach, dark-patron reach",
   "Banking, vendor temp stock & 72-hour buyback",
 ];
 
@@ -117,7 +117,7 @@ export default function SplashPage() {
         }}
       >
         <img
-          src="/hero.jpg"
+          src="/art/brand/hero.jpg"
           alt="A barbarian protects a kneeling woman from Persian warriors under a stormy sky crafted by Robert E. Howard"
           style={{
             position: "absolute",
@@ -144,32 +144,61 @@ export default function SplashPage() {
             position: "relative",
             zIndex: 1,
             width: "100%",
-            maxWidth: 960,
-            textAlign: "center",
+            maxWidth: 1280,
             fontFamily: "Georgia, serif",
+            display: "grid",
+            // 3 columns on desktop; mobile collapses to one (logo / [hidden center] / tagline stack).
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
+            columnGap: 32,
+            rowGap: 28,
+            alignItems: "center",
           }}
+          className="le-splash-hero-grid"
         >
+          {/* Top wide row — eyebrow tagline spans all three columns */}
           <p
             style={{
+              gridColumn: "1 / -1",
               color: "#fbbf24",
               fontSize: 14,
               fontWeight: 700,
               letterSpacing: "0.35em",
               textTransform: "uppercase",
-              margin: "0 0 24px 0",
+              margin: 0,
+              textAlign: "center",
             }}
           >
-            A Living Text Adventure — Inspired by Robert E. Howard's Thurian Age Sword & Sorcery Tales
+            A Living Text Adventure — Inspired by Robert E. Howard's Thurian Age Sword &amp; Sorcery Tales
           </p>
 
+          {/* Left column — logo, left-justified */}
+          <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
+            <img
+              src="/art/brand/logo.png"
+              alt="Living Eamon"
+              style={{
+                width: "100%",
+                maxWidth: 420,
+                height: "auto",
+                display: "block",
+                filter: "drop-shadow(0 4px 32px rgba(0, 0, 0, 0.7))",
+              }}
+            />
+          </div>
+
+          {/* Center column — intentionally empty so the background graphic shows through. */}
+          <div className="le-splash-hero-center" aria-hidden="true" />
+
+          {/* Right column — tagline, right-justified to mirror the logo's left-justification */}
           <h1
             style={{
               color: "#fef3c7",
-              fontSize: "clamp(2.75rem, 6vw, 4.25rem)",
+              fontSize: "clamp(2.0rem, 4.5vw, 3.25rem)",
               fontWeight: 700,
-              lineHeight: 1.05,
-              margin: "0 0 28px 0",
-              textShadow: "0 2px 24px rgba(0, 0, 0, 0.8)",
+              lineHeight: 1.1,
+              margin: 0,
+              textShadow: "0 2px 24px rgba(0, 0, 0, 0.85)",
+              textAlign: "right",
             }}
           >
             One hero. A thousand realms.
@@ -177,13 +206,16 @@ export default function SplashPage() {
             A chronicle that never forgets.
           </h1>
 
+          {/* Bottom wide row — description spans all three columns */}
           <p
             style={{
+              gridColumn: "1 / -1",
               color: "#e8d4a0",
               fontSize: "clamp(1.0625rem, 1.6vw, 1.25rem)",
               lineHeight: 1.7,
-              margin: "0 auto 40px",
-              maxWidth: 780,
+              margin: "0 auto",
+              maxWidth: 880,
+              textAlign: "center",
               textShadow: "0 1px 12px rgba(0, 0, 0, 0.7)",
             }}
           >
@@ -192,8 +224,10 @@ export default function SplashPage() {
             full moon, avoiding the Order&rsquo;s inquisitive eye. Carry your scars, your virtues, and your legend from one realm to the next. Everything you do is written down — you are the immortal hero - famed or shamed across worlds.
           </p>
 
+          {/* CTA — also spans all columns, centered */}
           <div
             style={{
+              gridColumn: "1 / -1",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -246,6 +280,26 @@ export default function SplashPage() {
             </a>
           </div>
         </div>
+
+        {/* Mobile: collapse the 3-column grid to a single column and stack
+            (logo above tagline) — hide the empty transparent center column.
+            Tablet/desktop keeps the 3-column layout. */}
+        <style>{`
+          @media (max-width: 900px) {
+            .le-splash-hero-grid {
+              grid-template-columns: 1fr !important;
+            }
+            .le-splash-hero-grid > h1 {
+              text-align: center !important;
+            }
+            .le-splash-hero-grid > div:first-of-type {
+              justify-content: center !important;
+            }
+            .le-splash-hero-center {
+              display: none !important;
+            }
+          }
+        `}</style>
       </section>
 
       {/* ───────────────────────── PILLARS ───────────────────────── */}
@@ -364,7 +418,7 @@ export default function SplashPage() {
           {[
             { n: "8", label: "Circles of Sorcery" },
             { n: "64", label: "Forbidden Invocations" },
-            { n: "10", label: "Tracked Virtues" },
+            { n: "6", label: "PICSSI Virtue Dimensions" },
             { n: "4", label: "Body Zones in Combat" },
             { n: "∞", label: "Procedurally-Generated Realms" },
           ].map((s) => (

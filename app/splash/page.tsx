@@ -181,7 +181,7 @@ export default function SplashPage() {
                 maxWidth: 420,
                 height: "auto",
                 display: "block",
-                marginLeft: -20,
+                marginLeft: -40,
                 filter: "drop-shadow(0 4px 32px rgba(0, 0, 0, 0.7))",
               }}
             />

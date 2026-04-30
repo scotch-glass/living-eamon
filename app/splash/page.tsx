@@ -189,21 +189,25 @@ export default function SplashPage() {
           {/* Center column — intentionally empty so the background graphic shows through. */}
           <div className="le-splash-hero-center" aria-hidden="true" />
 
-          {/* Right column — tagline, right-justified to mirror the logo's left-justification */}
+          {/* Right column — tagline, left-justified within the column. */}
           <h1
             style={{
               color: "#fef3c7",
               fontSize: "clamp(2.0rem, 4.5vw, 3.25rem)",
               fontWeight: 700,
-              lineHeight: 1.1,
+              lineHeight: 1.15,
               margin: 0,
               textShadow: "0 2px 24px rgba(0, 0, 0, 0.85)",
-              textAlign: "right",
+              textAlign: "left",
             }}
           >
-            One hero. A thousand realms.
+            One hero.
             <br />
-            A chronicle that never forgets.
+            A thousand realms.
+            <br />
+            A chronicle that
+            <br />
+            never forgets.
           </h1>
 
           {/* Bottom wide row — description spans all three columns */}

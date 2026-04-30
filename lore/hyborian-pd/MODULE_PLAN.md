@@ -43,7 +43,7 @@ extended with:
 
 - A small original framing (what brings the player to this place
   in this era?)
-- HWRR combat encounters where Howard's prose summarizes a
+- body-zone combat encounters where Howard's prose summarizes a
   battle in a sentence
 - Profile-driven branches (per Reader's Mirror) where Howard's
   protagonist had a single fixed reaction
@@ -143,7 +143,7 @@ The README.md inside each module folder must include:
   approach paths, antechambers — described in Howard's voice.
 - **Combat encounters** where Howard summarized a fight in a
   sentence ("a brief savage struggle, and the thing was dead") —
-  expanded into HWRR engagements with NPC combat profiles.
+  expanded into body-zone engagements with NPC combat profiles.
 - **Modern-system loot** (potions Zim sells, weapons Sam sells)
   found as treasure to give the player tangible reward beyond
   story progression and Chronicle entries.
@@ -166,7 +166,7 @@ The README.md inside each module folder must include:
 
 Every module must explicitly handle each of these:
 
-### HWRR Combat
+### body-zone Combat
 - Define `combatProfile` for every hostile NPC (agility, weapon
   skill, per-zone armor, shield)
 - Specify which body zones their armor covers
@@ -280,6 +280,15 @@ crypts.
 
 ## 8. The First Three Modules (Build Order)
 
+> **2026-04-30 update:** the project's PD corpus expanded to include
+> 15 additional *Weird Tales* 1934–1936 stories (per the non-renewal
+> audit recorded in `Public_Domain_Rules.md` §1.2). The full
+> 18-module roadmap, per-module customization diagrams, scroll/
+> fragment seeding map, and recommended build order are now in
+> [`ADVENTURE_MODULES_PLAN.md`](../../ADVENTURE_MODULES_PLAN.md).
+> The three Thurian-Age modules below remain the recommended
+> first-three (M-1, M-2, M-3) per that plan.
+
 All three are based on the three Thurian-Age PD short stories.
 Build in this order; each demonstrates a different module type.
 
@@ -314,7 +323,7 @@ of the conversion methodology.
 
 **Difficulty notes:** Combat is light but lethal if rushed.
 Encourages the player to use BANDAGE/TOURNIQUET and to think
-about positioning. Good HWRR tutorial.
+about positioning. Good body-zone tutorial.
 
 ---
 
@@ -335,7 +344,7 @@ cannot say it back — is central to the module.**
 **Why second:** Investigation + combat + social play. Demonstrates
 NPC interrogation, deduction mechanics, and **enough combat to
 advance weapon skills + earn gold for training before Module 3**.
-The Serpent-Men make excellent HWRR opponents — agile, fast,
+The Serpent-Men make excellent body-zone opponents — agile, fast,
 poison-fanged.
 
 **Key elements:**
@@ -372,7 +381,7 @@ original story are swapped for Stygian raiders** — same dramatic
 function, fits our setting cleanly.
 
 **Why third:** Battle climax module. Demonstrates large-scale
-HWRR combat, the time-bridge mechanic (player briefly fights
+body-zone combat, the time-bridge mechanic (player briefly fights
 alongside or against a summoned Thurian warrior), and a
 substantial legacy-flag consequence (the Stygian raiders'
 employer takes notice of the player either way).

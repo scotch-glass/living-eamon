@@ -10,7 +10,7 @@ import CommandInput, { type CommandInputHandle } from "../components/CommandInpu
 import CombatScreen from "../components/CombatScreen";
 import { fromSplatterStates, toSplatterStates, type BloodSplatter } from "../lib/bloodSplatterData";
 import LootScreen, { type LootEntry } from "../components/LootScreen";
-import { SITUATION_BLOCK_LINE } from "../lib/gameEngine";
+import { SITUATION_BLOCK_LINE } from "../lib/gameEngineClient";
 import { logoutAction } from "./auth/actions";
 import { createBrowserSupabase } from "../lib/supabaseAuthClient";
 import ScenePanel from "../components/ScenePanel";

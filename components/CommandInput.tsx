@@ -15,7 +15,7 @@ import type { WorldState } from "../lib/gameState";
 import {
   getCommandAutocompleteSuggestions,
   type AutocompleteItem,
-} from "../lib/gameEngine";
+} from "../lib/gameEngineClient";
 
 export type CommandInputHandle = {
   focus: () => void;

@@ -11,7 +11,7 @@ note: |
   Original Living Eamon prose. The ancient Hermetic ideas
   are themselves in the public domain by antiquity. No modern
   translator's text is reproduced here.
-deliveryNpc: tavren_long_road
+deliveryNpc: tavren_of_the_long_road
 deliveryStep: scroll-9
 deliveryVector: helm-interior-stitching
 themes: [fate, providence, necessity, walking-light]

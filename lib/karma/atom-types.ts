@@ -66,6 +66,16 @@ export type AffectAxis =
   | "wonder"
   | "melancholy";
 
+/**
+ * Per-axis affect scores (0–1) tagged on encounter baselines and on
+ * each choice's delta. The seven axes carry a canonical neuro-emotional
+ * reading (excitement→dopamine, awe/wonder→serotonin, fear/dread→
+ * cortisol, melancholy→serotonin-low, eros→eros) — see
+ * `docs/affect-axes.md` for the full mapping table and how future
+ * balance simulators should score curves through that lens.
+ *
+ * @see ../../docs/affect-axes.md
+ */
 export type AffectVector = Partial<Record<AffectAxis, number>>;
 
 // ── PROVENANCE / IP ─────────────────────────────────────────

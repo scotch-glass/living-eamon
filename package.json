@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "painter:scan": "tsx scripts/scenario/scan-manual-painter-refs.ts",
+    "test:quests": "tsx scripts/run-quest-tests.ts",
+    "registry:dump": "tsx scripts/dump-quest-registry.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

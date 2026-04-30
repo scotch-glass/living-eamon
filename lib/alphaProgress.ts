@@ -29,7 +29,7 @@ export const PROGRESS_CATEGORIES: ProgressCategory[] = [
   },
   {
     id: "combat",
-    label: "Combat System (HWRR Body-Part Targeting)",
+    label: "Combat System (Body-Part Targeting)",
     items: [
       { label: "Body-part targeting system (6 hit zones)", status: "done" },
       { label: "Critical hit mechanics + gore narration", status: "done" },

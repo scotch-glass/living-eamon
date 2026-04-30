@@ -1112,12 +1112,12 @@ decide what to carry back from the Main Hall.
 ### Runes & Runegates *(Phase 2)*
 
 Runes are items that can be marked at a specific location using
-the Occult spell Mark (Circle 6: `Kal Por Ylem`). A marked rune
+the Occult spell Mark (Circle 6: `Crea Sig Loc`). A marked rune
 stores the location and can be used with:
 
-- **Recall** (Circle 4: `Kal Ort Por`) — instant solo transport
+- **Recall** (Circle 4: `Crea Tra Via`) — instant solo transport
   to the rune's location, consuming the rune's charge
-- **Gate Travel** (Circle 7: `Vas Rel Por`) — opens a two-way
+- **Gate Travel** (Circle 7: `Mag Mut Via`) — opens a two-way
   moongate to the rune's location; lasts 30 seconds; anyone can
   pass through
 

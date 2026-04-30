@@ -41,7 +41,7 @@ Additional Guild spells planned for Phase 2.
 **Legal status:** Forbidden everywhere. The knowledge barely exists — in fragments, adventure loot, whispered hints, never written openly.
 
 **Command syntax:** `INVOKE [Words of Power]`
-Example: `INVOKE Corp Por` attempts Energy Bolt (Circle 6).
+Example: `INVOKE Mag Ict Arc` attempts Energy Bolt (Circle 6).
 
 The player must know the invocation. This knowledge must be discovered in-game through adventure loot, NPC hints, or secret research — or learned out-of-game by the player themselves. The knowledge barrier is intentional and part of the illegality. There is no in-game HELP text for Occult.
 
@@ -88,6 +88,66 @@ Their mundane value is what they would logically be worth as herbs, pearls, or n
 
 ---
 
+## 5b. Words of Power — Vocabulary
+
+The Old Tongue is **compositional**. Every Word of Power is a Latinate root, one or two syllables, and every spell-phrase is built from one to four such roots in the order **[operator] [element]** (with `Mag` "great" stacking in front of any phrase to amplify it). A practitioner who learns the vocabulary can in principle parse a phrase she has never heard — but she still cannot cast it without the reagents and the skill, and the Order knows the same vocabulary, which is why uttered Words in a public room are dangerous.
+
+### Operators (verbs and qualifiers)
+
+| Word | Meaning |
+|------|---------|
+| Aug | raise, strengthen, increase |
+| Min | lower, weaken, decrease |
+| Mag | great, vast (intensifies the phrase that follows) |
+| Crea | create, summon, call forth |
+| Solv | dissolve, dispel, undo |
+| Mut | change, transform, redirect |
+| Tra | across, through, transfer |
+| Ten | bind, hold, lock |
+| Lib | release, free, open |
+| Dur | harden, fortify, ward |
+| Vel | veil, hide, conceal |
+| Pluv | rain, swarm (mass / multiple targets) |
+
+### Elements (objects and domains)
+
+| Word | Meaning |
+|------|---------|
+| Ign | fire |
+| Aqu | water |
+| Aer | air, wind |
+| Terr | earth, stone |
+| Luc | light |
+| Umbr | shadow |
+| Vit | life, vitality |
+| Mort | death |
+| Mens | mind, intellect |
+| Cor | body, flesh |
+| Sang | blood |
+| Tox | poison |
+| Via | way, path, gate |
+| Ict | strike, blow |
+| Sag | arrow, projectile |
+| Vid | sight, vision |
+| Pot | strength, might |
+| Dex | dexterity, deftness |
+| Pan | food, bread |
+| Mat | matter, substance |
+| Aeg | ward, shield |
+| Mur | wall |
+| Spec | appearance, form |
+| Camp | field, zone |
+| Ful | lightning |
+| Bes | summoned beast / spirit form |
+| Sig | sign, mark |
+| Loc | place, locus |
+| Fer | iron, blade |
+| Arc | arcane essence (maps to the caster's mana) |
+
+A handful of element-roots — *Vox* (word), *Som* (sleep), *Vul* (wound), *Cael* (sky) — are attested in older fragments of the Old Tongue but appear in no spell of the Eight Circles taught today. The Order treats those fragments as Outer-Dark in origin and confiscates copies on sight.
+
+---
+
 ## 6. The Eight Circles of Occult Magic
 
 Circles 1–4 are implemented. Circles 5–8 are documented for completeness and will be implemented in later phases.
@@ -98,105 +158,105 @@ Mana costs follow UO classic rules. In Living Eamon, mana maps to the player's I
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Clumsy | Uus Jux | Blood Moss, Nightshade | Decreases target's dexterity |
-| Create Food | In Mani Ylem | Garlic, Ginseng, Mandrake Root | Creates a random food item |
-| Feeblemind | Rel Wis | Ginseng, Nightshade | Decreases target's intelligence |
-| Heal | In Mani | Garlic, Ginseng, Spider's Silk | Heals HP; faster but weaker than Greater Heal |
-| Magic Arrow | In Por Ylem | Sulfurous Ash | Fire damage projectile, 14–18 damage |
-| Night Sight | In Lor | Sulfurous Ash, Spider's Silk | Grants the caster the ability to see in complete darkness without a light source; lasts until dawn |
-| Reactive Armor | Flam Sanct | Garlic, Sulfurous Ash, Spider's Silk | Raises physical resistance; lowers elemental resistances |
-| Weaken | Des Mani | Garlic, Nightshade | Decreases target's strength |
+| Clumsy | Min Dex | Blood Moss, Nightshade | Decreases target's dexterity |
+| Create Food | Crea Pan | Garlic, Ginseng, Mandrake Root | Creates a random food item |
+| Feeblemind | Min Mens | Ginseng, Nightshade | Decreases target's intelligence |
+| Heal | Aug Vit | Garlic, Ginseng, Spider's Silk | Heals HP; faster but weaker than Greater Heal |
+| Magic Arrow | Crea Sag | Sulfurous Ash | Fire damage projectile, 14–18 damage |
+| Night Sight | Aug Vid | Sulfurous Ash, Spider's Silk | Grants the caster the ability to see in complete darkness without a light source; lasts until dawn |
+| Reactive Armor | Dur Cor | Garlic, Sulfurous Ash, Spider's Silk | Raises physical resistance; lowers elemental resistances |
+| Weaken | Min Pot | Garlic, Nightshade | Decreases target's strength |
 
 ### Circle 2 — Mana cost 6
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Agility | Ex Uus | Blood Moss, Mandrake Root | Increases dexterity and stamina |
-| Cunning | Uus Wis | Nightshade, Mandrake Root | Increases intelligence and mana |
-| Cure | An Nox | Garlic, Ginseng | Cures poison; higher skill cures stronger poisons |
-| Harm | An Mani | Nightshade, Spider's Silk | Cold damage; strongest at close range, 23–29 at 0–1 tiles |
-| Magic Trap | In Jux | Garlic, Spider's Silk, Sulfurous Ash | Magically traps a container |
-| Remove Trap | An Jux | Blood Moss, Sulfurous Ash | Removes magic or low-level mechanical traps |
-| Protection | Uus Sanct | Garlic, Ginseng, Sulfurous Ash | Prevents spell interruption; lowers resistances |
-| Strength | Uus Mani | Mandrake Root, Nightshade | Increases strength and hit point cap |
+| Agility | Aug Dex | Blood Moss, Mandrake Root | Increases dexterity and stamina |
+| Cunning | Aug Mens | Nightshade, Mandrake Root | Increases intelligence and mana |
+| Cure | Solv Tox | Garlic, Ginseng | Cures poison; higher skill cures stronger poisons |
+| Harm | Min Vit | Nightshade, Spider's Silk | Cold damage; strongest at close range, 23–29 at 0–1 tiles |
+| Magic Trap | Crea Ten | Garlic, Spider's Silk, Sulfurous Ash | Magically traps a container |
+| Remove Trap | Solv Ten | Blood Moss, Sulfurous Ash | Removes magic or low-level mechanical traps |
+| Protection | Dur Aeg | Garlic, Ginseng, Sulfurous Ash | Prevents spell interruption; lowers resistances |
+| Strength | Aug Pot | Mandrake Root, Nightshade | Increases strength and hit point cap |
 
 ### Circle 3 — Mana cost 9
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Bless | Rel Sanct | Garlic, Mandrake Root | Combines Agility, Cunning and Strength in one cast |
-| Fireball | Vas Flam | Black Pearl | Fire damage, 26–31; quick cast |
-| Magic Lock | An Por | Blood Moss, Garlic, Sulfurous Ash | Magically locks a chest |
-| Poison | In Nox | Nightshade | Poisons target; prevents healing; 4 levels of severity |
-| Telekinesis | Ort Por Ylem | Blood Moss, Mandrake Root | Manipulates objects at range; opens doors, springs traps |
-| Teleport | Rel Por | Blood Moss, Mandrake Root | Teleports caster up to 11 tiles to a visible location |
-| Unlock | Ex Por | Blood Moss, Sulfurous Ash | Unlocks magic-locked or low-level treasure chests |
-| Wall of Stone | In Sanct Ylem | Blood Moss, Garlic | Creates a stone wall; blocks movement; lasts 10 seconds |
+| Bless | Mag Aug | Garlic, Mandrake Root | Combines Agility, Cunning and Strength in one cast |
+| Fireball | Mag Ign | Black Pearl | Fire damage, 26–31; quick cast |
+| Magic Lock | Ten Via | Blood Moss, Garlic, Sulfurous Ash | Magically locks a chest |
+| Poison | Crea Tox | Nightshade | Poisons target; prevents healing; 4 levels of severity |
+| Telekinesis | Tra Mat | Blood Moss, Mandrake Root | Manipulates objects at range; opens doors, springs traps |
+| Teleport | Mut Via | Blood Moss, Mandrake Root | Teleports caster up to 11 tiles to a visible location |
+| Unlock | Lib Via | Blood Moss, Sulfurous Ash | Unlocks magic-locked or low-level treasure chests |
+| Wall of Stone | Crea Mur | Blood Moss, Garlic | Creates a stone wall; blocks movement; lasts 10 seconds |
 
 ### Circle 4 — Mana cost 11
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Arch Cure | Vas An Nox | Garlic, Ginseng, Mandrake Root | Stronger cure; affects all friendlies within 2 tiles |
-| Arch Protection | Vas Uus Sanct | Garlic, Ginseng, Mandrake Root, Sulfurous Ash | Casts Protection on all party members within 3 tiles |
-| Curse | Des Sanct | Garlic, Nightshade, Sulfurous Ash | Combines Clumsy, Feeblemind and Weaken; lowers max resistances |
-| Fire Field | In Flam Grav | Black Pearl, Spider's Silk, Sulfurous Ash | Creates a fire field; 2 damage/second; lasts ~54 seconds at GM |
-| Greater Heal | In Vas Mani | Garlic, Ginseng, Mandrake Root, Spider's Silk | Major healing: (Magery × 0.4) + 1–10 HP |
-| Lightning | Por Ort Grav | Mandrake Root, Sulfurous Ash | Instant energy bolt, 30–34 damage |
-| Mana Drain | Ort Rel | Black Pearl, Mandrake Root, Spider's Silk | Drains target's mana for 4 seconds |
-| Recall | Kal Ort Por | Black Pearl, Blood Moss, Mandrake Root | Instant transport to a marked rune location |
+| Arch Cure | Mag Solv Tox | Garlic, Ginseng, Mandrake Root | Stronger cure; affects all friendlies within 2 tiles |
+| Arch Protection | Mag Dur Aeg | Garlic, Ginseng, Mandrake Root, Sulfurous Ash | Casts Protection on all party members within 3 tiles |
+| Curse | Mag Min | Garlic, Nightshade, Sulfurous Ash | Combines Clumsy, Feeblemind and Weaken; lowers max resistances |
+| Fire Field | Crea Camp Ign | Black Pearl, Spider's Silk, Sulfurous Ash | Creates a fire field; 2 damage/second; lasts ~54 seconds at GM |
+| Greater Heal | Mag Aug Vit | Garlic, Ginseng, Mandrake Root, Spider's Silk | Major healing: (Magery × 0.4) + 1–10 HP |
+| Lightning | Crea Ful | Mandrake Root, Sulfurous Ash | Instant energy bolt, 30–34 damage |
+| Mana Drain | Min Arc | Black Pearl, Mandrake Root, Spider's Silk | Drains target's mana for 4 seconds |
+| Recall | Crea Tra Via | Black Pearl, Blood Moss, Mandrake Root | Instant transport to a marked rune location |
 
 ### Circle 5 — Mana cost 14 *(documented; not yet implemented)*
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Blade Spirits | In Jux Hur Ylem | Black Pearl, Mandrake Root, Nightshade | Summons spirits that attack nearby enemies; lasts 120s |
-| Dispel Field | An Grav | Black Pearl, Garlic, Spider's Silk, Sulfurous Ash | Dispels one tile of a field spell |
-| Incognito | Kal In Ex | Blood Moss, Mandrake Root, Nightshade, Sulfurous Ash | Temporarily changes name and appearance |
-| Magic Reflection | In Jux Sanct | Garlic, Mandrake Root, Spider's Silk | Reflects spells back at caster; pool-based |
-| Mind Blast | Por Corp Wis | Black Pearl, Mandrake Root, Nightshade, Sulfurous Ash | Cold damage, 40–42; based on Magery and Intelligence |
-| Paralyze | An Ex Por | Black Pearl, Nightshade, Spider's Silk | Freezes target; broken by damage |
-| Poison Field | In Nox Grav | Black Pearl, Nightshade, Spider's Silk | Field of poison; same levels as Poison spell |
-| Summon Creature | Kal Xen | Blood Moss, Mandrake Root, Spider's Silk | Summons a low-level creature; lasts up to 480s |
+| Blade Spirits | Crea Bes Fer | Black Pearl, Mandrake Root, Nightshade | Summons spirits that attack nearby enemies; lasts 120s |
+| Dispel Field | Solv Camp | Black Pearl, Garlic, Spider's Silk, Sulfurous Ash | Dispels one tile of a field spell |
+| Incognito | Mut Spec | Blood Moss, Mandrake Root, Nightshade, Sulfurous Ash | Temporarily changes name and appearance |
+| Magic Reflection | Mut Arc | Garlic, Mandrake Root, Spider's Silk | Reflects spells back at caster; pool-based |
+| Mind Blast | Mag Ict Mens | Black Pearl, Mandrake Root, Nightshade, Sulfurous Ash | Cold damage, 40–42; based on Magery and Intelligence |
+| Paralyze | Ten Cor | Black Pearl, Nightshade, Spider's Silk | Freezes target; broken by damage |
+| Poison Field | Crea Camp Tox | Black Pearl, Nightshade, Spider's Silk | Field of poison; same levels as Poison spell |
+| Summon Creature | Crea Bes | Blood Moss, Mandrake Root, Spider's Silk | Summons a low-level creature; lasts up to 480s |
 
 ### Circle 6 — Mana cost 20 *(documented; not yet implemented)*
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Dispel | An Ort | Garlic, Mandrake Root, Sulfurous Ash | Dispels a summoned creature |
-| Energy Bolt | Corp Por | Black Pearl, Nightshade | Energy damage, 51–56 |
-| Explosion | Vas Ort Flam | Blood Moss, Mandrake Root | Fire damage, 51–56; 2-second delay before impact |
-| Invisibility | An Lor Xen | Blood Moss, Nightshade | Hides caster; lasts (Magery × 1.2) seconds |
-| Mark | Kal Por Ylem | Black Pearl, Blood Moss, Mandrake Root | Marks a rune at current location for Recall/Gate |
-| Mass Curse | Vas Des Sanct | Garlic, Mandrake Root, Nightshade, Sulfurous Ash | Curses all enemies within 3 tiles |
-| Paralyze Field | In Ex Grav | Black Pearl, Ginseng, Spider's Silk | Field of paralysis |
-| Reveal | Wis Quas | Blood Moss, Sulfurous Ash | Reveals hidden targets |
+| Dispel | Solv Bes | Garlic, Mandrake Root, Sulfurous Ash | Dispels a summoned creature |
+| Energy Bolt | Mag Ict Arc | Black Pearl, Nightshade | Energy damage, 51–56 |
+| Explosion | Mag Arc Ign | Blood Moss, Mandrake Root | Fire damage, 51–56; 2-second delay before impact |
+| Invisibility | Vel Cor | Blood Moss, Nightshade | Hides caster; lasts (Magery × 1.2) seconds |
+| Mark | Crea Sig Loc | Black Pearl, Blood Moss, Mandrake Root | Marks a rune at current location for Recall/Gate |
+| Mass Curse | Mag Pluv Min | Garlic, Mandrake Root, Nightshade, Sulfurous Ash | Curses all enemies within 3 tiles |
+| Paralyze Field | Crea Camp Ten | Black Pearl, Ginseng, Spider's Silk | Field of paralysis |
+| Reveal | Solv Vel | Blood Moss, Sulfurous Ash | Reveals hidden targets |
 
 ### Circle 7 — Mana cost 40 *(documented; not yet implemented)*
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Chain Lightning | Vas Ort Grav | Black Pearl, Blood Moss, Mandrake Root, Sulfurous Ash | Lightning hits multiple targets; 64–69 total energy damage |
-| Energy Field | In Sanct Grav | Black Pearl, Mandrake Root, Spider's Silk, Sulfurous Ash | Wall of energy; blocks movement |
-| Flamestrike | Kal Vas Flam | Spider's Silk, Sulfurous Ash | Massive fire burst; 64–69 damage |
-| Gate Travel | Vas Rel Por | Black Pearl, Mandrake Root, Sulfurous Ash | Opens a moongate to a marked rune; lasts 30 seconds |
-| Mana Vampire | Ort Sanct | Black Pearl, Blood Moss, Mandrake Root, Spider's Silk | Drains target's mana and adds it to caster's |
-| Mass Dispel | Vas An Ort | Black Pearl, Garlic, Mandrake Root, Sulfurous Ash | Dispels multiple summoned creatures |
-| Meteor Swarm | Kal Des Flam Ylem | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Fire meteors hit multiple targets; 64–69 total damage |
-| Polymorph | Vas Ylem Rel | Blood Moss, Mandrake Root, Spider's Silk | Transforms caster into another creature form |
+| Chain Lightning | Crea Pluv Ful | Black Pearl, Blood Moss, Mandrake Root, Sulfurous Ash | Lightning hits multiple targets; 64–69 total energy damage |
+| Energy Field | Crea Camp Arc | Black Pearl, Mandrake Root, Spider's Silk, Sulfurous Ash | Wall of energy; blocks movement |
+| Flamestrike | Crea Mag Ign | Spider's Silk, Sulfurous Ash | Massive fire burst; 64–69 damage |
+| Gate Travel | Mag Mut Via | Black Pearl, Mandrake Root, Sulfurous Ash | Opens a moongate to a marked rune; lasts 30 seconds |
+| Mana Vampire | Tra Arc | Black Pearl, Blood Moss, Mandrake Root, Spider's Silk | Drains target's mana and adds it to caster's |
+| Mass Dispel | Mag Solv Bes | Black Pearl, Garlic, Mandrake Root, Sulfurous Ash | Dispels multiple summoned creatures |
+| Meteor Swarm | Crea Pluv Ign | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Fire meteors hit multiple targets; 64–69 total damage |
+| Polymorph | Mut Cor | Blood Moss, Mandrake Root, Spider's Silk | Transforms caster into another creature form |
 
 ### Circle 8 — Mana cost 50 *(documented; not yet implemented)*
 
 | Spell | Words of Power | Reagents | Effect |
 |-------|---------------|----------|--------|
-| Earthquake | In Vas Por | Blood Moss, Ginseng, Mandrake Root, Sulfurous Ash | ~33% physical damage to all visible targets in radius |
-| Energy Vortex | Vas Corp Por | Black Pearl, Blood Moss, Mandrake Root, Nightshade | Summons vortex that attacks nearby enemies; 26 dmg/hit |
-| Resurrection | An Corp | Blood Moss, Garlic, Ginseng | Restores a dead character to life |
-| Summon Air Elemental | Kal Vas Xen Hur | Blood Moss, Mandrake Root, Spider's Silk | Summons air elemental; focuses on spellcasting |
-| Summon Daemon | Kal Vas Xen Corp | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Summons daemon; powerful melee + 7th circle magic; costs karma |
-| Summon Earth Elemental | Kal Vas Xen Ylem | Blood Moss, Mandrake Root, Spider's Silk | Summons earth elemental; strong melee, no magic |
-| Summon Fire Elemental | Kal Vas Xen Flam | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Most powerful elemental; melee + magic |
-| Summon Water Elemental | Kal Vas Xen An Flam | Blood Moss, Mandrake Root, Spider's Silk | Combines air and earth elemental skills |
+| Earthquake | Mag Ict Terr | Blood Moss, Ginseng, Mandrake Root, Sulfurous Ash | ~33% physical damage to all visible targets in radius |
+| Energy Vortex | Crea Bes Arc | Black Pearl, Blood Moss, Mandrake Root, Nightshade | Summons vortex that attacks nearby enemies; 26 dmg/hit |
+| Resurrection | Solv Mort | Blood Moss, Garlic, Ginseng | Restores a dead character to life |
+| Summon Air Elemental | Crea Bes Aer | Blood Moss, Mandrake Root, Spider's Silk | Summons air elemental; focuses on spellcasting |
+| Summon Daemon | Crea Bes Mort | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Summons daemon; powerful melee + 7th circle magic; costs karma |
+| Summon Earth Elemental | Crea Bes Terr | Blood Moss, Mandrake Root, Spider's Silk | Summons earth elemental; strong melee, no magic |
+| Summon Fire Elemental | Crea Bes Ign | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Most powerful elemental; melee + magic |
+| Summon Water Elemental | Crea Bes Aqu | Blood Moss, Mandrake Root, Spider's Silk | Combines air and earth elemental skills |
 
 ---
 

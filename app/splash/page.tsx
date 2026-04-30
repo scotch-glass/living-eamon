@@ -181,6 +181,7 @@ export default function SplashPage() {
                 maxWidth: 420,
                 height: "auto",
                 display: "block",
+                marginLeft: -20,
                 filter: "drop-shadow(0 4px 32px rgba(0, 0, 0, 0.7))",
               }}
             />
@@ -189,16 +190,19 @@ export default function SplashPage() {
           {/* Center column — intentionally empty so the background graphic shows through. */}
           <div className="le-splash-hero-center" aria-hidden="true" />
 
-          {/* Right column — tagline, left-justified within the column. */}
+          {/* Right column — tagline, left-justified within the column.
+              Sized so "A thousand realms." fits on one line at the
+              widest line of the four. */}
           <h1
             style={{
               color: "#fef3c7",
-              fontSize: "clamp(2.0rem, 4.5vw, 3.25rem)",
+              fontSize: "clamp(1.5rem, 3.0vw, 2.5rem)",
               fontWeight: 700,
-              lineHeight: 1.15,
+              lineHeight: 1.2,
               margin: 0,
               textShadow: "0 2px 24px rgba(0, 0, 0, 0.85)",
               textAlign: "left",
+              whiteSpace: "nowrap",
             }}
           >
             One hero.

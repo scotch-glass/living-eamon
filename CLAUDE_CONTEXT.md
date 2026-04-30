@@ -1,19 +1,87 @@
 Living Eamon — Claude Context & Rehydration Guide
 
+
+## Behavioral Guidelines
+
+Imported 2026-04-25 from [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills/blob/main/CLAUDE.md). Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+### 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
 REHYDRATION INSTRUCTIONS FOR EVERY NEW SESSION
 Before doing any work, read these files in order:
 
 1. This file (CLAUDE_CONTEXT.md) — project overview, architecture, current status
 2. **`Public_Domain_Rules.md`** — CRITICAL: Legal framework & Safe Harbor strategy for using Howard's public domain works. Establishes branding rules, trademark restrictions, timeline (Phase 1: Thurian/Aurelion pre-2028; Phase 2: Hyborian modules post-2028), and content sourcing rules. Read this before any design decision involving IP.
-3. GAME_DESIGN.md — full game design document. **§10 (Hyborian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. Read it before designing anything new in the game world.
-4. **`Public_Domain_Rules.md`** is now the single consolidated PD-safety doc (as of April 19, 2026). The former `lore/hyborian-pd/PD_RESEARCH.md` was deleted and its content absorbed. The authoritative name-by-name Safe Harbor / Radioactive lookup is at the top of **`GAME_DESIGN.md`** — that table supersedes everything else. Currently-PD corpus: *The Hyborian Age* essay (1936), three Thurian-Age Kull stories (1929–1930), and two *Phantagraph* poems ("Always Comes Evening" 1936, "Song at Midnight" 1940). Most Conan short-story content enters PD 2028–2032.
-5. **`lore/hyborian-pd/MODULE_PLAN.md`** — the methodology for converting PD stories into Living Eamon adventure modules. Includes the standing rule: *every module = one PD story + Living Eamon systems + Howard's voice + PD-verified naming.*
-6. .claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md — memory index with links to:
-   - User profile (Scotch — non-developer founder)
-   - Feedback rules (image cache safety, CLAUDE_CONTEXT.md updates, etc.)
-   - Project decisions (Aquilonia styling, Hyborian Age + PD limits, etc.)
-7. §5.4 below — HWRR combat system (all 6 phases complete)
-8. §5.10–§5.16 below — recent additions: mana system + static merchant purchases + universal SELL, HWRR bleed/poison Phase A, charity-barrel Honor system, sidebar tabs + per-item painted icons, prescripted-text instant fade-in + item action menu, apply-poison-to-weapon, expertise→maxMana rename
+3. **`GAME_DESIGN.md`** — full game design document. **§10 (Thurian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. **§11 (PICSSI Virtue System, ratified 2026-04-26)** documents the six-dimensional character scoring framework — Passion, Integrity, Courage, Standing, Spirituality, Illumination — that drives NPC reactions, prayer reach, sorcery cost, and quest gating. **§12 (Brothels + Fertility Temple + VD)** added 2026-04-29. PICSSI replaces the legacy 10-virtue ledger entirely; cold-delete is wired into KARMA_IMPLEMENTATION_PLAN.md Sprint 2.
+4. **`SORCERY.md`** — extracted from GAME_DESIGN.md §9 on 2026-04-29. Canonical for both magic systems (Guild CAST + Occult INVOKE), Eight Circles, Reagents, The Order, per-circle Illumination cost.
+5. **`KARMA_SYSTEM.md`** — single source of truth for the karma system design (PICSSI virtues + attributes + consumables (HP / mana / stamina+fatiguePool) + atoms + NPC affection + flags). All numerical values for the karma system live here. As of 2026-04-29 evening, all open design questions are resolved and §6 Approval Gate awaits "begin Sprint 1" sign-off.
+6. **`KARMA_IMPLEMENTATION_PLAN.md`** — sprint-by-sprint wiring plan (Sprints 0–7) with file-, function-, and DDL-level detail. References KARMA_SYSTEM.md as source of truth — never duplicates values. Load this when implementing karma; load KARMA_SYSTEM.md when designing.
+7. **`Public_Domain_Rules.md`** is now the single consolidated PD-safety doc (as of April 19, 2026). Authoritative Safe Harbor / Radioactive lookup at the top of **`GAME_DESIGN.md`**.
+8. **`lore/hyborian-pd/MODULE_PLAN.md`** — methodology for converting PD stories into adventure modules.
+9. **`lore/scrolls-of-thoth/INDEX.md`** + the 15 scroll files — the in-game Scrolls of Thoth, Kybalion-derived (Hermes→Thoth substitution), each with riddle frontmatter for the read-verification gate (KARMA_SYSTEM.md §2.10 + project memory `project_scroll_riddle_verification.md`).
+10. `.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index.
+11. §5.4 below — body-zone combat system (all 6 phases complete; body-zone also serves as the model for the stamina+fatiguePool system per KARMA_SYSTEM.md §2.3).
+12. §5.10–§5.16 below — recent additions: mana system, merchant purchases, bleed/poison, charity-barrel Honor (legacy — being cold-deleted in Sprint 2), sidebar tabs, item action menu, apply-poison-to-weapon, expertise→maxMana rename.
 
 Check the todo list for in-progress tasks from the previous session.
 
@@ -42,6 +110,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_KEY=
 XAI_API_KEY=
 GROK_IMAGINE_BASE_URL=https://api.x.ai/v1/images/generations
+SCENARIO_API_KEY=
+SCENARIO_API_SECRET=
+
+**Scenario.gg (added 2026-04-26):** Project-wide AI provider being evaluated alongside Grok. REST API uses HTTP Basic auth (KEY:SECRET → base64 → `Authorization: Basic ...`); base URL `https://api.cloud.scenario.com/v1`. The planned project-wide client lives at `lib/scenario/` (NOT YET BUILT — scaffolded when the first real call is made, likely with the sword-and-sorcery style-LoRA training plan). Currently a parallel spike: see `lib/wardrobe/CLAUDE_CONTEXT.md §13` for the spike procedure. Grok stays the mandatory provider for all surfaces until the spike resolves.
+
+**WARDROBE ENGINE WORK**: If the user's request is about the Wardrobe Engine, paper-doll layering, PC sprite compositing, slot schema, drag-and-drop inventory popup, or `lib/wardrobe/` code — load [`~/.claude/plans/wardrobe_engine_planning.md`](~/.claude/plans/wardrobe_engine_planning.md) as the primary spec and (once it exists) [`lib/wardrobe/CLAUDE_CONTEXT.md`](lib/wardrobe/CLAUDE_CONTEXT.md) for module-scoped context. You can skim this root file for hero/identity-block background but don't load the whole thing.
 
 §4 — Architecture: Static With State
 The world is pre-written and stateful. Jane only generates content when something genuinely novel occurs. Once Jane writes it, it's saved permanently to Supabase and served to every subsequent player for free.
@@ -69,7 +143,7 @@ Completed systems:
 Authentication: email/password + Google SSO scaffolding, cookie-based sessions via @supabase/ssr, proxy.ts route protection, server actions for auth, /login and /register pages
 user_id FK column linking players to auth.users
 Jane daily call limit: unlimited in development via NODE_ENV check
-Combat system — HWRR-style body-part targeting COMPLETE (all 6 phases). See §5.4 below.
+Combat system — body-zone body-part targeting COMPLETE (all 6 phases). See §5.4 below.
 10-virtue moral system
 Consequence engine (burnt rooms, NPC memory, Sheriff alerts, bounties)
 NPC agenda system
@@ -87,7 +161,7 @@ Image cache safety — soft-delete (deleted_at), approved flag, scripts/image-ca
 Supabase CLI linked — migrations via Management API (scripts/db-push.sh)
 
 §5.1 — Starting Area: Ostavar (Aquilonian Hub)
-Ostavar is styled after Aquilonia from Robert E. Howard's Hyborian Age — the Conan-universe equivalent of Tolkien's Gondor. Marble colonnades, gilt towers, Frazetta/Brom art style.
+Ostavar is styled after Robert E. Howard's (REH's) Aquilonia — the REH equivalent of Tolkien's Gondor. Marble colonnades, gilt towers, Frazetta/Brom art style.
 
 Current rooms (lib/adventures/guild-hall.ts):
 - Church of Perpetual Life (spawn/respawn, grimdark tone, cold open with __YESNO__)
@@ -122,7 +196,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - **STATS display:** now shows `Mana: X / Y` instead of `Expertise: N`. Stats grid shows only STR/DEX/CHA (3 columns).
 
 §5.18 — Combat Spell System + Effect Markers + Attack Animation (April 15-16, 2026)
-- **Four combat spells** implemented in `lib/combatEngine.ts:resolveCombatSpell()`: HEAL (18-32 HP), BLAST (2d8+4 lightning, bypasses armor), SPEED (+10 agility 3 rounds), POWER (weighted d100 random table — 80% good, 16% bad, 4% nothing). Mana debited up-front, never refunded.
+- **Four combat spells** implemented in `lib/combatEngine.ts:resolveCombatSpell()`: HEAL (18-32 HP), BLAST (2d8+4 lightning, bypasses armor), SPEED (+10 Dexterity, 3 rounds), POWER (weighted d100 random table — 80% good, 16% bad, 4% nothing). Mana debited up-front, never refunded.
 - **Power outcome table** (16 outcomes): Bonus Strike, Mana Surge, Lesser Healing, Quickening, Silver Aura, Untouchable, Dread (good); An Unwanted Vision (-1 Honor), Hiccups (-3 agi), Glimpse the Void (5 psychic), Tongue-Tied (spells fizzle 2 rounds), Numb Hand (miss next strike), Smelled by Set (+15 enemy accuracy), Phantom Pain (1d6), Nothing.
 - **8 new StatusEffectTypes** in `combatTypes.ts`: haste, shield_aura, invisible, feared_skip, numb_hand, hiccups, tongue_tied, marked_by_set. All wired into `resolveStrike` (evasion/armor calculations) and `resolveCombatRound` (feared_skip skips enemy strike).
 - **CAST handler in gameEngine.ts** intercepts combat spells when `activeCombat` is set — routes to `resolveCombatSpell` instead of Jane. Out-of-combat CAST still goes to Jane.
@@ -130,7 +204,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - **Effect Marker system**: `lib/effectIconData.ts` (SVG paths + colors + animations for all 18 effects), `components/EffectMarkerIcon.tsx` (20px dark-disc SVG icon with glow + tooltip via `createPortal` to escape stacking contexts). Replaces old 8px dots. 7 CSS animations: pulse, glow, shake, wobble, shimmer, fade, bounce. Icons appear in status column (max 6 + overflow badge) AND as floating 24px overlay near sprite's feet (max 3 priority-sorted).
 - **Invisible sprite transparency**: allies/enemies with `invisible` effect render at 35% opacity + blue hue-shift.
 - **Attack animation** (Option B "Impact Pulse"): attacker sprite pulses to 1.05× twice (0.5s) + dark radial blur disc expands behind them, then defender sprite shakes ±4px (0.35s). `animateThenCommand()` delays the engine command until mid-animation. Zone clicks + spell casts both route through it.
-- **Prescripted death narration**: HWRR combat win path now picks from `getEnemyDeathPool(bodyType)` — HUMANOID/BEAST/AMORPHOUS/UNDEAD pools (40-50 lines each). Player deaths use existing `COMBAT_TEMPLATES.playerDeath` (50 lines) + `REBIRTH_NARRATIVES`.
+- **Prescripted death narration**: body-zone combat win path now picks from `getEnemyDeathPool(bodyType)` — HUMANOID/BEAST/AMORPHOUS/UNDEAD pools (40-50 lines each). Player deaths use existing `COMBAT_TEMPLATES.playerDeath` (50 lines) + `REBIRTH_NARRATIVES`.
 - **LootScreen** (`components/LootScreen.tsx`): post-combat modal with enemy name, gold drop, per-item rows (icon + name + quantity + glance + value), individual Take buttons + Take All + Leave. Triggered on player victory (not training dummies, not fleeing).
 - **Combat fast-path** in `chat/route.ts`: when `activeCombat` is set or response contains `__COMBAT_END__`, the static-response handler returns IMMEDIATELY — bypassing courtyard weather injection, NPC on_enter scripts, `__CRITICAL__` Jane rewrite, and everything else. This was the root cause of the room-description leak.
 - **Isolated combat log** (`combatBoxLog` state in page.tsx): completely separate from the chat `messages` array. Only populated by responses to STRIKE/CAST/FLEE/ATTACK commands. Client-side strips any situation-block text (`Exits:`, `●`, `👁`) as a fallback defense. Resets on fight-start (new enemy id) and fight-end.
@@ -188,7 +262,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 §5.15 — Apply Poison to Weapon (April 14, 2026)
 - **PlayerState gained:** `weaponPoisonCharges: number` (0 = no coating) + `weaponPoisonSeverity: number` (1-3). Both reset on death. Migration: `supabase/migrations/20260414110000_players_weapon_poison.sql`.
 - **Engine handler:** `APPLY [poison name] TO [weapon/blade/arrows/bolts]` in lib/gameEngine.ts. Matches Painful Poison (sev 1, 3 charges) and Quick Death (sev 3, 3 charges). Consumes the poison item. Ranged flavor: bow → "arrows", crossbow → "bolts", melee → "blade".
-- **Combat integration:** after `resolveHWRRRound` in gameEngine.ts, if player's strike dealt damage and `weaponPoisonCharges > 0`: adds a `poison` ActiveStatusEffect to the enemy combatant (severity from coating, turnsRemaining = -1, bleedPerTurn = severity). Charges decrement per hit; severity resets to 0 when charges reach 0.
+- **Combat integration:** after `resolveCombatRound` in gameEngine.ts, if player's strike dealt damage and `weaponPoisonCharges > 0`: adds a `poison` ActiveStatusEffect to the enemy combatant (severity from coating, turnsRemaining = -1, bleedPerTurn = severity). Charges decrement per hit; severity resets to 0 when charges reach 0.
 - **Action menu wired:** "Apply to Blade" option on Painful Poison / Quick Death is now live (removed comingSoon flag from ItemActionMenu.tsx).
 
 §5.14 — Prescripted Text Instant Fade-in + Item Action Menu (April 14, 2026)
@@ -218,8 +292,8 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
   - **PACK:** BackpackPanel component
 - **Sidebar cleanup:** LOCATION row removed (room name still in header bar), "she is watching" footer line removed, REPUTATION row collapsed (revisit later). Sidebar width unchanged at 256px.
 
-§5.11 — HWRR Bleed & Poison (April 2026)
-- **`poison` added to `StatusEffectType`** (combatTypes.ts) — universal across all body zones in `ZONE_INJURY_TABLE` (alongside `bleed`). Severity 1-3 maps to 1/2/3 HP per turn (scaled down from HWRR's 3/6/9 because our HP pool is 20).
+§5.11 — body-zone Bleed & Poison (April 2026)
+- **`poison` added to `StatusEffectType`** (combatTypes.ts) — universal across all body zones in `ZONE_INJURY_TABLE` (alongside `bleed`). Severity 1-3 maps to 1/2/3 HP per turn (scaled down from the source combat model's 3/6/9 because our HP pool is 20).
 - **PlayerState gains `activeEffects: ActiveStatusEffect[]`** — out-of-combat effect store. Migration: `supabase/migrations/20260413130000_players_active_effects.sql` adds `active_effects jsonb default '[]' not null`.
 - **Combat-boundary plumbing** (`endCombatSession` helper in gameEngine.ts):
   - On combat START: `buildCombatantFromPlayer` copies `player.activeEffects` → `playerCombatant.activeEffects` (carries bleed/poison into the fight)
@@ -237,7 +311,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
   - Ally-targeting (`BANDAGE HOKAS`) is wired but always graceful no-op until allies/escorts have effects (no item consumed).
 - **HEALTH command** lists active effects with severity + zone + damage/turn + duration.
 - **Sidebar** shows STATUS section under HP bar — color-coded glyphs (♦ red bleed, ☠ green poison, ✕ amber broken bone, ◉ amber concussion/eye, ✦ amber lung/rib) + severity dots (●●○).
-- **Item prices:** Bandage 5 → **1 gp**, Tourniquet 15 → **2 gp** (HWRR-faithful: cures should be cheap and accessible).
+- **Item prices:** Bandage 5 → **1 gp**, Tourniquet 15 → **2 gp** (source-faithful: cures should be cheap and accessible).
 - **Phase B (next PR, NOT in this one):** poison-application sources — NPC `combatProfile.poisonOnHit`, `APPLY POISON TO WEAPON` for player-side blade coating, field hazards in adventures.
 
 §5.10 — Mana System & Static Merchant Purchases (April 2026)
@@ -317,7 +391,7 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 | components/ItemActionMenu.tsx | Contextual verb popup on item-icon click — Equip/Drink/Apply/Inspect/Drop/Sell; context-sensitive per item type + room |
 | components/ItemDetailPopup.tsx | Style-routed inspect popup: StandardInspectView (dark glassmorphism + icon sprite + stats) for most items, AlchemicalBookView (Thurian codex parchment) for spell-type books/scrolls |
 | app/api/item-image/route.ts | Generates alchemical book page backgrounds for items — Grok Imagine 4:3, no BG removal |
-| components/CombatScreen.tsx | HWRR 3v3 combat overlay — 3 ally sprites left (Aldric/Zim/Hero) + 3 enemy sprites right, per-character status columns (vertical HP/mana bars, spell icons, gear/potion grids, zone-target buttons), scrolling combat log top, attack animation (pulse+blur+shake), effect marker overlays, invisible sprite transparency |
+| components/CombatScreen.tsx | body-zone 3v3 combat overlay — 3 ally sprites left (Aldric/Zim/Hero) + 3 enemy sprites right, per-character status columns (vertical HP/mana bars, spell icons, gear/potion grids, zone-target buttons), scrolling combat log top, attack animation (pulse+blur+shake), effect marker overlays, invisible sprite transparency |
 | components/EffectMarkerIcon.tsx | SVG combat-effect icon in dark disc with animation + portal tooltip — 18 Hyborian-themed icons (injuries + spell buffs/debuffs) |
 | components/LootScreen.tsx | Post-combat loot modal — enemy name, gold, per-item rows with icon/name/value/description, Take/Take All/Leave |
 | components/SpellActionMenu (in CombatScreen) | Spell right-click menu (Cast / Lore) anchored to spell icon |
@@ -337,18 +411,18 @@ NPC scripts (lib/adventures/guild-hall-npcs.ts):
 - scene_image_cache.deleted_at timestamptz — soft delete
 - scene_image_cache.approved boolean — protects accepted images from accidental clearing
 
-§5.4 — HWRR Combat System Rewrite (COMPLETE — all 6 phases shipped)
+§5.4 — body-zone Combat System Rewrite (COMPLETE — all 6 phases shipped)
 Replacing flat ATTACK [enemy] with Heads Will Roll Reforged-style body-part targeting.
 Status tracked in §5.4 below (plan file archived).
 
 4 target zones: head (1.5x dmg), neck (2.0x), torso (1.0x), limbs (0.8x)
 3-roll attack resolution: Evasion (+ zone accuracy penalty) → Shield Block → Armor Penetration (per-zone cover rating)
-Zone evasion penalties (HWRR-faithful): torso +0, limbs +10, head +30, neck +50 — smaller targets are harder to hit
+Zone evasion penalties (source-faithful): torso +0, limbs +10, head +30, neck +50 — smaller targets are harder to hit
 Evasion formula: (defender.agility × 0.8) − (attacker.agility × 0.4) + zone penalty + injury mods, capped 0-95%
-Armor dex penalties: each armor piece has dexPenalty (leather 1-2, chain 3-5, plate 6-12, buckler 1) — cumulative, subtracted from agility
+Armor dex penalties: each armor piece has dexPenalty (leather 1-2, chain 3-5, plate 6-12, buckler 1) — cumulative, subtracted from Dexterity
 Mounted state: player.mounted boolean — plate armor uses mountedDexPenalty when mounted (plate on horseback ≈ chain on foot)
 Plate armor: 4 pieces (plate_helm/gorget/cuirass/greaves), 5000 gp total, customFit=true, on-foot dexPenalty=36 total (crippling), mounted=13 (viable)
-Unarmored barbarian archetype: high DEX + no armor = full agility → high evasion + high accuracy (Conan-faithful)
+Unarmored barbarian archetype: high DEX + no armor = full dexterity → high evasion + high accuracy (Robert E Howard-faithful)
 Per-zone armor with degradation (durability decreases on hit, pieces break)
 Zone-specific injuries: concussion, damaged_eye (head), severed_artery, crushed_windpipe (neck), pierced_lung, cracked_ribs (torso), broken_arm, broken_leg (limbs)
 Status effects stack with severity (1-3) and duration
@@ -359,7 +433,7 @@ Combat UI: paper doll SVG with clickable zones, combat screen overlay, combat lo
 COMPLETED:
 - Phase 1: lib/combatTypes.ts — all type definitions (BodyZone, CombatantState, StrikeResolution, ActiveCombatSession, etc.)
 - Phase 1: PlayerState extended — helmet, gorget, bodyArmor, limbArmor, activeCombat fields
-- Phase 1: NPC interface extended — optional combatProfile (agility, weaponSkill, per-zone armor, shield)
+- Phase 1: NPC interface extended — optional combatProfile (Dexterity, weaponSkill, per-zone armor, shield)
 - Phase 1: Item interface extended — zoneSlot, zoneCover, zoneDurability, shieldBlockChance, shieldDurability
 - Phase 1: New armor items — leather_cap, iron_helm, leather_gorget, chain_coif, leather_greaves, chain_greaves
 - Phase 1: Existing armor updated — leather_armor/chain_mail get torso zone data, buckler gets shieldBlockChance
@@ -376,8 +450,8 @@ COMPLETED:
   - initCombatSession() — creates ActiveCombatSession from WorldState
   - buildRoundNarrative() — assembles combat text from round result
 - Phase 2: gameEngine.ts ATTACK handler rewrite:
-  - ATTACK [enemy] now initiates HWRR combat → stores ActiveCombatSession on player.activeCombat, emits __COMBAT_START__
-  - STRIKE HEAD/NECK/TORSO/LIMBS → resolves one HWRR round per command, syncs HP/injuries/armor durability
+  - ATTACK [enemy] now initiates body-zone combat → stores ActiveCombatSession on player.activeCombat, emits __COMBAT_START__
+  - STRIKE HEAD/NECK/TORSO/LIMBS → resolves one body-zone round per command, syncs HP/injuries/armor durability
   - __COMBAT_END__ emitted on victory, death, or flee
   - Combat-mode guard blocks non-combat commands while activeCombat is set (STRIKE/FLEE/HEALTH/HELP only)
   - FLEE checks for broken_leg injury preventing escape, clears activeCombat on success
@@ -391,7 +465,7 @@ COMPLETED:
   - Inventory display: shows zone coverage % instead of flat AC, "(worn)" tag for equipped zone pieces
   - Stats display: per-zone armor breakdown (Head/Neck/Torso/Limbs with cover% and durability)
   - Shield display: shows block% and durability instead of flat AC
-  - All goblin NPCs + Goblin King now have explicit combatProfile (agility, weaponSkill, per-zone armor)
+  - All goblin NPCs + Goblin King now have explicit combatProfile (Dexterity, weaponSkill, per-zone armor)
   - Legacy armor field auto-synced: save derives armor from bodyArmor; load falls back armor→bodyArmor
   - Old resolveCombatRound() still exists in gameEngine.ts as dead code (safe to remove later)
 
@@ -435,7 +509,7 @@ COMPLETED:
     - CombatScreen onCommand wired to sendMessage() for STRIKE/FLEE
     - Rehydration sync: sets inCombat on page load if activeCombat exists
 
-HWRR COMBAT SYSTEM REWRITE — ALL 6 PHASES COMPLETE.
+body-zone COMBAT SYSTEM REWRITE — ALL 6 PHASES COMPLETE.
 
 §5.5 — Three-Tier Description Verbosity System
 Rooms, items, and NPCs support three verbosity levels:
@@ -470,13 +544,138 @@ The hero has lost their memory. NPCs in the hub recognize the hero but notice th
 - Training dummy renamed to "Dufus" — DUFUS carved into forehead
 - Aldric personality: most talkative/forthcoming NPC, knows hero from before, covers heartbreak with gruff practicality
 
+§5.19 — Character Creation Epic (April 23, 2026)
+
+**Sprint 1 — Identity Block generator + seed library** (shipped)
+- `lib/heroTypes.ts` / `lib/identityBlock.ts` — `HeroCustomization` interface + deterministic `buildIdentityBlock(h)` + `buildForgeGenerationPrompt(h)`. Pure function, lookup-table phrase composers, zero LLM at runtime. Skin-tone clauses tuned for 99% European palette per Howard canon (no "dark" modifiers pushing Grok to ebony; no "reddens under sun" causing literal sunburn). Identity block only — scars/tan/eye patches/brands are runtime body state, not identity, and wipe on rebirth at the Church.
+- `scripts/forge-hero-masters.ts` — reads `scripts/hero-seed-data.json`, auto-assigns UUIDs, validates slug uniqueness, generates master PNGs via grok-imagine-image-pro, runs rembg, writes transparent PNGs to `public/art/heroes/`. Supports `--force` + slug filters.
+- `scripts/build-hero-qa.ts` → `public/art/heroes/qa.html` — self-contained QA page with hero sprites composited over church backdrop, per-hero "re-forge + notes" checkboxes, "generate report" button (copies markdown to clipboard).
+- `scripts/forge-qa-church-bg.ts` — church interior backdrop generator.
+- Library seeded with **20 curated heroes** (Kane, Dural, Gaius, Orin, Vard, Selek, Halvar, Roderic, Corin, Marik, Talon, Aldan, Rurik, Thane, Karn, Hollan, Lev, Seward, Ivorn, Draxan). All UUID'd. ~$1.68 total Grok cost.
+
+**Sprint 2a — DB + upload + wizard + gate** (shipped)
+- Migration `20260423120000_add_hero_masters.sql` — `hero_masters(id uuid pk, slug, hero_name, customization_vector jsonb, identity_block, master_image_url, source, creator_player_id, consent_shared, times_chosen, approved_at, retired_at)` + `players.hero_master_id` FK + `players.backstory`.
+- `scripts/upload-hero-masters.ts` — creates `hero-masters` Supabase Storage bucket, uploads each PNG keyed by UUID, upserts DB rows. Idempotent.
+- `app/forge-avatar/page.tsx` + `actions.ts` + `WizardClient.tsx` — 3-step wizard (I Face · II Name · III Memory). Filterable library grid (10/page pagination, scales to 100+). Name input never auto-fills from the template's hero_name (the hero_name column is internal admin label only — player must type their own; otherwise we'd have a hundred Vards). Commit action resets ALL player game state to new-hero defaults (HP 20, 0 gold, gray_robe in inventory, current_room church, etc.) so legacy testers get a true fresh start.
+- `proxy.ts` — service-role Supabase client + post-auth gate. Unauthenticated → `/splash`. Authenticated without `hero_master_id` → `/forge-avatar`. Only users with a chosen hero reach the game.
+
+**Sprint 2a iteration — prescripted last memories** (shipped)
+- `lib/heroBackstories.ts` — 20 short vague "last memory" templates, each featuring a non-human divine entity (pillars of flame, beings of starlight, winged light-shapes, serpents of light) granting a blessing / curse / ambiguous gift. Howard-voice, hazy to match amnesia framing, non-specific divinity for IP safety. 10 blessings, 6 curses, 4 ambiguous.
+- Memory selection is **mandatory** (no free-text option). Free-text textarea removed. Pagination 5/page × 4 pages with deliberate interleaving so every page contains at least one blessing, one curse, one ambiguous (variety visible from the first page).
+- Migration `20260423140000_add_backstory_template_id.sql` — `players.backstory_template_id text`. Wizard submits both the template id and the resolved full text; server action persists both. Jane can key side quests off the stable id without brittle text-matching.
+
+**Sprint 2b — hero on every screen (gray-robe variant)** (code committed locally, NOT YET PUSHED — see below)
+- `/api/hero-equipment-sprite?heroMasterId=X&equipment=gray_robe|loincloth&stance=casual|combat` — returns a transparent-PNG sprite of the specific player's hero in the specified equipment + stance. `loincloth+casual` short-circuits to `hero_masters.master_image_url`. Any other combo builds a prompt (identity_block + equipment-framing + stance-framing + backdrop-framing), calls grok-imagine-image-pro, rembg, uploads, caches in `scene_image_cache` (room_id=`hero_eq_{id}`, room_state=`{equipment}_{stance}`). One-time per (hero × equipment × stance). Gray-robe framing describes a backless hospital-gown rebirth garment per Scotch's brief.
+- `/api/my-hero-master` — returns the authed user's `hero_master_id` for client use.
+- `components/HeroScenePortrait.tsx` — fetches the sprite URL, renders bottom-anchored with "forging thy likeness…" placeholder on first-generation wait.
+- `app/page.tsx` — fetches `heroMasterId` on mount, derives equipment from inventory (`gray_robe` while carried, else `loincloth`), renders portrait at `left: sidebarOpen ? 256 : 48, bottom: 0, height: 70vh, width: min(40vh,40vw), z-index: 1`. Hidden during combat. Also added **sidebar auto-collapse after 5 seconds** on initial mount (sidebar shown first so player sees it, collapses to get out of the way).
+
+**Sprint 2c — dynamic hero sprite + canonical framing system** (shipped April 24, 2026 — see §5.20 for details)
+
+**Face uniqueness for multiplayer** (deferred to Phase 3)
+- "Variation forge" plan in memory file `project_hero_name_face_decoupling.md`. At multiplayer launch, each player's chosen master gets forked into a unique visual variation. Schema addition: `hero_masters.based_on_master_id` + `source='player_variation'`. Background-generate during wizard Steps 2–3 so the variation is ready by commit.
+
+**⚠️ Session-end state (2026-04-24):**
+- Local `dev` is **ahead of origin/dev** with all Sprint 2c work (canonical sprite framing + dynamic equipment/weapon sprite system + NPC regen). **Not yet pushed** — previous session's push failure may still block; try again from interactive Terminal.
+- Seward (Scotch's test hero) has `gold: 10000` set directly in DB for weapon-swap testing.
+- All 10 NPC sprites regenerated with canonical framing ($0.70).
+- All 3 Seward equipment variants regenerated with canonical framing ($0.21).
+- Dev server was restarted once during session — verify it's running before next test session.
+- Browser cache may hold stale sprite URLs; a hard refresh clears them.
+
+**Decided direction (2026-04-24): Wardrobe Engine pilot** — rather than refactor the current full-body prompt generator, build a paper-doll layering system for PCs. Plan at `~/.claude/plans/wardrobe_engine_planning.md`. Coherence problem (the "wool trousers → shorts" bug that drove the structured-prompt question) is solved by NOT regenerating: each wardrobe piece is generated once against a canonical Conan body, cut into a transparent per-slot PNG, and composited forever. NPCs keep the current generative pipeline.
+
+**Memory files added in earlier sessions (retained):**
+- `project_hero_identity_block.md` — the approved Identity Block template
+- `project_hero_identity_vs_body_state.md` — identity vs runtime-body-state split
+- `project_hero_name_face_decoupling.md` — name ≠ face; face uniqueness deferred
+- `project_payment_before_character_creation.md` — Stripe must gate character creation (bridged via email-confirm for now)
+- `project_creator_forge_plan.md` — in-app Creator Forge deferred; NPC/monster/animal prompts authored by Opus 4.7 in conversation
+- `project_crowd_qa_plan.md` — Turk/SageMaker pipeline deferred
+- `project_volunteer_qa_plan.md` — community QA-for-play-time tier plan deferred
+- `feedback_howard_skin_palette.md` — 99% European skin default
+- `feedback_art_quality_pro_only.md` — mandatory grok-imagine-image-pro
+
 Pending / next up (non-combat):
-Player creation screen / psychological profile questionnaire (pre-cold-open)
+**Wardrobe Engine pilot** — 7-day paper-doll layering system to replace PC Grok-per-combo sprite generation. Plan at `~/.claude/plans/wardrobe_engine_planning.md` (approved 2026-04-24). Supersedes "structured-prompt schema refactor" below — that refactor becomes moot once layering is done. Pilot target: Seward + leather cuirass in both scene portrait AND UO-style paperdoll popup with full drag-and-drop, 19-slot schema. Scoped module at `lib/wardrobe/` with its own `CLAUDE_CONTEXT.md`.
+Combat-stance hero sprite — `CombatScreen.tsx` still uses hardcoded `HEROES`; wire to `/api/hero-equipment-sprite?stance=combat` (or Wardrobe Engine once built)
+Stripe payment gate ahead of character creation (currently bridged by email-confirm)
 Variable substitution engine for PD prose placeholders
 Legacy flag system (append-only cross-module persistence)
 Content gate system (player-level opt-in, controls module section visibility)
 First adventure module: Kull — The Shadow Kingdom
 Phase 2 systems (see §12 in GAME_DESIGN.md): Stamina, Hunger/Thirst, Encumbrance, Runes
+
+§5.20 — Canonical Sprite Framing + Dynamic Equipment/Weapon Sprites (April 24, 2026)
+
+**New module `lib/spriteFraming.ts` — single source of truth for all character-sprite composition.**
+
+Every character sprite (hero, NPC, future monsters) is generated with a shared framing block so figures are always predictably scaled. Removes the "eyeball vh caps" hack. Three dimensions:
+
+- **`SpriteSide`**: `"left"` | `"right"` — where on screen the character appears. PCs always left (face screen-right), NPCs always right (face screen-left). Creates an over-the-shoulder two-shot in dialogue.
+- **`SpriteSize`**: `"small"` | `"medium"` | `"large"` — creature scale.
+  - small (dwarf/gnome/halfling): figure fills 55-60% of frame, 38-42% empty above head
+  - medium (human/elf/orc — default): figure fills 83-87%, 10-12% empty above
+  - large (troll/giant/ogre): figure fills 94-97%, 1-3% empty above
+  - At shared render height of 70vh, visible figure heights: small ≈ 40vh, medium ≈ 60vh, large ≈ 66vh. Troll is ~1.6× a dwarf.
+- **Canonical composition** (constant across all sprites): 3:4 portrait, pure white backdrop, feet touching bottom edge (≤2% margin), horizontally centered, even studio lighting.
+
+**Exports:**
+- `canonicalFraming(side, size="medium")` — returns the full framing text block to append to any character description
+- `SPRITE_RENDER_MAX_HEIGHT = "70vh"` — shared CSS constant used in `HeroScenePortrait` and `NPCSprite`
+
+**Hero sprite matrix (dynamic, generated on demand):**
+- Cache key: `hero_eq_{heroMasterId}` × `{equipment}_{weapon}_{stance}`
+- **Equipment dimension** (6): loincloth, gray_robe, common_clothes, leather_armor, chain_mail, plate_armor
+  - Derived from `player.bodyArmor` and `player.inventory` via `deriveEquipment()` in `app/page.tsx`
+  - common_clothes triggered by any non-gray-robe clothing item (plain_*, ragged_*, moth_eaten_wool_shirt, threadbare_linen_shirt, heavy_canvas_tunic, homespun_pants, patched_wool_breeches, rough_canvas_trousers, cloth_shoes, leather_sandals, mismatched_boots)
+  - Armor precedence: plate_cuirass > chain_mail > leather_armor > clothes > gray_robe > loincloth
+- **Weapon-carry dimension** (8, see `lib/weaponCarry.ts`): unarmed, hip_short_blade, hip_long_blade, hip_haft_mace, hip_haft_axe, back_two_hander, staff_bow, polearm
+  - Mapped from `player.weapon` via `getWeaponCarry()`. Important: engine uses sentinel string `"unarmed"` (not null) → handled explicitly.
+  - hip_haft (mace/axe/scepter): head-UP at belt, haft hangs down thigh (head-down would swing into leg)
+- **Stance dimension** (2): casual, combat. Combat stance still TODO — CombatScreen.tsx hardcoded; future work.
+- Default `loincloth + unarmed + casual` short-circuits to the stored `master_image_url` — no Grok call.
+- All other combos: Grok Imagine Pro → rembg → Supabase storage → `scene_image_cache` row. First encounter = ~40s wait with placeholder; cached forever after.
+
+**Placeholder during generation:** 120×180 amber-framed silhouette with pulsing glow + "forging thy likeness…" text. Previously was a tiny invisible label — now visible.
+
+**Render components:**
+- `HeroScenePortrait` ([components/HeroScenePortrait.tsx](components/HeroScenePortrait.tsx)) — accepts `heroMasterId`, `equipment`, `weapon`, `stance`. Returns `<img>` directly as fragment (no inner wrapper). Bottom-anchored, `maxHeight: SPRITE_RENDER_MAX_HEIGHT`.
+- `NPCSprite` ([components/NPCSprite.tsx](components/NPCSprite.tsx)) — same rendering, mounted symmetrically on screen-right.
+- Hero portrait is mounted at the **root level** of `app/page.tsx` JSX (same depth as NPCSprite) so it escapes the deeper `overflow:hidden`/`position:relative` ancestors that were clipping its layout.
+
+**Generation paths updated to use canonical framing:**
+- [app/api/npc-image/route.ts](app/api/npc-image/route.ts) — `canonicalFraming("right", npc.spriteSize ?? "medium")` appended to `npc.spritePrompt`
+- [lib/spritePregenerate.ts](lib/spritePregenerate.ts) — mirrors the above for server-startup pregen
+- [app/api/hero-equipment-sprite/route.ts](app/api/hero-equipment-sprite/route.ts) — `canonicalFraming("left")` appended to identity_block + equipment + weapon + stance + fresh-rebirth clauses
+- [scripts/forge-hero-equipment-variant.ts](scripts/forge-hero-equipment-variant.ts) — mirror of the API route, for CLI pre-generation
+- [lib/identityBlock.ts](lib/identityBlock.ts) `buildForgeGenerationPrompt()` — `canonicalFraming("left")` for future hero master regens
+
+**NPC interface gained `spriteSize?: SpriteSize`** ([lib/gameData.ts](lib/gameData.ts)) — defaults to medium. All existing NPCs are humans = medium. Set to "small" for dwarves, "large" for trolls when authored.
+
+**Regeneration done this session:**
+- All 10 existing NPC sprites regenerated ($0.70): Hokas, Sam, Aldric, Lira, Mavia, Seraine, Brunt, Pip, Zim, Dufus
+- Seward's 3 equipment variants regenerated ($0.21): gray_robe+unarmed, common_clothes+unarmed, common_clothes+hip_short_blade
+
+**Cache schema fix — `scene_image_cache` unique constraint:**
+Both regen paths switched from `insert()` to `upsert({ onConflict: "room_id,room_state,tone" })` because the constraint `(room_id, room_state, tone)` doesn't include `deleted_at` — soft-deleted rows still block re-inserts. Upsert updates in place and clears `deleted_at: null`.
+
+**Prompt-coherence lesson** (open issue, see "Open design question" above):
+Prose prompts like "wool trousers" regenerate inconsistently — Grok interpreted it as shorts on one regen. Mitigation shipped for `common_clothes`: explicit numbered clauses + `forbidden:` list ("NOT shorts, NOT breeches, NOT cropped, NOT rolled-up, NOT tucked into boots"). Broader structured-schema refactor deferred pending Scotch's approval of approach.
+
+**New scripts:**
+- [scripts/forge-hero-equipment-variant.ts](scripts/forge-hero-equipment-variant.ts) — CLI to generate any hero × equipment × weapon × stance combo. Supports `--force` to overwrite, `--all` to batch across every hero master.
+- [scripts/regen-npc-sprites.ts](scripts/regen-npc-sprites.ts) — CLI to regenerate all NPC sprites with canonical framing. `--dry-run` available.
+
+**New API routes:**
+- [app/api/hero-equipment-sprite/route.ts](app/api/hero-equipment-sprite/route.ts) — GET with `heroMasterId`, `equipment`, `weapon`, `stance` query params. Default combo short-circuits to master URL.
+- [app/api/my-hero-master/route.ts](app/api/my-hero-master/route.ts) — returns the authed user's `hero_master_id` for client-side portrait rendering.
+
+**Bugs fixed this session:**
+- `getWeaponCarry("unarmed")` incorrectly returned `"hip_short_blade"` fallback — now explicitly treats `"unarmed"` as unarmed
+- Hero portrait was rendering too small due to deeper `overflow:hidden` ancestors — fixed by moving to root level
+- Cache `upsert` issue (see above)
+- Hero sprite sizing calibrated to 70vh with 85% figure-fill = matches NPC visible height
 
 
 §6 — The Eamon Chronicle
@@ -830,10 +1029,10 @@ PhaseFocusPhase 1Core engine, streaming chat, Supabase persistence, character cr
 April 2026
 
 - **Mana system implemented (April 13, 2026):** `expertise` is now formally the max mana pool. New field `currentMana: number` added to PlayerState (default 10/10). Passive regen +1 mana/turn (and +1 HP/turn) via `tickWorldState`, gated by `!activeCombat`. INVOKE costs are still pending. Sidebar shows live HP/mana bars with bronze framing and ✦/♥ glyphs; STR/DEX/CHA in 3-column grid (EXP dropped from display).
-- **HWRR bleed/poison adopted (April 13, 2026):** poison added to `StatusEffectType`. `player.activeEffects[]` carries effects out of combat, transferred in/out of `playerCombatant.activeEffects` at combat boundaries. Severity 1-3 = 1/2/3 HP/turn (scaled down from HWRR's 3/6/9 because our HP pool is 20). Cures: BANDAGE (-1 bleed sev), TOURNIQUET (all bleed + severed_artery), ANTIDOTE (-1 poison sev), STRONG ANTIDOTE (all poison). Phase B (deferred): poison-application sources (NPC `combatProfile.poisonOnHit`, `APPLY POISON TO WEAPON`, field hazards).
+- **body-zone bleed/poison adopted (April 13, 2026):** poison added to `StatusEffectType`. `player.activeEffects[]` carries effects out of combat, transferred in/out of `playerCombatant.activeEffects` at combat boundaries. Severity 1-3 = 1/2/3 HP/turn (scaled down from the source combat model's 3/6/9 because our HP pool is 20). Cures: BANDAGE (-1 bleed sev), TOURNIQUET (all bleed + severed_artery), ANTIDOTE (-1 poison sev), STRONG ANTIDOTE (all poison). Phase B (deferred): poison-application sources (NPC `combatProfile.poisonOnHit`, `APPLY POISON TO WEAPON`, field hazards).
 - **Universal vendor SELL at half price (April 13, 2026):** every vendor buys everything at `Math.max(1, Math.floor(item.value / 2))`. Equipped items refused (UNEQUIP first). All vendor menus refactored to read prices dynamically from `ITEMS` — no more hardcoded prices in welcome speeches.
 - **expertise → maxMana full rename (April 14, 2026):** `PlayerState.expertise` renamed to `PlayerState.maxMana` across all code + DB column renamed `expertise` → `max_mana`. Backfill set pre-mana heroes (where pool was 0) to 10/10. `armor_expertise`/`shield_expertise` in WeaponSkills untouched (they're skill names, not mana).
-- **HWRR visual-novel combat screen (April 15, 2026):** `CombatScreen.tsx` completely redesigned. Replaced the ugly centered modal with a full-viewport transparent overlay. Enemy sprite floats HWRR-style over the room scene (xcenter 0.64, bottom-anchored, 60vh tall). Top HP strip, bottom-left PaperDoll HUD (wound display), bottom-right action panel with zone pills + Strike/Flee. Floating narrative strip replaces the scrolling log. Zone positions lifted from HWRR's `script.rpy:4047-4058`.
+- **body-zone visual-novel combat screen (April 15, 2026):** `CombatScreen.tsx` completely redesigned. Replaced the ugly centered modal with a full-viewport transparent overlay. Enemy sprite floats body-zone-style over the room scene (xcenter 0.64, bottom-anchored, 60vh tall). Top HP strip, bottom-left PaperDoll HUD (wound display), bottom-right action panel with zone pills + Strike/Flee. Floating narrative strip replaces the scrolling log. Zone positions lifted from the source combat model's `script.rpy:4047-4058`.
 - **Inspect popup redesign / Pass E (April 14, 2026):** `ItemDetailPopup.tsx` now routes between two visual styles. Standard inspection (dark glassmorphism, large item sprite left, scrollable stats+description right) for all current items. Alchemical book (Thurian codex parchment) reserved for `type === "spell"` books/scrolls/grimoires (none exist yet). Stats table is context-sensitive per item type.
 - **Apply Poison to Weapon (April 14, 2026):** APPLY [poison] TO [weapon/blade/arrows/bolts] handler + combat integration. Poison coats the weapon for N charges; each hit that lands transfers a poison effect to the enemy. Painful Poison = sev 1 / 3 charges; Quick Death = sev 3 / 3 charges. Ranged weapons get arrows/bolts flavor text.
 - **Prescripted text instant fade-in (April 14, 2026):** static engine responses now return JSON (not ReadableStream) — client renders instantly with 300ms fade-in. Only Jane dynamic content streams character-by-character. Clear visual signal for dev + player.
@@ -862,6 +1061,190 @@ Authentication system implemented (email/password, Google SSO scaffolding, @supa
 Reader's Mirror personalization vision documented
 Ultima Online skill/magic system integration explored (pending QA)
 Jane daily call limit: unlimited in development via NODE_ENV check
+
+---
+
+## ⚡ Most recent session (2026-04-30) — Quest Engine 8a-8b shipped + client bundle crash hotfix
+
+**The day's headline:** Quest Engine bedrock + event hooks landed on prod (Sprints 8a/8b), then a follow-up hotfix repaired a server-only-module-leak that was crashing the page ~6 seconds after rejoin.
+
+### Shipped to prod (main)
+
+- **Sprint 8a — Quest Engine bedrock** (commit `88ce683` rescue + `a874e04`):
+  - `lib/quests/types.ts` — Quest, QuestStep, QuestState, QuestEvent (7 variants), QuestReward, QuestPrerequisite
+  - `lib/quests/engine.ts` — registerQuest, getQuest, validateRegistry, acceptQuest, emitQuestEvent (depth-cap 8), completeStep, applyReward (10-channel fan-out), filterQuestsByScope
+  - `lib/quests/log.ts` — renderActiveQuests, renderQuestLog, renderQuestRegistry
+  - `supabase/migrations/20260430110000_quest_engine_bedrock.sql` — players.quests jsonb + quest_definitions table
+- **Sprint 8b — Quest event hooks** (commit `a874e04`): wired emitQuestEvent into 6 sites (enter-room, talk-to-npc, command, item-acquired, scroll-read, combat-end) + new `QUESTS` and `QUESTS LOG` static commands.
+- **Quest registry is empty** — engine cycles silently against zero quests until 8d lands the first arc.
+- **Client bundle hotfix** (commit `1de8dce` → merge `05dc39b`): see below.
+
+### Client bundle hotfix — gameEngineClient.ts split (NEW architectural file)
+
+**Symptom:** game crashed ~6 seconds after rejoin with current login.
+
+**Root cause:** [lib/karma/loader.ts](lib/karma/loader.ts) and [lib/karma/scrolls.ts](lib/karma/scrolls.ts) `import fs from "node:fs"`. They were transitively pulled into the **client** bundle because [lib/gameEngine.ts](lib/gameEngine.ts) imports them and is in turn imported by `"use client"` modules ([app/page.tsx](app/page.tsx), [components/CommandInput.tsx](components/CommandInput.tsx)). Turbopack failed to chunk `node:fs` for the browser, so the client chunk that fed the page exploded shortly after hydration. The `eslint.config.mjs` rule already warned against importing `lib/gameEngine` from non-engine code — exactly to prevent this — but the rescue commit re-introduced it.
+
+**Fix:** New file [lib/gameEngineClient.ts](lib/gameEngineClient.ts) exports the client-safe surface (`SITUATION_BLOCK_LINE`, `getCommandAutocompleteSuggestions`, `AutocompleteItem`, `AutocompleteDispositionTone`) plus the helpers it shares with the rest of the engine (`exitDestinationLabel`, `presentNPCsInRoom`, `npcTone`, `isShieldSlotItem`, `isBodyArmorSlotItem`, `EXIT_ORDER`). It has **zero `node:fs` deps**. [lib/gameEngine.ts](lib/gameEngine.ts) re-imports + re-exports the public surface so server-side callers ([app/api/chat/route.ts](app/api/chat/route.ts)) are unaffected. Client components now import from `gameEngineClient` directly.
+
+**Architectural rule going forward:** Any client component (`"use client"`) that needs game-engine functionality MUST import from [lib/gameEngineClient.ts](lib/gameEngineClient.ts), never from [lib/gameEngine.ts](lib/gameEngine.ts). The eslint rule in `eslint.config.mjs` (lines 46–57) enforces this — don't disable it.
+
+### Next sprint: 8c — Multi-stage NPC dialogue resolver
+
+Implementation file: `lib/quests/dialogue.ts` (new). Ships:
+- `QuestNPCDialogue` interface (npcId + branches[] + fallback)
+- `QuestDialogueBranch` (when: questId/onStep/afterStepCompleted/extra)
+- `resolveQuestDialogue(state, npcId)` runs **before** the legacy `NPCScript` matcher in `lib/gameEngine.ts` TALK handler
+- `fireOnceReward` semantics + `fireOnceKey` persisted in `QuestState.scratch`
+- DoD: `__tests__/quests/dialogue.test.ts` covers stage-aware branching, fire-once gating, fallback when no branch matches
+
+After 8c (in plan order): 8d Vivian-arc + Way-of-Thoth scaffolding · 8e Stobaean Hermetic fragments · 8f 14 new NPCs + Zim's 15 turn-in branches + `unlockCircle` reward · 8g difficulty-curve calibration · 8h `THE WAY` codex command. Sprint 7 (Sorcery + Outer Dark) remains deferred.
+
+### Deferred / dormant
+
+- **Ally combat system.** Spec'd in KARMA_SYSTEM.md §2.7 (group-flee, max party 3, broken-leg gate, abandonment penalty per-ally-count). Implementation lives in `lib/karma/combat-deltas.ts` ally-abandoned + ordered-retreat branches — currently dormant.
+- **Wardrobe Engine + painter-curation.** Uncommitted in working tree. Migration `20260424120000_wardrobe_tables.sql` is committed and applied to prod; `lib/wardrobe/`, `app/api/wardrobe/`, `app/api/painter-curation/` source remains untracked.
+
+---
+
+## ⚡ Previous session (2026-04-29 evening) — Karma System design + implementation plan
+
+**The day's headline:** the Karma System (PICSSI + attributes + consumables + atoms + brothel/VD + Scrolls of Thoth + sorcery) is now fully designed and ready for implementation. All design questions are resolved; sprint-by-sprint wiring plan written. Sprint 0 in flight as of session end.
+
+### Headline deliverables (2026-04-29 only)
+
+1. **`KARMA_SYSTEM.md`** (new, repo root) — single source of truth for the entire karma system. ~600 lines. All numerical values for PICSSI multipliers, stamina/fatigue thresholds, action-budget tier scaling (20/25/30 by adventure tier), combat-victory PICSSI delta table, brothel/VD mechanics, riddle-verification design, and 50+ flow inventory. **Approval gate at §6 awaits "begin Sprint 1" sign-off.**
+2. **`KARMA_IMPLEMENTATION_PLAN.md`** (new, repo root) — sprint-by-sprint wiring plan with file-, function-, and DDL-level detail. Sprints 0–7. References KARMA_SYSTEM.md as source of truth (never duplicates values). ~750 lines.
+3. **`SORCERY.md`** (new, repo root) — extracted from GAME_DESIGN.md §9 on 2026-04-29. Canonical for both magic systems (Guild CAST + Occult INVOKE), Eight Circles, Reagents, The Order, per-circle Illumination cost table. GAME_DESIGN.md §9 now redirects to it.
+4. **`GAME_DESIGN.md` §12 Brothels + Fertility Temple + VD** (new) — full mechanic spec. The fertility-temple paradox (same building hosts both the most popular brothel and the most effective VD cure) is canonical.
+5. **`lore/scrolls-of-thoth/`** (new directory) — 15 Scrolls of Thoth modeled word-for-word on *The Kybalion* (1908/1912, Three Initiates) with `Hermes`/`Hermetic` substituted to `Thoth`/`Thothian`. Each scroll has YAML frontmatter declaring `illuminationDelta: 3` and a fill-in-the-blank riddle (e.g., Scroll VIII: *"As above, so _____"* → "below"). Plus `INDEX.md`. Scrolls only award Illumination after the player passes the riddle gate ("read-verification mechanic").
+6. **CLAUDE.md stack updated** — now loads SORCERY.md (#3), KARMA_SYSTEM.md (#4), KARMA_IMPLEMENTATION_PLAN.md (#5) alongside the existing PD doc + module plan + memory index.
+
+### Canonical PICSSI → stat mappings (locked 2026-04-29 evening)
+
+Per GAME_DESIGN.md §11 + KARMA_SYSTEM.md §4a:
+
+| Virtue | Direct mechanical link |
+|--------|------------------------|
+| **Passion** | → STR (additive: `STR_eff = STR_base + min(10, floor(Passion/10))`) |
+| **Integrity** | → maxHP (`maxHP = 50 + 2·Integrity`) |
+| **Courage** | → DEX (additive: `DEX_eff = DEX_base + min(10, floor(Courage/10))`) |
+| **Standing** | → legendary loot luck + shop deals + CHA (`CHA_eff = CHA_base + min(10, floor(Standing/10))`) |
+| **Spirituality** | → mana regen rate + HEAL spell power (+0.5%/pt) |
+| **Illumination** | → maxMana via `\|Illumination\|/2` (saints AND demons get the bonus; midline is deadest) |
+
+Five virtues unipolar 0..100; **Illumination bipolar −100..+100**.
+
+### Stamina + fatiguePool model (body-zone-derived per Scotch's "body-zone as baseline" direction)
+
+- `maxStamina = 35 + 2·STR_effective` (body-zone `script.rpy:4077`).
+- `fatiguePool` accumulates negatively in combat; 5 tiers at thresholds `−maxStamina × {1,2,3,4}` per the source body-zone combat model `script_2.rpy:1799`.
+- **Combat penalty per tier:** `enemy_hit_chance += 15 × tier` (body-zone `script_2.rpy:11110`). NO damage modifier (body-zone doesn't have one).
+- **Tier 4 (Exhausted):** can't act.
+- **After-combat recovery:** `fatiguePool += enemiesKilled × maxStamina × 1.5` (body-zone combat-direct).
+- **Per-adventure action budget:** 20 (novice) / 25 (moderate) / 30 (deadly) — the source combat model's `time_left=25` adapted with tier scaling.
+
+### Triple penalty for ally abandonment (canonical)
+
+Per Scotch 2026-04-29: fleeing combat ALWAYS reduces Courage; fleeing while leaving allies behind = **TRIPLE PENALTY**: large −Standing + −Integrity (broken implicit combat-vow) + Defining −Courage (the "ultimate cowardice"). **Ordered retreat** (player commands each ally to flee on prior turns, then flees themselves) preserves Standing/Integrity but Courage still falls. Implementation: per-ally Flee command + state-tracked `hasFled` boolean.
+
+### Cold-deletion of legacy 10-virtue ledger
+
+Per Scotch 2026-04-29: drop `honesty / compassion / valor / justice / sacrifice / honor / spirituality (legacy) / humility / grace / mercy` columns + remove `updateVirtue()` helper + remove all 4 mutation points (Honor ×3, Valor ×1) in the same PR as PICSSI introduction (KARMA_IMPLEMENTATION_PLAN.md Sprint 2). No deprecation period.
+
+### Sprint roadmap (KARMA_IMPLEMENTATION_PLAN.md)
+
+- **Sprint 0** Preflight (½ day) — DB snapshot, baseline tests, mutation-point audit. **Started 2026-04-29 evening.**
+- **Sprint 1** Stamina + fatiguePool + actionBudget bedrock (2–3 days)
+- **Sprint 2** PICSSI bedrock + cold-delete legacy 10-virtue (2–3 days)
+- **Sprint 3** Activity dispatcher + Brothel/VD + Scrolls READ + riddle gate (3 days)
+- **Sprint 4** Encounter loader + triggers + choices + NPC affection + flag scope (3–4 days)
+- **Sprint 5** Combat-PICSSI generation + per-ally Flee + ordered retreat (3 days)
+- **Sprint 6** UI polish — PICSSI bars, affection panel, karma history, riddle modal (2 days)
+- **Sprint 7** (deferred) — Sorcery + per-circle Illumination + Outer Dark gate
+
+Total Sprints 0–6: ~16–18 dev-days, ~3–4 calendar weeks pairing with Claude.
+
+### Other deliverables (earlier in 2026-04-29)
+
+7. **Public art reorganization** — all art consolidated under `public/art/` with logical sub-folders (heroes/, npcs/, lora/, wardrobe/, items/, painter-curation/, scenes/, brand/). 16 code files updated, 7 QA HTMLs relocated, .gitignore patterns updated. Typecheck green.
+8. **Memory updates** — new entries: `project_karma_system_design.md`, `project_scroll_riddle_verification.md`. Corrected: `feedback_read_game_design_first.md` (rule clarified — read docs BEFORE asking questions, not instead of asking).
+
+### Older (pre-2026-04-29) deliverables — preserved below for reference
+
+**Read [HYDRATE_NEXT_SESSION.md](./HYDRATE_NEXT_SESSION.md) at repo root for the concise hand-off prompt for the next Claude instance.**
+
+### 1. Setting pivot — Thurian Age, not Hyborian
+- Game's in-fiction era is now Howard's pre-Cataclysmic **Thurian Age** (Kull's era).
+- Hyborian-Age kingdoms (Aquilonia, Stygia, Cimmeria) are FUTURE prophecy from the player's vantage, not past lore.
+- **But Aquilonian VISUAL STYLE remains the canonical art-prompt reference** for Ostavar — styles are immortal, fiction-era is Thurian. Players never read "Aquilonia" in-game; the art still reads late-Aquilonian.
+- The Order's mission is now **preventive** — they're trying to stop the Cataclysm from happening (again). There has been at least one prior Cataclysm; their secret chronicles record it.
+- Recursive **"earlier civilization" principle** (canonical): Pre-Thurian Builders' ruins exist beneath Thurian-era civilization. New §10.2a in GAME_DESIGN.md.
+- GAME_DESIGN.md §10 fully rewritten. The Order section in §6 updated with Cataclysm-preventive frame.
+- New memory: `project_thurian_age_setting.md`. Updated: `project_ostavar_aquilonia.md` (style vs. era decoupled).
+
+### 2. Beginner's Cave removed → three Thurian-PD adventures
+The Notice Board, autocomplete, Aldric dialogue, and ENTER fallback all updated. Three modules planned:
+- **The Mirrors of Tuzun Thune** (Weird Tales, Sept 1929) — novice
+- **The Serpent in the Court** (from *The Shadow Kingdom*, Aug 1929) — moderate
+- **The Pictish Time-Tomb** (from *Kings of the Night*, Nov 1930) — deadly
+
+Module files NOT yet built. `ENTER` returns "writs being copied for the field" stub. Goblin NPCs preserved in `NPCS` for reuse.
+
+### 3. Vivian — the hero's first ally — fully designed and image-generated
+- **Character bible:** petite athletic 20-year-old, chestnut-auburn high ponytail, bright green eyes, leather thief outfit, silver locket. No tattoo, no mole.
+- **Locked master:** [public/art/npcs/vivian/master/vivian_master_v1.png](public/art/npcs/vivian/master/vivian_master_v1.png) (v6 candidate, 2 MB transparent PNG).
+- **Pony Realism v23 LoRA trained.** Trigger word `vivian1`. File: `r2://living-eamon/trained-loras/vivian-pony-v1/vivian-pony-v1.safetensors` (228 MB). Hyperparams: rank 32, alpha 16, 1500 steps, AdamW8bit, bf16. ~$0.45 Vast cost.
+- **400 inference PNGs generated** at [public/art/lora/vivian-eros/](public/art/lora/vivian-eros/). Backup at `r2://living-eamon/eros-batches/vivian-v1/`.
+- **Three karma encounter atoms** in `scripts/balance/library/`: `vivian-notice-board-meet`, `vivian-first-adventure-rescue-bond`, `vivian-flirty-banter`.
+- **Game roles:** combat ally (low HP, high evasion), Lockpicking trainer, Stealth trainer, eros interest. Death is permanent and ripples through world (Hokas mentions absence, Aldric pours two drinks, locket lands in player's inventory).
+- **Two-stage meet plan:** Notice Board (light flirt, walks away) → mid-first-adventure rescue (combat save + lockpick demo + healing-potion gift = first bond formed).
+
+### 4. Karma system foundation
+**Design-time encounter library, runtime integration NOT done.**
+- Schema: [scripts/balance/types.ts](scripts/balance/types.ts) — Encounter / Choice / KarmaDelta / AffectVector / npcAffection.
+- 7 atoms in [scripts/balance/library/](scripts/balance/library/): hokas-pity-gift, charity-gowns-barrel-steal, aldric-drink-offer, aldric-combat-training-offer, vivian-notice-board-meet, vivian-first-adventure-rescue-bond, vivian-flirty-banter.
+- Simulator: [scripts/balance/simulator.ts](scripts/balance/simulator.ts) — coverage matrix + affect curve audit. Run: `npx tsx scripts/balance/simulator.ts`.
+- Current corpus covers 5/6 PICSSI virtues + 6/7 affect axes. Illumination + awe are dead zones (expected for hub-only content).
+
+**Runtime gap (full audit in HYDRATE_NEXT_SESSION.md):** PICSSI virtues exist only in design docs; PlayerState still has the legacy 10-virtue ledger. Engine has only 3 sparse karma mutation points (Honor ×2, Valor ×1). Encounter library is never read by the game engine. Five epics needed for full wiring (~4-5 days).
+
+### 5. Weapons simplified — 28 → 3
+- Kept: `short_sword`, `long_sword`, `great_sword` (new two-handed). All use Swordsmanship.
+- All weapon flavor variants (mace, axe, dagger, bow, etc.) deleted.
+- Sam stocks the 3 swords. Pip stocks 4 armor items only: `old_leather_armor`, `old_iron_helm`, `old_leather_gorget`, `old_wooden_shield`.
+- Skill tracks reduced 9 → 6: Swordsmanship, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery. (Mace Fighting / Fencing / Archery removed.)
+- Backward-compat sanitizers in `app/api/chat/route.ts` reset orphaned weapons/armor on player load.
+
+### 6. PICSSI Strength → Standing rename
+Earlier in this session, the PICSSI virtue named "Strength" was renamed to **Standing** to disambiguate from the physical STR attribute. Affects GAME_DESIGN.md §11, alphaProgress, memory files, MEMORY index. Six PICSSI virtues are now: **Passion, Integrity, Courage, Standing, Spirituality, Illumination.**
+
+### 7. Infrastructure fixes
+- **`rembg` moved to project venv** at `.venv/` after Homebrew bumped Python 3.13 → 3.14 and wiped the global install. `lib/imageProcessing.ts` now prefers `.venv/bin/python3` with system fallback.
+- **Next.js dev server moved to port 3001** (Docker holds 3000).
+- **Vast.ai LoRA stack:** kohya `sd-scripts` (NOT ai-toolkit) for SDXL/Pony LoRAs. Pony Realism v23 in diffusers format requires `model_index.json` + per-component configs. Use `HF_HUB_ENABLE_HF_TRANSFER=1` to avoid stalled UNet downloads. Need `peft` in the inference venv. Full plan: [scripts/lora/VIVIAN_LORA_PLAN.md](scripts/lora/VIVIAN_LORA_PLAN.md).
+- **Streaming-pull pattern:** `rsync` from Vast → local during inference, polled every 15s with `--ignore-existing`. Pattern reusable for future inference runs.
+
+### 8. Critical constraints baked into the inference pipeline
+- **No weapons in any Pony prompt.** Pony renders weapons poorly. Inference script's negative prompt blacklists every weapon term. Action poses use empty hands or non-weapon props.
+- **Pure white background on every Pony render.** WHITE_BG suffix + scenery negatives. Outputs are rembg-cuttable for game compositing.
+
+### 9. Pending epics (priority order)
+1. **Curate the 400 Pony outputs** — mark keepers, identify misfires. v1 LoRA quality assessment. If keepers form a usable corpus, retrain v2 with mixed clothed + selected Pony-derived data.
+2. **Karma runtime wiring** — five epics (PICSSI in PlayerState, NPC affection store, encounter loader, choice resolution, UI surfacing). ~4-5 days.
+3. **Build Module 1: The Mirrors of Tuzun Thune.** First Thurian-PD adventure per [lore/hyborian-pd/MODULE_PLAN.md §8](lore/hyborian-pd/MODULE_PLAN.md).
+4. **Wardrobe Engine pilot** — paperdoll layering for PCs (deferred from earlier).
+5. **Stripe payment gate** ahead of character creation.
+6. **CLAUDE_CONTEXT.md historical scrub** — older sections still have player-facing Hyborian/Aquilonian language that needs Thurian-coherent rewrites (visual-style refs stay).
+
+### 10. Session cost ledger
+- Grok image generation (Vivian master + 50 poses): ~$3.50
+- Vast LoRA training + 400-image inference: ~$0.45
+- Topless variants (rejected by Grok moderation): $0
+- **Total session AI spend: ~$4.00**
+
+---
+
 ## 0. Local Development Path
 
 - Mac laptop username: joshuamcclure
@@ -1023,7 +1406,7 @@ Living Eamon is an AI-powered recreation of the classic Apple II text-adventure 
 | `app/api/player/route.ts` | **POST:** **`createPlayer(name, authUser?.id)`** (link when session present). **GET:** **`loadPlayerByUserId(id)`** first (bootstrap passes auth UUID), then **`loadPlayer(id)`** |
 | `components/CommandInput.tsx` | Command bar with engine-driven autocomplete |
 | `components/ScenePanel.tsx` | **`ScenePanel`** — **`SCENE_DATA`** loading subtitle, shimmer, **30s** `AbortController` timeout, error panel, crossfade, **`retried`** apology toast; vignette + label when loaded |
-| `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/uo-art/items/{artId}.png` |
+| `scripts/generate-all-art.mjs` | Batch UO-style PNGs via Grok image API → `public/art/items/{artId}.png` |
 | `scripts/test-plate-chest.mjs` | Single-item art test |
 | `public/*.svg` | Default Next/Vercel assets (`public/uo-art` may be generated locally and not committed) |
 
@@ -1057,7 +1440,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 - `armor`: `string | null`
 - `shield`: `string | null`
 - `inventory`: `PlayerInventoryItem[]` where each item is `{ itemId: string; quantity: number }`
-- `virtues`: object with keys `Honesty`, `Compassion`, `Valor`, `Justice`, `Sacrifice`, `Honor`, `Spirituality`, `Humility`, `Grace`, `Mercy` — all `number`
+- `virtues`: **DEPRECATED — pending migration to PICSSI** (decided 2026-04-26). Currently `{ Honesty, Compassion, Valor, Justice, Sacrifice, Honor, Spirituality, Humility, Grace, Mercy }`, all `number`. Replacement schema: `picssi: { Passion, Integrity, Courage, Standing, Spirituality, Illumination }` (see GAME_DESIGN.md §11). New code should NOT add features that read/write the 10-virtue keys; existing reads continue to work until the migration epic ships. Migration is non-isomorphic — live characters reset to midline PICSSI on first load post-migration.
 - `reputationScore`: `number`
 - `reputationLevel`: `ReputationLevel`
 - `knownAs`: `string | null`
@@ -1205,7 +1588,7 @@ Source: `lib/gameState.ts` — `PlayerState` interface and defaults from `create
 
 ## 10. Art System
 
-- Output path (script): `public/uo-art/items/[numeric artId].png` (created by `scripts/generate-all-art.mjs`; folder may be absent in a fresh clone).
+- Output path (script): `public/art/items/[numeric artId].png` (created by `scripts/generate-all-art.mjs`; folder may be absent in a fresh clone).
 - Model: **`grok-imagine-image-pro`** (xAI Images API). **Mandate:** never use the non-pro `grok-imagine-image` model. See §7 Art Direction art-quality mandate.
 - Batch script: `scripts/generate-all-art.mjs` (reads `GROK_API_KEY` from `.env.local`).
 - Test script: `scripts/test-plate-chest.mjs`.
@@ -1353,7 +1736,7 @@ Do not commit secret values.
 - [ ] `player_profiles` Supabase table + Profile Builder job
 - [ ] Re-enable Jane streaming in `main_hall` before production
 - [ ] Persist `known_spells` / `known_deities` in savePlayer
-- [ ] Static structured shop for Pip (beginner gear)
+- [ ] Static structured shop for Pip (cheap beginner gear)
 - [ ] Apply **`supabase/migrations`** on the Supabase project (incl. **`received_sam_starter_outfit`**; shield column if still missing on older DBs)
 - [ ] Male / female paperdoll art and compositor
 
@@ -1933,3 +2316,4 @@ The public-facing pages attract players and manage pre-login flows. All use dark
 - **logoutAction:** clears session → redirects to /login
 
 ---
+

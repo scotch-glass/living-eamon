@@ -1064,9 +1064,9 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 ---
 
-## ⚡ Most recent session (2026-04-30) — Quest Engine 8a-8b shipped + client bundle crash hotfix
+## ⚡ Most recent session (2026-04-30) — Quest Engine 8a→8d shipped + client bundle crash hotfix
 
-**The day's headline:** Quest Engine bedrock + event hooks landed on prod (Sprints 8a/8b), then a follow-up hotfix repaired a server-only-module-leak that was crashing the page ~6 seconds after rejoin.
+**The day's headline:** Quest Engine bedrock + event hooks (8a/8b), client-bundle hotfix, multi-stage NPC dialogue resolver (8c), Vivian-arc + Way-of-Thoth scaffolding (8d) all landed on prod in one day. Registry is now non-empty: `vivian-arc` + `way-of-thoth` are live, validating clean.
 
 ### Shipped to prod (main)
 
@@ -1076,8 +1076,19 @@ Jane daily call limit: unlimited in development via NODE_ENV check
   - `lib/quests/log.ts` — renderActiveQuests, renderQuestLog, renderQuestRegistry
   - `supabase/migrations/20260430110000_quest_engine_bedrock.sql` — players.quests jsonb + quest_definitions table
 - **Sprint 8b — Quest event hooks** (commit `a874e04`): wired emitQuestEvent into 6 sites (enter-room, talk-to-npc, command, item-acquired, scroll-read, combat-end) + new `QUESTS` and `QUESTS LOG` static commands.
-- **Quest registry is empty** — engine cycles silently against zero quests until 8d lands the first arc.
 - **Client bundle hotfix** (commit `1de8dce` → merge `05dc39b`): see below.
+- **Sprint 8c — Multi-stage NPC dialogue resolver** (commit `97858d4` → merge `067f1d4`):
+  - `lib/quests/dialogue.ts` — `QuestNPCDialogue` + `QuestDialogueBranch` + `resolveQuestDialogue(state, npcId)`. Branches match on `questId/onStep/afterStepCompleted/questCompleted/questNotAccepted/extra` (QuestPrerequisite vocabulary).
+  - **Fire-once semantics**: `fireOnceReward` fires at most once per `QuestState.scratch[fireOnceKey ?? branch.id]`; lines re-render every TALK but the reward is gated.
+  - **TALK integration**: [lib/gameEngine.ts:2602-2624](lib/gameEngine.ts#L2602-L2624) runs the resolver before the legacy Aldric-topic check / Jane fall-through. Quest-bound NPCs are owned by the resolver; legacy NPCs (Aldric, Hokas) are unchanged.
+  - `__tests__/quests/dialogue.test.ts` — 13 cases (stage-aware, fire-once, fallback, declaration order, gating).
+- **Sprint 8d — Vivian-arc + Way-of-Thoth scaffolding** (same commit `97858d4` → merge `067f1d4`):
+  - **Engine extension**: `Quest.acceptanceTrigger?: QuestTriggerHook` added in `lib/quests/types.ts`. `emitQuestEvent` now has a Phase 1 auto-accept walk before the Phase 2 active-quest walk — one event can both accept a quest AND complete its first step.
+  - `lib/quests/lines/vivian-arc.ts` — life-scope proof of **atom-triggers-quest**. Auto-accepts on any `command` event after `flagsLife.vivian_first_met` (set by the existing `vivian-notice-board-meet` atom). Completes on any `command` after `flagsLife.vivian_cave_bond` (set by the rescue-bond atom). **No atom edits, no JSON changes** — atoms set flags, the quest reads flags. Canonical pattern.
+  - `lib/quests/lines/way-of-thoth.ts` — legacy-scope, 15 stub steps. Each step triggers on `scroll-read` `target: "thoth-N"` with `firstPass: true` guard. Stub rewards: chronicle line per step + `acceptReward.legacyChronicle` (public chronicle on acceptance) + `completionChronicle`. **No Circle unlocks yet** — Sprint 8f wires `unlockCircle` into the right stages.
+  - `lib/quests/load.ts` — side-effect imports of all line modules; consumed by `gameEngine.ts` to keep `engine.ts` free of the const-TDZ that would arise from a circular import. Dependency direction: `lines → engine`, `gameEngine → engine`, `gameEngine → load`, `load → lines`. No cycle through engine.
+  - `__tests__/quests/sprint-8d.test.ts` — 9 cases (Vivian-arc atom→quest flow, Way-of-Thoth one-event accept-and-advance, end-to-end 15-step walk, legacy-scope denormalization, auto-accept gating).
+  - **Validator** (`validateRegistry()`) reports both quests `{ ok: true }`.
 
 ### Client bundle hotfix — gameEngineClient.ts split (NEW architectural file)
 
@@ -1089,16 +1100,15 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 **Architectural rule going forward:** Any client component (`"use client"`) that needs game-engine functionality MUST import from [lib/gameEngineClient.ts](lib/gameEngineClient.ts), never from [lib/gameEngine.ts](lib/gameEngine.ts). The eslint rule in `eslint.config.mjs` (lines 46–57) enforces this — don't disable it.
 
-### Next sprint: 8c — Multi-stage NPC dialogue resolver
+### Next sprint: 8e — Stobaean Hermetic fragments + Logos Teleios
 
-Implementation file: `lib/quests/dialogue.ts` (new). Ships:
-- `QuestNPCDialogue` interface (npcId + branches[] + fallback)
-- `QuestDialogueBranch` (when: questId/onStep/afterStepCompleted/extra)
-- `resolveQuestDialogue(state, npcId)` runs **before** the legacy `NPCScript` matcher in `lib/gameEngine.ts` TALK handler
-- `fireOnceReward` semantics + `fireOnceKey` persisted in `QuestState.scratch`
-- DoD: `__tests__/quests/dialogue.test.ts` covers stage-aware branching, fire-once gating, fallback when no branch matches
+Authoring sprint, no engine changes:
+- 14 fragment files at `lore/stobaean-fragments/SH-*.md` (Walter Scott, *Hermetica Vol. III* 1924, US-PD)
+- `lore/logos-teleios/` — partial-text excerpt (Mead 1906, US-PD)
+- Stobaean Fragments wired into specific Way-of-Thoth steps as `talk-to-npc`-triggered dialogue lines that fire once per legacy lifetime (use Sprint 8c's `fireOnceReward` mechanic via `lib/quests/dialogue.ts`)
+- DoD: each fragment fires once per legacy life and persists across rebirth; *Logos Teleios* found in Scroll 14 vault; Brother Inan dialogue triggers correctly.
 
-After 8c (in plan order): 8d Vivian-arc + Way-of-Thoth scaffolding · 8e Stobaean Hermetic fragments · 8f 14 new NPCs + Zim's 15 turn-in branches + `unlockCircle` reward · 8g difficulty-curve calibration · 8h `THE WAY` codex command. Sprint 7 (Sorcery + Outer Dark) remains deferred.
+After 8e (in plan order): 8f 14 new NPCs (Old Bram, Sister Hela, Maelis, Cassian, Tavren, Yssa, Orin, Rhonen, Tava, Brother Inan, Mother Khe-Anun + Aldric/Hokas/Vivian extensions) + Zim's 15 turn-in branches + `unlockCircle` reward · 8g difficulty-curve calibration · 8h `THE WAY` codex command. Sprint 7 (Sorcery + Outer Dark) remains deferred until Sprint 8 done.
 
 ### Deferred / dormant
 

@@ -39,7 +39,7 @@ import {
   movePlayer,
   updatePlayerGold,
   updatePlayerHP,
-  updateVirtue,
+  bumpStanding,
   addToChronicle,
   changeRoomState,
   changeNPCDisposition,
@@ -67,6 +67,135 @@ import {
 
 import type { BodyZone, ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 import { BODY_ZONES } from "./combatTypes";
+import {
+  fatigueLevel,
+  recomputeDerivedStats,
+  weaponStaminaCost,
+} from "./karma/recompute";
+import { matchActivity, applyActivity } from "./karma/activities";
+import { answerPendingRiddle, findScroll, readScroll } from "./karma/scrolls";
+import { matchTriggers, type KarmaEvent } from "./karma/triggers";
+import { findAtom } from "./karma/loader";
+import { applyChoice, presentAtom } from "./karma/resolve";
+import { applyKarma, logKarmaDelta } from "./karma/recompute";
+import {
+  computeCombatDeltas,
+  sumDeltas,
+  type CombatDeltaContext,
+} from "./karma/combat-deltas";
+import type { KarmaDelta } from "./karma/types";
+import { emitQuestEvent } from "./quests/engine";
+import { renderActiveQuests, renderQuestLog } from "./quests/log";
+
+/**
+ * Apply per-strike stamina drain. KARMA_SYSTEM.md §2.3: every swing
+ * costs `weaponStaminaCost(weaponId)`; both pools take the hit so the
+ * `stamina` bar shows immediate exhaustion while `fatiguePool` carries
+ * tier debt across rounds and into the next fight if not recovered.
+ */
+function drainPlayerStaminaForStrike(
+  state: WorldState,
+  weaponId: string
+): WorldState {
+  const cost = weaponStaminaCost(weaponId);
+  const p = state.player;
+  return {
+    ...state,
+    player: {
+      ...p,
+      stamina: Math.max(0, p.stamina - cost),
+      fatiguePool: p.fatiguePool - cost,
+    },
+  };
+}
+
+/**
+ * Build combat-PICSSI tag flags from an NPC's authored tags.
+ * Tags drive Illumination shifts (dark vs innocent vs friendly) and
+ * the catastrophic delta path (killing a friendly).
+ */
+function tagFlagsFromNpc(
+  npcId: string | null | undefined
+): {
+  killedDarkBeing: boolean;
+  killedInnocent: boolean;
+  killedFriendly: boolean;
+} {
+  if (!npcId) return { killedDarkBeing: false, killedInnocent: false, killedFriendly: false };
+  const npc = NPCS[npcId];
+  const tags = npc?.tags ?? [];
+  const dark =
+    tags.includes("dark") ||
+    tags.includes("undead") ||
+    tags.includes("demon") ||
+    tags.includes("sorceror") ||
+    tags.includes("serpent");
+  return {
+    killedDarkBeing: dark,
+    killedInnocent: tags.includes("innocent"),
+    killedFriendly: tags.includes("friendly"),
+  };
+}
+
+/**
+ * Apply combat-PICSSI deltas (Sprint 5). Writes a single chronicle
+ * line summarizing the net karmic shift if anything moved; the
+ * narrative that goes back to the player is the caller's
+ * responsibility.
+ */
+function applyCombatDeltas(
+  state: WorldState,
+  ctx: CombatDeltaContext,
+  source = "combat"
+): WorldState {
+  const deltas = computeCombatDeltas(ctx);
+  if (deltas.length === 0) return state;
+  let next = state;
+  for (const d of deltas) {
+    next = { ...next, player: applyKarma(next.player, d) };
+  }
+  // Sprint 6: log the net summed delta as a single karma-history entry.
+  const summary = sumDeltas(deltas);
+  next = { ...next, player: logKarmaDelta(next.player, summary, source) };
+  // Chronicle the net summary so the deed log captures the shift.
+  const parts = (Object.entries(summary) as Array<[keyof KarmaDelta, number]>)
+    .filter(([, v]) => v !== 0)
+    .map(([k, v]) => `${k.charAt(0).toUpperCase()}${k.slice(1)} ${v > 0 ? "+" : ""}${v}`);
+  if (parts.length > 0) {
+    next = addToChronicle(
+      next,
+      `Combat karma shifted: ${parts.join(", ")}.`,
+      false
+    );
+  }
+  return next;
+}
+
+/**
+ * Combat-end recovery — applied on victory, dummy-kill, or flee.
+ *   killed > 0 → fatiguePool recovers maxStamina × 1.5 per kill.
+ *   killed = 0 → fatiguePool recovers maxStamina × 0.5 (a flee/breather).
+ * Stamina restores fully either way (the heart finally slows).
+ * Player-death path skips this; applyPlayerDeath handles rebirth.
+ */
+function applyCombatEndRecovery(
+  state: WorldState,
+  enemiesKilled: number
+): WorldState {
+  const p = state.player;
+  const recovery =
+    enemiesKilled > 0
+      ? enemiesKilled * p.maxStamina * 1.5
+      : p.maxStamina * 0.5;
+  return {
+    ...state,
+    player: {
+      ...p,
+      stamina: p.maxStamina,
+      fatiguePool: Math.min(0, p.fatiguePool + recovery),
+    },
+  };
+}
 
 // ── Combat-end helper: transfer persistent effects back to player ──
 // Called from every place that ends combat (victory, flee, dummy).
@@ -87,7 +216,7 @@ function endCombatSession(state: WorldState, transferEffects: boolean): WorldSta
 }
 import {
   initCombatSession,
-  resolveCombatRound as resolveHWRRRound,
+  resolveCombatRound as resolveCombatRound,
   buildRoundNarrative,
   resolveCombatSpell,
   isCombatSpell,
@@ -305,7 +434,7 @@ function presentNPCsInRoom(room: Room, state: WorldState): {
     .filter((x): x is NonNullable<typeof x> => x !== null);
 }
 
-const HOKAS_UNARMED_GIFT_WEAPON = "castoff_short_sword";
+const HOKAS_UNARMED_GIFT_WEAPON = "short_sword";
 const HOKAS_UNARMED_GIFT_CLOTHES = [
   "ragged_shirt",
   "ragged_trousers",
@@ -816,9 +945,6 @@ export function getCommandAutocompleteSuggestions(
           insertText: "TRAIN SWORDSMANSHIP",
           autoSubmit: true,
         },
-        { label: "Train Mace", insertText: "TRAIN MACE", autoSubmit: true },
-        { label: "Train Fencing", insertText: "TRAIN FENCING", autoSubmit: true },
-        { label: "Train Archery", insertText: "TRAIN ARCHERY", autoSubmit: true },
         { label: "Train Armor", insertText: "TRAIN ARMOR", autoSubmit: true },
         { label: "Train Shield", insertText: "TRAIN SHIELD", autoSubmit: true },
         { label: "Train Stealth", insertText: "TRAIN STEALTH", autoSubmit: true },
@@ -914,20 +1040,22 @@ export function getCommandAutocompleteSuggestions(
     /^enter\s*$/i.test(trimmed) &&
     state.player.currentRoom === "notice_board"
   ) {
+    // Three Thurian-Age PD adventures (Howard short stories).
+    // Module implementations land sequentially per MODULE_PLAN.md.
     return [
       {
-        label: "The Beginner's Cave (novice)",
-        insertText: "ENTER THE BEGINNER'S CAVE",
+        label: "The Mirrors of Tuzun Thune (novice)",
+        insertText: "ENTER THE MIRRORS OF TUZUN THUNE",
         autoSubmit: true,
       },
       {
-        label: "The Thieves Guild (moderate)",
-        insertText: "ENTER THE THIEVES GUILD",
+        label: "The Serpent in the Court (moderate)",
+        insertText: "ENTER THE SERPENT IN THE COURT",
         autoSubmit: true,
       },
       {
-        label: "The Haunted Manor (deadly)",
-        insertText: "ENTER THE HAUNTED MANOR",
+        label: "The Pictish Time-Tomb (deadly)",
+        insertText: "ENTER THE PICTISH TIME-TOMB",
         autoSubmit: true,
       },
     ];
@@ -1021,7 +1149,7 @@ TRAINING (Main Hall, Aldric the Veteran)
   TRAIN [skill]      Tiered cost/gain by current skill (Basic→Master); see TRAIN with no args
 
 ADVENTURES
-  ENTER [adventure]  ENTER THE BEGINNER'S CAVE
+  ENTER [adventure]  ENTER THE MIRRORS OF TUZUN THUNE
 
 META
   LOOK               Describe your current location
@@ -1069,7 +1197,7 @@ function matchInventoryDrop(inputLower: string, player: PlayerState): string | n
 
 /** Item ids that occupy the shield slot (off-hand), distinct from body armor. */
 function isShieldSlotItem(itemId: string): boolean {
-  return itemId === "buckler";
+  return itemId === "old_wooden_shield";
 }
 
 function matchWeaponFromPhrase(phraseLower: string, player: PlayerState): string | null {
@@ -1906,10 +2034,6 @@ const TRAIN_TIERS = [
 const TRAIN_PHRASE_TO_SKILL: { phrase: string; skill: keyof WeaponSkills }[] = [
   { phrase: "swordsmanship", skill: "swordsmanship" },
   { phrase: "sword", skill: "swordsmanship" },
-  { phrase: "mace fighting", skill: "mace_fighting" },
-  { phrase: "mace", skill: "mace_fighting" },
-  { phrase: "fencing", skill: "fencing" },
-  { phrase: "archery", skill: "archery" },
   { phrase: "armor expertise", skill: "armor_expertise" },
   { phrase: "armor", skill: "armor_expertise" },
   { phrase: "shield expertise", skill: "shield_expertise" },
@@ -2146,9 +2270,10 @@ function buildHealthDescription(player: PlayerState): string {
 }
 
 function buildStatDescription(player: PlayerState): string {
-  const virtueLines = Object.entries(player.virtues)
+  // PICSSI display — only show non-zero axes. Capitalize for readability.
+  const virtueLines = (Object.entries(player.picssi) as Array<[keyof typeof player.picssi, number]>)
     .filter(([, v]) => v !== 0)
-    .map(([k, v]) => `  ${k}: ${v > 0 ? "+" : ""}${v}`)
+    .map(([k, v]) => `  ${k.charAt(0).toUpperCase()}${k.slice(1)}: ${v > 0 ? "+" : ""}${v}`)
     .join("\n");
 
   // Zone armor display
@@ -2281,7 +2406,7 @@ function maybeRevealName(
 // SAM SLICKER STATIC SHOP (main_hall only, Tier 1)
 // ============================================================
 
-const SAM_ARMOR_KEYS = new Set(["leather_armor", "chain_mail", "buckler"]);
+const SAM_ARMOR_KEYS = new Set<string>();
 
 function partitionSamInventory(): {
   oneHanded: SamShopRow[];
@@ -2978,7 +3103,16 @@ function samShopWrongRoomResult(state: WorldState): EngineResult {
 // MAIN ENGINE — PROCESS PLAYER INPUT
 // ============================================================
 
-export function processInput(
+/**
+ * Core engine pipeline. Wrapped by `processInput` (below) to add the
+ * KARMA Sprint 4 atom dispatch — pendingAtom intercept (resolves a
+ * presented choice) + post-process trigger emission (presents a new
+ * atom when an enter-room or talk-to-npc event matches the library).
+ *
+ * Direct callers should always use `processInput`; `processInputCore`
+ * is internal and skips atom dispatch.
+ */
+function processInputCore(
   input: string,
   state: WorldState
 ): EngineResult {
@@ -3027,6 +3161,53 @@ export function processInput(
       newState,
       stateChanged: false,
     };
+  }
+
+  // ── KARMA Sprint 3: pending Scroll-of-Thoth riddle ────────
+  // The player's previous READ opened a riddle gate. Their next
+  // input — whatever it is — is taken as the answer. HELP and HEALTH
+  // are still passes (let the player check their state mid-riddle).
+  const RIDDLE_BYPASS = new Set(["HELP", "HEALTH"]);
+  if (p.pendingRiddle && !RIDDLE_BYPASS.has(first)) {
+    const result = answerPendingRiddle(newState, trimmed);
+    return {
+      responseType: "static",
+      staticResponse: result.narrative,
+      dynamicContext: null,
+      newState: result.state,
+      stateChanged: true,
+    };
+  }
+
+  // ── KARMA Sprint 3: activity dispatcher ───────────────────
+  // REST / PRAY (in temples) / DRINK / BROTHEL / BATHE / DONATE /
+  // MORTIFY consume actionBudget, restore stamina, apply PICSSI
+  // deltas. PRAY in non-temple rooms falls through to the dynamic
+  // Jane handler below. DRINK in non-tavern rooms ditto.
+  const activityId = matchActivity(first, p.currentRoom);
+  if (activityId) {
+    const result = applyActivity(newState, activityId);
+    if (!result.rejected) {
+      return {
+        responseType: "static",
+        staticResponse: result.narrative,
+        dynamicContext: null,
+        newState: result.state,
+        stateChanged: true,
+      };
+    }
+    // For activities that REQUIRE a specific room (BROTHEL/BATHE/DONATE/
+    // MORTIFY), surface the rejection. PRAY/DRINK fall through to the
+    // existing dynamic handlers when the room isn't a match.
+    if (activityId !== "pray" && activityId !== "drink") {
+      return {
+        responseType: "static",
+        staticResponse: result.narrative,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
   }
 
   if (
@@ -3243,12 +3424,9 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
           `  100–199: 750 gp  (+20, Master)\n` +
           `  200+:   Nothing left to teach.\n\n` +
           `Your current skills:\n` +
-          `  Swordsmanship:  ${ws.swordsmanship}\n` +
-          `  Mace Fighting:  ${ws.mace_fighting}\n` +
-          `  Fencing:        ${ws.fencing}\n` +
-          `  Archery:        ${ws.archery}\n\n` +
+          `  Swordsmanship:  ${ws.swordsmanship}\n\n` +
           `Total: ${wsTotal} / ${SKILL_CAP}\n\n` +
-          `Example: TRAIN SWORDSMANSHIP, TRAIN MACE, TRAIN FENCING, TRAIN ARCHERY, TRAIN ARMOR, TRAIN SHIELD, TRAIN STEALTH, TRAIN LOCKPICKING, TRAIN MAGERY.`,
+          `Example: TRAIN SWORDSMANSHIP, TRAIN ARMOR, TRAIN SHIELD, TRAIN STEALTH, TRAIN LOCKPICKING, TRAIN MAGERY.`,
         dynamicContext: null,
         newState,
         stateChanged: false,
@@ -3259,7 +3437,7 @@ ${p.inventory.some(e => e.itemId === "gray_robe")
       return {
         responseType: "static",
         staticResponse:
-          `Aldric shakes his head. "I don't teach that under that name. Try swordsmanship, mace, fencing, archery, armor, shield, stealth, lockpicking, or magery."`,
+          `Aldric shakes his head. "I don't teach that under that name. Try swordsmanship, armor, shield, stealth, lockpicking, or magery."`,
         dynamicContext: null,
         newState,
         stateChanged: false,
@@ -3470,6 +3648,20 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     };
   }
 
+  if (first === "QUESTS" || first === "QUEST") {
+    const rest = trimmed.slice(first.length).trim().toUpperCase();
+    const body = rest === "LOG"
+      ? renderQuestLog(newState)
+      : renderActiveQuests(newState);
+    return {
+      responseType: "static",
+      staticResponse: body,
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
   if (first === "SHOP" || first === "SAM" || first === "LIST") {
     if (p.currentRoom === "main_hall" || p.currentRoom === "sams_sharps") {
       return {
@@ -3552,11 +3744,7 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       const weaponItem = ITEMS[p.weapon];
       const weaponName = weaponItem?.name ?? p.weapon;
 
-      // Determine flavor text for ranged vs melee
-      const isRanged = p.weapon === "bow" || p.weapon === "crossbow" || p.weapon === "repeating_crossbow";
-      const surfaceText = isRanged
-        ? (p.weapon === "bow" ? "arrows" : "bolts")
-        : "blade";
+      const surfaceText = "blade";
 
       const nextInv = p.inventory
         .map(e => (e.itemId === poisonId ? { ...e, quantity: e.quantity - 1 } : e))
@@ -3709,6 +3897,25 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
         newState,
         stateChanged: false,
       };
+    }
+    // KARMA Sprint 3 — Scrolls of Thoth. The argument can be a number
+    // ("READ 1"), a roman numeral ("READ III"), an id ("READ thoth-1"),
+    // or any unique substring of the title. Carrying the scroll in
+    // inventory is not yet required (player gets free reads in the hub
+    // for now; later a "scroll item" system will gate this).
+    const readArg = trimmed.slice(4).trim();
+    if (readArg && /scroll|thoth|\d|^[ivx]+$/i.test(readArg)) {
+      const scroll = findScroll(readArg.replace(/^scroll\s+/i, ""));
+      if (scroll) {
+        const result = readScroll(newState, scroll.id);
+        return {
+          responseType: "static",
+          staticResponse: result.narrative,
+          dynamicContext: null,
+          newState: result.state,
+          stateChanged: true,
+        };
+      }
     }
     return {
       responseType: "dynamic",
@@ -4061,7 +4268,7 @@ Describe what they find to read, or tell them there is nothing to read here.`,
             gowns: gownStock - 1,
           },
         };
-        updatedState = updateVirtue(updatedState, "Honor", -1);
+        updatedState = bumpStanding(updatedState, -1);
         updatedState = addToChronicle(
           updatedState,
           "Took a gray church robe from the gowns barrel.",
@@ -4221,10 +4428,11 @@ Describe what they find to read, or tell them there is nothing to read here.`,
           },
         };
 
-        // Honor + chronicle: −1 Honor per item taken from charity, single
-        // chronicle entry summarizing the take.
+        // Standing + chronicle: −1 Standing per item taken from charity,
+        // single chronicle entry summarizing the take. (Was Honor pre-2026-04-29;
+        // deprecated to PICSSI Standing per the Honor → Standing rewire.)
         for (let i = 0; i < itemsTaken; i++) {
-          updatedState = updateVirtue(updatedState, "Honor", -1);
+          updatedState = bumpStanding(updatedState, -1);
         }
         updatedState = addToChronicle(
           updatedState,
@@ -4444,7 +4652,25 @@ Describe what they find to read, or tell them there is nothing to read here.`,
 
     // Clear combat session on flee — bleed/poison persists out of combat
     if (wasInCombat) {
+      // KARMA Sprint 5: solo flee → −1 Courage, −1 Standing
+      // (KARMA_SYSTEM.md §4c). Allies-abandoned + ordered-retreat
+      // branches stay dormant until the ally combat system lands.
+      newState = applyCombatDeltas(newState, {
+        victory: false,
+        enemiesKilled: 0,
+        enemyCount: 1,
+        fled: true,
+        playerLost: false,
+      }, `combat: fled ${wasInCombat.enemyName}`);
       newState = endCombatSession(newState, true);
+      // Flee = no kills → breather-tier recovery (maxStamina × 0.5).
+      newState = applyCombatEndRecovery(newState, 0);
+      newState = emitQuestEvent(newState, {
+        type: "combat-end",
+        victory: false,
+        enemyNpcId: wasInCombat.enemyNpcId,
+        enemyTag: NPCS[wasInCombat.enemyNpcId]?.bodyType,
+      });
     }
 
     const destRoom = getRoom(fleeDest);
@@ -4477,23 +4703,22 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     ) {
       const newInventory = [
         ...p.inventory,
-        { itemId: "rusty_shortsword", quantity: 1 },
+        { itemId: "short_sword", quantity: 1 },
       ];
       let afterGift: WorldState = {
         ...newState,
         player: {
           ...newState.player,
-          weapon: "rusty_shortsword",
+          weapon: "short_sword",
           inventory: newInventory,
         },
       };
 
       let samResponse =
         `Sam looks at you for a long moment — the empty hands, the whole situation. He's seen this before.\n\n` +
-        `He reaches under the counter and produces a short sword so rusty it looks like it was ` +
-        `recovered from a riverbed. He sets it on the counter without ceremony.\n\n` +
-        `"Don't thank me. Kill something with it and buy a real one."\n\n` +
-        `You have the Rusty Short Sword. It is equipped.`;
+        `He reaches under the counter and produces a battered short sword and sets it on the counter without ceremony.\n\n` +
+        `"Don't thank me. Kill something with it and buy a better one."\n\n` +
+        `You have the Short Sword. It is equipped.`;
 
       const reveal = maybeRevealName(samResponse, afterGift, "sam_slicker");
       samResponse = reveal.text;
@@ -4519,13 +4744,13 @@ Describe what they find to read, or tell them there is nothing to read here.`,
     ) {
       const newInventory = [
         ...p.inventory,
-        { itemId: "butcher_knife", quantity: 1 },
+        { itemId: "short_sword", quantity: 1 },
       ];
       let afterGift: WorldState = {
         ...newState,
         player: {
           ...newState.player,
-          weapon: "butcher_knife",
+          weapon: "short_sword",
           inventory: newInventory,
         },
       };
@@ -4534,13 +4759,12 @@ Describe what they find to read, or tell them there is nothing to read here.`,
         `Hokas looks at you for a long moment — the empty hands,` +
         ` the general situation. Something soft and worried crosses his face, but he` +
         ` buries it fast.\n\n` +
-        `He disappears behind the bar and comes back with a large knife,` +
-        ` the kind used for breaking down a side of beef. He sets it on` +
-        ` the bar with a solid thunk.\n\n` +
+        `He disappears behind the bar and comes back with a worn short sword in a plain` +
+        ` scabbard. He sets it on the bar with a solid thunk.\n\n` +
         `"I don't need it anymore," he says. "Don't tell me what you do` +
         ` with it. Don't bring it back." He goes back to polishing a` +
         ` glass that doesn't need polishing.\n\n` +
-        `You have the Butcher Knife. It is equipped.`;
+        `You have the Short Sword. It is equipped.`;
 
       const reveal = maybeRevealName(hokasResponse, afterGift, "hokas_tokas");
       hokasResponse = reveal.text;
@@ -4581,7 +4805,7 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     };
   }
 
-  // ── STRIKE [zone] — HWRR body-part targeting (active combat only) ──
+  // ── STRIKE [zone] — body-zone body-part targeting (active combat only) ──
   if (first === "STRIKE") {
     const session = p.activeCombat;
     if (!session) {
@@ -4604,9 +4828,34 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       };
     }
 
-    // Resolve one HWRR combat round
+    // Tier 4 (Exhausted) — KARMA_SYSTEM.md §2.3 / §4a. The player
+    // cannot raise their arms. Combat session stays open; FLEE still
+    // works (broken_leg permitting). Recovery happens at fight-end.
+    if (fatigueLevel(newState.player) === 4) {
+      return {
+        responseType: "static",
+        staticResponse:
+          "You are utterly exhausted — your arms are lead, your lungs scream. You cannot strike. FLEE, or die where you stand.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    // Refresh the player combatant's fatigue tier so this round's
+    // resolveStrike sees the latest drain (penalty applies as the
+    // enemy targets the hero).
+    const refreshedSession: ActiveCombatSession = {
+      ...session,
+      playerCombatant: {
+        ...session.playerCombatant,
+        fatigueTier: fatigueLevel(newState.player),
+      },
+    };
+
+    // Resolve one body-zone combat round
     const isDummyEnemy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
-    const roundResult = resolveHWRRRound(session, zoneArg, { enemyIsTrainingDummy: isDummyEnemy });
+    const roundResult = resolveCombatRound(refreshedSession, zoneArg, { enemyIsTrainingDummy: isDummyEnemy });
     let narrative = buildRoundNarrative(roundResult);
 
     // Session combatLog is re-synced after narrative amendments below.
@@ -4621,6 +4870,15 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     };
 
     let finalState = newState;
+
+    // ── Stamina drain — every swing costs by weapon weight ──
+    // KARMA_SYSTEM.md §2.3. Drains regardless of hit/miss/evade
+    // (the swing happened). Tier 4 was already gated above; if the
+    // player crosses into Tier 4 mid-round their NEXT command will
+    // see it. Non-strike rounds (e.g., feared_skip) skip the cost.
+    if (roundResult.playerStrike) {
+      finalState = drainPlayerStaminaForStrike(finalState, finalState.player.weapon);
+    }
 
     // ── Weapon poison: if player landed a hit and weapon is poisoned, apply poison to enemy ──
     if (
@@ -4682,6 +4940,8 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       if (isDummy && roundResult.playerWon) {
         // Training dummy: reset HP, don't kill. Keep session for loot screen.
         finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
+        // Dummies aren't "kills" — give the breather-tier recovery only.
+        finalState = applyCombatEndRecovery(finalState, 0);
         const weaponSkillKey = getWeaponSkillKey(finalState.player.weapon);
         const skillVal = finalState.player.weaponSkills[weaponSkillKey] ?? 0;
         const capNote = skillVal >= DUMMY_SKILL_CAP
@@ -4727,20 +4987,63 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
           },
         };
         finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
-        finalState = updateVirtue(finalState, "Valor", 1);
+        // KARMA Sprint 5: combat-end PICSSI deltas — KARMA_SYSTEM.md §4c.
+        // Routine kill = +1 Passion; dark-tagged enemy = +3 Illumination;
+        // killing an innocent or friendly carries the catastrophic delta.
+        // Multi-enemy bonuses dormant until 1v1 → multi-enemy lands.
+        finalState = applyCombatDeltas(finalState, {
+          victory: true,
+          enemiesKilled: 1,
+          enemyCount: 1,
+          fled: false,
+          playerLost: false,
+          ...tagFlagsFromNpc(session.enemyNpcId),
+        }, `combat: defeated ${session.enemyName}`);
         finalState = addToChronicle(
           finalState,
           `${p.name} defeated ${session.enemyName}.`,
           false
         );
+        // Combat-victory mana growth (KARMA_SYSTEM.md §2.2):
+        // increment combatVictories; recompute derives the new maxMana.
         finalState = {
           ...finalState,
-          player: {
+          player: recomputeDerivedStats({
             ...finalState.player,
-            maxMana: finalState.player.maxMana + 1,
-          },
+            combatVictories: finalState.player.combatVictories + 1,
+          }),
         };
+        // Combat-end recovery: 1 kill × maxStamina × 1.5 added to fatiguePool
+        // (clamped to 0). Stamina restores fully. KARMA_SYSTEM.md §2.3.
+        finalState = applyCombatEndRecovery(finalState, 1);
+        finalState = emitQuestEvent(finalState, {
+          type: "combat-end",
+          victory: true,
+          enemyNpcId: session.enemyNpcId,
+          enemyTag: NPCS[session.enemyNpcId]?.bodyType,
+        });
       } else if (roundResult.playerDied) {
+        // KARMA Sprint 5: stand-and-lose Courage credit (KARMA_SYSTEM.md §4c).
+        // Standing falls because the room saw the loss. Apply BEFORE
+        // applyPlayerDeath so the chronicle line lands while the
+        // pre-death PlayerState is still active; the rebirth wipe in
+        // applyPlayerDeath then resets PICSSI to midline as designed.
+        finalState = applyCombatDeltas(finalState, {
+          victory: false,
+          enemiesKilled: 0,
+          enemyCount: 1,
+          fled: false,
+          playerLost: true,
+        }, `combat: stood and fell to ${session.enemyName}`);
+        // Quest engine: emit combat-end BEFORE applyPlayerDeath, so any
+        // life-scope quest step that fires on stand-and-lose still has
+        // its slot intact (rebirth wipes life-scope quests).
+        finalState = emitQuestEvent(finalState, {
+          type: "combat-end",
+          victory: false,
+          enemyNpcId: session.enemyNpcId,
+          enemyTag: NPCS[session.enemyNpcId]?.bodyType,
+        });
         // Player death — apply death penalty, respawn
         const { newState: afterDeath, lostGold } = applyPlayerDeath(
           finalState,
@@ -4882,7 +5185,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
       };
     }
 
-    // Initialize HWRR combat session
+    // Initialize body-zone combat session
     const session = initCombatSession(newState, target.id);
     if (!session) {
       return {
@@ -5072,11 +5375,12 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
     return {
       responseType: "static",
       staticResponse:
-        `The Guild has three open contracts posted on the notice board.\n\n` +
-        `Head east to read them, or type one of these directly:\n\n` +
-        `  ENTER THE BEGINNER'S CAVE\n` +
-        `  ENTER THE THIEVES GUILD\n` +
-        `  ENTER THE HAUNTED MANOR`,
+        `The Guild has three open contracts posted on the notice board, but the writs are still being copied for the field. None can be entered yet.\n\n` +
+        `When the modules ship, the entry commands will be:\n\n` +
+        `  ENTER THE MIRRORS OF TUZUN THUNE  (novice)\n` +
+        `  ENTER THE SERPENT IN THE COURT    (moderate)\n` +
+        `  ENTER THE PICTISH TIME-TOMB       (deadly)\n\n` +
+        `Head east (GO EAST) to read the postings, or talk to Aldric for the field summary.`,
       dynamicContext: null,
       newState,
       stateChanged: false,
@@ -5142,4 +5446,203 @@ Handle this naturally as the living world. If it is a moral choice, note the rel
     newState,
     stateChanged: false,
   };
+}
+
+// ============================================================
+// KARMA Sprint 4 — public processInput wrapper
+// Adds atom dispatch around the core engine pipeline:
+//   1. Pending-atom intercept — if the player has a presented atom
+//      open, treat their input as the numbered choice and resolve.
+//   2. Run processInputCore for normal handling.
+//   3. Post-process — if the turn produced an enter-room or
+//      talk-to-npc event, evaluate the atom library; if a match
+//      passes prerequisites, append the atom prompt to the result.
+// ============================================================
+
+const ATOM_BYPASS_VERBS = new Set([
+  "HEALTH", "HELP", "STATS", "LOOK", "EXAMINE",
+  "QUESTS", "QUEST", "INVENTORY", "INV", "PACK",
+]);
+
+/** "TALK ALDRIC", "TALK TO HOKAS", "TALK TO THE BANKER" → npcId or null. */
+function npcIdFromTalk(input: string, state: WorldState): string | null {
+  const tokens = input.trim().toLowerCase().split(/\s+/);
+  if (tokens[0] !== "talk") return null;
+  const rest = tokens.slice(1).join(" ").replace(/^to\s+/, "").trim();
+  if (!rest) return null;
+  const room = getRoom(state.player.currentRoom);
+  if (!room) return null;
+  // Match against NPCs present in the current room. Substring on
+  // display name first, then on id, so "TALK ALDRIC" hits old_mercenary.
+  for (const npcId of room.npcs ?? []) {
+    const npc = NPCS[npcId];
+    if (!npc) continue;
+    const name = npc.name.toLowerCase();
+    if (
+      name.includes(rest) ||
+      rest.includes(name) ||
+      npcId.includes(rest) ||
+      rest.includes(npcId.replace(/_/g, " "))
+    ) {
+      return npcId;
+    }
+  }
+  return null;
+}
+
+export function processInput(
+  input: string,
+  state: WorldState
+): EngineResult {
+  const trimmedInput = input.trim();
+  const firstVerb = trimmedInput.toUpperCase().split(/\s+/)[0] ?? "";
+
+  // ── 1. Pending-atom intercept ─────────────────────────────
+  // If the player has an atom open and is not requesting a bypass
+  // command (HEALTH/HELP/STATS/etc.), interpret their input as the
+  // numbered choice. Out-of-range / non-numeric input clears the
+  // gate with a polite refusal rather than crashing.
+  if (state.player.pendingAtom && !ATOM_BYPASS_VERBS.has(firstVerb)) {
+    const atom = findAtom(state.player.pendingAtom.atomId);
+    if (!atom) {
+      // Atom file vanished between present and resolve — clear gate.
+      const cleared: WorldState = {
+        ...state,
+        player: { ...state.player, pendingAtom: null },
+      };
+      return {
+        responseType: "static",
+        staticResponse: "The moment slips through your fingers, formless.",
+        dynamicContext: null,
+        newState: cleared,
+        stateChanged: true,
+      };
+    }
+    const choiceNum = parseInt(trimmedInput, 10);
+    if (!Number.isFinite(choiceNum) || choiceNum < 1 || choiceNum > atom.choices.length) {
+      // Show the atom again so the player can re-pick.
+      return {
+        responseType: "static",
+        staticResponse:
+          `Type a number 1–${atom.choices.length} to choose.\n\n` +
+          atom.choices.map((c, i) => `  ${i + 1}. ${c.label}`).join("\n"),
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const choiceResult = applyChoice(state, atom, choiceNum - 1);
+    // Quest engine: emit a synthetic command event so quest steps that
+    // hinge on the player's atom-choice can react. The choice index is
+    // packed as args[0]; the verb is "ATOM-CHOICE".
+    const afterAtomQuestState = emitQuestEvent(choiceResult.state, {
+      type: "command",
+      verb: "ATOM-CHOICE",
+      args: [String(choiceNum)],
+    });
+    return {
+      responseType: "static",
+      staticResponse: choiceResult.narrative,
+      dynamicContext: null,
+      newState: afterAtomQuestState,
+      stateChanged: true,
+    };
+  }
+
+  // ── 2. Run the core engine pipeline ──────────────────────
+  const beforeRoom = state.player.currentRoom;
+  const beforeInventory = inventorySignature(state);
+  const result = processInputCore(input, state);
+
+  // ── 3. Post-process: detect events + present matching atom ────
+  const events: KarmaEvent[] = [];
+  const afterRoom = result.newState.player.currentRoom;
+  if (afterRoom !== beforeRoom) {
+    events.push({ type: "enter-room", roomId: afterRoom });
+  }
+  let talkNpcId: string | null = null;
+  if (firstVerb === "TALK") {
+    talkNpcId = npcIdFromTalk(input, result.newState);
+    if (talkNpcId) events.push({ type: "talk-to-npc", npcId: talkNpcId });
+  }
+
+  // ── 3a. Quest engine: emit events. Silent (no narrative); quests
+  //       advance their state machine without printing anything. The
+  //       karma-atom presenter (3b) runs AFTER, on the updated state.
+  let questState = result.newState;
+  // command event: every turn, so quests can hook on raw verbs.
+  if (firstVerb) {
+    const args = input.trim().split(/\s+/).slice(1);
+    questState = emitQuestEvent(questState, {
+      type: "command",
+      verb: firstVerb,
+      args,
+    });
+  }
+  if (afterRoom !== beforeRoom) {
+    questState = emitQuestEvent(questState, { type: "enter-room", roomId: afterRoom });
+  }
+  if (talkNpcId) {
+    questState = emitQuestEvent(questState, { type: "talk-to-npc", npcId: talkNpcId });
+  }
+  // item-acquired: diff inventory signatures, emit one event per net-new unit.
+  const afterInventory = inventorySignature({ ...result.newState, player: questState.player });
+  for (const itemId of inventoryDiff(beforeInventory, afterInventory)) {
+    questState = emitQuestEvent(questState, { type: "item-acquired", itemId });
+  }
+  const stateAfterQuestEvents = questState;
+
+  // Don't fire atoms while another gate is open or while in combat.
+  if (
+    stateAfterQuestEvents.player.pendingAtom ||
+    stateAfterQuestEvents.player.pendingRiddle ||
+    stateAfterQuestEvents.player.activeCombat
+  ) {
+    return { ...result, newState: stateAfterQuestEvents };
+  }
+
+  for (const event of events) {
+    const matches = matchTriggers(stateAfterQuestEvents, event);
+    if (matches.length === 0) continue;
+    const atom = matches[0]!;
+    const presented = presentAtom(stateAfterQuestEvents, atom);
+    return {
+      ...result,
+      staticResponse:
+        (result.staticResponse ?? "").trim() +
+        (result.staticResponse?.trim() ? "\n\n" : "") +
+        presented.rendered,
+      newState: presented.state,
+      stateChanged: true,
+    };
+  }
+
+  return { ...result, newState: stateAfterQuestEvents };
+}
+
+/**
+ * Build a Map of itemId → quantity for inventory diffing. Used by the
+ * processInput wrapper to detect item-acquired events without
+ * instrumenting every TAKE / BUY / loot path.
+ */
+function inventorySignature(state: WorldState): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const e of state.player.inventory ?? []) {
+    map.set(e.itemId, (map.get(e.itemId) ?? 0) + e.quantity);
+  }
+  return map;
+}
+
+/**
+ * Yield each newly-acquired itemId, repeated once per net-positive unit
+ * delta. Decreases (sell, drop, item-lost) yield nothing.
+ */
+function inventoryDiff(before: Map<string, number>, after: Map<string, number>): string[] {
+  const out: string[] = [];
+  for (const [itemId, qty] of after.entries()) {
+    const prev = before.get(itemId) ?? 0;
+    const gained = qty - prev;
+    for (let i = 0; i < gained; i++) out.push(itemId);
+  }
+  return out;
 }

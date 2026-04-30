@@ -13,41 +13,68 @@ domain — using it will expose Thot Technologies to a takedown or suit.
 
 1. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — **the
    authoritative legal doc.** Full legal framework, trademark
-   restrictions, Always-Safe Corpus, future PD calendar, Phase 1 /
-   Phase 2 timeline. (As of April 19, 2026, this file consolidated
-   the former `lore/hyborian-pd/PD_RESEARCH.md` and that file was
-   deleted.)
-2. The Safe Harbor / Radioactive tables below in this document —
+   restrictions, Bucket A / B / C corpus, future PD calendar.
+2. [**ADVENTURE_MODULES_PLAN.md**](./ADVENTURE_MODULES_PLAN.md) —
+   per-module roadmap for the expanded PD library, customization
+   discipline, scroll/fragment seeding map.
+3. The Safe Harbor / Radioactive tables below in this document —
    **name-by-name authoritative lookup.** Supersedes any other doc on
    individual term status.
-3. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
+4. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
    methodology for converting PD stories into adventure modules.
 
-**Current PD corpus (verified April 2026):**
+**Current PD corpus (verified April 2026, expanded April 30, 2026):**
 
-- **"The Hyborian Age"** essay, *The Phantagraph* 1936 — fully PD. No
-  US copyright registration or renewal found. Project Gutenberg hosts
-  the full text. The entire Hyborian-Age geography, migrations,
-  cataclysms, named kingdoms, and peoples are freely usable.
+*Phantagraph non-renewal (1936 / 1940):*
+- **"The Hyborian Age"** essay, *The Phantagraph* 1936 — fully PD.
+  Hyborian-Age geography, migrations, cataclysms, named kingdoms, peoples.
 - **"Always Comes Evening"** poem, *The Phantagraph* Aug 1936 — fully PD.
 - **"Song at Midnight"** / **"Man, the Master"** poem, *The Phantagraph*
   Aug 1940 — fully PD (posthumous).
-- **"The Shadow Kingdom"** *Weird Tales* Aug 1929 — fully PD.
-- **"The Mirrors of Tuzun Thune"** *Weird Tales* Sept 1929 — fully PD.
-- **"Kings of the Night"** *Weird Tales* Nov 1930 — fully PD.
 
-**Trademark-radioactive terms (apply forever, regardless of any PD
-claim):** "Conan," "Conan the Barbarian," "Cimmerian," "Cimmerians,"
-"Cimmeria," "Hyboria," "Hyborian Age," "Hyborian" as a marketing
-adjective. These are CPI-held trademarks or project-designated
-brand-marker avoids; they do not appear in player-facing pages,
-marketing, titles, meta tags, or alt text regardless of copyright
-status of the underlying essay.
+*Weird Tales 1929–1930 non-renewal:*
+- **"The Shadow Kingdom"** *Weird Tales* Aug 1929 — fully PD. Thurian Age.
+- **"The Mirrors of Tuzun Thune"** *Weird Tales* Sept 1929 — fully PD. Thurian Age.
+- **"Kings of the Night"** *Weird Tales* Nov 1930 — fully PD. Thurian Age.
 
-**Still copyright-protected until 2028–2032:** All Conan short-story
-content (Conan himself, Tarantia, Thoth-Amon, Bêlit, Valeria,
-Yag-Kosha) and *The Hour of the Dragon* content (Acheron, Xaltotun,
-Heart of Ahriman, Python). See the Radioactive table below.
+*Weird Tales 1934–1936 non-renewal (project-adopted 2026-04-30):*
+- **"Iron Shadows in the Moon"** (Apr 1934)
+- **"Queen of the Black Coast"** (May 1934) — Bêlit, Yag-Kosha (as
+  encountered in this story)
+- **"The Haunter of the Ring"** (Jun 1934) — Conrad & Kirowan
+- **"The Devil in Iron"** (Aug 1934) — Khosatral Khel, Octavia
+- **"The People of the Black Circle"** (Sep–Nov 1934) — Yasmina, Khemsa
+- **"A Witch Shall Be Born"** (Dec 1934) — Salome, Taramis
+- **"The Grisly Horror" / "Moon of Zambebwei"** (Feb 1935)
+- **"Jewels of Gwahlur"** (Mar 1935) — Bît-Yakin, Muriela
+- **"Beyond the Black River"** (May–Jun 1935) — Balthus, Slasher, Zogar Sag
+- **"Shadows in Zamboula"** (Nov 1935) — Aram Baksh, Zabibi, Totrasmek
+- **"The Hour of the Dragon"** (Dec 1935 – Apr 1936) — **Acheron, Xaltotun,
+  Heart of Ahriman, Pelias** (now PD)
+- **"Black Canaan"** (Jun 1936)
+- **"Red Nails"** (Jul–Oct 1936) — Valeria, Tascela, Xuchotl
+- **"Black Hound of Death"** (Nov 1936)
+- **"The Fire of Asshurbanipal"** (Dec 1936)
+
+**Trademark-radioactive terms (apply forever, regardless of PD status
+of any underlying story):** "Conan," "Conan the Barbarian," "Cimmerian,"
+"Cimmerians," "Cimmeria," "Hyboria," "Hyborian Age," "Hyborian" as a
+marketing adjective. These are CPI / Cabinet / Heroic Signatures
+trademarks (or project-designated brand-marker avoids); they do not
+appear in player-facing pages, marketing, titles, meta tags, alt text,
+or module prose **even when the underlying source story is PD**. The
+player replaces Conan as protagonist in adventures derived from
+Bucket A Conan-era stories — see [`ADVENTURE_MODULES_PLAN.md`](./ADVENTURE_MODULES_PLAN.md) §1.
+
+**Still copyright-protected (Bucket B):** Pre-1934 Conan stories from
+the 1932–1933 *Weird Tales* issues remain in Bucket B until either
+(a) non-renewal is verified for those issues (would move them to
+Bucket A early), or (b) the 95-year clock unlocks them (2028 / 2029).
+Affected: *Phoenix on the Sword* (1932), *Scarlet Citadel* (1932),
+*Tower of the Elephant* (1933), *Black Colossus* (1933), *Slithering
+Shadow* (1933), *Pool of the Black One* (1933), *Rogues in the House*
+(1933), and any unique elements introduced only in those stories. See
+the Radioactive table below.
 
 When in doubt, **ask before using.**
 
@@ -214,22 +241,54 @@ Two categories live here:
 | **Cimmerians** | Same as above. | Permanent avoid |
 | **Cimmeria** (place) | Technically PD-copyright via essay, but project-designated radioactive for brand reasons. | Permanent avoid |
 | "Conan universe" (colloquial) | TM via usage. | Permanent avoid |
+| "Robert E. Howard" | TM only in the United States | Avoid use pemanently in USA | Use is allowed if the browser IP is anywhere in the world, other than the USA |
 
-#### Copyright-radioactive — Conan-story content (enters PD 2028–2032)
-| Term | Source | Earliest PD date |
+#### Copyright-radioactive — Bucket B (1932–1933 stories pending non-renewal audit OR 2028–2029 unlock)
+
+The 2026-04-30 PD expansion moved most Conan-story content into Bucket
+A (see top-of-file PD corpus block). The remaining radioactive items
+are the 1932–1933 *Weird Tales* Conan stories not yet covered by the
+project's adopted non-renewal audit.
+
+| Term | Source | Status |
 |---|---|---|
-| Conan (character) | Any Conan story | 2028 |
-| Thoth-Amon | Copyrighted Conan stories | 2028+ |
-| Bêlit | *Queen of the Black Coast* (1934) | 2030 |
-| Valeria | *Red Nails* (1936) | 2032 |
-| Yag-Kosha | *The Tower of the Elephant* (1933) | 2029 |
-| Tarantia (Aquilonia's capital) | Copyrighted Conan stories | 2028+ |
-| Acheron (as named empire) | *The Hour of the Dragon* (1935–1936). Use **"Thurian"** as substitute. | 2031 |
-| Xaltotun | *The Hour of the Dragon*. Use **Tuzun Thune** as template. | 2031 |
-| Heart of Ahriman | *The Hour of the Dragon*. Use **mirror chamber** (from *Mirrors*). | 2031 |
-| Python (Acheronian capital) | *The Hour of the Dragon* | 2031 |
-| *The Hour of the Dragon* (novel title) | 1935–1936 serial | 2031 |
-| Any Conan short-story title (*"The Tower of the Elephant," "Queen of the Black Coast," "Red Nails," "Beyond the Black River," "Black Colossus,"* etc.) | Copyrighted. See `Public_Domain_Rules.md` §8 calendar. | 2028–2032 (varies per story) |
+| Conan (character, as a *named protagonist* in module prose / marketing) | All sources | **Trademark-radioactive forever** — see table above. Player replaces Conan as protagonist in adventures derived from Bucket A stories. |
+| Thoth-Amon (as a named figure) | First major appearance *The Phoenix on the Sword* (1932) | 2028 (or sooner if 1932 *WT* non-renewal is confirmed) |
+| Tarantia (Aquilonia's capital city, as a named place) | 1932–1933 Conan stories | 2028+ (or sooner if 1932/1933 *WT* non-renewal is confirmed). The kingdom Aquilonia itself is PD via the 1936 essay; only the capital-city name "Tarantia" is restricted. |
+| *The Phoenix on the Sword* / *The Scarlet Citadel* (titles + plot) | *Weird Tales* 1932 | 2028 (or sooner) |
+| *The Tower of the Elephant*, *Black Colossus*, *Rogues in the House*, *The Slithering Shadow*, *The Pool of the Black One* (titles + plot) | *Weird Tales* 1933 | 2029 (or sooner) |
+| Yag-Kosha (named-figure first introduction) | *The Tower of the Elephant* (1933) | 2029 (or sooner). **Project working stance:** Yag-Kosha is treated as usable via the 1934 *Queen of the Black Coast* appearance (Bucket A) where the character is fully described — strict-reading defers until 1933 *WT* non-renewal confirmed. See [Public_Domain_Rules.md §6.2](./Public_Domain_Rules.md). |
+
+#### Newly available (Bucket A, 2026-04-30 expansion)
+
+The following terms moved from Copyright-radioactive to Safe Harbor on
+2026-04-30 per the project's adopted non-renewal position for *Weird
+Tales* 1934–1936 issues. Use is permitted in module prose, NPC names,
+Chronicle entries, and lore docs — subject to the **trademark
+restrictions above** (Conan / Cimmerian / Hyborian remain scrubbed
+forever) and the **customization discipline** in [Public_Domain_Rules.md §4.4](./Public_Domain_Rules.md):
+
+- **Bêlit, Yag-Kosha** (*Queen of the Black Coast*, 1934)
+- **Olivia, Shah Amurath** (*Iron Shadows in the Moon*, 1934)
+- **Khosatral Khel, Octavia, Jehungir Agha** (*The Devil in Iron*, 1934)
+- **Yasmina, the Black Seers of Yimsha, Khemsa** (*The People of the Black Circle*, 1934)
+- **Salome, Taramis, Constantius the Falcon, Krallides** (*A Witch Shall Be Born*, 1934)
+- **Bît-Yakin, Muriela, Gwarunga** (*Jewels of Gwahlur*, 1935)
+- **Balthus, Slasher, Valannus, Zogar Sag** (*Beyond the Black River*, 1935)
+- **Aram Baksh, Zabibi, Totrasmek** (*Shadows in Zamboula*, 1935)
+- **Acheron, Xaltotun, Heart of Ahriman, Pelias, Hadrathus, Zelata, Tarascus, Amalric, Valerius** (*The Hour of the Dragon*, 1935–1936)
+- **Tascela, Valeria, Xuchotl, Olmec, Tolkemec, Techotl** (*Red Nails*, 1936)
+- **Conrad, John Kirowan** (*The Haunter of the Ring*, 1934)
+- **Adam Grimm, Bristol McGrath** (*The Grisly Horror / Moon of Zambebwei*, 1935)
+- **Kirby Buckner, Saul Stark** (*Black Canaan*, 1936)
+- **Kirby Garfield** (*Black Hound of Death*, 1936)
+- **Yar Ali, Steve Clarney, Asshurbanipal** (*The Fire of Asshurbanipal*, 1936)
+
+Settings / regions newly available: **Vendhya, Khauran, Vilayet Sea,
+Black Coast, Zamboula, Xuchotl, Yimsha, Alkmeenon, Dagoth Hill, the
+Pictish frontier east of the Black River.**
+
+Per-module customization plans live in [`ADVENTURE_MODULES_PLAN.md`](./ADVENTURE_MODULES_PLAN.md).
 
 ---
 
@@ -248,245 +307,39 @@ copy.
 
 ## 9. Magic — Two Systems
 
-### Official Guild Magic (CAST command)
+> **Canonical reference moved to [SORCERY.md](./SORCERY.md) on 2026-04-29.** That file now holds the full content of the magic systems: Guild Magic (CAST), Occult Magic / Sorcery (INVOKE), The Order, the Eight Reagents, and the Eight Circles of Occult Magic with all spells, Words of Power, and per-circle Illumination cost. **Update SORCERY.md, not this section, for any future magic-system changes.**
+>
+> The summary below is preserved as a quick orientation. For full text — including all 64 spells across the Eight Circles — see SORCERY.md.
 
-Legal, taught in guilds, no reagents required. Roughly half
-the power of equivalent Circle 1 Occult spells. Safe to use
-anywhere. Nobody fears them.
+**At a glance:**
+- **CAST** = Guild Magic. Legal, no reagents, weak (~½ Circle-1 power). 4 spells: BLAST, HEAL, LIGHT, SPEED.
+- **INVOKE** = Occult Sorcery. Forbidden, reagent-required, 8 Circles of escalating power. Witnessed casting attracts The Order.
+- **Eight Reagents:** Black Pearl, Blood Moss, Garlic, Ginseng, Mandrake Root, Nightshade, Spider's Silk, Sulfurous Ash.
+- **Soul cost:** Circles 1–3 only narrative warnings; Circles 4+ darken Illumination logarithmically (per §11 + SORCERY.md §7).
 
-Syntax: `CAST BLAST`, `CAST HEAL`, `CAST LIGHT`, `CAST SPEED`
-
-| Spell | Effect |
-|-------|--------|
-| BLAST | Weak magic projectile — damages one target |
-| HEAL | Minor healing — restores a small amount of HP |
-| LIGHT | Illuminates dark areas |
-| SPEED | Briefly increases movement and initiative |
-
-Additional Guild spells planned for Phase 2.
+The full spell tables, Words of Power, reagent lists, and lore on The Order live in [SORCERY.md](./SORCERY.md).
 
 ---
 
-### Occult Magic (INVOKE command)
+## 10. Thurian Age Lore — The Foundational Setting
 
-**In-world name:** Occult, the Art, the Old Ways — never
-"magic" or "spells" by those who know what it is.
-
-**Legal status:** Forbidden everywhere. The knowledge barely
-exists — in fragments, adventure loot, whispered hints,
-never written openly.
-
-**Command syntax:** `INVOKE [Words of Power]`
-Example: `INVOKE Corp Por` attempts Energy Bolt (Circle 6).
-
-The player must know the invocation. This knowledge must be
-discovered in-game through adventure loot, NPC hints, or
-secret research — or learned out-of-game by the player
-themselves. The knowledge barrier is intentional and part
-of the illegality. There is no in-game HELP text for Occult.
-
-**Without reagents:** The attempt fizzles. A sulfur stench
-lingers. There is a chance it attracts unwanted attention —
-a flash, a smell, something noticed.
-
-**With reagents, failed skill check:** Same or worse.
-
-**With reagents and success:** Full Occult effect.
-
-**Fizzle detection risk:** Using Occult magic in a public
-room risks witnesses. The Order investigates witnesses.
-
----
-
-### The Order
-
-The only authorized Occult practitioners in the world —
-authorized exclusively to prosecute, punish, and remove
-unauthorized Occultists. They are knights and priests of
-absolute authority. They disappear people: not just
-practitioners, but witnesses, informants, anyone who has
-seen or heard too much. Everyone is terrified of The Order.
-
-**Lore:** Thousands of years ago, great wars fought with
-Occult magic destroyed entire worlds. Since then, The Order
-has stamped it out wherever found. The history is suppressed.
-Most people don't even know why it's illegal — only that
-The Order comes for those who ask.
-
-**In-game:** The Order is a dormant faction until Occult
-magic is used in a witnessed location. Phase 2 feature —
-documented here, not yet coded.
-
----
-
-### Reagents
-
-Eight classic reagents, consumed on cast. In Living Eamon
-they cannot be purchased in the Main Hall or any starting
-area. They are found as adventure loot, grown or traded
-in other worlds, or purchased from sources who don't ask
-questions.
-
-Their mundane value is what they would logically be worth
-as herbs, pearls, or natural materials. To Occultists they
-are invaluable — but Occultists try not to reveal that.
-
-**The Order uses reagent collection as an investigative
-indicator.** Buying, selling, growing, or stockpiling these
-materials in quantity is grounds for investigation.
-
-| Reagent | Abbreviation | Mundane form |
-|---------|-------------|-------------|
-| Black Pearl | BP | A rare black pearl |
-| Blood Moss | BM | A crimson creeping moss |
-| Garlic | GA | Common garlic bulb |
-| Ginseng | GI | Medicinal root |
-| Mandrake Root | MR | A forked root, screams when pulled |
-| Nightshade | NS | A poisonous dark-berried plant |
-| Spider's Silk | SS | Fine silk from giant spiders |
-| Sulfurous Ash | SA | Grey ash with a sulfur smell |
-
----
-
-### The Eight Circles of Occult Magic
-
-Circles 1–4 are implemented. Circles 5–8 are documented
-for completeness and will be implemented in later phases.
-
-Mana costs follow UO classic rules. In Living Eamon, mana
-maps to the player's Expertise stat (renamed for lore;
-functions identically).
-
----
-
-#### Circle 1 — Mana cost 4
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Clumsy | Uus Jux | Blood Moss, Nightshade | Decreases target's dexterity |
-| Create Food | In Mani Ylem | Garlic, Ginseng, Mandrake Root | Creates a random food item |
-| Feeblemind | Rel Wis | Ginseng, Nightshade | Decreases target's intelligence |
-| Heal | In Mani | Garlic, Ginseng, Spider's Silk | Heals HP; faster but weaker than Greater Heal |
-| Magic Arrow | In Por Ylem | Sulfurous Ash | Fire damage projectile, 14–18 damage |
-| Night Sight | In Lor | Sulfurous Ash, Spider's Silk | Grants the caster the ability to see in complete darkness without a light source; lasts until dawn |
-| Reactive Armor | Flam Sanct | Garlic, Sulfurous Ash, Spider's Silk | Raises physical resistance; lowers elemental resistances |
-| Weaken | Des Mani | Garlic, Nightshade | Decreases target's strength |
-
----
-
-#### Circle 2 — Mana cost 6
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Agility | Ex Uus | Blood Moss, Mandrake Root | Increases dexterity and stamina |
-| Cunning | Uus Wis | Nightshade, Mandrake Root | Increases intelligence and mana |
-| Cure | An Nox | Garlic, Ginseng | Cures poison; higher skill cures stronger poisons |
-| Harm | An Mani | Nightshade, Spider's Silk | Cold damage; strongest at close range, 23–29 at 0–1 tiles |
-| Magic Trap | In Jux | Garlic, Spider's Silk, Sulfurous Ash | Magically traps a container |
-| Remove Trap | An Jux | Blood Moss, Sulfurous Ash | Removes magic or low-level mechanical traps |
-| Protection | Uus Sanct | Garlic, Ginseng, Sulfurous Ash | Prevents spell interruption; lowers resistances |
-| Strength | Uus Mani | Mandrake Root, Nightshade | Increases strength and hit point cap |
-
----
-
-#### Circle 3 — Mana cost 9
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Bless | Rel Sanct | Garlic, Mandrake Root | Combines Agility, Cunning and Strength in one cast |
-| Fireball | Vas Flam | Black Pearl | Fire damage, 26–31; quick cast |
-| Magic Lock | An Por | Blood Moss, Garlic, Sulfurous Ash | Magically locks a chest |
-| Poison | In Nox | Nightshade | Poisons target; prevents healing; 4 levels of severity |
-| Telekinesis | Ort Por Ylem | Blood Moss, Mandrake Root | Manipulates objects at range; opens doors, springs traps |
-| Teleport | Rel Por | Blood Moss, Mandrake Root | Teleports caster up to 11 tiles to a visible location |
-| Unlock | Ex Por | Blood Moss, Sulfurous Ash | Unlocks magic-locked or low-level treasure chests |
-| Wall of Stone | In Sanct Ylem | Blood Moss, Garlic | Creates a stone wall; blocks movement; lasts 10 seconds |
-
----
-
-#### Circle 4 — Mana cost 11
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Arch Cure | Vas An Nox | Garlic, Ginseng, Mandrake Root | Stronger cure; affects all friendlies within 2 tiles |
-| Arch Protection | Vas Uus Sanct | Garlic, Ginseng, Mandrake Root, Sulfurous Ash | Casts Protection on all party members within 3 tiles |
-| Curse | Des Sanct | Garlic, Nightshade, Sulfurous Ash | Combines Clumsy, Feeblemind and Weaken; lowers max resistances |
-| Fire Field | In Flam Grav | Black Pearl, Spider's Silk, Sulfurous Ash | Creates a fire field; 2 damage/second; lasts ~54 seconds at GM |
-| Greater Heal | In Vas Mani | Garlic, Ginseng, Mandrake Root, Spider's Silk | Major healing: (Magery × 0.4) + 1–10 HP |
-| Lightning | Por Ort Grav | Mandrake Root, Sulfurous Ash | Instant energy bolt, 30–34 damage |
-| Mana Drain | Ort Rel | Black Pearl, Mandrake Root, Spider's Silk | Drains target's mana for 4 seconds |
-| Recall | Kal Ort Por | Black Pearl, Blood Moss, Mandrake Root | Instant transport to a marked rune location |
-
----
-
-#### Circle 5 — Mana cost 14 *(documented; not yet implemented)*
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Blade Spirits | In Jux Hur Ylem | Black Pearl, Mandrake Root, Nightshade | Summons spirits that attack nearby enemies; lasts 120s |
-| Dispel Field | An Grav | Black Pearl, Garlic, Spider's Silk, Sulfurous Ash | Dispels one tile of a field spell |
-| Incognito | Kal In Ex | Blood Moss, Mandrake Root, Nightshade, Sulfurous Ash | Temporarily changes name and appearance |
-| Magic Reflection | In Jux Sanct | Garlic, Mandrake Root, Spider's Silk | Reflects spells back at caster; pool-based |
-| Mind Blast | Por Corp Wis | Black Pearl, Mandrake Root, Nightshade, Sulfurous Ash | Cold damage, 40–42; based on Magery and Intelligence |
-| Paralyze | An Ex Por | Black Pearl, Nightshade, Spider's Silk | Freezes target; broken by damage |
-| Poison Field | In Nox Grav | Black Pearl, Nightshade, Spider's Silk | Field of poison; same levels as Poison spell |
-| Summon Creature | Kal Xen | Blood Moss, Mandrake Root, Spider's Silk | Summons a low-level creature; lasts up to 480s |
-
----
-
-#### Circle 6 — Mana cost 20 *(documented; not yet implemented)*
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Dispel | An Ort | Garlic, Mandrake Root, Sulfurous Ash | Dispels a summoned creature |
-| Energy Bolt | Corp Por | Black Pearl, Nightshade | Energy damage, 51–56 |
-| Explosion | Vas Ort Flam | Blood Moss, Mandrake Root | Fire damage, 51–56; 2-second delay before impact |
-| Invisibility | An Lor Xen | Blood Moss, Nightshade | Hides caster; lasts (Magery × 1.2) seconds |
-| Mark | Kal Por Ylem | Black Pearl, Blood Moss, Mandrake Root | Marks a rune at current location for Recall/Gate |
-| Mass Curse | Vas Des Sanct | Garlic, Mandrake Root, Nightshade, Sulfurous Ash | Curses all enemies within 3 tiles |
-| Paralyze Field | In Ex Grav | Black Pearl, Ginseng, Spider's Silk | Field of paralysis |
-| Reveal | Wis Quas | Blood Moss, Sulfurous Ash | Reveals hidden targets |
-
----
-
-#### Circle 7 — Mana cost 40 *(documented; not yet implemented)*
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Chain Lightning | Vas Ort Grav | Black Pearl, Blood Moss, Mandrake Root, Sulfurous Ash | Lightning hits multiple targets; 64–69 total energy damage |
-| Energy Field | In Sanct Grav | Black Pearl, Mandrake Root, Spider's Silk, Sulfurous Ash | Wall of energy; blocks movement |
-| Flamestrike | Kal Vas Flam | Spider's Silk, Sulfurous Ash | Massive fire burst; 64–69 damage |
-| Gate Travel | Vas Rel Por | Black Pearl, Mandrake Root, Sulfurous Ash | Opens a moongate to a marked rune; lasts 30 seconds |
-| Mana Vampire | Ort Sanct | Black Pearl, Blood Moss, Mandrake Root, Spider's Silk | Drains target's mana and adds it to caster's |
-| Mass Dispel | Vas An Ort | Black Pearl, Garlic, Mandrake Root, Sulfurous Ash | Dispels multiple summoned creatures |
-| Meteor Swarm | Kal Des Flam Ylem | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Fire meteors hit multiple targets; 64–69 total damage |
-| Polymorph | Vas Ylem Rel | Blood Moss, Mandrake Root, Spider's Silk | Transforms caster into another creature form |
-
----
-
-#### Circle 8 — Mana cost 50 *(documented; not yet implemented)*
-
-| Spell | Words of Power | Reagents | Effect |
-|-------|---------------|----------|--------|
-| Earthquake | In Vas Por | Blood Moss, Ginseng, Mandrake Root, Sulfurous Ash | ~33% physical damage to all visible targets in radius |
-| Energy Vortex | Vas Corp Por | Black Pearl, Blood Moss, Mandrake Root, Nightshade | Summons vortex that attacks nearby enemies; 26 dmg/hit |
-| Resurrection | An Corp | Blood Moss, Garlic, Ginseng | Restores a dead character to life |
-| Summon Air Elemental | Kal Vas Xen Hur | Blood Moss, Mandrake Root, Spider's Silk | Summons air elemental; focuses on spellcasting |
-| Summon Daemon | Kal Vas Xen Corp | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Summons daemon; powerful melee + 7th circle magic; costs karma |
-| Summon Earth Elemental | Kal Vas Xen Ylem | Blood Moss, Mandrake Root, Spider's Silk | Summons earth elemental; strong melee, no magic |
-| Summon Fire Elemental | Kal Vas Xen Flam | Blood Moss, Mandrake Root, Spider's Silk, Sulfurous Ash | Most powerful elemental; melee + magic |
-| Summon Water Elemental | Kal Vas Xen An Flam | Blood Moss, Mandrake Root, Spider's Silk | Combines air and earth elemental skills |
-
----
-
-## 10. Hyborian Age Lore — The Foundational Setting
-
-Living Eamon is set in **Robert E. Howard's Hyborian Age**. This
-is not generic fantasy. **All future adventures, story modules,
-Occult magic, monsters, enemies, and magical-item back-stories
-must descend from this canon** — either adapted directly from
-Howard's public-domain works, or invented in his voice and fitted
+Living Eamon is set in **Robert E. Howard's Thurian Age — the
+pre-Cataclysmic epoch** of Howard's mythos. This is not generic
+fantasy. **All future adventures, story modules, Occult magic,
+monsters, enemies, and magical-item back-stories must descend
+from this canon** — either adapted directly from Howard's
+public-domain Thurian works, or invented in his voice and fitted
 to his geography and chronology.
+
+> **Setting decision (2026-04-28):** Living Eamon's present is
+> the Thurian Age, *before* the great Cataclysm. The Hyborian
+> Age (Conan-era) is in our **future**, not our past — its
+> kingdoms have not yet risen. This is both an IP-safety choice
+> (Thurian-Age PD corpus is unambiguous; Hyborian/Aquilonia/
+> Cimmeria are trademark-radioactive) and a creative one: it
+> lets us write derivative Thurian stories that build on the
+> three PD Kull short stories without colliding with copyrighted
+> Conan material.
 
 > ⚠️ **CRITICAL — PD STATUS:** Most of Howard's Conan corpus is
 > NOT yet in US public domain. The full PD-status framework and
@@ -508,129 +361,204 @@ enter 2028–2032).
 
 ### 10.1 The Setting in One Paragraph
 
-The Hyborian Age sits roughly **between the sinking of Atlantis
-and the dawn of recorded history** — Howard placed it ~12,000–10,000
-BC. It is a world of marble cities and naked barbarians; of
-decadent civilizations crusted over the ruins of older, blacker
-empires; of slow-grinding theocracies and lone-genius adventurers
-who topple them. The dominant powers are the Hyborian kingdoms of
-the west (Aquilonia, Nemedia, Brythunia), with serpent-haunted
-**Stygia** to the south, the **Black Kingdoms** beyond, and the
-ruins of the older **Thurian Age** beneath every well-traveled
-road. Magic exists, but it is rare, hated, and almost always evil
-at the edges. Heroes are mortal; the universe is indifferent.
+The Thurian Age sits roughly **before the sinking of Atlantis
+and the rise of the kingdoms that would, in some far future,
+become known as the Hyborian Age** — Howard placed the Cataclysm
+~12,000–10,000 BC, and the Thurian world above it some thousands
+of years earlier. It is a world of pre-human stonework and
+serpent-haunted courts; of seven kingdoms held precariously
+together against shapeshifting infiltration; of guttering torches
+in chambers that should not stand and oaths sworn on names older
+than the human voice. The dominant power is **Valusia**, the
+decadent jewel of the Thurian kingdoms; **Atlantis** rises as a
+barbarian island far to the west; the **Picts** hold the
+wilderness; the **Lemurians** brood across the eastern sea. The
+Cataclysm has not yet come — but it is gathering. Magic exists,
+is feared, and is policed by The Order. Heroes are mortal; the
+universe is indifferent; and the world will end within a few
+generations whether anyone is ready or not.
 
 All kingdom names above are PD-safe via the *Hyborian Age* essay
-(1936, non-renewed).
+(1936, non-renewed) and the three Thurian-Age Kull short stories.
 
 ---
 
-### 10.2 The Thurian Age — The Pre-Cataclysmic Foundation
+### 10.2 The Thurian Age — Our Present
 
-The **Thurian Age** is the lost prehistoric epoch that preceded
-the Hyborian Age. It ended in the Cataclysm that sank Atlantis
-and reshaped the world. **The Thurian Age is the spine of Living
-Eamon's Occult magic** — its ruins, its forgotten races, and its
-buried artifacts are the natural source of the dark sorcery that
-seeps into the player's present.
+The **Thurian Age** is the player's present. It is exceptionally
+well-suited to Living Eamon because **three Thurian-Age short
+stories by Howard are fully public domain** (see
+`Public_Domain_Rules.md` §5): *The Shadow Kingdom*, *The Mirrors
+of Tuzun Thune*, and *Kings of the Night*. These give us **named
+characters, named places, named magical phenomena, and named
+races** that we can use freely as living, breathing elements of
+the player's world — not as crumbled ruins.
 
-The Thurian Age is exceptionally well-suited to Living Eamon
-because **three Thurian-Age short stories by Howard are fully
-public domain** (see `Public_Domain_Rules.md` §5): *The Shadow Kingdom*,
-*The Mirrors of Tuzun Thune*, and *Kings of the Night*. These
-give us **named characters, named places, named magical
-phenomena, and named races** that we can use freely.
+**PD-safe Thurian elements (use freely as living, present-tense
+content):**
 
-**PD-safe Thurian elements (use freely):**
-
-- **Valusia** — the decadent serpent-haunted empire; pre-Cataclysmic
-  human civilization corrupted by Serpent-Men infiltration. Its
-  ruins exist in the Hyborian present as crumbling crypts and
-  half-buried temples.
-- **Atlantis** — the barbarian homeland of Kull; sank in the
-  Cataclysm. Atlantean ruins occasionally surface on remote
-  shores.
+- **Valusia** — the decadent serpent-haunted empire; the dominant
+  human civilization of the present, corrupted by Serpent-Men
+  infiltration. Its courts are intrigue-thick; its temples ancient
+  but in active use.
+- **Atlantis** — the barbarian island home of Kull. Still standing.
+  The Cataclysm that will sink it has not yet come.
 - **Kull of Atlantis** — the barbarian who became king of Valusia.
-  Long dead by the Hyborian present, but his name persists in
-  legend and his deeds in carved stone.
+  Active, alive, possibly the player's contemporary or recent
+  predecessor (timeline flexibility — keep him offstage or briefly
+  on-stage as the modules require).
 - **Tuzun Thune** — the ancient Valusian wizard whose **mirror
-  chamber** showed visions of alternate realities. His tower is
-  abandoned but sealed; his mirrors persist.
-- **Bran Mak Morn** — king of the Picts; known across both
-  Thurian and Hyborian eras through ritual time-bridges. Pictish
-  shamans still invoke his name.
-- **Serpent Men** — the ancient shapeshifting race that ruled
-  before humans. Most were destroyed at the Cataclysm; some
-  survived in deep places and can still infiltrate human courts
-  by mimicking faces. Speak the phrase *"Ka nama kaa lajerama"*
-  to expose them — they cannot say it.
-- **The Cataclysm** — the great sundering that sank Atlantis,
-  drowned Valusia, and ended the Thurian Age. The boundary
-  event between the two ages.
+  chamber** showed visions of alternate realities. He is dead by
+  Kull's time per the source story; his tower is sealed; the
+  mirrors are findable artifacts.
+- **Bran Mak Morn** — by Howard's mythos, Bran's name reaches
+  back across eras through ritual time-bridges. Pictish shamans of
+  the Thurian present still invoke him as a future-king prophecy.
+- **Serpent Men** — the **active** shapeshifting threat. They
+  ruled the world before humans; in the Thurian present they
+  infiltrate human courts by mimicking faces. The exposure phrase
+  *"Ka nama kaa lajerama"* (PD via *The Shadow Kingdom*) is
+  current operational counter-intelligence, not lost lore.
+- **The Cataclysm** — the great sundering that *will* sink
+  Atlantis, drown Valusia, and end the Thurian Age. The Order
+  knows it is coming. Most others do not.
 
-**Thurian Aesthetic.** Ancient stonework predating any known
-script. Stepped pyramids and serpent-columns. Mirror chambers.
-Pre-human geometry that doesn't quite fit the human eye. Frazetta's
-oldest, most weathered ruins. Scenes lit by guttering torches in
-chambers that shouldn't have stood for ten thousand years.
-
----
-
-### 10.3 Stygia and Set — The Living Serpent-Cult
-
-**Stygia** is the southern serpent-god-worshipping kingdom of the
-Hyborian Age — named in the *Hyborian Age* essay (PD-safe). Older
-than the Hyborian kingdoms, the cult of **Set** persists from
-Stygia south through the Black Kingdoms.
-
-Stygian sorcery is **the living tradition** that connects most
-directly to the lost Thurian magic. Where Thurian Serpent-Men
-ruled the world from Valusia, the Stygian serpent-priests rule a
-shrunken modern kingdom — but they remember much that should have
-died with the Cataclysm.
-
-**Game implication:** anywhere Thurian ruins appear, expect
-Stygian-style iconography (serpents, eyes of Set, black pearls
-used as scrying foci). Stygian assassins, snake-cultists, and
-suspected Serpent-Man infiltrators are the natural living
-antagonists who carry Thurian techniques forward into the
-player's present.
-
-> **Note on names:** "Stygia," "Set," "Khemi," "serpent-priests"
-> are all from the *Hyborian Age* essay (PD). "Thoth-Amon" and
-> other named Stygian sorcerers from the Conan stories remain
-> copyrighted until 2028+.
+**Thurian Aesthetic.** Ancient stonework that the people of this
+age live and rule among (not crumbled — *occupied*). Stepped
+pyramids and serpent-columns. Mirror chambers. Pre-human geometry
+that doesn't quite fit the human eye. Frazetta's most weathered
+ruins are still our setting's *modern* civic architecture, just
+weathered after thousands of years of use.
 
 ---
 
-### 10.4 Aquilonia and Ostavar — The Civilized Present
+### 10.2a The Earlier Civilization — Pre-Thurian Ruins
 
-**Aquilonia** is the dominant Hyborian kingdom of the present —
-named in the *Hyborian Age* essay (PD-safe). Marble colonnades,
-gilt towers, silk banners, Frazetta/Brom interiors. It is the
-westernmost Hyborian power, civilized to the point of decadence,
-patrolling its border against serpentine Stygia to the south and
-Pictish wilderness to the west.
+**There is always an earlier civilization.** Even the Thurian Age
+is built atop the buried bones of an older one — the **Pre-Thurian
+Builders**, whose names are not preserved in the PD corpus and so
+remain ours to invent. Their works appear as:
 
-**Ostavar — the player's starting hub — is styled after
-Aquilonia.** This is canonical (see CLAUDE_CONTEXT memory
-`project_ostavar_aquilonia.md`). The Guild Hall, Sam's Sharps,
-Pots & Bobbles, the Church of Perpetual Life — all read as
-late-Aquilonian civic architecture. **Tone for Ostavar is
-"aquilonian"** in the scene-image system.
+- **Pre-human geometry** in the deepest substrata of Valusian
+  temples — angles and proportions that human masonry adopts
+  but does not understand.
+- **Stones that predate language** — inscriptions in scripts
+  before script, marked with marks Kull's wisest scholars cannot
+  read.
+- **Sealed crypts beneath Valusia, Atlantis, and the eastern
+  sea-trenches** — most never opened, many deliberately buried by
+  the Order to prevent rediscovery.
+- **Whispers in the deepest mirror-chambers** suggesting that
+  Tuzun Thune himself learned his craft from older sources.
 
-When future modules introduce other regions, use these tonal
-anchors:
-- **Aquilonia** → marble, gilt, civilized, Frazetta palace
-- **Stygia** → serpent stone, black basalt, Brom temple-interiors
-- **Thurian ruins** → ancient pre-human stonework, mirror chambers,
-  serpent-columns, Frazetta's oldest weathered crypts
-- **Cimmeria / barbarian frontier** → grey crags, snow, Conan-tone
-  (Cimmeria is named in the essay; Conan himself is NOT yet PD)
-- **Pictish Wilderness** → standing stones, dark forest, Bran Mak
-  Morn's heritage
-- **Black Kingdoms** → jungle, mud-brick, drum-haunted
-- **Vanaheim / Asgard** → ice, longships, Vendel-era
+Adventures that explore Pre-Thurian ruins follow the same
+template-shape as Thurian-ruin modules in the Hyborian-era plan
+(see `lore/hyborian-pd/MODULE_PLAN.md` §3, "Setting from Thurian
+present → Thurian ruin in Hyborian present" — re-rooted for our
+era as "Thurian present → Pre-Thurian ruin in Thurian present"):
+the player walks current corridors that lead down into chambers
+no living mind has read since before the human age.
+
+**The recursive principle:** Whatever the Pre-Thurians feared,
+they buried. Whatever they buried, the Order is afraid will be
+unburied. Whatever the player unburies, the Order will come for.
+
+This is also our designer-side trapdoor for new adventure
+content: any module set in the Thurian present can credibly
+descend into a "Pre-Thurian" sub-region without requiring more
+PD source material than we already have.
+
+---
+
+### 10.3 The Serpent-Men — The Living Threat
+
+In the Thurian present, **Serpent-Men are an active,
+shapeshifting infiltration**, not a relic. They ruled the world
+before humans (per *The Shadow Kingdom*, 1929, PD), most were
+driven out at the rise of human civilization, and a population
+of survivors persists in deep places — and in human courts,
+wearing the faces of dead nobles.
+
+The exposure phrase **"Ka nama kaa lajerama"** (PD via *The
+Shadow Kingdom*) is operational counter-intelligence in this era,
+not lost lore: it is a current Order tool. Watch faces when the
+phrase is spoken. Anyone who cannot say it back is not human.
+
+**Game implication:** any Thurian-court adventure (including
+investigation modules, court-intrigue mysteries, and any
+encounter where a once-trusted NPC has become a stranger) can
+seed a Serpent-Man reveal. Serpent-Men make excellent body-zone combat model
+opponents — agile, fast, poison-fanged. They are the natural
+living antagonists of the Thurian setting, and unlike post-
+Cataclysmic Stygia (which does not yet exist in our era) they
+can appear *anywhere* a human can — including at the next table
+in the Main Hall.
+
+> **Stygia in our era:** The southern serpent-god-worshipping
+> kingdom of Stygia, prominent in the post-Cataclysmic Hyborian
+> Age, **does not yet exist** in the Thurian present. Stygia and
+> the cult of Set rise after the Cataclysm, drawing on Thurian
+> serpent-magic that survived the sundering. We can foreshadow
+> the future cult through Serpent-Man oaths to "the Old Coiled
+> One," but Set and Stygia themselves are not period-appropriate
+> for the player's current era.
+
+---
+
+### 10.4 Ostavar and the Thurian Kingdoms
+
+**Ostavar — the player's starting hub** — is a Living-Eamon-
+invented Thurian-Age city. **Visually it is styled after Howard's
+late-Aquilonian civic architecture** — marble colonnades, gilt
+towers, silk banners, Frazetta/Brom palace and temple interiors —
+even though the in-fiction era is the Thurian Age, thousands of
+years before Aquilonia rises. Visual styles are immortal:
+marble cities look like marble cities whether they stand in
+Valusia or Aquilonia, and Howard's architectural language is the
+designed-from-the-start tonal anchor for Ostavar's civic
+buildings. Players will never read the word "Aquilonia" in-game,
+but the art will continue to read late-Aquilonian.
+
+**Tone for Ostavar is "aquilonian"** in the scene-image system —
+this is an art-prompt reference, not an in-fiction location tag.
+Continue using "Aquilonian style" / "Hyborian style" / "Frazetta
+palace" / "Brom temple" freely in image-generation prompts and
+internal design docs; just keep those words out of player-facing
+prose, NPC dialogue, marketing copy, and any signage/UI the
+player reads.
+
+When future modules introduce other regions, use these
+era-appropriate in-fiction names paired with Howard-derived
+visual styles:
+- **Ostavar (Thurian-era city)** → late-Aquilonian visual style:
+  marble, gilt, civilized, Frazetta palace, Brom temple-interior
+- **Valusia** (in-fiction the great Thurian empire) → ancient
+  mottled marble, serpent-columns, brass and bronze, late-imperial
+  decadence; visually overlaps Aquilonian palace style with darker
+  serpent-iconography accents
+- **Atlantis** → barbarian island stronghold, weathered stone
+  fortresses, sea-rock and longboats — Kull's homeland, wilder
+  than Valusia
+- **Pictish Wilderness** → standing stones, dark forest, ritual
+  fires, Bran Mak Morn's prophesied heritage
+- **Thurian frontier kingdoms** (Commoria, Grondar, Kamelia,
+  Thule, Verulia — all named in the *Hyborian Age* essay, all
+  PD-safe in the Thurian present): each gets its own flavor when
+  needed; freely invent specifics within Howard's voice
+- **Pre-Thurian ruins** → pre-human stonework, geometry that
+  doesn't fit the human eye, sealed crypts older than language
+  (the recursive earlier-civilization layer)
+
+> **Hyborian-era kingdoms are FUTURE prophecy IN-FICTION but their
+> visual styles are present-day art references.** Aquilonia,
+> Stygia, Cimmeria, Nemedia, the Black Kingdoms — all PD-safe via
+> the *Hyborian Age* essay — do not yet exist as places in the
+> player's Thurian Age. The Order's secret chronicles foretell
+> these kingdoms; some Thurian seers glimpse them in mirror
+> visions. The player cannot travel to them. **But their visual
+> aesthetics — Aquilonian marble, Stygian black basalt, Pictish
+> standing stones — are usable as art-prompt references whenever
+> the in-fiction Thurian setting needs that visual flavor.**
 
 ---
 
@@ -643,11 +571,16 @@ Kull stared into the mirrors he saw himself living different
 lives, considered which was real, and almost lost himself to the
 visions.
 
+In the Thurian present Tuzun Thune is recently dead (per the
+source story, his death is contemporaneous with Kull's reign);
+his tower stands sealed; his mirrors persist and can be entered
+by adventurers willing to risk the visions.
+
 **This is the template for Living Eamon's permanent legacy
 artifacts.** Future modules should design artifacts in this mould:
 
-- **Discovered in Thurian ruins** (or comparable PD-derived
-  Thurian sites)
+- **Discovered in Thurian or Pre-Thurian ruins** (sealed towers,
+  buried temples, mirror-chambers, time-tombs)
 - **Carries permanent power** the player can claim
 - **Carries permanent corruption / risk** the player must manage —
   taint score, virtue ceiling shifts, profile-driven visions, NPC
@@ -837,6 +770,101 @@ The full PD entry calendar is maintained in **`Public_Domain_Rules.md`
 
 ---
 
+## 11. PICSSI — The Six-Virtue Character Scoring System
+
+*Pronounced "Pixy." Ratified 2026-04-26.*
+
+PICSSI is Living Eamon's multi-dimensional scoring framework for the player's character. It does not replace traditional combat stats (Strength, Dexterity, Constitution, etc.) — those still drive damage rolls, encumbrance, and saves. PICSSI sits *above* those mechanics and shapes how the world reacts: which NPCs flirt with the hero, which gods listen to his prayers, which quests will accept him, which dark patrons answer his INVOKE spells. It is the social and metaphysical state of the character. It is the core scoring system of the game and attracts followers of similar tendencies, the more extreme the score, the more extreme the followers scores. The goal is to attract an end game Band of Heros or Band of Villans over which to become a Lord with a title and land, ie a dark lord might be called "Lord Vard the Destroyer" or "...the Feared" and a highly illuminated Lord might be called "Lord Cedric the Lightbringer" and the opposite would be "Lord Elric the Dark Lord." We will need to prescript multi-dimensional titles for each of the extreme scores.
+
+The acronym is the six dimensions, scored independently. Each dimension runs from a deeply negative pole (vice / void) to a peak positive pole (virtue / fullness), with midline as moral neutrality on that axis.
+
+### P — Passion
+
+Fervor, drive, energy, eagerness, inner fire. Visible in *how* the hero pursues goals, faces challenges, and expresses desire. This is directly related to the physical attribute, strength. The higher the Passion virtue, the higher the Strength attribute. **Attracts passionate women.**
+
+- **Gain**: bold pursuits, declarations of intent, choosing decisively, loud and dramatic acts, decisive action, picking fights, taking women, getting high or drunk, kissing women, fondling women, having sex (R rated game).
+- **Lose**: hesitation, indecision, listless drifting, half-measures, getting lost, slow action, abandoning quests partway out of boredom.
+
+### I — Integrity
+
+The literal keeping of one's word. The ultimate goal of integrity is keeping promises to the letter — to others *and* to oneself ("to thine own self be true"). When circumstances make a promise unkeepable, integrity is preserved by either asking forgiveness or being transparent in one's failure — never by quiet evasion. **Attracts wise women.**
+*Direct link to physical attribute Hit Points. The more Integrity the more maximum Hit Points.*
+
+- **Gain**: completing committed quests on time, keeping vows, paying debts, returning rescued items, owning up to failures publicly.
+- **Lose**: breaking promises, concealing failures, lying to NPCs, abandoning declared goals without acknowledgment.
+
+### C — Courage
+
+Passion in the face of danger. Courage scales with the apparent overwhelming-ness of opposition: the more impossibly out-matched the hero looks when he engages, the more courage he earns. **Attracts romantic women.** *Direct link to physical attribute Dexterity. The more Courage the more maximum Dexterity.*
+
+- **Gain**: engaging unbeatable-looking odds, refusing to flee from monstrous threats, protecting weaker against stronger, accepting trial-by-combat against superior foes.
+- **Lose**: fleeing during combat (a major loss), abandoning allies in danger (worse than fleeing is fleeing while friends are still in combat), attacking only when victory is certain, refusing trials.
+
+### S — Standing
+
+Visible standing, winning, victory, masculinity, virility — the triumphant body. (Renamed 2026-04-28 from "Strength" to disambiguate from the physical STR attribute.) Note: this is the *narrative-virtue* dimension of public stature, not the combat stat. A weak hero who improbably wins still gains Standing here. A strong hero who loses still loses Standing here. **Attracts lusty women.** *Increases chance of legendary magic weapons appearing in treasure and loot.*
+
+- **Gain**: combat victories (especially decisive ones), feats of physical power, visible domination over physical challenges, public displays of vigor.
+- **Lose**: combat defeats, public displays of weakness, illness, public humiliation, being subdued without resistance.
+
+### S — Spirituality
+
+Respect for and an internal sense of the spiritual; praying to a god even when it seems hopeless. The **Conan-Crom paradigm** is canonical here: Crom only cares about *witnessing* his hero's strength and courage in the face of hopelessness, and never overtly intervenes with magic during battle — but he blesses successful heroes after the fact with wine, women, song, and treasure. The praying itself is the virtue, not the answer but is  (and maybe whimsically) honored by the gods. **Attracts spiritual women.** *Increases chance of gods responding to Power spell & increases chance of quests from gods & increases power of heal spell.* *Direct link to physical attributes, the more Spirituality, the faster Mana regenerates."
+
+- **Gain**: praying (regardless of outcome), respecting shrines and holy ground, conducting oneself as if observed by gods, leaving offerings.
+- **Lose**: blasphemy, defiling sacred sites, mocking priests, dismissing oaths sworn to gods, performing sorcery on consecrated ground.
+
+### I — Illumination
+
+The amount of Light inside the hero's self. **Light** is the source of Life and Creation; **Darkness** is the source of Death and Destruction. The Way of the Warrior is, by nature, partly death and destruction — but *defending* Light-Life by *using* the tools of Destruction is a beautiful quest, and one of the most illuminating things a warrior can do.
+*Direct link to physical attribute Mana. The more Illumination the more maximum Mana.*
+
+Conan was mostly negative in Illumination — a casual brigand and reaver — but had great moments of Illuminative power: killing demons, killing sorcerers, saving innocents. Those acts pulled him toward Light without making him saintly. Conversely, **practicing powerful sorcery directly darkens the soul** — the more powerful the sorcery, the darker the Illumination in a longrithmic relationship (ie 1-3 circle sorcery have no effect on illumination but 2nd Circle Sorcery comes with an occassional message tells the hero this feels dark in subtle ways, and 3rd circle confirms a dark presence is near)  *cross-link to §9.2 Occult Magic and the Eight Circles).*
+
+Illumination is the only PICSSI dimension that **attracts at both extremes**: saintly Illumination calls to both saintly women and abyssal women (to tempt you to the darkness); abyssal Darkness calls to both abyssal women and saintly women (to tempt you to the light); midline attracts no one along this axis. (Romance with mid-axis NPCs flows through the other five dimensions.)
+
+- **Gain Light**: killing beings of darkness (demons, undead, sorcerers, dark cults), saving innocent lives, healing the helpless, restoring desecrated holy sites.
+- **Gain Darkness**: practicing sorcery (every INVOKE casting), killing innocents, sacrificing the helpless, defiling holy sites, performing necromancy.
+- The two are NOT a single zero-sum slider — a hero who heals an orphanage in the morning and casts INVOKE at night accumulates BOTH Light gain and Darkness gain, and the scoring weighs the absolute distance from midline. Saints and demons are equally "Illuminated"; the bored midline is the lowest social-status state.
+
+### How PICSSI scores affect gameplay
+
+| System | PICSSI input |
+|--|--|
+| **NPC dialogue / romance** | female NPCs weigh the player's PICSSI scores when choosing flirtation, marriage offers, betrayals, rescue offers. The dimension that attracts them dictates which axis they read. |
+| **Prayer reach** (CAST) | low-Illumination heroes find that only dark gods answer their prayers; high-Illumination heroes find that bright gods answer. Mid-Illumination heroes get inconsistent or weak answers. |
+| **Sorcery cost** (INVOKE) | every casting darkens Illumination. Compounding: lower Illumination → wider door for Outer Dark gods to answer further INVOKE attempts. The Eight Circles thus become darker AND more powerful as the hero descends. |
+| **Quest gating** | attributes and virtues lock adventure modules and even magical doors in adventures and in temples and in magic rooms (like wizard and sorcery schools), integrity-locked quests refuse to launch for a hero who has broken too many prior promises this life. Courage-locked quests likewise check courage history. |
+| **NPC trust thresholds** | shopkeepers, merchants, and quest-givers extend credit to high integrity heros / offer assassination, banditry and thuggery adventures to low-Integrity heroes. |
+
+### PICSSI is per-life, not per-character
+
+PICSSI scores are tracked across the **current life** of the Perpetual Hero. Death at the Church of Perpetual Life wipes them; the reborn hero starts at midline on every axis. This means every life is its own PICSSI arc, and the player's choices in *this* life dictate *this* life's reactions, prayer reach, and quest access.
+
+### PICSSI replaces the Ultima-derived 10-virtue system (DECIDED 2026-04-26)
+
+Living Eamon previously had a 10-virtue moral tracker on `PlayerState` (keys: `Honesty`, `Compassion`, `Valor`, `Justice`, `Sacrifice`, `Honor`, `Spirituality`, `Humility`, `Grace`, `Mercy` — Ultima-derived). **PICSSI replaces it entirely.** The 10-virtue model is deprecated; new code reads/writes PICSSI scores only.
+
+**Why:** the 10-virtue model was a *moral ledger* (each virtue tracked behavior consistency in isolation). PICSSI is a *behavioral consequence engine* (each dimension drives NPC reactions, prayer reach, patron alignment). One system can do the second job; the first is redundant.
+
+**Replacement scope (code + DB cleanup task — not yet started):**
+
+- `PlayerState` shape: drop the 10 virtue keys (`Honesty`, `Compassion`, `Valor`, `Justice`, `Sacrifice`, `Honor`, `Spirituality`, `Humility`, `Grace`, `Mercy`). Add the 6 PICSSI keys (`Passion`, `Integrity`, `Courage`, `Standing`, `Spirituality`, `Illumination`).
+- Database: migrate the existing `player_state.virtues` JSON column (or equivalent) to a `player_state.picssi` column with the new schema. Existing live players will reset to midline on first load post-migration (no per-axis mapping — the systems aren't isomorphic).
+- `STATS` panel UI: replace the 10-virtue list with a PICSSI panel showing the 6 dimensions and their current values.
+- `CLAUDE_CONTEXT.md` §6 Player State: update to reflect PICSSI as the single virtue model.
+- Any narrative text that says "your Honesty virtue increased" rewrites to PICSSI ("your Integrity rose").
+
+**Lossy axes to acknowledge in the rewrite:** the 10-virtue keys `Compassion`, `Justice`, `Sacrifice`, `Humility`, `Grace`, `Mercy` have no direct PICSSI counterpart and disappear. Their game-mechanical effect (NPC reactions to charitable behavior, etc.) folds into PICSSI's `Illumination` dimension at design time, not via code mapping.
+
+### Other open design questions (deferred)
+
+- Should some virtues persist as faint "echoes" across lives — e.g., a hero who lived ten high-Integrity lives has a small Integrity-bias on rebirth?
+- Should a hero who dies mid-quest with extreme PICSSI scores leave behind ghostly NPCs / world reactions referencing that prior incarnation?
+- Should there be PICSSI-driven legacy flags in the world cache (cross-link to existing legacy-flag memory)?
+
+---
+
 ## 12. Planned Core Systems *(Phase 2 unless noted)*
 
 ### Inventory & Equipment UI *(High Priority — April 2026)*
@@ -900,12 +928,12 @@ vendor integration, and equipment slot expansion.
 - Vendor temp inventory stored as `vendorTempStock[]` on
   WorldState (per vendor NPC id).
 
-**Expanded Equipment Slots (HWRR-aligned):**
+**Expanded Equipment Slots (body-zone combat-aligned):**
 - Current: weapon, shield, helmet, gorget, bodyArmor, limbArmor (6)
 - Adding: **2 ring slots per hand** (4 ring slots total),
   **necklace/medallion** (1 slot), **waist/belt with pouches**
   (1 slot).
-- Total: 12 slots. Research HWRR `.rpy` files for exact slot
+- Total: 12 slots. Research body-zone `.rpy` files for exact slot
   layout before implementing.
 - EquipmentGrid layout will need redesign to accommodate 12 slots
   (probably 4×3 grid).
@@ -1116,6 +1144,52 @@ The Order considers runebooks strong evidence of Occult practice.
 
 ---
 
+### Brothels, the Fertility Temple, and Venereal Disease *(Phase 2)*
+
+*Decided 2026-04-29.* Brothels exist in Living Eamon as one of the canonical Passion-growing rest activities (see KARMA_SYSTEM.md §2.3 and §2.13a). They are also one of the few activities that simultaneously grow one PICSSI virtue and damage another — and one of two activities (alongside CAST HEAL) that interact with the body-state flag `vdActive`.
+
+**Brothel mechanics:**
+
+- **Cost:** gold (default 45g; Vivian-discount possible if affection is high; "Casanova"-style talents may waive cost).
+- **Stamina:** full restore (`stamina = maxStamina`).
+- **Fatigue:** complete reset (`fatiguePool = 0`).
+- **PICSSI:** +Passion (Notable). Minor +Courage (real risk-of-thieves/VD justifies a small Courage award per Scotch's note that "women can be scary thieves and assassins, and venereal diseases definitely are").
+- **Side effects:**
+  - **−Spirituality** (Notable). The act is read as appetite over devotion.
+  - **Small chance** (proposed: 5–10%, tunable) of contracting **venereal disease** (`vdActive = true`).
+
+**Venereal Disease (VD):**
+
+- Persistent body-state boolean: `vdActive`. Survives sleep/rest. **Reset on death.**
+- While `vdActive = true`: −2 STR_effective (proposed magnitude — see KARMA_SYSTEM.md §2.13a). Floors at minimum playable STR.
+- One VD at a time (no stacking).
+
+**Cure paths:**
+
+1. **Cast HEAL on self** (either CAST or INVOKE) → cures VD instantly.
+2. **Pray at any temple** → small chance the god responds and cures (chance scales with Spirituality).
+3. **Pray at the Fertility Temple** → CANONICAL HIGH chance to cure. The fertility-god's domain explicitly includes diseases of generation; the temple is the textbook destination.
+
+**The Fertility Temple paradox** *(canonical)*:
+
+The Temple of the Fertility God in Ostavar (and analogous temples in other Thurian-Age cities) is, in the same building:
+
+- The most popular **brothel** in the city — the temple's "sacred prostitutes" are dancers, courtesans, and ritual partners. Visiting here = brothel rest activity (Passion +, Spirituality −, VD risk).
+- The most effective **cure** for venereal disease in the city — praying at the fertility-god's altar has the highest chance of removing `vdActive`.
+
+A hero who contracts VD at the temple and then prays at the same altar to be cured is participating in a deeply ironic ritual. NPCs may comment on it. Priests of austere gods will not.
+
+**Atom themes:** brothel-choice scenes; "morning regret" check-ins; fertility-god prayer scenes; cure-quest atoms; rumor/gossip about heroes who frequent the fertility temple "for both reasons."
+
+**Implementation status:** designed, not yet wired. Lives downstream of:
+- Stamina system (KARMA_SYSTEM.md Sprint 1).
+- PICSSI bedrock (KARMA_SYSTEM.md Sprint 2).
+- Activity dispatcher (KARMA_SYSTEM.md Sprint 3).
+
+The `vd_active` boolean column on `players` is added in Sprint 2 alongside the PICSSI columns. Brothel and fertility-temple as recovery activities ship in Sprint 3.
+
+---
+
 ## 19. Design Decisions Log
 
 ### April 2026
@@ -1172,82 +1246,20 @@ Jane does not write generic fantasy. She writes in the style of the player's fav
 The product is a Kindle Unlimited subscription to an infinite library of one — a living novel that is always in progress, always shaped by the reader's subconscious, and always their favorite book.
 
 ---
+### 20.1 Deprecated
+---
 
-### 20.1 The Two Sources of Truth
-
-The psychological profile is built from two sources:
-
-**Source 1 — In-game behavior (automatic, continuous)**
-
-Every choice a player makes is a data point. Jane observes silently:
-
-- **Virtue pattern:** A player who consistently chooses Mercy over Justice has a different moral center than one who chooses Justice over Compassion. These patterns map to literary preferences — the Mercy-dominant player likely prefers Dostoevsky to Cormac McCarthy.
-- **Combat vs. diplomacy ratio:** Players who always try to talk first before fighting prefer character-driven fiction over action. Jane paces their narrative accordingly.
-- **NPC relationship investment:** Players who spend turns building relationships with NPCs rather than moving toward goals prefer sprawling character novels (Tolstoy, George R.R. Martin) over tight thrillers.
-- **Risk appetite:** Players who attempt the Occult despite knowing it is illegal are drawn to transgressive fiction — Nabokov, Bret Easton Ellis, Chuck Palahniuk.
-- **Darkness tolerance:** A player who casts fireball in the Main Hall without hesitation can handle darker narrative. A player who carefully deposits gold before every adventure prefers order and resolution.
-- **Curiosity signals:** Players who examine everything before acting prefer literary fiction with layered prose (Le Guin, Ishiguro, Toni Morrison).
-- **Adventure selection:** Players who go straight to The Beginner's Cave prefer genre fiction with clear goals. Players who spend hours in the Main Hall building relationships prefer character studies.
-
-**Source 2 — Reading history (player-provided, one-time import)**
-
-- **GoodReads public profile:** The player provides their GoodReads URL. The system reads their shelves, ratings, and read lists. A 5-star rating for *Blood Meridian* and *Crime and Punishment* tells Jane more about the player's ideal fiction than any survey.
-- **Kindle reading history:** Amazon provides a CSV export of every book purchased and read. Completion rates (did they finish it?), re-reads, and purchase patterns reveal preferences more honestly than ratings.
+### 20.2 Deprecated
 
 ---
 
-### 20.2 The Profile Dimensions
-
-The Player Profile tracks the following dimensions. Each is a number or enum derived from the two data sources above.
-
-| Dimension | Type | What it controls |
-|-----------|------|-----------------|
-| `genre_weights` | Object (12 genres, 0–100 each) | What adventure types Jane proposes |
-| `author_styles` | Ranked list of author names | Jane's prose style and dialogue register |
-| `narrative_themes` | List of theme tags | Recurring plot elements Jane emphasizes |
-| `darkness_tolerance` | 0–100 | Content rating ceiling |
-| `pacing_preference` | `fast` / `measured` / `slow` | Scene length and action density |
-| `moral_complexity` | 0–100 | How morally ambiguous Jane makes villains and choices |
-| `romance_weight` | 0–100 | Frequency and depth of romantic subplots |
-| `horror_weight` | 0–100 | Frequency and intensity of horror elements |
-| `humor_weight` | 0–100 | Frequency of comic beats and levity |
-| `mystery_weight` | 0–100 | Frequency of mystery/revelation structure |
-| `violence_weight` | 0–100 | Intensity of combat and consequence narration |
-| `age_tier` | `young_adult` / `adult` / `mature` | Content filter |
-
-**The 12 genres tracked:** Dark fantasy/grimdark · Epic fantasy · Psychological thriller · Mystery/detective · Horror/cosmic horror · Hard sci-fi · Soft sci-fi/social · Romance/erotica · Historical fiction · Literary fiction · Adventure/action · Young adult
-
----
-
-### 20.3 Content Tiers
-
-| Tier | `darkness_tolerance` | Content |
-|------|---------------------|---------|
-| Young Adult | 0–30 | Coming-of-age adventure, light conflict, no explicit content, villains defeated not annihilated |
-| Adult | 31–69 | Moral ambiguity, moderate violence, romantic subplots (no explicit content), tragedy is possible |
-| Mature | 70–100 | R-rated; explicit romance/erotica; brutal war and consequence; psychological horror; no redemptive requirement |
-
-Age tier is set at registration (date of birth or self-selection). Players must confirm they are 18+ for the Mature tier.
+### 20.3 Deprecated
 
 ---
 
 ### 20.4 Jane Personalization Injection
 
-Each session, Jane receives a personalization block built from the player's profile:
-
-```
-READER PROFILE — use this to personalize every response:
-Preferred genres: dark fantasy (87), psychological thriller (74), literary fiction (68)
-Write in the style of: Cormac McCarthy, Dostoevsky, Ursula K. Le Guin
-Recurring themes this player loves: moral ambiguity, redemption, the weight of violence, isolation
-Darkness tolerance: 82/100 (mature content permitted)
-Pacing: measured — scenes should breathe; do not rush to action
-Romance: 40/100 — present but not dominant
-Shape all narration, NPC voice, plot beats, and adventure content to this profile.
-The villain of any adventure should feel personally threatening to this player — not physically, but morally.
-```
-
-This block is generated fresh each session from the current profile state.
+Each session, Jane receives a personalization block built from the Reader's Mirror
 
 ---
 
@@ -1274,46 +1286,16 @@ Player provides their GoodReads public profile URL. The system:
 
 ---
 
-### 20.7 Kindle Integration
-
-Player uploads an Amazon "Request My Data" CSV export. We analyze:
-- Books with high page-count read (completion = strong preference signal)
-- Re-reads (the strongest signal of all)
-- Sample-to-purchase conversions (curiosity signal)
-
-The raw CSV is never stored server-side — processed client-side and only the analysis is stored.
+### 20.7 Deprecated
 
 ---
 
-### 20.8 The Infinite Novel — Content Generation Vision
-
-At full development, Jane operates in four modes:
-
-**Mode 1 — Style Mimicry:** Jane writes in the prose style of the player's identified authors.
-
-**Mode 2 — Theme Weaving:** Jane builds recurring themes into every adventure. A player with high Redemption weight finds that their past follows them across the world.
-
-**Mode 3 — Genre Adaptation:** The same adventure is written differently for different players. The Beginner's Cave is a dungeon crawl for the action player, a locked-room mystery for the thriller player, a cosmic horror for the horror player, and an archaeological mystery for the sci-fi player.
-
-**Mode 4 — Villain Personalization:** Jane builds villains that are morally threatening to each player — mirrors of their fears, their temptations, or the choices they have avoided.
+### 20.8 Deprecated
 
 ---
 
-### 20.9 Privacy and Consent
-
-- Players opt in to profile building. It is not on by default.
-- The full profile is always visible and editable by the player on their Profile page.
-- Players can delete the profile entirely at any time.
-- GoodReads and Kindle data is never stored raw — only the analysis is kept.
-- The profile is never sold or shared. The business model is subscription only.
-- Players can export their profile as JSON.
+### 20.9 Deprecated
 
 ---
 
-## 21. Design Decisions Log (continued)
-
-### April 2026 (continued)
-
-- **Auth system:** Email/password + Google SSO via Supabase Auth; cookie-based sessions via `@supabase/ssr`; middleware protects all routes; `players.user_id` FK to `auth.users`; `/login` and `/register` pages match game visual style.
-- **Reader's Mirror (§20) designed:** Psychological profile built from in-game virtue/choice signals + optional GoodReads/Kindle import; 12 genre dimensions; darkness tolerance drives content rating (YA / Adult / Mature); Jane receives personalization block each session; Profile page surfaces the profile with a transparency section showing Jane's exact current instructions. Privacy-first: opt-in, editable, deletable, never sold.
-- **Living Eamon vision:** Kindle Unlimited for a library of one — an infinite novel written in the style of the player's favorite authors, shaped by the themes they love, calibrated to their darkness tolerance, featuring villains designed to threaten them morally rather than physically.
+## 21. Deprecated

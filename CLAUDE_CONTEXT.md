@@ -1056,7 +1056,7 @@ Soul Forge designed. One-time permanent avatar creation. Grok Imagine Pro master
 Chapter/Arc story engine designed. Programmatic chapter regeneration using HWR Reforged arc templates + Black Company narrative DNA. Grok mutates templates using player Chronicle + Virtue vector at chapter start. The Stag Company is Arc Set #1. Sandbox trap eliminated — every chapter is on-rails with survival pressure and forced events.
 World Destruction System locked. Fully destructible settlements and realms. Permanent in Chronicle. Circle-tier-based escalation. Realm-level cataclysm possible at Circle 7–8.
 AI stack confirmed. Anthropic Claude = Jane (narrator, moral mirror, NPC dialogue). Grok = primary world/story generation LLM. Grok Imagine Pro = all image generation. Image API costs: $0.07/master (pro tier), $0.02/composite scene (standard tier).
-Occult magic system: classic UO Magery rules (8 circles, 64 spells, reagent consumption). INVOKE command. Reagents not purchasable in starting areas. The Order prosecutes practitioners and witnesses. Circles 1–4 implemented; 5–8 documented for later phases.
+Occult magic system: 8 circles × 8 spells = 64 spells, reagent consumption per cast, mechanics (mana costs 4/6/9/11/14/20/40/50, hit-point ranges, area-effect rules) modeled on classic CRPG Magery. INVOKE command. Reagents not purchasable in starting areas. The Order prosecutes practitioners and witnesses. Circles 1–4 implemented; 5–8 documented for later phases. **Words of Power are an original Latinate compositional vocabulary** ([operator]+[element], 1–4 roots per phrase) — see SORCERY.md §5b for the full root list and §6 for all 64 spell phrases. The legacy third-party vocabulary that earlier drafts referenced was replaced wholesale on 2026-05-01 (Sprint 7 vocabulary swap).
 Stamina system planned (Phase 2 high priority): third vital stat; full stamina = max natural healing + fast poison recovery; low stamina disables FLEE; very low stops healing; zero drains HP.
 Hunger/thirst planned (Phase 2): separate mechanics; both drain stamina; severe cases drain HP; always available in Main Hall so death only possible in prolonged adventures.
 Weight/encumbrance planned (Phase 2 high priority): every item has weight; carry limit based on Strength; four levels (normal/burdened/overloaded/cannot pick up).
@@ -1072,7 +1072,37 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 ---
 
-## ⚡ Most recent session (2026-04-30) — Quest Engine 8a→8d shipped + client bundle crash hotfix
+## ⚡ Most recent session (2026-05-01) — Sprint 7 vocabulary swap (partial; Outer Dark + Circles 5–8 still deferred)
+
+**The day's headline:** the legacy third-party Words-of-Power vocabulary that the Eight Circles inherited from a CRPG ancestor was replaced wholesale with an original Latinate compositional system. **No engine code changed.** Mechanics, mana costs, reagents, and Illumination cost-curve are unchanged; only the in-fiction language is new. Sprint 7's larger scope (Outer Dark patron-response, Circle 5–8 implementation, witness/Order combat hookup) remains deferred until Sprint 8 ships.
+
+### Shipped on dev (commit `ea02d20`, not yet pushed/merged)
+
+- **`SORCERY.md`** — new §5b "Words of Power — Vocabulary" documenting 12 operators (Aug, Min, Mag, Crea, Solv, Mut, Tra, Ten, Lib, Dur, Vel, Pluv) and 30+ element roots (Ign, Aqu, Aer, Terr, Vit, Mort, Mens, Cor, Tox, Via, Ict, Sag, Pot, Dex, Aeg, Mur, Camp, Ful, Bes, Sig, Loc, Fer, Arc, etc.). Grammar: `[operator] [element]` with `Mag` stacking in front to amplify. All 64 spells across the 8 circles retabled with unique non-colliding phrases.
+- **`GAME_DESIGN.md`** lines 1115/1118/1120 — Mark/Recall/Gate Travel rune references updated to new phrases (`Crea Sig Loc` / `Crea Tra Via` / `Mag Mut Via`).
+- **Verification:** zero matches for legacy vocabulary tokens (Uus/Mani/Ylem/Sanct/Flam/Nox/Grav/Hur/Xen/Quas/Ort/Wis/Jux/Vas/Des/Kal/Rel/Lor/Por/Corp) in either magic-spec doc.
+
+### Sample mappings (legacy → new)
+
+| Spell | Was | Now |
+|-------|-----|-----|
+| Heal | `In Mani` | `Aug Vit` |
+| Fireball | `Vas Flam` | `Mag Ign` |
+| Energy Bolt | `Corp Por` | `Mag Ict Arc` |
+| Resurrection | `An Corp` | `Solv Mort` |
+| Summon Daemon | `Kal Vas Xen Corp` | `Crea Bes Mort` |
+
+### Why now
+
+The previous vocabulary was lifted directly from a third-party property. Living Eamon needed its own Old Tongue **before** any in-fiction prose, NPC dialogue, scroll, or scroll-of-Thoth riddle quotes a spell aloud. Once content starts citing Words of Power by name, retroactive renaming gets expensive. Sprint 7 vocabulary was promoted out of its original scope and shipped early.
+
+### Next
+
+Push `dev` and merge `dev` → `main` (held back pending Scotch's eyeball — content overhaul of canonical doc). Then resume the planned order: **Sprint 8e** (Stobaean fragments + Logos Teleios) is still next per the original plan; the rest of Sprint 7 (Outer Dark, Circles 5–8 implementation) stays deferred until Sprint 8 finishes.
+
+---
+
+## ⚡ Previous session (2026-04-30) — Quest Engine 8a→8d shipped + client bundle crash hotfix
 
 **The day's headline:** Quest Engine bedrock + event hooks (8a/8b), client-bundle hotfix, multi-stage NPC dialogue resolver (8c), Vivian-arc + Way-of-Thoth scaffolding (8d) all landed on prod in one day. Registry is now non-empty: `vivian-arc` + `way-of-thoth` are live, validating clean.
 
@@ -1125,7 +1155,7 @@ After 8e (in plan order): 8f 14 new NPCs (Old Bram, Sister Hela, Maelis, Cassian
 
 ---
 
-## ⚡ Previous session (2026-04-29 evening) — Karma System design + implementation plan
+## ⚡ Earlier session (2026-04-29 evening) — Karma System design + implementation plan
 
 **The day's headline:** the Karma System (PICSSI + attributes + consumables + atoms + brothel/VD + Scrolls of Thoth + sorcery) is now fully designed and ready for implementation. All design questions are resolved; sprint-by-sprint wiring plan written. Sprint 0 in flight as of session end.
 

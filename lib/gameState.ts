@@ -321,6 +321,15 @@ export interface PlayerState {
 
   /** Official guild magic — autocomplete for CAST */
   knownSpells: string[];
+  /**
+   * Occult Circles the player has unlocked (1..8). Empty by default.
+   * Set by quest rewards via `applyReward` when `unlockCircle` is
+   * granted. Persists across rebirth (legacy knowledge — once a soul
+   * has glimpsed a Circle, it does not unsee it). Sorcery INVOKE
+   * gates on this set: spells of unknown circles are rejected.
+   * See SORCERY.md §6 + lib/sorcery/registry.ts.
+   */
+  knownCircles: number[];
   /** Divine names learned in play — autocomplete for PRAY */
   knownDeities: string[];
 
@@ -758,6 +767,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       lastAction: null,
 
       knownSpells: [],
+      knownCircles: [],
       knownDeities: [],
       goreSplatters: [],
 

@@ -57,8 +57,19 @@ export interface QuestNPCDialogue {
   npcId: string;
   /** Declaration order; first match wins. */
   branches: QuestDialogueBranch[];
-  /** Shown when no branch matches. */
-  fallback: string[];
+  /**
+   * Lines shown when no branch matches.
+   *
+   * - **Provided** (array, including `[]`): the resolver returns these
+   *   lines; the registered NPC's TALK is fully owned by this dialogue.
+   * - **Omitted** (`undefined`): the resolver returns `null` when no
+   *   branch matches; the caller in gameEngine.ts then falls through to
+   *   the legacy NPCScript matcher / Jane. Use this for **extension**
+   *   wirings — quest-specific branches added on top of an NPC's
+   *   existing legacy dialogue path. Sprint 8f extends Aldric, Hokas,
+   *   and Vivian this way without porting their full legacy paths.
+   */
+  fallback?: string[];
 }
 
 const REGISTRY: Record<string, QuestNPCDialogue> = {};
@@ -134,6 +145,10 @@ export function resolveQuestDialogue(
     return { lines: branch.lines, state: nextState };
   }
 
+  // No branch matched. If fallback is omitted, return null so the
+  // caller falls through to the legacy NPCScript matcher / Jane.
+  // This is the "extension" pattern (Sprint 8f).
+  if (dialogue.fallback === undefined) return null;
   return { lines: dialogue.fallback, state };
 }
 

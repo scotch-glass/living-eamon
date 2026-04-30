@@ -92,11 +92,14 @@ caseName("all 11 new-NPC fragment dialogues are registered", () => {
   }
 });
 
-caseName("deferred-to-8f NPCs are NOT registered (legacy NPCScript still owns them)", () => {
-  // Aldric (old_mercenary), Hokas (hokas_tokas), Vivian (vivian) —
-  // see TODO 8f block in lib/quests/lines/way-of-thoth.ts
+caseName("Sprint-8f extension NPCs are registered with fallback omitted (extension-style)", () => {
+  // Sprint 8f wired Aldric/Hokas/Vivian as extension-style dialogues:
+  // they are registered, but `fallback` is undefined so the resolver
+  // falls through to the legacy NPCScript matcher on non-matching turns.
   for (const id of ["old_mercenary", "hokas_tokas", "vivian"]) {
-    eq(getQuestDialogue(id), null, `${id} not yet registered (8f)`);
+    const d = getQuestDialogue(id);
+    truthy(d, `${id} registered`);
+    eq(d!.fallback, undefined, `${id} fallback omitted (extension-style)`);
   }
 });
 

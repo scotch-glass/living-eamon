@@ -147,7 +147,14 @@ interface FragmentDialogueOpts {
   fragmentId: string;
   lines: string[];
   chronicle: string;
-  fallback: string[];
+  /**
+   * Optional. When provided, the resolver returns these lines on
+   * non-matching turns (the registered NPC's TALK is fully owned by
+   * this dialogue). When omitted, the resolver falls through to the
+   * legacy NPCScript matcher — the **extension** pattern used by
+   * Sprint 8f for Aldric, Hokas, and Vivian.
+   */
+  fallback?: string[];
   illuminationDelta?: number;
 }
 
@@ -166,7 +173,7 @@ function fragmentDialogue(opts: FragmentDialogueOpts): void {
         fireOnceKey: `${opts.fragmentId}-delivered`,
       },
     ],
-    fallback: opts.fallback,
+    ...(opts.fallback !== undefined ? { fallback: opts.fallback } : {}),
   });
 }
 
@@ -468,14 +475,99 @@ fragmentDialogue({
 });
 
 // ============================================================
-// TODO Sprint 8f — migrate three existing-NPC fragments:
-//   - SH 1.1  · old_mercenary (Aldric)  · scroll-5 · sword pommel
-//   - SH 18.3 · vivian                  · scroll-4 · pillow note
-//   - SH 19.7 · hokas_tokas             · scroll-6 · drinking-song
-// Each requires absorbing the NPC's existing legacy NPCScript path
-// (see lib/gameData.ts + lib/adventures/guild-hall-npcs.ts) into a
-// QuestNPCDialogue with a default-step branch. Lore source-of-meaning
-// already exists in lore/stobaean-fragments/SH-{1.1,18.3,19.7}.md.
+// SPRINT 8f — Extension-style fragment delivery for existing NPCs
+//
+// Aldric (old_mercenary), Hokas (hokas_tokas), and Vivian have rich
+// legacy NPCScript paths in lib/gameData.ts + lib/adventures/
+// guild-hall-npcs.ts. Rather than absorbing their full legacy
+// dialogue into QuestNPCDialogue branches (large diff, regression
+// risk), we register **extension** dialogues here — branches that
+// fire only on the matching scroll-N step and `fallback` is omitted
+// so the resolver falls through to the legacy NPCScript matcher on
+// every other turn.
+//
+// See lib/quests/dialogue.ts QuestNPCDialogue.fallback JSDoc for
+// the extension-pattern semantics (Sprint 8f).
 // ============================================================
+
+// ── SH 1.1 · Aldric (old_mercenary) · scroll-5 · sword pommel ──
+fragmentDialogue({
+  npcId: "old_mercenary",
+  step: "scroll-5",
+  fragmentId: "sh-1-1",
+  lines: [
+    "Aldric draws his sword and lays it flat across the table between you. The blade catches the lamplight; the pommel turns toward you — and along the inside of the pommel-cap, in fine script, a verse waits to be read.",
+    "",
+    "\"Read it,\" he says. \"Out loud. I won't tell you what it is until you do.\"",
+    "",
+    "You read.",
+    "",
+    "\"The first virtue is to remain.\"",
+    "",
+    "\"Strength is given. Skill is bought. But the one who stands when fear commands flight has begun to be — and a thing that has begun to be does not easily un-begin. This is the soldier's small immortality. The body may fall. The standing does not.\"",
+    "",
+    "Aldric sheathes the blade. His prosthetic hand drums once on the wood.",
+    "",
+    "\"That's the verse my mentor showed me. It kept me alive when better men died. Now it's yours to keep alive.\"",
+    "",
+    "*(SH 1.1 — On Standing Firm.)*",
+  ],
+  chronicle:
+    "Aldric drew his sword and showed you the verse engraved inside the pommel — the soldier's small immortality. The first virtue is to remain.",
+  // fallback omitted: extension-style. Aldric's legacy NPCScript path
+  // (ALDRIC_OPENING_LINES, ALDRIC_TOPIC_RESPONSES, etc.) handles all
+  // non-scroll-5 turns.
+});
+
+// ── SH 18.3 · Vivian · scroll-4 · pillow note ────────────────
+fragmentDialogue({
+  npcId: "vivian",
+  step: "scroll-4",
+  fragmentId: "sh-18-3",
+  lines: [
+    "Vivian is gone before sunrise. Where her head lay on the inn pillow, a folded slip of paper waits — small, quick, hand like a thief's. You unfold it.",
+    "",
+    "\"The soul has more doors than a thief has fingers. Pride locks one. Shame locks another. Love unlocks doors that ought to stay closed. Fear unlocks doors that ought to be ripped from their hinges.\"",
+    "",
+    "\"A wise thief learns which lock is on which door before drawing her picks. So with the soul.\"",
+    "",
+    "Beneath the verse, in smaller letters: *Find me later. I'll know if you read it twice.*",
+    "",
+    "*(SH 18.3 — On the Soul's Doors.)*",
+  ],
+  chronicle:
+    "Vivian left a thief's note under the inn pillow before slipping out at dawn. The soul, you learned, has more doors than a thief has fingers.",
+  // fallback omitted: extension-style. Vivian's existing dialogue
+  // (when she's wired into rooms beyond the Notice Board) handles
+  // all non-scroll-4 turns.
+});
+
+// ── SH 19.7 · Hokas (hokas_tokas) · scroll-6 · drinking-song ──
+fragmentDialogue({
+  npcId: "hokas_tokas",
+  step: "scroll-6",
+  fragmentId: "sh-19-7",
+  lines: [
+    "Hokas is humming as he polishes a tankard. You catch only the chorus at first — a verse the old men in the back of the hall sing when the night runs late and the conversation runs deep.",
+    "",
+    "He notices you listening, sets the tankard down, and slides a fresh cup of ale across the bar.",
+    "",
+    "\"On the house. There's a verse goes with it. Drink while I sing.\"",
+    "",
+    "He sings, low and slow, like a man who has thought about the words a long time:",
+    "",
+    "\"Coming down, the soul drinks deep / of the river called Forget. / Coming down, it sleeps the sleep / that wakes us into debt.\"",
+    "",
+    "Hokas sets his own cup down and looks past you, at nothing in particular.",
+    "",
+    "\"Some men are brave enough to remember,\" he says. \"Most aren't. Drink up.\"",
+    "",
+    "*(SH 19.7 — On Forgetfulness.)*",
+  ],
+  chronicle:
+    "Hokas sang you the old drinking-song's hidden verse — the soul drinking from the river called Forget. Some men, he said, are brave enough to remember.",
+  // fallback omitted: extension-style. Hokas's legacy NPCScript +
+  // merchant interactions handle all non-scroll-6 turns.
+});
 
 export default WAY_OF_THOTH;

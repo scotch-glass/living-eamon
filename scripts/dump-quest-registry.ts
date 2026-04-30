@@ -199,7 +199,11 @@ function renderDialogue(d: QuestNPCDialogue): string {
   lines.push(`#### \`${d.npcId}\``);
   lines.push("");
   for (const b of d.branches) lines.push(renderDialogueBranch(b));
-  lines.push(`  - *fallback:* ${d.fallback.length} line(s)`);
+  if (d.fallback === undefined) {
+    lines.push(`  - *fallback:* — (extension-style, falls through to legacy NPCScript)`);
+  } else {
+    lines.push(`  - *fallback:* ${d.fallback.length} line(s)`);
+  }
   return lines.join("\n");
 }
 

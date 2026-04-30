@@ -162,6 +162,14 @@ export interface Quest {
   scope: QuestScope;
   steps: Record<string, QuestStep>;
   startStep: string;
+  /**
+   * Optional event trigger that auto-accepts the quest. When the engine
+   * receives a matching event AND `acceptancePrerequisites` (if any) all
+   * pass, the quest is auto-accepted. Atoms can set flags that this
+   * trigger's guard reads — that's the canonical "atom triggers quest"
+   * pattern (Sprint 8d).
+   */
+  acceptanceTrigger?: QuestTriggerHook;
   acceptancePrerequisites?: QuestPrerequisite[];
   acceptReward?: QuestReward;
   completionReward?: QuestReward;

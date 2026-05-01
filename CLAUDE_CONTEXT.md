@@ -1191,7 +1191,7 @@ Per GAME_DESIGN.md §11 + KARMA_SYSTEM.md §4a:
 | **Courage** | → DEX (additive: `DEX_eff = DEX_base + min(10, floor(Courage/10))`) |
 | **Standing** | → legendary loot luck + shop deals + CHA (`CHA_eff = CHA_base + min(10, floor(Standing/10))`) |
 | **Spirituality** | → mana regen rate + HEAL spell power (+0.5%/pt) |
-| **Illumination** | → maxMana via `\|Illumination\|/2` (saints AND demons get the bonus; midline is deadest) |
+| **Illumination** | → maxMana via `\|Illumination\|/2` (saints AND daemons get the bonus; midline is deadest) |
 
 Five virtues unipolar 0..100; **Illumination bipolar −100..+100**.
 

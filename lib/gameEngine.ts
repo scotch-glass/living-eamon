@@ -147,7 +147,7 @@ function tagFlagsFromNpc(
   const dark =
     tags.includes("dark") ||
     tags.includes("undead") ||
-    tags.includes("demon") ||
+    tags.includes("daemon") ||
     tags.includes("sorceror") ||
     tags.includes("serpent");
   return {

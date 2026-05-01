@@ -77,7 +77,7 @@ Place names from the *Hyborian Age* essay (Aquilonia, Stygia,
 Nemedia, Zamora, Koth, Shem, Kush, Turan, Hyrkania, Vendhya,
 Vanaheim, Asgard, Pictish wilderness, the Vilayet Sea, the Black
 Coast, the Black Kingdoms) remain PD-safe via the 1936 essay's
-non-renewal.
+non-renewal. 
 
 ### 1.3 The "Inspired by" framing
 
@@ -303,11 +303,11 @@ optional fragments depending on final pacing.
 - **LE hooks:** Timed-pursuit module (novel mechanic); Courage + Spirituality forks around safe-haven choices; **probably no fragment seed** (modules don't all have to carry one).
 
 #### M-18: The Fire of Asshurbanipal (inspired by *The Fire of Asshurbanipal*, Dec 1936)
-**Genre:** desert ruin / Lovecraftian flame-demon / treasure-hunt-gone-wrong · **Difficulty:** deadly
+**Genre:** desert ruin / Lovecraftian flame-daemon / treasure-hunt-gone-wrong · **Difficulty:** deadly
 - **Setting (PD-safe):** Stygian or Shemite desert (essay-level Hyborian geography); a buried Atlantean installation half-mistaken for an Akkadian-era temple.
 - **Characters available:** Yar Ali, Steve Clarney, Asshurbanipal (as a long-dead figure inscribed in the ruin)
-- **Hero angle:** Player accompanies Yar Ali and Steve Clarney into the desert to find a fabled jewel; what they find isn't a jewel and isn't dead. The flame-demon Howard described becomes a **dormant Atlantean reactor's containment-binding** that has eroded.
-- **Customization:** Heavy wonder-tech accent — the ruin is an Atlantean installation, the demon is plasma containment, the jewel is the reactor's control-crystal. Living Eamon's player can choose to recover the crystal (powerful but radioactive — KARMA-style cost), seal the breach (Spirituality reward), or flee (default survival). Howard's Bedouin pursuers reframe as a desert raider tribe with their own claim to the ruin.
+- **Hero angle:** Player accompanies Yar Ali and Steve Clarney into the desert to find a fabled jewel; what they find isn't a jewel and isn't dead. The flame-daemon Howard described becomes a **dormant Atlantean reactor's containment-binding** that has eroded.
+- **Customization:** Heavy wonder-tech accent — the ruin is an Atlantean installation, the daemon is plasma containment, the jewel is the reactor's control-crystal. Living Eamon's player can choose to recover the crystal (powerful but radioactive — KARMA-style cost), seal the breach (Spirituality reward), or flee (default survival). Howard's Bedouin pursuers reframe as a desert raider tribe with their own claim to the ruin.
 - **LE hooks:** Treasure-hunt-gone-wrong module; cosmic-horror combat tier; **Scroll XV (capstone) potentially seeded here** as the alternate to the Lighthouse-of-the-Last-Word route — the player can complete the Way of Thoth via Asshurbanipal's deep-time recording or via Mother Khe-Anun's lighthouse, with different capstone-choice consequences.
 
 ---

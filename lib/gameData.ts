@@ -34,16 +34,16 @@ export interface NPC {
   /**
    * Karma-relevant tags read by Sprint 5's combat-PICSSI deltas.
    * Multiple tags allowed.
-   *   "dark"     — demon, dark cultist, dark sorceror; killing → +Illumination toward Light
+   *   "dark"     — daemon, dark cultist, dark sorceror; killing → +Illumination toward Light
    *   "undead"   — animated dead; treated as dark for Illumination purposes
-   *   "demon"    — outer-dark spawn; treated as dark
+   *   "daemon"   — outer-dark spawn; treated as dark
    *   "sorceror" — Occult practitioner the Order would also hunt; treated as dark
    *   "innocent" — non-combatant peasant / child / unarmed civilian; killing → −Illumination + −Standing
    *   "friendly" — Way ally, named hub NPC, training dummy. Killing one is the catastrophic-delta path.
    *   "serpent"  — Serpent-Man infiltrator (also "dark" for Illumination)
    * KARMA_SYSTEM.md §4c.
    */
-  tags?: Array<"dark" | "undead" | "demon" | "sorceror" | "innocent" | "friendly" | "serpent">;
+  tags?: Array<"dark" | "undead" | "daemon" | "sorceror" | "innocent" | "friendly" | "serpent">;
   stats: { hp: number; armor: number; damage: string };
   /** body-zone-style per-zone armor + AI targeting. Auto-derived from flat armor if absent. */
   combatProfile?: NPCCombatProfile;

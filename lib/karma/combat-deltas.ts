@@ -31,7 +31,7 @@ export interface CombatDeltaContext {
   playerLost: boolean;
 
   // ── Enemy-kind flags (from NPC.tags) ──────────────────────
-  killedDarkBeing?: boolean;   // dark / undead / demon / sorceror / serpent
+  killedDarkBeing?: boolean;   // dark / undead / daemon / sorceror / serpent
   killedInnocent?: boolean;    // innocent civilian / unarmed
   killedFriendly?: boolean;    // Way ally / hub NPC — catastrophic
 

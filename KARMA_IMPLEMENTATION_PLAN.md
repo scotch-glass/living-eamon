@@ -1069,7 +1069,7 @@ export interface CombatDeltaContext {
   alliesFledFirst: boolean; // ordered retreat
   alliesAbandoned: number;  // fled + ¬alliesFledFirst
   killedFriendly: boolean;
-  killedDarkBeing: boolean; // demon, undead, sorceror, dark cultist tag
+  killedDarkBeing: boolean; // daemon, undead, sorceror, dark cultist tag
   killedInnocent: boolean;
   defendedAlly: boolean;
   activeIntegrityContract: boolean;
@@ -1166,10 +1166,10 @@ for (const d of deltas) newP = applyKarma(newP, d);
 
 **File:** `lib/combatTypes.ts` — extend `Enemy` interface:
 ```typescript
-tags?: Array<"dark" | "undead" | "demon" | "sorceror" | "innocent" | "friendly">;
+tags?: Array<"dark" | "undead" | "daemon" | "sorceror" | "innocent" | "friendly">;
 ```
 
-Update enemy data files (anywhere monsters are declared) to add tags. Demons/undead/sorcerors/dark-cultists get `dark`. Specific named NPCs (Vivian, Aldric, etc.) get `friendly` so accidentally killing them triggers the catastrophic delta.
+Update enemy data files (anywhere monsters are declared) to add tags. Daemons/undead/sorcerors/dark-cultists get `dark`. Specific named NPCs (Vivian, Aldric, etc.) get `friendly` so accidentally killing them triggers the catastrophic delta.
 
 ### Tests
 

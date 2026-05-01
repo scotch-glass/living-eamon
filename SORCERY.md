@@ -381,7 +381,7 @@ Resurrection is **not** an unconditional revival. It has a strict reagent gate: 
 
 **The Sun-and-Moon rule.** A mortal corpse can be resurrected if and only if it has not yet been exposed to **both** the sun and the moon since death. A corpse left out long enough to experience both becomes a *failed reagent* — the corpse itself is no longer viable, and the cast fails for reagent-missing reasons (the corpse, not the standard 8 reagents). A corpse that has been **buried or kept underground** is shielded from celestial exposure regardless of how long ago death occurred — it can be resurrected even after it has decayed to a skeleton.
 
-**Mortal-vs-immortal.** Only mortal beings can be resurrected. The corpses of immortals — elves, dragons, demons, gods — cannot. Their souls departed by other rules; the spell has no purchase on them.
+**Mortal-vs-immortal.** Only mortal beings can be resurrected. The corpses of immortals — elves, dragons, daemons, gods — cannot. Their souls departed by other rules; the spell has no purchase on them.
 
 **The undead-likelihood drift.** The longer a mortal corpse has been dead, the more likely the enlivened body comes back **undead** rather than truly alive. The drift is a probabilistic curve: fresh corpses come back alive almost always; long-dead corpses come back as something walking but not living. This is the natural form of the spell, not a misuse.
 
@@ -394,7 +394,7 @@ Resurrection is **not** an unconditional revival. It has a strict reagent gate: 
 - A **corpse model** — a world-state entity with: time of death, sun-exposure flag, moon-exposure flag, location-context (buried / underground / surface / other), mortal-or-immortal flag.
 - A **world tick** — the sun/moon exposure flags update over in-game time when a corpse is on the surface.
 - A **burial mechanic** — moves a corpse's location-context to underground/buried so the celestial flags freeze.
-- A **mortal-or-immortal classification** on every NPC kind — elves, dragons, demons, gods are immortal; everyone else is mortal.
+- A **mortal-or-immortal classification** on every NPC kind — elves, dragons, daemons, gods are immortal; everyone else is mortal.
 - A **hero-death short-circuit** — the church reincarnation path runs before any corpse-creation step for the hero, and the hero's body cools too fast for resurrection to apply even hypothetically.
 - An **undead-likelihood roll** at resurrection time, scaling with time-since-death.
 - The **necromancy variant** is design-pending; carry the lore but don't wire mechanics yet.

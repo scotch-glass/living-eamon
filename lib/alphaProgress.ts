@@ -37,7 +37,7 @@ export const PROGRESS_CATEGORIES: ProgressCategory[] = [
       { label: "Visual combat animations & blood effects", status: "done" },
       { label: "Stamina + fatigue tier system (5 tiers; tier-4 exhaustion blocks the player's turn)", status: "done" },
       { label: "Combat-PICSSI deltas \u2014 routine kill +Passion; dark-being kill +Illumination; stand-and-lose +Courage; flee \u2212Courage/\u2212Standing", status: "done" },
-      { label: "NPC karma tags (dark/undead/demon/sorceror/innocent/friendly/serpent) drive Illumination shifts on kill", status: "done" },
+      { label: "NPC karma tags (dark/undead/daemon/sorceror/innocent/friendly/serpent) drive Illumination shifts on kill", status: "done" },
       { label: "Armor damage reduction + durability tracking", status: "planned" },
       { label: "Combat AI behavior (enemy tactics & formations)", status: "planned" },
       { label: "Companion/party system (fighting alongside allies)", status: "planned" },

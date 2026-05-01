@@ -191,7 +191,7 @@ Each stock has three Stage-I sub-tasks (max math · use/replenish math · depend
 
 - [ ] **I.1 Max math (best-guess; Machinations.io will tune):**
   `baseMaxMana = 10` (current default). Existing `+1 per combat victory` retained.
-  `maxMana = baseMaxMana + |Illumination| / 2` → uses ABSOLUTE value of Illumination because GAME_DESIGN.md §11 describes saints AND demons as equally "Illuminated"; the bored midline is the lowest state. Illumination ±100 = +50 maxMana. Illumination 0 = no bonus.
+  `maxMana = baseMaxMana + |Illumination| / 2` → uses ABSOLUTE value of Illumination because GAME_DESIGN.md §11 describes saints AND daemons as equally "Illuminated"; the bored midline is the lowest state. Illumination ±100 = +50 maxMana. Illumination 0 = no bonus.
   Stacking semantics: combat-victory `+1 per kill` grows base; |Illumination| adds on top. Example: Illumination −80 hero who has won 30 fights = `10 + 30 + 40 = 80 max mana`.
   **Note:** Illumination at the dark pole (negative) gives the same maxMana boost as the bright pole — but at low/negative values, GAME_DESIGN.md §11 also opens the "Outer Dark gates" (wider patron-response for INVOKE), which is its own separate effect on Sorcery (see SORCERY.md once extracted).
 - [ ] **I.2 Use/replenish math:**
@@ -412,11 +412,11 @@ The disciplined commander covering his men's retreat is not branded a coward lik
 
 #### 2.10 Illumination — the soul's balance between Light and Dark **(BIPOLAR, −100..+100)** (→ maxMana)
 
-- **Canonical link (GAME_DESIGN.md §11):** Illumination → maxMana. Both extremes increase the cap (saints and demons are equally "Illuminated"; the bored midline is the lowest social-status state).
+- **Canonical link (GAME_DESIGN.md §11):** Illumination → maxMana. Both extremes increase the cap (saints and daemons are equally "Illuminated"; the bored midline is the lowest social-status state).
 - **Range:** integer **−100..+100**. Default 0 (neutral). Negative = Darkness (selfish power, lust, greed, sorcery). Positive = Light (helping fight the Cataclysm at personal expense).
 
 - **Growth toward Light** (canonical + chat):
-  - **Killing beings of darkness:** demons, undead, sorcerers, dark cults. Per chat 2026-04-29: "fighting monsters and sorcerors is one way."
+  - **Killing beings of darkness:** daemons, undead, sorcerers, dark cults. Per chat 2026-04-29: "fighting monsters and sorcerors is one way."
   - **Saving innocent lives**, healing the helpless, restoring desecrated holy sites.
   - **Reading sacred texts.** Per chat 2026-04-29: there are books in the game that increase Illumination, including **The Scrolls of Thoth** — 15 scrolls modeled word-for-word on Hermes Trismegistus's *The Kybalion*, with Hermes/Hermes Trismegistus replaced by Thoth. The 15 scrolls are objects of quests; finding and reading each one gives an Illumination boost toward Light.
   - **Riddle-verification mechanic (per chat 2026-04-29):** to confirm the player actually READ a scroll (not just possessed/discarded it), in-game riddles or NPC dialogue gates use fill-in-the-blank prompts drawn from the scrolls. Example: *"As Above, So _____"* (canonical Hermetic answer: "Below"). Implementation: each scroll registers a list of `{prompt, blank, answer}` tuples; quest gates draw from a player's read-scrolls set; Illumination is awarded only on first successful read+verify, not on second-or-later reads. See `project_scroll_riddle_verification.md` memory.
@@ -565,7 +565,7 @@ Flows are the wires between stocks. Each one is independently checkable.
 | 3.42 | Sorcery cast (Circles 1–3) → narrative warning ONLY (no Illumination delta, per GAME_DESIGN.md §11) | spell → narrator text | [ ] Not wired |
 | 3.43 | Sorcery cast (Circle 4) → small Illumination loss; (Circles 5–8) → progressively larger loss (logarithmic) | spell → Illumination | [ ] Not wired |
 | 3.44 | maxStamina derived from STR_effective (which derives from Passion) — NO direct Passion×stamina multiplier | (chain via 3.21 → STR → maxStamina formula) | [ ] Not wired |
-| 3.44b | Killing demon/undead/sorceror/dark-cult → +Illumination toward Light | combat → Illumination | [ ] Not wired |
+| 3.44b | Killing daemon/undead/sorceror/dark-cult → +Illumination toward Light | combat → Illumination | [ ] Not wired |
 | 3.44c | Killing innocent → −Illumination toward Dark | combat → Illumination | [ ] Not wired |
 | 3.44d | First-time read of a Scroll of Thoth + verified-by-riddle → +Illumination toward Light | activity → Illumination | [ ] Not wired |
 | 3.44e | Brothel visit → −Spirituality + chance vdActive=true | activity → Spirituality + body state | [ ] Not wired |
@@ -682,7 +682,7 @@ Atom-driven combat events fire at fight end. Magnitudes use the canonical bands 
 | Stand-and-lose against great odds | death AND ≥4 enemies | **+10 Courage** (Defining) + **−3 Standing** |
 | Win in service of contract / vow | combat-end + active integrity-flagged contract | **+3 Integrity** |
 | Defend an ally in combat (took a hit FOR them) | per intervention | **+1 Courage** + **+1 Standing** |
-| Killed a demon / undead / sorceror / dark-cultist | per kill (enemy tagged "dark") | **+3 Illumination toward Light** |
+| Killed a daemon / undead / sorceror / dark-cultist | per kill (enemy tagged "dark") | **+3 Illumination toward Light** |
 | Killed an innocent (NPC tagged "innocent") | per kill | **+5 Illumination toward Dark** + **−5 Standing** (witnessed atrocity) |
 | Flee solo (no allies present) | flee command | **−1 Courage** + **−1 Standing** |
 | Flee under "great odds" pressure | flee command + ≥4 enemies | **−3 Courage** + **−3 Standing** |

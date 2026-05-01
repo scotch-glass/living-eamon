@@ -590,7 +590,6 @@ export const ITEM_ICON_PROMPTS: Record<string, string> = {
   rumor_token: "small bronze guild token stamped with an unreadable sigil",
   notice_board_key: "small brass key with a notched bit and a leather thong loop",
   goblin_ear: "severed pointed grey-green goblin ear with traces of dried blood",
-  cave_treasure: "small pile of mixed gold coins and a single gem, suggesting a modest hoard",
 };
 
 export const ITEMS: Record<string, Item> = {
@@ -1117,14 +1116,6 @@ export const ITEMS: Record<string, Item> = {
     type: "treasure",
     value: 3,
     isCarryable: true,
-  },
-  cave_treasure: {
-    id: "cave_treasure",
-    name: "Cave Treasure Chest",
-    description: "A battered iron chest filled with coins, a gem or two, and something wrapped in cloth.",
-    type: "treasure",
-    value: 150,
-    isCarryable: false,
   },
 
   // ── Per-Zone Armor (body-zone-style) ────────────────────────────

@@ -126,7 +126,6 @@ Player input
 - [x] Living World Database
 
 ### Phase 2 — Next
-- [ ] Full Beginner's Cave adventure
 - [ ] Banking system
 - [ ] Henchman hiring
 - [ ] Chronicle newspaper

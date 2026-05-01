@@ -119,7 +119,7 @@ const { data } = await serviceClient
 | `strength` / `dexterity` / `charisma` / `expertise` | int | `dexterity` replaces legacy `agility`. `expertise` is the mana pool size (formerly a 4th display stat — dropped from sidebar). |
 | `gold` / `banked_gold` | int | |
 | `weapon` / `armor` / `shield` | text / nullable | Item ids. Legacy `armor` mapped to `body_armor` on load. |
-| `helmet` / `gorget` / `body_armor` / `limb_armor` | text / nullable | Per-zone armor slots (HWRR-style) |
+| `helmet` / `gorget` / `body_armor` / `limb_armor` | text / nullable | Per-zone armor slots (body-zone-style) |
 | `inventory` | jsonb | `{ itemId, quantity }[]` |
 | `virtues` | jsonb | 10 virtue scores; **Honor** is decremented by charity-barrel takes and gray-robe-worn ticks |
 | `active_combat` | jsonb / nullable | `ActiveCombatSession` — non-null while in a fight |
@@ -250,7 +250,6 @@ Input → Static? → Return immediately (zero cost)
 - [ ] Persist `known_spells` / `known_deities`
 - [ ] Re-enable Jane streaming in `main_hall` for production
 - [ ] Pip static shop
-- [ ] Full Beginner's Cave adventure
 
 ### Phase 3 — Living World
 - [ ] Occult magic (INVOKE, reagents, The Order)

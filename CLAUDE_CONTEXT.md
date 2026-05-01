@@ -1031,7 +1031,7 @@ TierPriceDescriptionLone WandererFreeFull solo play, 10 Jane calls/dayAdventurer
 No pay-to-win. Virtues, combat, and Jane's moral mirror are identical across all tiers.
 
 §16 — Roadmap
-PhaseFocusPhase 1Core engine, streaming chat, Supabase persistence, character creation, consequence engine, Living World Database — COMPLETEPhase 2Full Beginner's Cave adventure, banking, henchman hiring, Chronicle newspaper, Grok API integration, stamina/hunger/encumbrance, Soul Forge, Scene Image systemPhase 3Occult magic full (all 8 circles), prison adventure, multiplayer shardsPhase 4Hundreds of classic Eamon adventures, player retirement → immortal NPC, Hall of Legends, Jane self-evolution, full Chapter/Arc engine with Story Engine
+PhaseFocusPhase 1Core engine, streaming chat, Supabase persistence, character creation, consequence engine, Living World Database — COMPLETEPhase 2Banking, henchman hiring, Chronicle newspaper, Grok API integration, stamina/hunger/encumbrance, Soul Forge, Scene Image systemPhase 3Occult magic full (all 8 circles), prison adventure, multiplayer shardsPhase 4Hundreds of classic Eamon adventures, player retirement → immortal NPC, Hall of Legends, Jane self-evolution, full Chapter/Arc engine with Story Engine
 
 §17 — Key Design Decisions Log
 April 2026
@@ -2211,7 +2211,7 @@ in `lib/gameData.ts` to reflect that feature.
 | Combat | Hit chance 75% + skill bonus (max 95%), weapon types, armor, fumbles, crits, FLEE |
 | Skills | Nine tracks, 700 cap, decay at cap, STATS, combat gains on hits |
 | Training | **TRAIN** in Main Hall, tiered **25/100/300/750** gp; Aldric present |
-| Adventures | Beginner's Cave, Thieves Guild, Haunted Manor |
+| Adventures | Three Thurian-PD contracts on the Notice Board (Mirrors of Tuzun Thune, Serpent in the Court, Pictish Time-Tomb) |
 | The World | The Guild, the Church, Hokas, Sam |
 | The Order | Whispered hint only — keep voice down |
 | Magic | Guild magic (safe) vs things not discussed in public |

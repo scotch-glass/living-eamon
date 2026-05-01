@@ -306,17 +306,27 @@ caseName("Cure out of combat is a successful no-op", () => {
   eq(r.outcome.effect.cured, 0, "no combat means nothing to cure");
 });
 
-// ── 5. Resurrection ──────────────────────────────────────────
+// ── 5. Dev-state markers (Phase-2 dispatchers + Resurrection) ───
+//
+// Per design principle, unbuilt features surface as a `dev-not-
+// implemented` EffectResult — visible `[DEV]` flag, never in-
+// fiction prose. These tests assert the marker is present and
+// resources still consume normally; when each Phase-2 dispatcher
+// lands, the corresponding test case gets removed (or rewritten to
+// exercise the real effect).
 
-console.log("[sprint-7b] Resurrection");
+console.log("[sprint-7b] dev-not-implemented markers");
 
-caseName("Resurrection returns resurrection-no-corpse (deferred until corpse model)", () => {
+caseName("Resurrection returns dev-not-implemented (corpse model unbuilt)", () => {
   const s0 = fixtureState();
   const manaBefore = s0.player.currentMana;
   const r = handleInvoke(s0, "Solv Mort");
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind !== "success") return;
-  eq(r.outcome.effect.kind, "resurrection-no-corpse", "effect kind");
+  eq(r.outcome.effect.kind, "dev-not-implemented", "effect kind");
+  if (r.outcome.effect.kind === "dev-not-implemented") {
+    truthy(r.outcome.effect.reason.toLowerCase().includes("corpse"), "reason mentions corpse model");
+  }
   // Resources still consumed (Resurrection is C8, mana 50, illum -30).
   // applyKarma recomputes maxMana from |illumination| (KARMA §2.2) and
   // currentMana clamps — we just assert directional behavior.
@@ -326,40 +336,37 @@ caseName("Resurrection returns resurrection-no-corpse (deferred until corpse mod
   eq(r.state.player.picssi.illumination, -30, "illumination 0 → -30");
 });
 
-// ── 6. Phase-2 effect kinds → no-effect-yet ──────────────────
-
-console.log("[sprint-7b] Phase-2 effect kinds (no-effect-yet)");
-
-caseName("Bless (buff) returns no-effect-yet but consumes resources", () => {
+caseName("Bless (buff) returns dev-not-implemented but consumes resources", () => {
   const s0 = fixtureState();
   const r = handleInvoke(s0, "Mag Aug"); // Bless C3
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind !== "success") return;
-  eq(r.outcome.effect.kind, "no-effect-yet", "effect kind");
-  if (r.outcome.effect.kind !== "no-effect-yet") return;
-  eq(r.outcome.effect.effectKind, "buff", "carried effectKind");
+  eq(r.outcome.effect.kind, "dev-not-implemented", "effect kind");
+  if (r.outcome.effect.kind === "dev-not-implemented") {
+    truthy(r.outcome.effect.reason.includes("buff"), "reason names the missing dispatcher");
+  }
   eq(r.state.player.currentMana, 100 - 9, "mana consumed");
 });
 
-caseName("Wall of Stone (field) returns no-effect-yet", () => {
+caseName("Wall of Stone (field) returns dev-not-implemented", () => {
   const s0 = fixtureState();
   const r = handleInvoke(s0, "Crea Mur"); // Wall of Stone C3
   eq(r.outcome.kind, "success", "kind");
-  if (r.outcome.kind === "success" && r.outcome.effect.kind === "no-effect-yet") {
-    eq(r.outcome.effect.effectKind, "field", "carried effectKind");
+  if (r.outcome.kind === "success" && r.outcome.effect.kind === "dev-not-implemented") {
+    truthy(r.outcome.effect.reason.includes("field"), "reason names the missing dispatcher");
   } else {
-    throw new Error("expected no-effect-yet for field");
+    throw new Error("expected dev-not-implemented for field");
   }
 });
 
-caseName("Teleport (movement) returns no-effect-yet", () => {
+caseName("Teleport (movement) returns dev-not-implemented", () => {
   const s0 = fixtureState();
   const r = handleInvoke(s0, "Mut Via"); // Teleport C3
   eq(r.outcome.kind, "success", "kind");
-  if (r.outcome.kind === "success" && r.outcome.effect.kind === "no-effect-yet") {
-    eq(r.outcome.effect.effectKind, "movement", "carried effectKind");
+  if (r.outcome.kind === "success" && r.outcome.effect.kind === "dev-not-implemented") {
+    truthy(r.outcome.effect.reason.includes("movement"), "reason names the missing dispatcher");
   } else {
-    throw new Error("expected no-effect-yet for movement");
+    throw new Error("expected dev-not-implemented for movement");
   }
 });
 
@@ -422,27 +429,34 @@ caseName("renders healed with before/after HP", () => {
   truthy(text.includes("50") && text.includes("58"), "before/after");
 });
 
-caseName("no-effect-yet renders an in-fiction line per effectKind, no meta-leaks", () => {
+caseName("dev-not-implemented renders a visible [DEV] marker, never in-fiction prose", () => {
   const spell = getSpellById("bless")!;
-  const META_LEAKS = ["deferred", "implementation", "sprint", "TODO", "not yet implemented"];
-  const KINDS: import("../../lib/sorcery/types").SpellEffectKind[] = [
-    "buff", "debuff", "summon", "field", "movement", "conceal", "reveal", "transform", "utility",
+  // Reasons that should show up in dev markers across the registry.
+  const REASONS = [
+    "buff dispatcher",
+    "debuff dispatcher",
+    "summon dispatcher",
+    "field dispatcher",
+    "movement dispatcher",
+    "conceal dispatcher",
+    "reveal dispatcher",
+    "transform dispatcher",
+    "utility dispatcher",
+    "Resurrection corpse model",
   ];
-  for (const kind of KINDS) {
+  for (const reason of REASONS) {
     const text = composeInvokeResponse({
       kind: "success",
       spell,
       illuminationDrained: 0,
       warning: null,
-      effect: { kind: "no-effect-yet", effectKind: kind },
+      effect: { kind: "dev-not-implemented", reason },
     });
-    truthy(text.length > 0, `${kind} non-empty`);
-    truthy(text.includes("Words") || text.includes("Art"), `${kind} uses in-fiction vocabulary`);
-    for (const leak of META_LEAKS) {
-      if (text.toLowerCase().includes(leak.toLowerCase())) {
-        throw new Error(`${kind} response leaks meta-language: '${leak}' in: ${text}`);
-      }
-    }
+    truthy(text.length > 0, `${reason} non-empty`);
+    // Marker must be visibly developer-flagged — no in-fiction camouflage.
+    truthy(text.includes("[DEV]"), `${reason} carries the [DEV] marker`);
+    truthy(text.includes(reason), `${reason} text includes the reason`);
+    truthy(text.toLowerCase().includes("not yet implemented"), `${reason} is flagged not yet implemented`);
   }
 });
 

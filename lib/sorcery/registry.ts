@@ -26,7 +26,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "nightshade"],
     illuminationDrain: 0,
     effectKind: "debuff",
-    description: "The target's limbs grow heavy and slow. A stumble where there should not be one.",
+    description: "Heaviness gathers, ready to weight the target's limbs into stumbling slowness.",
   },
   {
     id: "create-food",
@@ -37,7 +37,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng", "mandrake_root"],
     illuminationDrain: 0,
     effectKind: "utility",
-    description: "Bread and a wedge of cheese coalesce in the air, plain and edible.",
+    description: "The Art reaches for plain food, ready to coalesce bread and a wedge of cheese from the air.",
   },
   {
     id: "feeblemind",
@@ -48,7 +48,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["ginseng", "nightshade"],
     illuminationDrain: 0,
     effectKind: "debuff",
-    description: "The target's thoughts thicken; speech becomes effort.",
+    description: "A thickening reaches for the target's thoughts, ready to make speech an effort.",
   },
   {
     id: "heal",
@@ -60,7 +60,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: 0,
     effectKind: "heal",
     healRoll: { min: 6, max: 12 },
-    description: "A small warmth gathers under the skin; a wound closes a little.",
+    description: "A small warmth gathers under the skin, ready to close a wound a little.",
   },
   {
     id: "magic-arrow",
@@ -72,7 +72,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: 0,
     effectKind: "damage",
     damageRoll: { min: 14, max: 18 },
-    description: "A streak of pale fire leaps from the caster's hand, fast and straight.",
+    description: "Pale fire gathers at the caster's hand, ready to leap forth straight and fast.",
   },
   {
     id: "night-sight",
@@ -83,7 +83,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["sulfurous_ash", "spider_silk"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "The dark loosens its grip on your eyes. Shapes resolve where there were none.",
+    description: "The Art reaches for your eyes, ready to loosen the dark's grip and draw shapes out of shadow.",
   },
   {
     id: "reactive-armor",
@@ -94,7 +94,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "sulfurous_ash", "spider_silk"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "The skin hardens, briefly stone-cousined. Blades will find it stubborn.",
+    description: "A hardening gathers in the skin, ready to make it briefly stone-cousined and stubborn against blades.",
   },
   {
     id: "weaken",
@@ -105,7 +105,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "nightshade"],
     illuminationDrain: 0,
     effectKind: "debuff",
-    description: "The target's grip falters. A held weapon feels heavier than it should.",
+    description: "A faltering reaches for the target's grip, ready to make any held weapon feel heavier than it should.",
   },
 
   // ── Circle 2 — mana 6 ─────────────────────────────────────
@@ -118,7 +118,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "Limbs find their old quickness. The room feels a half-step slower.",
+    description: "Quickness gathers in the limbs, ready to give them their old speed; the room would feel a half-step slower.",
   },
   {
     id: "cunning",
@@ -129,7 +129,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["nightshade", "mandrake_root"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "Thought sharpens. Connections that were dark a moment ago lay themselves out.",
+    description: "A sharpening gathers in thought, ready to draw out connections that were dark a moment ago.",
   },
   {
     id: "cure",
@@ -140,7 +140,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng"],
     illuminationDrain: 0,
     effectKind: "heal",
-    description: "The poison loosens its hold. Color returns to the wounded.",
+    description: "The Art reaches for the poisoned places, ready to loosen the toxin's hold and return color to the wounded.",
   },
   {
     id: "harm",
@@ -152,7 +152,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: 0,
     effectKind: "damage",
     damageRoll: { min: 23, max: 29 },
-    description: "A cold hand closes briefly on the target's heart and lets go.",
+    description: "A cold hand gathers, ready to close briefly on the target's heart and let go.",
   },
   {
     id: "magic-trap",
@@ -163,7 +163,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "spider_silk", "sulfurous_ash"],
     illuminationDrain: 0,
     effectKind: "utility",
-    description: "A waiting pattern is laid into the lock — patient, eager.",
+    description: "A waiting pattern gathers, ready to lay itself into the lock — patient, eager.",
   },
   {
     id: "remove-trap",
@@ -174,7 +174,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "sulfurous_ash"],
     illuminationDrain: 0,
     effectKind: "utility",
-    description: "The waiting pattern relaxes, then dissolves. The latch is harmless.",
+    description: "The Art reaches for the waiting pattern, ready to relax and dissolve it; the latch would go harmless.",
   },
   {
     id: "protection",
@@ -185,7 +185,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng", "sulfurous_ash"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "A focused calm settles over the caster. Distractions slide off the mind.",
+    description: "A focused calm gathers, ready to settle over the caster; distractions would slide off the mind.",
   },
   {
     id: "strength",
@@ -196,7 +196,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["mandrake_root", "nightshade"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "The target stands a little taller; the world weighs a little less on their shoulders.",
+    description: "Strength gathers, ready to stand the target a little taller; the world would weigh a little less on their shoulders.",
   },
 
   // ── Circle 3 — mana 9 ─────────────────────────────────────
@@ -209,7 +209,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "mandrake_root"],
     illuminationDrain: 0,
     effectKind: "buff",
-    description: "Three quiet warmths layer themselves into the body — quickness, sharpness, vigor.",
+    description: "Three quiet warmths gather, ready to layer themselves into the body — quickness, sharpness, vigor.",
   },
   {
     id: "fireball",
@@ -221,7 +221,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: 0,
     effectKind: "damage",
     damageRoll: { min: 26, max: 31 },
-    description: "A globe of fire leaves the caster's hand and breaks loud where it strikes.",
+    description: "A globe of fire gathers at the caster's hand, ready to leave it and break loud where it strikes.",
   },
   {
     id: "magic-lock",
@@ -232,7 +232,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "garlic", "sulfurous_ash"],
     illuminationDrain: 0,
     effectKind: "utility",
-    description: "The latch refuses the room. No mundane key will move it.",
+    description: "A binding gathers in the latch, ready to make it refuse the room; no mundane key would move it.",
   },
   {
     id: "poison",
@@ -243,7 +243,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["nightshade"],
     illuminationDrain: 0,
     effectKind: "debuff",
-    description: "Black flowers bloom briefly under the target's skin. They will not heal until cured.",
+    description: "The Art reaches for the target's veins, ready to bloom black flowers beneath the skin that would not heal until cured.",
   },
   {
     id: "telekinesis",
@@ -254,7 +254,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root"],
     illuminationDrain: 0,
     effectKind: "utility",
-    description: "A held thing lifts of its own accord and obeys the caster's small commanding gestures.",
+    description: "A lifting gathers around the named thing, ready to raise it of its own accord at the caster's small commanding gestures.",
   },
   {
     id: "teleport",
@@ -265,7 +265,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root"],
     illuminationDrain: 0,
     effectKind: "movement",
-    description: "The room briefly contains two of the caster, one fading and one resolving where the eye looked.",
+    description: "The way bends and gathers itself, ready to fade the caster from one place and resolve them where the eye looked.",
   },
   {
     id: "unlock",
@@ -276,7 +276,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "sulfurous_ash"],
     illuminationDrain: 0,
     effectKind: "utility",
-    description: "The lock finds itself remembering open, and obliges.",
+    description: "The Art reaches for the lock, ready to remind it of being open.",
   },
   {
     id: "wall-of-stone",
@@ -287,7 +287,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "garlic"],
     illuminationDrain: 0,
     effectKind: "field",
-    description: "Stone rises from the floor in the shape of a wall and does not ask permission.",
+    description: "Energy gathers to pull stone up from the earth in the shape of a wall.",
   },
 
   // ── Circle 4 — mana 11 — Illumination begins to darken ───
@@ -300,7 +300,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng", "mandrake_root"],
     illuminationDrain: -2,
     effectKind: "heal",
-    description: "Poison flees the air around the caster. Allies within reach exhale together.",
+    description: "The Art reaches outward from the caster, ready to drive poison from the air; allies within reach would exhale together.",
   },
   {
     id: "arch-protection",
@@ -311,7 +311,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng", "mandrake_root", "sulfurous_ash"],
     illuminationDrain: -2,
     effectKind: "buff",
-    description: "The same focused calm passes from the caster to every ally near. Spells will not interrupt them.",
+    description: "Focused calm gathers around the caster, ready to pass to every ally near; spells would not interrupt them.",
   },
   {
     id: "curse",
@@ -322,7 +322,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "nightshade", "sulfurous_ash"],
     illuminationDrain: -2,
     effectKind: "debuff",
-    description: "Three quiet wrongs settle into the target's body — slowness, fog, weakness.",
+    description: "Three quiet wrongs gather, ready to settle into the target's body — slowness, fog, weakness.",
   },
   {
     id: "fire-field",
@@ -333,7 +333,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "spider_silk", "sulfurous_ash"],
     illuminationDrain: -2,
     effectKind: "field",
-    description: "A line of fire lifts from the floor, knee-high, and stays where it is told.",
+    description: "Fire gathers along the named line, ready to lift knee-high from the floor and stay where it is told.",
   },
   {
     id: "greater-heal",
@@ -345,7 +345,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -2,
     effectKind: "heal",
     healRoll: { min: 25, max: 40 },
-    description: "Major wounds knit themselves shut. The target stands surprised at how easy it became.",
+    description: "A deep warmth gathers under the skin, ready to knit major wounds shut; the target would stand surprised at how easy it became.",
   },
   {
     id: "lightning",
@@ -357,7 +357,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -2,
     effectKind: "damage",
     damageRoll: { min: 30, max: 34 },
-    description: "A white seam splits the air between caster and target — gone before the thunder arrives.",
+    description: "A white seam gathers between caster and target, ready to split the air — gone before the thunder would arrive.",
   },
   {
     id: "mana-drain",
@@ -368,7 +368,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "mandrake_root", "spider_silk"],
     illuminationDrain: -2,
     effectKind: "debuff",
-    description: "Whatever power the target had gathered slips out of them in a long draining breath.",
+    description: "The Art reaches for whatever power the target has gathered, ready to slip it out of them in a long draining breath.",
   },
   {
     id: "recall",
@@ -379,7 +379,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "blood_moss", "mandrake_root"],
     illuminationDrain: -2,
     effectKind: "movement",
-    description: "The room folds. The caster is elsewhere — somewhere they have stood before.",
+    description: "The room would fold; the Art reaches for a marked place, ready to set the caster elsewhere — somewhere they have stood before.",
   },
 
   // ── Circle 5 — mana 14 ────────────────────────────────────
@@ -392,7 +392,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "mandrake_root", "nightshade"],
     illuminationDrain: -4,
     effectKind: "summon",
-    description: "Spinning blades lift from nowhere and hunt the caster's enemies until they are spent.",
+    description: "Spinning blades gather from nowhere, ready to lift and hunt the caster's enemies until they are spent.",
   },
   {
     id: "dispel-field",
@@ -403,7 +403,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "garlic", "spider_silk", "sulfurous_ash"],
     illuminationDrain: -4,
     effectKind: "field",
-    description: "A held pattern of force unwinds where the caster points, and is no longer there.",
+    description: "The Art reaches for a held pattern of force, ready to unwind it where the caster points.",
   },
   {
     id: "incognito",
@@ -414,7 +414,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "nightshade", "sulfurous_ash"],
     illuminationDrain: -4,
     effectKind: "conceal",
-    description: "Face, voice, and bearing slip into someone else's. Mirrors are confused.",
+    description: "A slipping gathers in face, voice, and bearing, ready to take on someone else's; mirrors would be confused.",
   },
   {
     id: "magic-reflection",
@@ -425,7 +425,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "mandrake_root", "spider_silk"],
     illuminationDrain: -4,
     effectKind: "buff",
-    description: "A polished shell of mind closes over the caster. What is sent will be returned.",
+    description: "A polished shell of mind gathers, ready to close over the caster; what is sent would be returned.",
   },
   {
     id: "mind-blast",
@@ -437,7 +437,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -4,
     effectKind: "damage",
     damageRoll: { min: 40, max: 42 },
-    description: "The target's thoughts crack like ice on a pond. They forget the next thing they were going to do.",
+    description: "A cold pressure gathers in the target's thoughts, ready to crack them like ice on a pond; they would forget the next thing they were going to do.",
   },
   {
     id: "paralyze",
@@ -448,7 +448,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "nightshade", "spider_silk"],
     illuminationDrain: -4,
     effectKind: "debuff",
-    description: "The target's body forgets that motion is allowed. It will remember when something strikes them.",
+    description: "A binding gathers around the target's body, ready to make it forget motion is allowed; it would remember when something strikes them.",
   },
   {
     id: "poison-field",
@@ -459,7 +459,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "nightshade", "spider_silk"],
     illuminationDrain: -4,
     effectKind: "field",
-    description: "Green air settles into a room-sized cloud. Breathing it has consequences.",
+    description: "Green air gathers in a room-sized cloud, ready to settle; breathing it would have consequences.",
   },
   {
     id: "summon-creature",
@@ -470,7 +470,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk"],
     illuminationDrain: -4,
     effectKind: "summon",
-    description: "Something wandered in and accepted being called. It will fight while it remembers being called.",
+    description: "The Art reaches into the further places, ready to call something that would wander in and fight while it remembers being called.",
   },
 
   // ── Circle 6 — mana 20 ────────────────────────────────────
@@ -483,7 +483,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "mandrake_root", "sulfurous_ash"],
     illuminationDrain: -8,
     effectKind: "utility",
-    description: "Whatever was called here, the caster sends home. It does not fight the going.",
+    description: "The Art reaches for whatever was called here, ready to send it home; it would not fight the going.",
   },
   {
     id: "energy-bolt",
@@ -495,7 +495,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -8,
     effectKind: "damage",
     damageRoll: { min: 51, max: 56 },
-    description: "A bar of pale energy crosses the room and the target is much less than they were.",
+    description: "A bar of pale energy gathers, ready to cross the room; the target would be much less than they were.",
   },
   {
     id: "explosion",
@@ -507,7 +507,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -8,
     effectKind: "damage",
     damageRoll: { min: 51, max: 56 },
-    description: "A delayed sphere of fire — counted in heartbeats — and then the room is changed.",
+    description: "A sphere of fire gathers, set on a delay of heartbeats, ready to break and change the room.",
   },
   {
     id: "invisibility",
@@ -518,7 +518,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "nightshade"],
     illuminationDrain: -8,
     effectKind: "conceal",
-    description: "The eye reaches for the caster and finds the room behind them. Footsteps remain.",
+    description: "A veil gathers around the caster, ready to make the eye reach for them and find the room behind; footsteps would remain.",
   },
   {
     id: "mark",
@@ -529,7 +529,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "blood_moss", "mandrake_root"],
     illuminationDrain: -8,
     effectKind: "utility",
-    description: "The caster fixes this place in a stone they carry. Recall will return them here.",
+    description: "The caster gathers this place's signature into a stone they carry; Recall would return them here.",
   },
   {
     id: "mass-curse",
@@ -540,7 +540,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "mandrake_root", "nightshade", "sulfurous_ash"],
     illuminationDrain: -8,
     effectKind: "debuff",
-    description: "Slowness and fog and weakness lay themselves over every enemy in the room at once.",
+    description: "Slowness, fog, and weakness gather, ready to lay themselves over every enemy in the room at once.",
   },
   {
     id: "paralyze-field",
@@ -551,7 +551,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "ginseng", "spider_silk"],
     illuminationDrain: -8,
     effectKind: "field",
-    description: "A line is drawn on the floor. Anyone who crosses it forgets that motion is allowed.",
+    description: "A binding gathers along a line on the floor, ready to make anyone who crosses it forget that motion is allowed.",
   },
   {
     id: "reveal",
@@ -562,7 +562,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "sulfurous_ash"],
     illuminationDrain: -8,
     effectKind: "reveal",
-    description: "Whatever has been hiding in the room shrugs off its hiding. The caster sees them all.",
+    description: "The Art reaches into the room's hiding-places, ready to shrug whatever lurks out of cover; the caster would see them all.",
   },
 
   // ── Circle 7 — mana 40 ────────────────────────────────────
@@ -576,7 +576,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -15,
     effectKind: "damage",
     damageRoll: { min: 64, max: 69 },
-    description: "The first target is the one named. The lightning, having begun, finds the others on its own.",
+    description: "Lightning gathers at the caster, ready to fall first on the named target and from there to find the others on its own.",
   },
   {
     id: "energy-field",
@@ -587,7 +587,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "mandrake_root", "spider_silk", "sulfurous_ash"],
     illuminationDrain: -15,
     effectKind: "field",
-    description: "A wall of standing force. It blocks the room as a hand blocks a doorway.",
+    description: "Standing force gathers along the named line, ready to make a wall that would block the room as a hand blocks a doorway.",
   },
   {
     id: "flamestrike",
@@ -599,7 +599,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -15,
     effectKind: "damage",
     damageRoll: { min: 64, max: 69 },
-    description: "A column of fire descends on the target's exact place. Everything within it is removed.",
+    description: "A column of fire gathers above the target's exact place, ready to descend; everything within it would be removed.",
   },
   {
     id: "gate-travel",
@@ -610,7 +610,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "mandrake_root", "sulfurous_ash"],
     illuminationDrain: -15,
     effectKind: "movement",
-    description: "An oval opens in the air and the caster's marked place is on the other side of it.",
+    description: "An oval gathers in the air, ready to open onto the caster's marked place on its other side.",
   },
   {
     id: "mana-vampire",
@@ -621,7 +621,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "blood_moss", "mandrake_root", "spider_silk"],
     illuminationDrain: -15,
     effectKind: "debuff",
-    description: "The target's gathered power is not lost — it is taken. The caster is the larger for it.",
+    description: "The Art reaches for the target's gathered power, ready not to lose it but to take it; the caster would be the larger for it.",
   },
   {
     id: "mass-dispel",
@@ -632,7 +632,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "garlic", "mandrake_root", "sulfurous_ash"],
     illuminationDrain: -15,
     effectKind: "utility",
-    description: "Every called creature in the room is sent back where it came from. They go.",
+    description: "The Art reaches outward from the caster, ready to send every called creature in the room back where it came from.",
   },
   {
     id: "meteor-swarm",
@@ -644,7 +644,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -15,
     effectKind: "damage",
     damageRoll: { min: 64, max: 69 },
-    description: "A flight of fire-stones falls through the ceiling and finds whoever it can reach.",
+    description: "Fire-stones gather above, ready to fall through the ceiling and find whoever they can reach.",
   },
   {
     id: "polymorph",
@@ -655,7 +655,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk"],
     illuminationDrain: -15,
     effectKind: "transform",
-    description: "The caster is briefly something else. The change takes; the going-back does, too.",
+    description: "A change gathers in the caster, ready to make them briefly something else; the going-back would take as well.",
   },
 
   // ── Circle 8 — mana 50 — the descent ──────────────────────
@@ -669,7 +669,7 @@ export const SPELL_REGISTRY: Spell[] = [
     illuminationDrain: -30,
     effectKind: "damage",
     damageRoll: { min: 25, max: 35 },
-    description: "The floor remembers being a fault and is honest about it. Everyone falls.",
+    description: "The Art reaches into the floor, ready to remind it of being a fault; everyone within reach would fall.",
   },
   {
     id: "energy-vortex",
@@ -680,7 +680,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "blood_moss", "mandrake_root", "nightshade"],
     illuminationDrain: -30,
     effectKind: "summon",
-    description: "A storm rises in the room, given a hunger and turned loose. It hunts.",
+    description: "A storm gathers in the room, ready to rise with a hunger turned loose, that it might hunt.",
   },
   {
     id: "resurrection",
@@ -691,7 +691,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "garlic", "ginseng"],
     illuminationDrain: -30,
     effectKind: "heal",
-    description: "A soul that had taken its leave is asked to return. Sometimes it does.",
+    description: "The Art reaches into the great quiet beyond the body, ready to ask a soul that had taken its leave to return; sometimes it does.",
   },
   {
     id: "summon-air-elemental",
@@ -702,7 +702,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk"],
     illuminationDrain: -30,
     effectKind: "summon",
-    description: "A tall column of moving wind enters the room and accepts having a name.",
+    description: "Wind gathers from the further places, ready to enter the room as a tall moving column and accept having a name.",
   },
   {
     id: "summon-daemon",
@@ -713,7 +713,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk", "sulfurous_ash"],
     illuminationDrain: -30,
     effectKind: "summon",
-    description: "Something arrives that did not arrive. It takes orders. It remembers being asked.",
+    description: "The Art reaches into the dark places, ready to summon something that takes orders and remembers being asked.",
   },
   {
     id: "summon-earth-elemental",
@@ -724,7 +724,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk"],
     illuminationDrain: -30,
     effectKind: "summon",
-    description: "The floor stands up and walks. It has no opinions but the caster's.",
+    description: "The Art reaches into the floor, ready to make it stand up and walk; it would have no opinions but the caster's.",
   },
   {
     id: "summon-fire-elemental",
@@ -735,7 +735,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk", "sulfurous_ash"],
     illuminationDrain: -30,
     effectKind: "summon",
-    description: "A figure of fire steps in from somewhere fire is more itself. It is patient.",
+    description: "Fire gathers from somewhere it is more itself, ready to step in as a figure; it would be patient.",
   },
   {
     id: "summon-water-elemental",
@@ -746,7 +746,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk"],
     illuminationDrain: -30,
     effectKind: "summon",
-    description: "A tower of water in the rough shape of a person. It moves slowly. It does not stop.",
+    description: "Water gathers, ready to rise as a tower in the rough shape of a person; it would move slowly, and not stop.",
   },
 ];
 

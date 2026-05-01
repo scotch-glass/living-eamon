@@ -1072,9 +1072,9 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 ---
 
-## ⚡ Most recent session (2026-05-01) — Sprint 7 vocabulary swap shipped; Sprint 7a Sorcery bedrock confirmed already on prod
+## ⚡ Most recent session (2026-05-01) — Sprint 7 vocabulary swap + Sprint 7a confirmed + Sprint 7b Phase 1 shipped + canonical Light/Dark lore correction
 
-**The day's headline:** Sprint 7 jumped its place in the queue. The legacy third-party Words-of-Power vocabulary was replaced wholesale with an original Latinate compositional system (`ea02d20` → merged `c953c23`). On hydration the next sub-sprint after that — **Sprint 7a, the full INVOKE bedrock (registry of all 64 spells, parser, Circle/mana/reagent/Illumination gates, `unlockCircle` quest reward wiring, 23-case test suite)** — was already shipped on commit `aab3eed` (merged into main as `6940c48`). The previous session built and committed it but did not update CLAUDE_CONTEXT.md to reflect the ship; **always re-check `git log --oneline --all --graph | head -20` against the most-recent-session block at the top of this file when hydrating, since the block can lag actual repo state.**
+**The day's headline:** Sprint 7 advanced two sub-sprints in one session. (1) Vocabulary swap shipped (`ea02d20` → `c953c23`). (2) Sprint 7a discovered already on prod from a prior session (`aab3eed` → `6940c48`); CLAUDE_CONTEXT.md was lagging the ship. (3) **Sprint 7b Phase 1 shipped — INVOKE successes now actually deal damage to combat enemies, restore HP to the caster, and cure poison.** Phase-2 effect kinds (buff/debuff/summon/field/movement/conceal/reveal/transform/utility) return `no-effect-yet` until their supporting infrastructure lands. (4) **Canonical lore correction (load-bearing):** removed the inherited "low Illumination amplifies subsequent INVOKE" claim from GAME_DESIGN.md §11 and SORCERY.md §7. Added SORCERY.md §7.1 documenting the cosmological reasoning (Thoth's Principle of Correspondence — Light and Dark as polar continuum, not factions; Darkness unsustainable by its own physics).
 
 ### Magic-system state on prod (main `6940c48`)
 
@@ -1098,9 +1098,10 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 | Sub-sprint | Scope | State |
 |---|---|---|
-| 7-vocab + 7a | Vocabulary, registry, INVOKE handler, gates | ✅ shipped (this session) |
-| 7b | Numeric effect dispatch — damage/heal/buff/debuff actually fire (today's INVOKE success only emits chronicle text + description) | ❌ stubbed, explicitly TODO in invoke.ts/registry.ts |
-| 7c | Outer Dark patron-response — low-Illumination amplifies subsequent INVOKE attempts (SORCERY.md §7) | ❌ design-only |
+| 7-vocab + 7a | Vocabulary, registry, INVOKE handler, gates | ✅ shipped |
+| 7b Phase 1 | Numeric effect dispatch — damage / heal / cure actually fire | ✅ shipped (this session) |
+| 7b Phase 2 | Effect dispatch for buff / debuff / summon / field / movement / conceal / reveal / transform / utility — currently return `no-effect-yet` (resources still consumed, physical magnitude deferred) | ❌ each kind needs supporting infrastructure: new ActiveStatusEffect types for stat buffs, ally combat for summons, persistent zone state for fields, runebook model for movement |
+| 7c | Outer Dark — narrative-only consequences of low Illumination (different gods answer prayers, different NPC reactions, patron whispers at the lowest tiers). **NOT** a power-amplifier — corrected 2026-05-01: the Illumination → spell-power relation is one-way. Powerful sorcery darkens the soul; a darkened soul does NOT boost spell power. Light and Dark are **poles of the PICSSI Illumination continuum**, not factions of beings. SORCERY.md §7 + §7.1 is the source of truth (Thoth's Principle of Correspondence). | ❌ design-only; precise scope TBD |
 | 7d | The Order witness mechanic — public-room casting probability spike → investigation thread (SORCERY.md §4) | ❌ Phase 2 per spec |
 
 ### Hydration discipline (lesson from this session)

@@ -48,6 +48,17 @@ export type SpellEffectKind =
   | "transform"
   | "utility";
 
+/**
+ * Inclusive integer range [min, max] for damage / heal / cure rolls.
+ * Sources are SORCERY.md §6 where the spell row gives a numeric range
+ * (e.g. Magic Arrow 14–18, Fireball 26–31). Spells without a stated
+ * range get a defensible per-circle default.
+ */
+export interface NumericRange {
+  min: number;
+  max: number;
+}
+
 export interface Spell {
   /** Stable internal ID, kebab-case. Use for code references + tests. */
   id: string;
@@ -71,8 +82,20 @@ export interface Spell {
    * warnings instead — see SORCERY.md §7).
    */
   illuminationDrain: number;
-  /** Effect classification (for narrative dispatch in Sprint 7a). */
+  /** Effect classification — drives Sprint 7b effect dispatch. */
   effectKind: SpellEffectKind;
+  /**
+   * Sprint 7b — damage spells: HP roll applied to the active combat
+   * enemy. Out of combat the spell returns `no-target` and consumes
+   * nothing. Non-damage spells leave this null.
+   */
+  damageRoll?: NumericRange | null;
+  /**
+   * Sprint 7b — heal spells: HP restored to the caster, capped at
+   * maxHp. Resurrection is a special case (handled in effects.ts).
+   * Non-heal spells leave this null.
+   */
+  healRoll?: NumericRange | null;
   /** One-line description; used in chronicle entries on cast. */
   description: string;
 }
@@ -117,6 +140,24 @@ export const CIRCLE_NARRATIVE_WARNING: Partial<Record<Circle, string>> = {
 };
 
 /**
+ * Sprint 7b — what the spell actually did on a successful cast.
+ * Sits alongside `success.illuminationDrained` so the response
+ * composer can describe both the metaphysical and physical cost.
+ *
+ * `no-effect-yet` covers effect kinds whose dispatcher hasn't been
+ * built yet (buffs / debuffs / summons / fields / movement / conceal
+ * / transform / utility — Sprint 7b Phase 2). For those, mana +
+ * reagents + Illumination still apply (the cast happened); only the
+ * physical result is unimplemented.
+ */
+export type EffectResult =
+  | { kind: "damage-dealt"; targetName: string; amount: number; targetHpAfter: number }
+  | { kind: "healed"; amount: number; hpAfter: number; hpBefore: number }
+  | { kind: "cure-applied"; cured: number }       // count of poison stacks removed
+  | { kind: "resurrection-no-corpse" }            // Resurrection cast with no valid target
+  | { kind: "no-effect-yet"; effectKind: SpellEffectKind };
+
+/**
  * Outcome of an INVOKE attempt — engine returns one of these so
  * the gameEngine.ts handler can compose the static response.
  */
@@ -126,4 +167,12 @@ export type InvokeOutcome =
   | { kind: "insufficient-mana"; spell: Spell; need: number; have: number }
   | { kind: "missing-reagents"; spell: Spell; missing: ReagentId[] }
   | { kind: "fizzle-no-reagents"; words: string[] } // attempted unknown invocation without any reagents
-  | { kind: "success"; spell: Spell; illuminationDrained: number; warning: string | null };
+  | { kind: "no-target"; spell: Spell }           // Sprint 7b — damage spell cast with no active combat
+  | {
+      kind: "success";
+      spell: Spell;
+      illuminationDrained: number;
+      warning: string | null;
+      /** Sprint 7b — what the spell physically did. */
+      effect: EffectResult;
+    };

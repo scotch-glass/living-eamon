@@ -833,7 +833,7 @@ Illumination is the only PICSSI dimension that **attracts at both extremes**: sa
 |--|--|
 | **NPC dialogue / romance** | female NPCs weigh the player's PICSSI scores when choosing flirtation, marriage offers, betrayals, rescue offers. The dimension that attracts them dictates which axis they read. |
 | **Prayer reach** (CAST) | low-Illumination heroes find that only dark gods answer their prayers; high-Illumination heroes find that bright gods answer. Mid-Illumination heroes get inconsistent or weak answers. |
-| **Sorcery cost** (INVOKE) | every casting darkens Illumination. Compounding: lower Illumination → wider door for Outer Dark gods to answer further INVOKE attempts. The Eight Circles thus become darker AND more powerful as the hero descends. |
+| **Sorcery cost** (INVOKE) | every casting darkens Illumination. The higher the Circle, the deeper the drain (per-Circle magnitudes: 0/0/0/−2/−4/−8/−15/−30; SORCERY.md §7). **The relation is one-way:** powerful sorcery darkens the soul, but a darkened soul does NOT amplify the power of subsequent sorcery. There is no Outer-Dark feedback loop that makes spells stronger as the hero falls. |
 | **Quest gating** | attributes and virtues lock adventure modules and even magical doors in adventures and in temples and in magic rooms (like wizard and sorcery schools), integrity-locked quests refuse to launch for a hero who has broken too many prior promises this life. Courage-locked quests likewise check courage history. |
 | **NPC trust thresholds** | shopkeepers, merchants, and quest-givers extend credit to high integrity heros / offer assassination, banditry and thuggery adventures to low-Integrity heroes. |
 

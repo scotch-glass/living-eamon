@@ -261,7 +261,11 @@ caseName("Circle 3 success: warning string fires (no Illumination drain)", () =>
     mana: 50,
     reagents: ALL_REAGENTS,
   });
-  const r = handleInvoke(s0, "Mag Ign"); // Fireball (Circle 3)
+  // Bless (Mag Aug) — Circle 3 buff; works out of combat (Sprint 7b
+  // returns no-effect-yet, which is still a success outcome). The
+  // earlier test used Fireball, which Sprint 7b now correctly gates
+  // behind active-combat (returns no-target instead of success).
+  const r = handleInvoke(s0, "Mag Aug");
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind === "success") {
     eq(r.outcome.illuminationDrained, 0, "no drain at Circle 3");
@@ -275,7 +279,10 @@ caseName("Circle 4 success: drains Illumination by -2", () => {
     mana: 50,
     reagents: ALL_REAGENTS,
   });
-  const r = handleInvoke(s0, "Crea Ful"); // Lightning (Circle 4)
+  // Greater Heal (Mag Aug Vit) — Circle 4 heal; works out of combat.
+  // The earlier test used Lightning, which Sprint 7b now correctly
+  // gates behind active-combat (returns no-target).
+  const r = handleInvoke(s0, "Mag Aug Vit");
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind === "success") {
     eq(r.outcome.illuminationDrained, -2, "drain -2 at Circle 4");

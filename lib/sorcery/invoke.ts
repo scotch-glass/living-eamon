@@ -193,29 +193,30 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
 
     case "circle-locked": {
       const spell = outcome.spell;
-      return `The Words "${spell.words.join(" ")}" are familiar to your tongue, but the Circle they belong to is not yet open to you. The invocation fails with a faint sulfurous tang and goes nowhere.`;
+      const words = spell.words.join(" ");
+      return `You speak the Words — *${words}* — and the syllables sit easy on your tongue, as if you had spoken them in some life before this one. But the Circle they belong to has not yet opened its door to you. The invocation finds no road to travel; a breath of sulfur clings to the room, and the Art waits, patient as the dead.`;
     }
 
     case "insufficient-mana": {
       const { spell, need, have } = outcome;
-      return `You speak the Words. Nothing answers. ${spell.name} costs ${need} mana; you have ${have}. The intent is sealed back inside you.`;
+      return `The Words leave your tongue and find no answer. ${spell.name} would drink ${need} from the wells of you; ${have} is all that remains in them. The intent gathers, falters, and is sealed back inside you — a breath that wanted to be a fire.`;
     }
 
     case "missing-reagents": {
       const { spell, missing } = outcome;
       const labels = missing.map(reagentLabel).join(", ");
-      return `The Words form, but the Art needs more than words. ${spell.name} requires reagents you lack: ${labels}. A breath of sulfur, and the moment passes.`;
+      return `The Words shape themselves on the air, but the Art will have more than syllables. ${spell.name} hungers for ${labels}, and your hand finds no such things to feed it. Sulfur clings briefly to the room; the gathered intent dissipates, unblooded.`;
     }
 
     case "no-target": {
       const { spell } = outcome;
-      return `${spell.name} wants a target. You are not in combat — the Words gather and disperse without striking anything. Reagents and mana are spared.`;
+      return `You speak the Words and the Art rises to meet them — gathers, coils, seeks the transmuted fear and malice required to destroy life from which ${spell.name} is made — and finds no such energy nor foe before you to take it. After a heartbeat the intent unwinds and slips back into the silences from which it came. Your reagents stay in your pouch unbroken; the mana stays in your blood unspilt.`;
     }
 
     case "success": {
       const { spell, illuminationDrained, warning, effect } = outcome;
       const lines: string[] = [];
-      lines.push(`*You invoke ${spell.name}.*`);
+      lines.push(`*The Words leave your tongue. ${spell.name} answers.*`);
       lines.push("");
       lines.push(spell.description);
 
@@ -244,21 +245,66 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
 function composeEffectLine(effect: import("./types").EffectResult): string | null {
   switch (effect.kind) {
     case "damage-dealt":
-      return `**${effect.targetName} takes ${effect.amount} damage.** (${effect.targetHpAfter} HP remaining)`;
+      if (effect.targetHpAfter === 0) {
+        return `**${effect.targetName} falls — silenced by the Art.** (${effect.amount} damage)`;
+      }
+      return `**${effect.targetName} reels under the strike; the breath rakes out of them.** (${effect.amount} damage; ${effect.targetHpAfter} HP remaining)`;
     case "healed":
       if (effect.amount === 0) {
-        return `*Already at full health — the warmth has nowhere to go.*`;
+        return `*The Art rises in you, finds no wound to mend, and settles back into your blood.*`;
       }
-      return `**You recover ${effect.amount} HP.** (${effect.hpBefore} → ${effect.hpAfter})`;
+      return `**Warmth gathers under your skin where the Art has answered.** (${effect.amount} HP; ${effect.hpBefore} → ${effect.hpAfter})`;
     case "cure-applied":
       if (effect.cured === 0) {
-        return `*No poison flowed in your veins to draw out.*`;
+        return `*The Art reaches for the poisoned places in you and finds none. It settles, unspent.*`;
       }
-      return `**Poison flees you.** (${effect.cured} effect${effect.cured === 1 ? "" : "s"} cured)`;
+      return `**Black flowers wither in your veins; the poison forgets its purpose.** (${effect.cured} cured)`;
     case "resurrection-no-corpse":
-      return `*The Words form, but no soul on this side hears them. Resurrection requires a body — that system is not yet in the world.*`;
+      return `*The Words form and the Art rises in answer — reaches into the great quiet beyond the body — and finds no soul there to call back. There is no dead before you to summon home. The Art subsides, patient; it is in no hurry.*`;
     case "no-effect-yet":
-      return `*The Words take, but the world does not yet know how to answer them. (Effect kind '${effect.effectKind}' — implementation deferred to a later sprint.)*`;
+      return composeNoEffectYetLine(effect.effectKind);
+  }
+}
+
+/**
+ * In-fiction "the spell happened but its result isn't visible to you"
+ * line, varied by effectKind so the player gets atmospheric variety
+ * across spells whose physical magnitudes haven't been wired yet.
+ *
+ * Each line is honest at the lore level (the Art does form; the cost
+ * is paid; SORCERY.md §3 specifies that mana + reagents always
+ * resolve on a non-fizzle cast) without referencing the dev reality
+ * that the dispatcher for that effectKind is unimplemented.
+ */
+function composeNoEffectYetLine(
+  effectKind: import("./types").SpellEffectKind
+): string {
+  switch (effectKind) {
+    case "buff":
+      return `*The Words form, and the Art rises in you like heat in a stove just kindled. Something settles into your bones — slow, certain, unnamed. The senses cannot yet take its measure.*`;
+    case "debuff":
+      return `*The Words form. Something quiet leaves your hand and finds the one you named — settles into them like a shadow lengthening at dusk. The eye cannot yet see what was taken from them, but it was.*`;
+    case "summon":
+      return `*The Words form. Far from here, in some place the Art knows and the world does not, something stirs that hears its name. It is not yet at the door.*`;
+    case "field":
+      return `*The Words form. The room briefly tastes of the Art — copper, ash, the sharp green smell of nightshade — but no shape rises from the floor to bear witness. Not yet.*`;
+    case "movement":
+      return `*The Words form. The way bends, in the manner of light through deep water — and stops, half-bent. You stand where you stood; the Art waits to be paid the rest of its price.*`;
+    case "conceal":
+      return `*The Words form. A veil reaches for you, gauzy as smoke — and slips off again before it can take. You stand still as you were.*`;
+    case "reveal":
+      return `*The Words form. The hidden flickers like a fish near the surface of a pool, almost shows itself — and dives back into shadow. The Art saw what you did not.*`;
+    case "transform":
+      return `*The Words form. Your shape begins to remember being something else — fur or scale, claw or wing — and the memory thins, fails, and is gone. You are yourself again, unchanged.*`;
+    case "utility":
+      return `*The Words form. The Art reaches, takes, and does what it does in some manner the eye cannot follow. You can only know that it was here.*`;
+    case "damage":
+    case "heal":
+      // These kinds have dispatch implemented (Sprint 7b Phase 1) — a
+      // no-effect-yet result here means data was missing on the spell
+      // (e.g. healRoll absent on a heal spell that isn't Cure or
+      // Resurrection). Use a generic, in-fiction line.
+      return `*The Words form, but the Art finds no shape to take in them. Something is missing from the asking — a piece of the Word, a breath of intent — and the moment passes unfulfilled.*`;
   }
 }
 

@@ -282,6 +282,25 @@ The Light-side response (preserved in *Logos Teleios* and the seventh Scroll of 
 
 This is **Thoth's Principle of Correspondence** in its Living Eamon reading: as above, so below — and as the soul, so the spell. A spell that grew in power as the soul fell would imply Darkness as a *generative* force, which it is not. The one-way rule is the cosmological signature of that asymmetry. Mechanically, it forecloses the Outer-Dark feedback loop the design briefly entertained; theologically, it is a load-bearing piece of the metaphysics the Way of Thoth quest line teaches the player by stages.
 
+### 7.2 The Two Fundamental Forces — what the Art actually draws on
+
+Every spell of every Circle is a channeling of one of **two fundamental forces** — opposite in direction, asymmetric in nature, and corresponding to the two poles of the Illumination continuum (§7 + §7.1). Which force a spell draws on determines where, when, and against whom it can be cast. Mechanical rules in the engine — including which Circles require active combat to resolve — are direct consequences of which force a spell taps.
+
+**Force I — Destructive / Outward / Disjunctive.** Damage spells (Magic Arrow, Harm, Fireball, Lightning, Mind Blast, Energy Bolt, Explosion, Chain Lightning, Flamestrike, Meteor Swarm, Earthquake) channel **directed malice seeded from duress and fear**. They tap the **fundamental explosive energy that extinguishes the spark of life itself**. The fuel of the Art in this mode is not merely the caster's mana and reagents — it is also the malice and fear that arise in the presence of a foe. **A foe is part of the recipe.** Without one, the directed-malice ingredient cannot transmute, and the Words have nothing to ignite. This is why damage sorcery cannot resolve outside of active combat: the Art literally cannot complete the transmutation without the duress-and-fear context that an enemy provides. A practitioner who attempts a damage cast in an empty room speaks the Words, feels the Art rise in answer, feels it seek the malice it needs — and feels it unwind, finding no such energy nor foe to take. Reagents and mana are not consumed; the cast did not occur.
+
+**Force II — Creative / Inward / Conjunctive.** Heal, Cure, buff, summon, field, movement, conceal, reveal, transform, and most utility spells channel **the creative inward, connective fundamental force that knits tissues, binds toxins, and creates new things into Being**. This force does not require duress or a target's malice as input. It draws from the caster's own intent, the reagents, and the underlying generative substrate of the world. **It works wherever the caster is**, in combat or out. A caster alone in a quiet room can speak the Words for *Heal*, *Cure*, *Bless*, *Wall of Stone*, or *Teleport* and the Art will resolve — because the force these spells tap on is everywhere, always available to a caster who knows the Words and pays the price.
+
+**Why this asymmetry matters cosmologically.** The Two Forces are not equal moral teams competing on a level field. They mirror the asymmetric polarity §7.1 names: Force II *generates* (knits, binds, creates into Being); Force I *only consumes* (extinguishes, destroys, requires a foe whose duress it transmutes). A practitioner who specializes in Force I increasingly depends on the existence of foes in order to act at all — they become **structurally dependent on conflict**. A practitioner who specializes in Force II can act on the world from any place at any time, foe or no foe. The Way of Thoth teaches that this asymmetry, played out across a soul's lifetimes, is the reason the Outer Dark — which lives on Force I — is unsustainable, and the reason the Light — which lives on Force II — prevails not by power but by independence from the conditions Darkness requires.
+
+**Mechanical entailment summary:**
+
+| Force | Spell kinds | Combat required? | Cause |
+|-------|-------------|------------------|-------|
+| I — Destructive | damage | **Yes** | needs foe-supplied malice/fear as transmutation input |
+| II — Creative | heal, cure, buff, debuff, summon, field, movement, conceal, reveal, transform, utility | **No** | draws from generative substrate, available everywhere |
+
+(Note: `debuff` is classed as Force II rather than Force I because the lore here is that *quieting*, *softening*, and *binding* a target's faculties — the operations of Clumsy, Feeblemind, Weaken, Curse, Mana Drain, Paralyze — are still **connective** acts on the target's being, not destructive ones. They reshape; they do not extinguish.)
+
 **Per-Circle Illumination cost (canonical magnitudes):**
 
 | Circle | Direct Illumination loss per cast | Narrative warning |

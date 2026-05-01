@@ -367,15 +367,7 @@ caseName("Teleport (movement) returns no-effect-yet", () => {
 
 console.log("[sprint-7b] composeInvokeResponse");
 
-caseName("renders no-target outcome with resource-spared note", () => {
-  const spell = getSpellById("magic-arrow")!;
-  const text = composeInvokeResponse({ kind: "no-target", spell });
-  truthy(text.length > 0, "non-empty");
-  truthy(text.toLowerCase().includes("target"), "mentions target");
-  truthy(text.toLowerCase().includes("spared") || text.toLowerCase().includes("reagents"), "mentions resources spared");
-});
-
-caseName("renders damage-dealt with target name + amount + remaining HP", () => {
+caseName("renders damage-dealt (wounded) with target name + amount + remaining HP", () => {
   const spell = getSpellById("fireball")!;
   const text = composeInvokeResponse({
     kind: "success",
@@ -394,6 +386,29 @@ caseName("renders damage-dealt with target name + amount + remaining HP", () => 
   truthy(text.includes("72"), "remaining HP");
 });
 
+caseName("renders damage-dealt (killed) with falls-silenced line, no remaining-HP tail", () => {
+  const spell = getSpellById("fireball")!;
+  const text = composeInvokeResponse({
+    kind: "success",
+    spell,
+    illuminationDrained: 0,
+    warning: null,
+    effect: {
+      kind: "damage-dealt",
+      targetName: "test orc",
+      amount: 28,
+      targetHpAfter: 0,
+    },
+  });
+  truthy(text.includes("test orc"), "target name");
+  truthy(text.includes("28"), "damage amount");
+  truthy(text.toLowerCase().includes("falls") || text.toLowerCase().includes("silenced"), "killed-flavor present");
+  // Killed variant should NOT include the "HP remaining" suffix.
+  if (text.includes("HP remaining")) {
+    throw new Error(`killed variant should not include 'HP remaining', got: ${text}`);
+  }
+});
+
 caseName("renders healed with before/after HP", () => {
   const spell = getSpellById("heal")!;
   const text = composeInvokeResponse({
@@ -407,16 +422,43 @@ caseName("renders healed with before/after HP", () => {
   truthy(text.includes("50") && text.includes("58"), "before/after");
 });
 
-caseName("renders no-effect-yet with effectKind hint", () => {
+caseName("no-effect-yet renders an in-fiction line per effectKind, no meta-leaks", () => {
   const spell = getSpellById("bless")!;
-  const text = composeInvokeResponse({
-    kind: "success",
-    spell,
-    illuminationDrained: 0,
-    warning: null,
-    effect: { kind: "no-effect-yet", effectKind: "buff" },
-  });
-  truthy(text.includes("buff") || text.includes("not yet") || text.includes("deferred"), "deferred-effect note");
+  const META_LEAKS = ["deferred", "implementation", "sprint", "TODO", "not yet implemented"];
+  const KINDS: import("../../lib/sorcery/types").SpellEffectKind[] = [
+    "buff", "debuff", "summon", "field", "movement", "conceal", "reveal", "transform", "utility",
+  ];
+  for (const kind of KINDS) {
+    const text = composeInvokeResponse({
+      kind: "success",
+      spell,
+      illuminationDrained: 0,
+      warning: null,
+      effect: { kind: "no-effect-yet", effectKind: kind },
+    });
+    truthy(text.length > 0, `${kind} non-empty`);
+    truthy(text.includes("Words") || text.includes("Art"), `${kind} uses in-fiction vocabulary`);
+    for (const leak of META_LEAKS) {
+      if (text.toLowerCase().includes(leak.toLowerCase())) {
+        throw new Error(`${kind} response leaks meta-language: '${leak}' in: ${text}`);
+      }
+    }
+  }
+});
+
+caseName("no-target response uses in-fiction voice (no 'not in combat' meta-leak)", () => {
+  const spell = getSpellById("magic-arrow")!;
+  const text = composeInvokeResponse({ kind: "no-target", spell });
+  truthy(text.length > 0, "non-empty");
+  // Must not say "you are not in combat" or similar meta-language.
+  if (text.toLowerCase().includes("not in combat") || text.toLowerCase().includes("combat mode")) {
+    throw new Error(`no-target response leaks combat-state meta-language: ${text}`);
+  }
+  // Must convey resources are preserved without using bookkeeping word "spared".
+  truthy(
+    text.toLowerCase().includes("reagents") || text.toLowerCase().includes("mana") || text.toLowerCase().includes("pouch"),
+    "mentions resources are preserved in-fiction"
+  );
 });
 
 // ── Tally ────────────────────────────────────────────────────

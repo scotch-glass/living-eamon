@@ -20,6 +20,7 @@ import type { WorldState, PlayerState } from "../gameState";
 import { addToChronicle } from "../gameState";
 import { applyKarma, logKarmaDelta } from "../karma/recompute";
 import { getSpellByWords } from "./registry";
+import { applyEffect } from "./effects";
 import type { InvokeOutcome, ReagentId, Spell } from "./types";
 import { CIRCLE_NARRATIVE_WARNING } from "./types";
 
@@ -72,8 +73,19 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
     return { outcome: { kind: "missing-reagents", spell, missing }, state };
   }
 
-  // 4. Cast: deduct mana + reagents, apply Illumination drain, narrative warning
-  let next: WorldState = state;
+  // 4. Effect dispatch (Sprint 7b). Resolves BEFORE consuming mana
+  //    + reagents so a damage-spell-with-no-target returns no-target
+  //    without burning the player's resources. Phase-2 effect kinds
+  //    (buff/debuff/summon/field/etc.) return `no-effect-yet` —
+  //    resources still get consumed in that case (the cast happened;
+  //    only the physical magnitude is unimplemented).
+  const dispatch = applyEffect(state, spell);
+  if (dispatch.kind === "no-target") {
+    return { outcome: { kind: "no-target", spell }, state };
+  }
+
+  // 5. Consume mana + reagents, apply Illumination drain, chronicle
+  let next: WorldState = dispatch.state;
   next = consumeReagents(next, spell.reagents);
   next = consumeMana(next, spell.manaCost);
 
@@ -103,6 +115,7 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
       spell,
       illuminationDrained: spell.illuminationDrain,
       warning,
+      effect: dispatch.effect,
     },
     state: next,
   };
@@ -194,12 +207,25 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
       return `The Words form, but the Art needs more than words. ${spell.name} requires reagents you lack: ${labels}. A breath of sulfur, and the moment passes.`;
     }
 
+    case "no-target": {
+      const { spell } = outcome;
+      return `${spell.name} wants a target. You are not in combat — the Words gather and disperse without striking anything. Reagents and mana are spared.`;
+    }
+
     case "success": {
-      const { spell, illuminationDrained, warning } = outcome;
+      const { spell, illuminationDrained, warning, effect } = outcome;
       const lines: string[] = [];
       lines.push(`*You invoke ${spell.name}.*`);
       lines.push("");
       lines.push(spell.description);
+
+      // Sprint 7b — physical effect line
+      const effectLine = composeEffectLine(effect);
+      if (effectLine) {
+        lines.push("");
+        lines.push(effectLine);
+      }
+
       if (warning) {
         lines.push("");
         lines.push(`*${warning}*`);
@@ -212,6 +238,27 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
       }
       return lines.join("\n");
     }
+  }
+}
+
+function composeEffectLine(effect: import("./types").EffectResult): string | null {
+  switch (effect.kind) {
+    case "damage-dealt":
+      return `**${effect.targetName} takes ${effect.amount} damage.** (${effect.targetHpAfter} HP remaining)`;
+    case "healed":
+      if (effect.amount === 0) {
+        return `*Already at full health — the warmth has nowhere to go.*`;
+      }
+      return `**You recover ${effect.amount} HP.** (${effect.hpBefore} → ${effect.hpAfter})`;
+    case "cure-applied":
+      if (effect.cured === 0) {
+        return `*No poison flowed in your veins to draw out.*`;
+      }
+      return `**Poison flees you.** (${effect.cured} effect${effect.cured === 1 ? "" : "s"} cured)`;
+    case "resurrection-no-corpse":
+      return `*The Words form, but no soul on this side hears them. Resurrection requires a body — that system is not yet in the world.*`;
+    case "no-effect-yet":
+      return `*The Words take, but the world does not yet know how to answer them. (Effect kind '${effect.effectKind}' — implementation deferred to a later sprint.)*`;
   }
 }
 

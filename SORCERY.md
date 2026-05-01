@@ -264,9 +264,25 @@ Mana costs follow UO classic rules. In Living Eamon, mana maps to the player's I
 
 Per GAME_DESIGN.md §11 (PICSSI — Illumination):
 
-> "**practicing powerful sorcery directly darkens the soul** — the more powerful the sorcery, the darker the Illumination in a logarithmic relationship (i.e. 1-3 circle sorcery have no effect on illumination but 2nd Circle Sorcery comes with an occasional message tells the hero this feels dark in subtle ways, and 3rd circle confirms a dark presence is near). Conversely, low-Illumination heroes find the Outer Dark gates *wider* — the lower the soul, the more powerful (and darker) the patron-response on subsequent INVOKE attempts."
+> Practicing powerful sorcery directly darkens the soul — the more powerful the Circle, the more Illumination is drained per cast in a logarithmic relationship. Circles 1–3 do not move Illumination directly (Circle 2 carries an occasional "this feels dark in subtle ways" warning, Circle 3 a "dark presence is near" line). Circles 4 and above darken the soul on every cast.
 
-**Per-Circle Illumination cost (proposed magnitudes — pending Scotch's balance pass; see KARMA_SYSTEM.md §4b Q9):**
+**Direction of the relation is one-way.** Powerful sorcery darkens the soul. A darkened soul does **not**, in turn, make subsequent sorcery more powerful. There is no Outer-Dark feedback loop — the Eight Circles are not a power-ladder unlocked by falling, they are a price-ladder paid in soul. Low Illumination has its own consequences (different gods answer prayers, different NPC reactions, different patron whispers at the lowest tiers — narrative only) but it does not boost spell damage, duration, mana efficiency, or any other mechanical magnitude.
+
+### 7.1 Why the relation is one-way (Thoth's Principle of Correspondence)
+
+The rule reflects the cosmological architecture the Order's chronicles record and the Scrolls of Thoth confirm.
+
+**Light and Dark are not factions, parties, or teams of beings.** They are the two poles of the **PICSSI Illumination continuum** (−100 to +100), and every soul — heroes, NPCs, gods, even Outer-Dark patrons — sits somewhere on that single axis at any given moment. The player character moves along it daily, drawn now toward one pole, now toward the other. **No soul is ever absolutely Light or absolutely Dark.** The continuum is the field; the poles are limits, not residences.
+
+Sorcery interacts with this continuum, and the key fact is: **a soul currently sitting near the Light pole that is forced to use Circle 8 sorcery to defend against an Outer-Dark assault** — *Meteor Swarm*, *Earthquake*, the binding-and-banishment of *Summon Daemon* — pays exactly the same Illumination toll as a soul sitting at the Dark pole using the same spell to attack. **The Eight Circles do not check where on the continuum the caster sits when they take their toll.** The defender is moved toward Dark by the act of defending.
+
+The Outer-Dark side of the continuum reads this as proof that Darkness must ultimately prevail. The reasoning: war is inherently destructive; every Circle 8 cast by a high-Illumination soul against the Outer Dark drags the caster toward Dark; the longer the war runs, the more of the continuum slides toward the Dark pole. From inside the Outer Dark's logic, the universe is a slow erosion that ends in dark.
+
+The Light-side response (preserved in *Logos Teleios* and the seventh Scroll of Thoth) is that the Outer Dark misreads its own physics. Darkness is sustained only by what it consumes; it produces nothing. Every act of destruction it forces — including the destruction it forces upon high-Illumination defenders — is a draw against a closed account. **Darkness is unsustainable by its own nature.** Light prevails not by being stronger but by being the only pole that *generates*. The polarity is real, but the poles are **not symmetric**: one feeds itself, the other feeds only by taking, and a system that only takes will eventually run out of things to take.
+
+This is **Thoth's Principle of Correspondence** in its Living Eamon reading: as above, so below — and as the soul, so the spell. A spell that grew in power as the soul fell would imply Darkness as a *generative* force, which it is not. The one-way rule is the cosmological signature of that asymmetry. Mechanically, it forecloses the Outer-Dark feedback loop the design briefly entertained; theologically, it is a load-bearing piece of the metaphysics the Way of Thoth quest line teaches the player by stages.
+
+**Per-Circle Illumination cost (canonical magnitudes):**
 
 | Circle | Direct Illumination loss per cast | Narrative warning |
 |--------|------------------------------------|--------------------|
@@ -278,8 +294,6 @@ Per GAME_DESIGN.md §11 (PICSSI — Illumination):
 | 6 | **−8** (Major) | visible to sensitive NPCs and beasts |
 | 7 | **−15** | the Outer Dark notices |
 | 8 | **−30** (Defining-tier) | a name is whispered; patrons rouse |
-
-**Compounding effect (canonical):** lower (more negative) Illumination → wider door for Outer Dark gods to answer further INVOKE attempts → spells become more powerful AND darker. The Eight Circles thus become a one-way descent for the hero who walks them.
 
 ---
 

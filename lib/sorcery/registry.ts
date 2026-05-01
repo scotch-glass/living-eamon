@@ -59,6 +59,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng", "spider_silk"],
     illuminationDrain: 0,
     effectKind: "heal",
+    healRoll: { min: 6, max: 12 },
     description: "A small warmth gathers under the skin; a wound closes a little.",
   },
   {
@@ -70,6 +71,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["sulfurous_ash"],
     illuminationDrain: 0,
     effectKind: "damage",
+    damageRoll: { min: 14, max: 18 },
     description: "A streak of pale fire leaps from the caster's hand, fast and straight.",
   },
   {
@@ -149,6 +151,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["nightshade", "spider_silk"],
     illuminationDrain: 0,
     effectKind: "damage",
+    damageRoll: { min: 23, max: 29 },
     description: "A cold hand closes briefly on the target's heart and lets go.",
   },
   {
@@ -217,6 +220,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl"],
     illuminationDrain: 0,
     effectKind: "damage",
+    damageRoll: { min: 26, max: 31 },
     description: "A globe of fire leaves the caster's hand and breaks loud where it strikes.",
   },
   {
@@ -340,6 +344,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["garlic", "ginseng", "mandrake_root", "spider_silk"],
     illuminationDrain: -2,
     effectKind: "heal",
+    healRoll: { min: 25, max: 40 },
     description: "Major wounds knit themselves shut. The target stands surprised at how easy it became.",
   },
   {
@@ -351,6 +356,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["mandrake_root", "sulfurous_ash"],
     illuminationDrain: -2,
     effectKind: "damage",
+    damageRoll: { min: 30, max: 34 },
     description: "A white seam splits the air between caster and target — gone before the thunder arrives.",
   },
   {
@@ -430,6 +436,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "mandrake_root", "nightshade", "sulfurous_ash"],
     illuminationDrain: -4,
     effectKind: "damage",
+    damageRoll: { min: 40, max: 42 },
     description: "The target's thoughts crack like ice on a pond. They forget the next thing they were going to do.",
   },
   {
@@ -487,6 +494,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "nightshade"],
     illuminationDrain: -8,
     effectKind: "damage",
+    damageRoll: { min: 51, max: 56 },
     description: "A bar of pale energy crosses the room and the target is much less than they were.",
   },
   {
@@ -498,6 +506,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root"],
     illuminationDrain: -8,
     effectKind: "damage",
+    damageRoll: { min: 51, max: 56 },
     description: "A delayed sphere of fire — counted in heartbeats — and then the room is changed.",
   },
   {
@@ -566,6 +575,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["black_pearl", "blood_moss", "mandrake_root", "sulfurous_ash"],
     illuminationDrain: -15,
     effectKind: "damage",
+    damageRoll: { min: 64, max: 69 },
     description: "The first target is the one named. The lightning, having begun, finds the others on its own.",
   },
   {
@@ -588,6 +598,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["spider_silk", "sulfurous_ash"],
     illuminationDrain: -15,
     effectKind: "damage",
+    damageRoll: { min: 64, max: 69 },
     description: "A column of fire descends on the target's exact place. Everything within it is removed.",
   },
   {
@@ -632,6 +643,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "mandrake_root", "spider_silk", "sulfurous_ash"],
     illuminationDrain: -15,
     effectKind: "damage",
+    damageRoll: { min: 64, max: 69 },
     description: "A flight of fire-stones falls through the ceiling and finds whoever it can reach.",
   },
   {
@@ -656,6 +668,7 @@ export const SPELL_REGISTRY: Spell[] = [
     reagents: ["blood_moss", "ginseng", "mandrake_root", "sulfurous_ash"],
     illuminationDrain: -30,
     effectKind: "damage",
+    damageRoll: { min: 25, max: 35 },
     description: "The floor remembers being a fault and is honest about it. Everyone falls.",
   },
   {

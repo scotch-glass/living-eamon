@@ -16,12 +16,16 @@
 //
 // Out of scope (Phase 2 — buff / debuff / summon / field / movement /
 // conceal / reveal / transform / utility): returns
-// { kind: "no-effect-yet" } so the caller still consumes mana +
-// reagents + Illumination (the cast happened) but the physical
-// outcome is deferred. Each Phase-2 kind needs design that doesn't
-// exist yet — temporary stat buffs need new ActiveStatusEffect
-// types, summons need an ally combat model (dormant), fields need
-// persistent zone state, runebook movement needs the rune item model.
+// { kind: "dev-not-implemented", reason } — a development-only
+// marker that the response composer renders as a visible `[DEV]`
+// flag. No in-fiction prose covers these gaps: per Living Eamon's
+// design principle, fictional camouflage over unbuilt features is
+// a hallucination. The features will be built before release; until
+// then the marker shouts. Each Phase-2 kind needs supporting
+// infrastructure that doesn't exist yet — temporary stat buffs
+// need new ActiveStatusEffect types, summons need an ally combat
+// model (dormant), fields need persistent zone state, runebook
+// movement needs the rune item model.
 //
 // Combat-round advancement on cast: the current MVP applies the
 // effect WITHOUT consuming a combat round (no enemy retaliation
@@ -62,7 +66,12 @@ export function applyEffect(
     case "heal":
       return applyHealOrCure(state, spell);
 
-    // Phase-2 kinds — cast goes through, physical effect deferred.
+    // Phase-2 kinds — cast goes through, physical effect not yet
+    // implemented. Returns a dev-only marker that the composer
+    // renders as `[DEV] <effectKind> dispatcher not yet implemented`.
+    // No in-fiction camouflage: when the dispatcher lands the marker
+    // disappears, and until then it's flagged for any session that
+    // hits it.
     case "buff":
     case "debuff":
     case "summon":
@@ -75,7 +84,10 @@ export function applyEffect(
       return {
         kind: "applied",
         state,
-        effect: { kind: "no-effect-yet", effectKind: spell.effectKind },
+        effect: {
+          kind: "dev-not-implemented",
+          reason: `${spell.effectKind} dispatcher`,
+        },
       };
   }
 }
@@ -91,12 +103,15 @@ function applyDamage(state: WorldState, spell: Spell): EffectDispatchResult {
     return { kind: "no-target" };
   }
   if (!spell.damageRoll) {
-    // Damage spell missing a damage roll — registry data error. Treat
-    // as no-effect-yet rather than crashing; tests will catch it.
+    // Registry data error — damage spell with no damageRoll. Surface
+    // as a dev marker rather than crashing; tests catch it.
     return {
       kind: "applied",
       state,
-      effect: { kind: "no-effect-yet", effectKind: spell.effectKind },
+      effect: {
+        kind: "dev-not-implemented",
+        reason: `damage spell '${spell.id}' missing damageRoll in registry`,
+      },
     };
   }
 
@@ -128,13 +143,17 @@ function applyDamage(state: WorldState, spell: Spell): EffectDispatchResult {
 // ── Heal / Cure ──────────────────────────────────────────────
 
 function applyHealOrCure(state: WorldState, spell: Spell): EffectDispatchResult {
-  // Resurrection is a heal-effectKind spell with no healRoll —
-  // currently a no-op until corpse model lands.
+  // Resurrection — corpse model not yet implemented. Returns a dev
+  // marker until the feature lands; no in-fiction prose for an
+  // unbuilt feature.
   if (spell.id === "resurrection") {
     return {
       kind: "applied",
       state,
-      effect: { kind: "resurrection-no-corpse" },
+      effect: {
+        kind: "dev-not-implemented",
+        reason: "Resurrection corpse model",
+      },
     };
   }
 
@@ -145,10 +164,15 @@ function applyHealOrCure(state: WorldState, spell: Spell): EffectDispatchResult 
   }
 
   if (!spell.healRoll) {
+    // Registry data error — heal spell with no healRoll (and not
+    // Cure / Arch Cure / Resurrection).
     return {
       kind: "applied",
       state,
-      effect: { kind: "no-effect-yet", effectKind: spell.effectKind },
+      effect: {
+        kind: "dev-not-implemented",
+        reason: `heal spell '${spell.id}' missing healRoll in registry`,
+      },
     };
   }
 

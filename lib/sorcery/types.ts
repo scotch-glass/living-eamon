@@ -144,18 +144,22 @@ export const CIRCLE_NARRATIVE_WARNING: Partial<Record<Circle, string>> = {
  * Sits alongside `success.illuminationDrained` so the response
  * composer can describe both the metaphysical and physical cost.
  *
- * `no-effect-yet` covers effect kinds whose dispatcher hasn't been
- * built yet (buffs / debuffs / summons / fields / movement / conceal
- * / transform / utility — Sprint 7b Phase 2). For those, mana +
- * reagents + Illumination still apply (the cast happened); only the
- * physical result is unimplemented.
+ * `dev-not-implemented` is a development-only marker. It fires when
+ * the player triggers an effect kind whose dispatcher hasn't been
+ * wired yet (buffs / debuffs / summons / fields / movement / conceal
+ * / reveal / transform / utility — Sprint 7b Phase 2) or a real-
+ * world dependency that doesn't exist yet (e.g. Resurrection's
+ * corpse model). The composer renders this as a visible `[DEV]`
+ * marker, never as in-fiction prose: per Living Eamon's design
+ * principle, we don't write fiction to paper over dev holes — we
+ * build the feature and the hole disappears. This variant must be
+ * dead code by release.
  */
 export type EffectResult =
   | { kind: "damage-dealt"; targetName: string; amount: number; targetHpAfter: number }
   | { kind: "healed"; amount: number; hpAfter: number; hpBefore: number }
   | { kind: "cure-applied"; cured: number }       // count of poison stacks removed
-  | { kind: "resurrection-no-corpse" }            // Resurrection cast with no valid target
-  | { kind: "no-effect-yet"; effectKind: SpellEffectKind };
+  | { kind: "dev-not-implemented"; reason: string };
 
 /**
  * Outcome of an INVOKE attempt — engine returns one of these so

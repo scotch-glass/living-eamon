@@ -259,52 +259,13 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
         return `*The Art reaches for the poisoned places in you and finds none. It settles, unspent.*`;
       }
       return `**Black flowers wither in your veins; the poison forgets its purpose.** (${effect.cured} cured)`;
-    case "resurrection-no-corpse":
-      return `*The Words form and the Art rises in answer — reaches into the great quiet beyond the body — and finds no soul there to call back. There is no dead before you to summon home. The Art subsides, patient; it is in no hurry.*`;
-    case "no-effect-yet":
-      return composeNoEffectYetLine(effect.effectKind);
-  }
-}
-
-/**
- * In-fiction "the spell happened but its result isn't visible to you"
- * line, varied by effectKind so the player gets atmospheric variety
- * across spells whose physical magnitudes haven't been wired yet.
- *
- * Each line is honest at the lore level (the Art does form; the cost
- * is paid; SORCERY.md §3 specifies that mana + reagents always
- * resolve on a non-fizzle cast) without referencing the dev reality
- * that the dispatcher for that effectKind is unimplemented.
- */
-function composeNoEffectYetLine(
-  effectKind: import("./types").SpellEffectKind
-): string {
-  switch (effectKind) {
-    case "buff":
-      return `*The Words form, and the Art rises in you like heat in a stove just kindled. Something settles into your bones — slow, certain, unnamed. The senses cannot yet take its measure.*`;
-    case "debuff":
-      return `*The Words form. Something quiet leaves your hand and finds the one you named — settles into them like a shadow lengthening at dusk. The eye cannot yet see what was taken from them, but it was.*`;
-    case "summon":
-      return `*The Words form. Far from here, in some place the Art knows and the world does not, something stirs that hears its name. It is not yet at the door.*`;
-    case "field":
-      return `*The Words form. The room briefly tastes of the Art — copper, ash, the sharp green smell of nightshade — but no shape rises from the floor to bear witness. Not yet.*`;
-    case "movement":
-      return `*The Words form. The way bends, in the manner of light through deep water — and stops, half-bent. You stand where you stood; the Art waits to be paid the rest of its price.*`;
-    case "conceal":
-      return `*The Words form. A veil reaches for you, gauzy as smoke — and slips off again before it can take. You stand still as you were.*`;
-    case "reveal":
-      return `*The Words form. The hidden flickers like a fish near the surface of a pool, almost shows itself — and dives back into shadow. The Art saw what you did not.*`;
-    case "transform":
-      return `*The Words form. Your shape begins to remember being something else — fur or scale, claw or wing — and the memory thins, fails, and is gone. You are yourself again, unchanged.*`;
-    case "utility":
-      return `*The Words form. The Art reaches, takes, and does what it does in some manner the eye cannot follow. You can only know that it was here.*`;
-    case "damage":
-    case "heal":
-      // These kinds have dispatch implemented (Sprint 7b Phase 1) — a
-      // no-effect-yet result here means data was missing on the spell
-      // (e.g. healRoll absent on a heal spell that isn't Cure or
-      // Resurrection). Use a generic, in-fiction line.
-      return `*The Words form, but the Art finds no shape to take in them. Something is missing from the asking — a piece of the Word, a breath of intent — and the moment passes unfulfilled.*`;
+    case "dev-not-implemented":
+      // Development-only marker. By design principle (no in-fiction
+      // prose for unbuilt features), this surfaces as a visible
+      // [DEV] flag any reader can grep for. Must be dead code by
+      // release — when every effect dispatcher and supporting model
+      // is wired, this branch is unreachable and gets removed.
+      return `[DEV] ${effect.reason} not yet implemented`;
   }
 }
 

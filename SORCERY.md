@@ -286,20 +286,22 @@ This is **Thoth's Principle of Correspondence** in its Living Eamon reading: as 
 
 Every spell of every Circle is a channeling of one of **two fundamental forces** — opposite in direction, asymmetric in nature, and corresponding to the two poles of the Illumination continuum (§7 + §7.1). Which force a spell draws on determines where, when, and against whom it can be cast. Mechanical rules in the engine — including which Circles require active combat to resolve — are direct consequences of which force a spell taps.
 
-**Force I — Destructive / Outward / Disjunctive.** Damage spells (Magic Arrow, Harm, Fireball, Lightning, Mind Blast, Energy Bolt, Explosion, Chain Lightning, Flamestrike, Meteor Swarm, Earthquake) channel **directed malice seeded from duress and fear**. They tap the **fundamental explosive energy that extinguishes the spark of life itself**. The fuel of the Art in this mode is not merely the caster's mana and reagents — it is also the malice and fear that arise in the presence of a foe. **A foe is part of the recipe.** Without one, the directed-malice ingredient cannot transmute, and the Words have nothing to ignite. This is why damage sorcery cannot resolve outside of active combat: the Art literally cannot complete the transmutation without the duress-and-fear context that an enemy provides. A practitioner who attempts a damage cast in an empty room speaks the Words, feels the Art rise in answer, feels it seek the malice it needs — and feels it unwind, finding no such energy nor foe to take. Reagents and mana are not consumed; the cast did not occur.
+**The numbering is canonical and meaningful.** The creative force is **Force I** (the *primary*, generative force — the **one** that produces). The destructive force is **Force 0** (zero because, on its own, it produces nothing — it only consumes what Force I has made). The asymmetry is encoded in the labels themselves: **0** is what destruction generates; **1** is what creation generates. There is no Force II — there are only these two, and one of them is null on its own ledger.
 
-**Force II — Creative / Inward / Conjunctive.** Heal, Cure, buff, summon, field, movement, conceal, reveal, transform, and most utility spells channel **the creative inward, connective fundamental force that knits tissues, binds toxins, and creates new things into Being**. This force does not require duress or a target's malice as input. It draws from the caster's own intent, the reagents, and the underlying generative substrate of the world. **It works wherever the caster is**, in combat or out. A caster alone in a quiet room can speak the Words for *Heal*, *Cure*, *Bless*, *Wall of Stone*, or *Teleport* and the Art will resolve — because the force these spells tap on is everywhere, always available to a caster who knows the Words and pays the price.
+**Force I — Creative / Inward / Conjunctive.** Heal, Cure, buff, debuff, summon, field, movement, conceal, reveal, transform, and most utility spells channel **the creative inward, connective fundamental force that knits tissues, binds toxins, and creates new things into Being**. This force does not require duress or a target's malice as input. It draws from the caster's own intent, the reagents, and the underlying generative substrate of the world. **It works wherever the caster is**, in combat or out. A caster alone in a quiet room can speak the Words for *Heal*, *Cure*, *Bless*, *Wall of Stone*, or *Teleport* and the Art will resolve — because the force these spells tap on is everywhere, always available to a caster who knows the Words and pays the price.
 
-**Why this asymmetry matters cosmologically.** The Two Forces are not equal moral teams competing on a level field. They mirror the asymmetric polarity §7.1 names: Force II *generates* (knits, binds, creates into Being); Force I *only consumes* (extinguishes, destroys, requires a foe whose duress it transmutes). A practitioner who specializes in Force I increasingly depends on the existence of foes in order to act at all — they become **structurally dependent on conflict**. A practitioner who specializes in Force II can act on the world from any place at any time, foe or no foe. The Way of Thoth teaches that this asymmetry, played out across a soul's lifetimes, is the reason the Outer Dark — which lives on Force I — is unsustainable, and the reason the Light — which lives on Force II — prevails not by power but by independence from the conditions Darkness requires.
+**Force 0 — Destructive / Outward / Disjunctive.** Damage spells (Magic Arrow, Harm, Fireball, Lightning, Mind Blast, Energy Bolt, Explosion, Chain Lightning, Flamestrike, Meteor Swarm, Earthquake) channel **directed malice seeded from duress and fear**. They tap the **fundamental explosive energy that extinguishes the spark of life itself**. The fuel of the Art in this mode is not merely the caster's mana and reagents — it is also the malice and fear that arise in the presence of a foe. **A foe is part of the recipe.** Without one, the directed-malice ingredient cannot transmute, and the Words have nothing to ignite. This is why damage sorcery cannot resolve outside of active combat: the Art literally cannot complete the transmutation without the duress-and-fear context that an enemy provides. A practitioner who attempts a damage cast in an empty room speaks the Words, feels the Art rise in answer, feels it seek the malice it needs — and feels it unwind, finding no such energy nor foe to take. Reagents and mana are not consumed; the cast did not occur.
+
+**Why this asymmetry matters cosmologically.** The Two Forces are not equal moral teams competing on a level field. They mirror the asymmetric polarity §7.1 names: Force I *generates* (knits, binds, creates into Being); Force 0 *only consumes* (extinguishes, destroys, requires a foe whose duress it transmutes). A practitioner who specializes in Force 0 increasingly depends on the existence of foes in order to act at all — they become **structurally dependent on conflict**. A practitioner who specializes in Force I can act on the world from any place at any time, foe or no foe. The Way of Thoth teaches that this asymmetry, played out across a soul's lifetimes, is the reason the Outer Dark — which lives on Force 0 — is unsustainable, and the reason the Light — which lives on Force I — prevails not by power but by independence from the conditions Darkness requires.
 
 **Mechanical entailment summary:**
 
 | Force | Spell kinds | Combat required? | Cause |
 |-------|-------------|------------------|-------|
-| I — Destructive | damage | **Yes** | needs foe-supplied malice/fear as transmutation input |
-| II — Creative | heal, cure, buff, debuff, summon, field, movement, conceal, reveal, transform, utility | **No** | draws from generative substrate, available everywhere |
+| **0** — Destructive | damage | **Yes** | needs foe-supplied malice/fear as transmutation input |
+| **I** — Creative | heal, cure, buff, debuff, summon, field, movement, conceal, reveal, transform, utility | **No** | draws from generative substrate, available everywhere |
 
-(Note: `debuff` is classed as Force II rather than Force I because the lore here is that *quieting*, *softening*, and *binding* a target's faculties — the operations of Clumsy, Feeblemind, Weaken, Curse, Mana Drain, Paralyze — are still **connective** acts on the target's being, not destructive ones. They reshape; they do not extinguish.)
+(Note: `debuff` is classed as Force I rather than Force 0 because the lore here is that *quieting*, *softening*, and *binding* a target's faculties — the operations of Clumsy, Feeblemind, Weaken, Curse, Mana Drain, Paralyze — are still **connective** acts on the target's being, not destructive ones. They reshape; they do not extinguish.)
 
 **Per-Circle Illumination cost (canonical magnitudes):**
 
@@ -326,6 +328,76 @@ Every spell of every Circle is a channeling of one of **two fundamental forces**
 | Soul cost | None | Circles 4+ darken Illumination (logarithmic) |
 | Knowledge gate | In-game HELP available | No HELP; Words of Power must be discovered |
 | Narrative weight | Hero is competent | Hero is risking everything every time |
+
+---
+
+## 9. Spell-specific design notes (canonical mechanics beyond the table)
+
+The Eight Circles table in §6 lists each spell's reagents, mana, Words, and effect kind. Some spells carry mechanics richer than a row — failure modes, special reagent requirements, exceptions, twisted forms. Those mechanics live here. **Every entry here is canonical:** registry data and dispatcher behavior must match.
+
+### 9.1 Mark + Teleport + Recall + Gate Travel — the rune-based travel system
+
+Living Eamon does **not** have a free-roaming "teleport up to N tiles" spell. All Occult travel (intra-world and inter-planar) flows through **marked runes**. This is design-load-bearing because the future of the game includes physical travel by foot, horse, and ship — those journeys are logistical, slow, and dangerous, and they are the default. The rune-based teleport family is the **shortcut that bypasses physical travel entirely**, including across planes and worlds, which is why it's expensive (Circle 3 / 4 / 6 / 7) and reagent-heavy.
+
+**Mark (C6 — `Crea Sig Loc`).** Programmatically captures the current location: room id, world/plane id, and any other coordinates the engine needs. Stores the capture into a rune item the player carries. The rune is the data structure; the player can hold many.
+
+**Teleport (C3 — `Mut Via`).** Requires a marked rune as a targeting argument. Sets the player's location to the rune's captured coordinates. Instantaneous, zero distance limit, **crosses planes and worlds** as a matter of course. Without a marked rune the spell has no target and fails.
+
+**Recall (C4 — `Crea Tra Via`).** Same destination semantics as Teleport but consumes the rune's charge (or the rune itself, depending on rune type). Functionally Teleport's stronger sibling for one-shot retreats from danger; less flexible because the rune is then gone.
+
+**Gate Travel (C7 — `Mag Mut Via`).** Opens a two-way moongate at the current room and the rune's captured room. Other beings can pass through in either direction while the gate stands. Time-limited (the established 30s window for reference, balance-pass tunable).
+
+**Why all four exist:** Mark is the writer; Teleport / Recall / Gate Travel are three readers with different costs and side-effects (cheap solo, expensive solo-and-burns-rune, very-expensive party). The whole family is a planar/cross-world transit network laid down by the caster's own hand, which is why The Order treats marked-rune practitioners as escape risks worth tracking.
+
+**Future system this composes with:** physical travel (foot / horse / ship). Those journeys will be logistical (rations, weather, encounters, deaths) and the **default mode of moving across the world**. The rune family is a luxury bypass — expensive in mana, reagents, and Illumination at the upper Circles, and dependent on the caster having physically been to a place to mark it.
+
+### 9.2 Bless (C3 — `Mag Aug`)
+
+Three layered effects on the caster (or a chosen ally), all temporary, all stacked under a single "Blessed" status:
+
+1. **Resistance to poison.** Poison status applications are reduced or rejected while Blessed.
+2. **Resistance to bleeding.** Bleed status applications are reduced or rejected while Blessed.
+3. **Temporary Illumination buff** — adds to PICSSI Illumination for the duration. This is a **temporary stat buff** (a layer that does not write through to the underlying PICSSI ledger; it modifies the effective value during checks).
+4. **Temporary Charisma buff** — same temp-buff layering as Illumination.
+
+The "temporary" qualifier is critical: PICSSI Illumination and the CHA attribute normally only move through committed acts (sorcery casts, virtuous deeds, NPC encounters). Bless is a sanctioned exception — sanctioned because it's Force I (creative) and Circle 3 (no Illumination drain on cast). The buff fades on a duration timer; the underlying ledger values are never touched.
+
+**Temple invocation (canonical exception):** when Bless is INVOKEd inside a temple, **reagents are not required** and the duration is **much longer** than a standard cast. The temple's consecrated ground supplies what the reagents would have, and the connection to the divine extends the buff's hold on the caster. This is a location-conditional modification of the spell, not a separate spell — the same `Mag Aug` Words, the same effect kinds, but the temple context relaxes the reagent gate and stretches the timer. The cast still consumes mana.
+
+**Implementation note:** existing combat-engine `ActiveStatusEffect` system handles turn-counted effects but not stat-modifier layers on PICSSI / CHA. The temp-buff layer for those needs to be designed alongside. The temple modification needs **two room tags** the dispatcher reads at cast time:
+
+1. **`consecrated: true`** — marks the room as a temple / shrine / sanctified space. The Bless reagent-relaxation and duration-extension key off this tag.
+2. **`deity: <god-id>`** — names the specific god the temple is dedicated to (e.g., Mythras, Grom). Required because (per design) which god's altar you stand on will eventually matter for: prayer responsiveness (PICSSI Spirituality + Illumination interactions), sorcery side-effects, NPC reactions to a hero who casts on a particular god's ground, and quest gating. Bless itself doesn't yet branch on deity, but the tag has to be there from the start so we don't have to retro-tag every temple room when god-specific behavior lands.
+
+**Design pattern flag:** this temple modification may generalize to other Force-I spells (Heal, Greater Heal, Cure, Arch Cure, possibly Resurrection). Treat the temple-relaxation as a pattern that may apply elsewhere in Sorcery, not just to Bless. Confirm per-spell as those mechanics land.
+
+### 9.2.1 Howard pantheon — pending canonical list
+
+The `deity` room-tag (§9.2 above) and the future PRAY-side mechanics depend on a canonical list of in-fiction gods. Howard's PD-safe corpus contains a small pantheon (Mythras and Grom are example anchors); the full list needs to be authored once, in one place, with provenance (which Howard story / which name was used / which is renamed for trademark safety) so that registry data, room tags, NPC dialogue, and quest gating all reference the same identifiers. **Recommended location:** `lore/pantheon/HOWARD_GODS.md` (or a section in `GAME_DESIGN.md §10` Thurian Age Lore — designer's call). Authoring deferred; flagged here so this doc has a pointer when the list lands.
+
+### 9.3 Resurrection (C8 — `Solv Mort`)
+
+Resurrection is **not** an unconditional revival. It has a strict reagent gate: the corpse itself is the central reagent, and not every corpse qualifies.
+
+**The Sun-and-Moon rule.** A mortal corpse can be resurrected if and only if it has not yet been exposed to **both** the sun and the moon since death. A corpse left out long enough to experience both becomes a *failed reagent* — the corpse itself is no longer viable, and the cast fails for reagent-missing reasons (the corpse, not the standard 8 reagents). A corpse that has been **buried or kept underground** is shielded from celestial exposure regardless of how long ago death occurred — it can be resurrected even after it has decayed to a skeleton.
+
+**Mortal-vs-immortal.** Only mortal beings can be resurrected. The corpses of immortals — elves, dragons, demons, gods — cannot. Their souls departed by other rules; the spell has no purchase on them.
+
+**The undead-likelihood drift.** The longer a mortal corpse has been dead, the more likely the enlivened body comes back **undead** rather than truly alive. The drift is a probabilistic curve: fresh corpses come back alive almost always; long-dead corpses come back as something walking but not living. This is the natural form of the spell, not a misuse.
+
+**Twisted forms (necromancy).** A deliberate corruption of Resurrection — same Words, different intent and reagent set — produces zombies, skeletal servants, and **liches** (undead sorcerers who chose this end). These are not separate spells in the registry but are the dark-side application of Resurrection by practitioners deep on the Outer-Dark side of the Illumination continuum. (Mechanically this may eventually live as a separate INVOKE branch or a low-Illumination-gated variant; design-pending.)
+
+**The Hero exception (load-bearing).** **The hero cannot be resurrected by this spell.** The hero is the *Chosen of the god of Perpetual Life*, and on death his body **goes cold very quickly** — faster than any normal mortal — to the point that even a fresh corpse-state is not a viable reagent. Mechanically, the hero's death routes him through the **church reincarnation path** (instant, automatic, separate system). The Resurrection spell explicitly fails on the hero's corpse with a distinct outcome (the body has no warmth left to call back). This protects both the rebirth system's invariants and the lore.
+
+**Implementation entailments (each is its own infra gap):**
+
+- A **corpse model** — a world-state entity with: time of death, sun-exposure flag, moon-exposure flag, location-context (buried / underground / surface / other), mortal-or-immortal flag.
+- A **world tick** — the sun/moon exposure flags update over in-game time when a corpse is on the surface.
+- A **burial mechanic** — moves a corpse's location-context to underground/buried so the celestial flags freeze.
+- A **mortal-or-immortal classification** on every NPC kind — elves, dragons, demons, gods are immortal; everyone else is mortal.
+- A **hero-death short-circuit** — the church reincarnation path runs before any corpse-creation step for the hero, and the hero's body cools too fast for resurrection to apply even hypothetically.
+- An **undead-likelihood roll** at resurrection time, scaling with time-since-death.
+- The **necromancy variant** is design-pending; carry the lore but don't wire mechanics yet.
 
 ---
 

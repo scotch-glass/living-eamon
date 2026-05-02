@@ -1651,7 +1651,7 @@ function buildHealthDescription(player: PlayerState): string {
   const effects: string[] = (player.activeEffects ?? []).map(e => {
     const sev = ["", "minor", "moderate", "severe"][e.severity] ?? `sev ${e.severity}`;
     const dur = e.turnsRemaining === -1 ? "until cured" : `${e.turnsRemaining} turn${e.turnsRemaining === 1 ? "" : "s"} left`;
-    const dmg = e.bleedPerTurn ? ` — ${e.bleedPerTurn} HP/turn` : "";
+    const dmg = e.damagePerTurn ? ` — ${e.damagePerTurn} HP/turn` : "";
     return `${sev} ${e.type.replace(/_/g, " ")} (${e.zone})${dmg}, ${dur}`;
   });
 
@@ -2050,7 +2050,7 @@ function runConsumable(
       if (target.severity > 1) {
         remaining = remaining.map((e, i) =>
           i === idx
-            ? { ...e, severity: e.severity - 1, bleedPerTurn: Math.max(0, (e.bleedPerTurn ?? e.severity) - 1) }
+            ? { ...e, severity: e.severity - 1, damagePerTurn: Math.max(0, (e.damagePerTurn ?? e.severity) - 1) }
             : e
         );
       } else {
@@ -2080,7 +2080,7 @@ function runConsumable(
       if (target.severity > 1) {
         remaining = remaining.map((e, i) =>
           i === idx
-            ? { ...e, severity: e.severity - 1, bleedPerTurn: Math.max(0, (e.bleedPerTurn ?? e.severity) - 1) }
+            ? { ...e, severity: e.severity - 1, damagePerTurn: Math.max(0, (e.damagePerTurn ?? e.severity) - 1) }
             : e
         );
       } else {
@@ -4327,7 +4327,7 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
         zone: roundResult.playerStrike.targetZone,
         severity: sev,
         turnsRemaining: -1, // persists until cured
-        bleedPerTurn: sev,  // 1/2/3 HP per round based on severity
+        damagePerTurn: sev,  // 1/2/3 HP per round based on severity
       };
       const updatedEnemy: import("./combatTypes").CombatantState = {
         ...updatedSession.enemyCombatant,

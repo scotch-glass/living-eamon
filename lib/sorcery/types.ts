@@ -177,6 +177,8 @@ export type EffectResult =
   | { kind: "gate-opened"; runeLabel: string; destination: string; durationTurns: number }
   // Sprint 7b.wall-of-stone
   | { kind: "wall-erected"; boundary: 0 | 1 | 2 | 3; durationTurns: number }
+  // Sprint 7b.poison
+  | { kind: "poison-applied"; targetName: string; severity: number; damagePerTurn: number }
   | { kind: "dev-not-implemented"; reason: string };
 
 /**

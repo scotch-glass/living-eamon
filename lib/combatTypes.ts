@@ -60,7 +60,7 @@ export interface ActiveStatusEffect {
   zone: BodyZone;
   severity: number;         // 1-3, affects magnitude
   turnsRemaining: number;   // -1 = until healed
-  bleedPerTurn?: number;    // For bleed/poison-type effects (HP per tick)
+  damagePerTurn?: number;    // For bleed/poison-type effects (HP per tick)
 }
 
 /** Which injuries can occur per zone. Poison is NOT included — it only

@@ -234,6 +234,9 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
 
     case "no-target": {
       const { spell } = outcome;
+      if (spell.effectKind === "field") {
+        return `The Words are spoken. ${spell.name} gathers, ready to anchor itself in matter — and finds no field of battle for it to define. It is a combat working; there must be a fight in progress before stone will answer the call. Your reagents stay in your pouch unbroken; the mana stays in your blood unspilt.`;
+      }
       return `You speak the Words and the Art rises to meet them — gathers, coils, seeks the transmuted fear and malice required to destroy life from which ${spell.name} is made — and finds no such energy nor foe before you to take it. After a heartbeat the intent unwinds and slips back into the silences from which it came. Your reagents stay in your pouch unbroken; the mana stays in your blood unspilt.`;
     }
 
@@ -322,6 +325,8 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
       return `**A sharpening gathers behind your eyes — thought quickens, and the Art follows.** (${effect.turnsGranted} turns; spells +33% strength and success)`;
     case "feeblemind-applied":
       return `**A thickening reaches for their thoughts — speech thickens, and the Art slows.** (${effect.turnsGranted} turns; target spells −33% strength and success)`;
+    case "poison-applied":
+      return `**Black flowers bloom in the blood. The poison takes root.** (${effect.targetName}; severity ${effect.severity}; ${effect.damagePerTurn} HP/turn until cured)`;
     case "wall-erected":
       return `**Stone answers. A wall rises between you and the enemy, solid as the earth that made it.** (${effect.durationTurns} turns; boundary ${effect.boundary})`;
     case "marked":

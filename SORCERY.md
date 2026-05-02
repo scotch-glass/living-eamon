@@ -212,7 +212,6 @@ Mana costs follow UO classic rules. In Living Eamon, mana maps to the player's I
 |-------|---------------|----------|--------|
 | Blade Spirits | Crea Bes Fer | Black Pearl, Mandrake Root, Nightshade | Summons spirits that attack nearby enemies; lasts 120s |
 | Dispel Field | Solv Camp | Black Pearl, Garlic, Spider's Silk, Sulfurous Ash | Dispels one tile of a field spell |
-| Incognito | Mut Spec | Blood Moss, Mandrake Root, Nightshade, Sulfurous Ash | Temporarily changes name and appearance |
 | Magic Reflection | Mut Arc | Garlic, Mandrake Root, Spider's Silk | Reflects spells back at caster; pool-based |
 | Mind Blast | Mag Ict Mens | Black Pearl, Mandrake Root, Nightshade, Sulfurous Ash | Cold damage, 40–42; based on Magery and Intelligence |
 | Paralyze | Ten Cor | Black Pearl, Nightshade, Spider's Silk | Freezes target; broken by damage |

@@ -406,17 +406,6 @@ export const SPELL_REGISTRY: Spell[] = [
     description: "The Art reaches for a held pattern of force, ready to unwind it where the caster points.",
   },
   {
-    id: "incognito",
-    name: "Incognito",
-    circle: 5,
-    words: ["Mut", "Spec"],
-    manaCost: 14,
-    reagents: ["blood_moss", "mandrake_root", "nightshade", "sulfurous_ash"],
-    illuminationDrain: -4,
-    effectKind: "conceal",
-    description: "A slipping gathers in face, voice, and bearing, ready to take on someone else's; mirrors would be confused.",
-  },
-  {
     id: "magic-reflection",
     name: "Magic Reflection",
     circle: 5,

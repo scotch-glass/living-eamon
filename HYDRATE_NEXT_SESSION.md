@@ -51,7 +51,7 @@ When you commit either of those files next session, both edits will go in togeth
 
 ### Next sprint per the approved plan
 
-The plan at `~/.claude/plans/fluffy-bouncing-hanrahan.md` has the recommended order. **Pre-work B — Combat-UI 3-vs-3 position model** is next on the pre-work list (load-bearing for Wall of Stone and Mass Curse / Mass Dispel). After that, **Pre-work C** (semi-transparency sprite layer for Incognito + Invisibility) and **Pre-work F** (pantheon stub list — Mythras, Crom, +2-4 others from PD-safe Howard corpus).
+The plan at `~/.claude/plans/fluffy-bouncing-hanrahan.md` has the recommended order. Pre-work A, B, and F have shipped. Pre-work C is effectively complete — the Invisibility semi-transparency render in `components/CombatScreen.tsx:1090-1098` is the entire deliverable. Incognito was dropped 2026-05-02 (too costly relative to gameplay value; sprite-swap-vs-transparent design conflict with Invisibility); see `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` for the system-sprint roadmap that opened in its place.
 
 Once pre-work clears, the per-spell sessions begin with **Sprint 7b.B — Bless** (foundational; lands the temp PICSSI/CHA buff layer + room tags inside its own sprint).
 
@@ -64,7 +64,6 @@ These canonical specs live ONLY in the plan file right now; they need to be port
 - **§9.6 Cunning / Feeblemind** — magical buffs/debuffs on the target's **spellcasting** (±33% spell strength + spell-success).
 - **§9.7 Polymorph** — caster-size-class restriction (combat UI can't fit cross-size morphs).
 - **§9.8 Create Food** — spawn-on-ground (`TAKE` to inventory), not auto-add.
-- **§9.9 Incognito + Invisibility** — semi-transparency sprite render directive.
 - **§9.10 Field spells share trap mechanics** — the field/trap unified entity model.
 - **§9.11 Hero corpse persistence** — created on death, persists in world, can be buried/burned by the hero himself for **+Spirituality AND +Standing** (concealing the shame of failure), but cannot be resurrected (body goes cold too fast).
 - **§9.12 Funeral rites + Spirituality** — `BURY <corpse>` (stamina cost) + `BURN <corpse>` (no stamina, requires hot flame source: campfire / pyre / Fire Field / Fireball residue). Both grant +Spirituality; hero-own-corpse grants +Spirituality AND +Standing.

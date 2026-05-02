@@ -89,10 +89,15 @@ const ALL_REAGENTS = [
 
 console.log("[sprint-7a] Spell registry");
 
-caseName("registry has 64 spells (8 per Circle × 8 Circles)", () => {
-  eq(spellCount(), 64, "total spell count");
+caseName("registry has 63 spells (8 per Circle × 8 Circles, minus Incognito dropped 2026-05-02)", () => {
+  // Incognito (Circle 5, Mut Spec) was dropped 2026-05-02 — the social-stealth
+  // mechanic it implied was multi-sprint social-system territory and Howard
+  // canon doesn't lean on glamour-disguise. Removed from registry.ts. Circle 5
+  // now has 7 spells; all others have 8; total 63.
+  eq(spellCount(), 63, "total spell count");
   for (let c = 1 as Circle; c <= 8; c = (c + 1) as Circle) {
-    eq(getSpellsByCircle(c).length, 8, `Circle ${c} count`);
+    const expected = c === 5 ? 7 : 8;
+    eq(getSpellsByCircle(c).length, expected, `Circle ${c} count`);
   }
 });
 

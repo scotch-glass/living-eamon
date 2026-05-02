@@ -113,12 +113,12 @@ function stateInCombat(): WorldState {
 
 console.log("\n[sprint-7b-wall] Out of combat");
 
-caseName("Wall of Stone out of combat → success but dev-not-implemented (room-exit blocking pending)", () => {
+caseName("Wall of Stone out of combat → no-target, resources untouched", () => {
   const s = baseState();
-  const { outcome } = handleInvoke(s, "Crea Mur");
-  eq(outcome.kind, "success", "outcome is success");
-  if (outcome.kind !== "success") return;
-  eq(outcome.effect.kind, "dev-not-implemented", "effect is dev-not-implemented");
+  const manaBefore = s.player.currentMana;
+  const { outcome, state: after } = handleInvoke(s, "Crea Mur");
+  eq(outcome.kind, "no-target", "outcome is no-target");
+  eq(after.player.currentMana, manaBefore, "mana not consumed");
 });
 
 // ── Wall of Stone — in combat ─────────────────────────────────

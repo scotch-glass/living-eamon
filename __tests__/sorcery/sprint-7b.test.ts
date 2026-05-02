@@ -349,13 +349,10 @@ caseName("Bless (buff) returns 'blessed' effect and consumes mana (implemented i
   eq(r.state.player.currentMana, 100 - 9, "mana consumed");
 });
 
-caseName("Wall of Stone (field) out-of-combat returns dev-not-implemented (room-exit blocking pending)", () => {
+caseName("Wall of Stone (field) out-of-combat returns no-target (combat-only spell)", () => {
   const s0 = fixtureState();
   const r = handleInvoke(s0, "Crea Mur"); // Wall of Stone C3, no active combat
-  eq(r.outcome.kind, "success", "kind");
-  if (r.outcome.kind === "success") {
-    eq(r.outcome.effect.kind, "dev-not-implemented", "effect is dev-not-implemented out of combat");
-  }
+  eq(r.outcome.kind, "no-target", "kind");
 });
 
 caseName("Teleport (movement) returns no-rune-target when no rune supplied (implemented in 7b.T)", () => {

@@ -616,11 +616,7 @@ function applyWallOfStone(state: WorldState): EffectDispatchResult {
   const session = state.player.activeCombat;
 
   if (!session) {
-    return {
-      kind: "applied",
-      state,
-      effect: { kind: "dev-not-implemented", reason: "wall-of-stone room-exit blocking not yet built" },
-    };
+    return { kind: "no-target" };
   }
 
   const newBarrier: Barrier = {

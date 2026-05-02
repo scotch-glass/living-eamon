@@ -41,6 +41,8 @@ export const EFFECT_COLORS: Record<StatusEffectType, string> = {
   tongue_tied: "#a78bfa",
   marked_by_set: "#dc2626",
   blessed: "#facc15",
+  cunning: "#34d399",
+  feeblemind: "#6b7280",
 };
 
 // ── SVG paths (hand-crafted for 20×20 viewBox) ──
@@ -196,11 +198,24 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     description: "The serpent god smelled you. Enemy strikes at +15.",
   },
   blessed: {
-    // Ma'atic feather of truth (upright quill with radiating light lines)
     svgPath: "M10 2L10 18 M10 6L7 3 M10 6L13 3 M10 10L6 8 M10 10L14 8 M10 14L7 17 M10 14L13 17",
     color: "#facc15",
     animation: "glow",
     label: "Blessed",
     description: "Ma'at's light. Poison and bleeding blunted. Illumination and Charisma lifted.",
+  },
+  cunning: {
+    svgPath: "M4 10 Q10 2 16 10 Q10 18 4 10 M8 10 Q10 6 12 10 Q10 14 8 10",
+    color: "#34d399",
+    animation: "pulse",
+    label: "Cunning",
+    description: "Thought quickens. Spells hit harder and fizzle less.",
+  },
+  feeblemind: {
+    svgPath: "M6 6 Q10 4 14 6 M6 14 Q10 16 14 14 M4 10 L16 10 M10 4 L10 16",
+    color: "#6b7280",
+    animation: "none",
+    label: "Feeblemind",
+    description: "Thought thickens. Spells weaken and falter.",
   },
 };

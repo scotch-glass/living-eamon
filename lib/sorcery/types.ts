@@ -164,6 +164,9 @@ export type EffectResult =
       turnsGranted: number;      // duration applied (10 normal, 15 in temple)
       inTemple: boolean;         // true = consecrated room; reagents were waived
     }
+  // Sprint 7b.cunning — Cunning / Feeblemind
+  | { kind: "cunning-applied"; turnsGranted: number }
+  | { kind: "feeblemind-applied"; turnsGranted: number }
   // Sprint 7b.T — rune travel family
   | { kind: "marked"; label: string; roomName: string }
   | { kind: "teleported"; runeLabel: string; destination: string }

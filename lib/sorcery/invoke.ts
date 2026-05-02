@@ -21,6 +21,7 @@ import { addToChronicle } from "../gameState";
 import { applyKarma, logKarmaDelta } from "../karma/recompute";
 import { getSpellByWords } from "./registry";
 import { applyEffect } from "./effects";
+import { getRoom } from "../adventures/registry";
 import type { InvokeOutcome, ReagentId, Spell } from "./types";
 import { CIRCLE_NARRATIVE_WARNING } from "./types";
 
@@ -67,10 +68,17 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
     };
   }
 
-  // 3. Reagent gate
-  const missing = findMissingReagents(state.player, spell.reagents);
-  if (missing.length > 0) {
-    return { outcome: { kind: "missing-reagents", spell, missing }, state };
+  // 3. Reagent gate — waived for Bless in a consecrated room (temple
+  //    modification per SORCERY.md §9.2 + §9.2 impl note).
+  const currentRoom    = getRoom(state.player.currentRoom);
+  const inTemple       = currentRoom?.consecrated === true;
+  const waiveReagents  = spell.id === "bless" && inTemple;
+
+  if (!waiveReagents) {
+    const missing = findMissingReagents(state.player, spell.reagents);
+    if (missing.length > 0) {
+      return { outcome: { kind: "missing-reagents", spell, missing }, state };
+    }
   }
 
   // 4. Effect dispatch (Sprint 7b). Resolves BEFORE consuming mana
@@ -86,7 +94,7 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
 
   // 5. Consume mana + reagents, apply Illumination drain, chronicle
   let next: WorldState = dispatch.state;
-  next = consumeReagents(next, spell.reagents);
+  if (!waiveReagents) next = consumeReagents(next, spell.reagents);
   next = consumeMana(next, spell.manaCost);
 
   if (spell.illuminationDrain !== 0) {
@@ -259,6 +267,12 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
         return `*The Art reaches for the poisoned places in you and finds none. It settles, unspent.*`;
       }
       return `**Black flowers wither in your veins; the poison forgets its purpose.** (${effect.cured} cured)`;
+    case "blessed": {
+      const templeNote = effect.inTemple
+        ? " The sacred ground amplifies the blessing — reagents dissolved into the light unspent."
+        : "";
+      return `**Three quiet warmths layer into your body — quickness of blood, keenness of eye, and something brighter at the edge of your soul.** (${effect.turnsGranted} turns; poison and bleeding blunted)${templeNote}`;
+    }
     case "dev-not-implemented":
       // Development-only marker. By design principle (no in-fiction
       // prose for unbuilt features), this surfaces as a visible

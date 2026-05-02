@@ -48,7 +48,9 @@ export type StatusEffectType =
   | "numb_hand"         // Attacker auto-misses next strike (POWER:Numb Hand → on self)
   | "hiccups"           // -3 effective agility, comic (POWER:Hiccups → on self)
   | "tongue_tied"       // Next CAST fizzles (POWER:Tongue-Tied → on self)
-  | "marked_by_set";    // Next enemy strike +15 accuracy (POWER:Smelled By Set → on self)
+  | "marked_by_set"     // Next enemy strike +15 accuracy (POWER:Smelled By Set → on self)
+  // ── Sprint 7b.B — Bless ──
+  | "blessed";          // Poison + bleed resistance; temp Illumination/CHA buff active
 
 export interface ActiveStatusEffect {
   type: StatusEffectType;

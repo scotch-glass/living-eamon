@@ -74,10 +74,22 @@ export function recomputeDerivedStats(p: PlayerState): PlayerState {
     p.strength + Math.min(10, Math.floor(passion / 10)) - vdPenalty
   );
   const dexEff = p.dexterity + Math.min(10, Math.floor(courage / 10));
-  const chaEff = p.charisma + Math.min(10, Math.floor(standing / 10));
+
+  // Temp modifier bonuses (Sprint 7b.B — Bless + future buffs).
+  // Sum all active charisma and illumination deltas without touching
+  // the underlying ledger.
+  const tempChaBonus = (p.tempModifiers ?? []).reduce(
+    (s, m) => s + (m.stat === "charisma" ? m.delta : 0), 0
+  );
+  const tempIllBonus = (p.tempModifiers ?? []).reduce(
+    (s, m) => s + (m.stat === "illumination" ? m.delta : 0), 0
+  );
+  const chaEff = p.charisma + Math.min(10, Math.floor(standing / 10)) + tempChaBonus;
 
   const newMaxHp = 50 + 2 * integrity;
-  const newMaxMana = 10 + Math.floor(Math.abs(illumination) / 2) + (p.combatVictories ?? 0);
+  // Effective illumination for maxMana includes the temp buff overlay.
+  const effIllumination = Math.max(-100, Math.min(100, illumination + tempIllBonus));
+  const newMaxMana = 10 + Math.floor(Math.abs(effIllumination) / 2) + (p.combatVictories ?? 0);
   const newMaxStamina = STAMINA_BASE + STAMINA_PER_STR * strEff;
 
   const clampedHp = Math.min(p.hp, newMaxHp);

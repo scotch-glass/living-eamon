@@ -340,15 +340,14 @@ caseName("Resurrection returns dev-not-implemented (corpse model unbuilt)", () =
   eq(r.state.player.picssi.illumination, -30, "illumination 0 → -30");
 });
 
-caseName("Bless (buff) returns dev-not-implemented but consumes resources", () => {
+caseName("Bless (buff) returns 'blessed' effect and consumes mana (implemented in 7b.B)", () => {
+  // Bless was upgraded from dev-not-implemented to a full dispatcher in
+  // Sprint 7b.B. Deep behavioral tests live in sprint-7b-bless.test.ts.
   const s0 = fixtureState();
   const r = handleInvoke(s0, "Mag Aug"); // Bless C3
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind !== "success") return;
-  eq(r.outcome.effect.kind, "dev-not-implemented", "effect kind");
-  if (r.outcome.effect.kind === "dev-not-implemented") {
-    truthy(r.outcome.effect.reason.includes("buff"), "reason names the missing dispatcher");
-  }
+  eq(r.outcome.effect.kind, "blessed", "effect kind is now blessed");
   eq(r.state.player.currentMana, 100 - 9, "mana consumed");
 });
 

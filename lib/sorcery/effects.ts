@@ -33,13 +33,14 @@
 // where casting eats a turn — flagged here for a Phase-2 decision.
 // ============================================================
 
-import type { WorldState } from "../gameState";
+import type { WorldState, TempModifier } from "../gameState";
 import { addToChronicle } from "../gameState";
 import type {
   ActiveStatusEffect,
   CombatantState,
   ActiveCombatSession,
 } from "../combatTypes";
+import { getRoom } from "../adventures/registry";
 import type { EffectResult, NumericRange, Spell } from "./types";
 
 /**
@@ -73,6 +74,13 @@ export function applyEffect(
     // disappears, and until then it's flagged for any session that
     // hits it.
     case "buff":
+      if (spell.id === "bless") return applyBless(state, spell);
+      return {
+        kind: "applied",
+        state,
+        effect: { kind: "dev-not-implemented", reason: `${spell.id} buff dispatcher` },
+      };
+
     case "debuff":
     case "summon":
     case "movement":
@@ -274,6 +282,83 @@ function applyCure(state: WorldState): EffectDispatchResult {
     kind: "applied",
     state: next,
     effect: { kind: "cure-applied", cured },
+  };
+}
+
+// ── Bless ────────────────────────────────────────────────────
+// SORCERY.md §9.2 — Circle 3 Force-I buff. Four effects:
+//   1. "blessed" status → poison + bleed resistance (checked in combat engine)
+//   2. Temp Illumination +10 (temp modifier overlay, not PICSSI ledger)
+//   3. Temp Charisma +5 (temp modifier overlay, not base stat)
+//   4. Temple mod: consecrated room → duration 15 turns (normal: 10)
+//
+// Reagent waiver in temples is handled upstream in invoke.ts before
+// consumeReagents runs — effects.ts only applies the physical changes.
+
+const BLESS_DURATION_NORMAL    = 10;
+const BLESS_DURATION_TEMPLE    = 15;
+const BLESS_ILLUMINATION_BONUS = 10;
+const BLESS_CHARISMA_BONUS     =  5;
+
+function applyBless(state: WorldState, spell: Spell): EffectDispatchResult {
+  const room      = getRoom(state.player.currentRoom);
+  const inTemple  = room?.consecrated === true;
+  const duration  = inTemple ? BLESS_DURATION_TEMPLE : BLESS_DURATION_NORMAL;
+
+  const blessedEffect: ActiveStatusEffect = {
+    type: "blessed",
+    zone: "torso",       // zone is structural — "torso" is the canonical body-wide zone
+    severity: 1,
+    turnsRemaining: duration,
+  };
+
+  const newTempMods: TempModifier[] = [
+    { stat: "illumination", delta: BLESS_ILLUMINATION_BONUS, turnsRemaining: duration, source: "bless" },
+    { stat: "charisma",     delta: BLESS_CHARISMA_BONUS,     turnsRemaining: duration, source: "bless" },
+  ];
+
+  // Remove any pre-existing Bless effects before applying (re-casting refreshes).
+  const filteredEffects = state.player.activeEffects.filter(e => e.type !== "blessed");
+  const filteredMods    = (state.player.tempModifiers ?? []).filter(m => m.source !== "bless");
+
+  let next: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      activeEffects: [...filteredEffects, blessedEffect],
+      tempModifiers: [...filteredMods, ...newTempMods],
+    },
+  };
+
+  // Sync blessed effect into active combat session if in combat.
+  if (next.player.activeCombat) {
+    const session = next.player.activeCombat;
+    const combatEffects = session.playerCombatant.activeEffects.filter(e => e.type !== "blessed");
+    next = {
+      ...next,
+      player: {
+        ...next.player,
+        activeCombat: {
+          ...session,
+          playerCombatant: {
+            ...session.playerCombatant,
+            activeEffects: [...combatEffects, blessedEffect],
+          },
+        },
+      },
+    };
+  }
+
+  next = addToChronicle(
+    next,
+    `Bless applied: ${duration} turns, +${BLESS_ILLUMINATION_BONUS} Illumination (temp), +${BLESS_CHARISMA_BONUS} Charisma (temp)${inTemple ? " [temple — reagents waived]" : ""}.`,
+    false
+  );
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "blessed", turnsGranted: duration, inTemple },
   };
 }
 

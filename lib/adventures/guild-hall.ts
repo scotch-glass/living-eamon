@@ -136,6 +136,7 @@ const rooms: Record<string, Room> = {
       west: "church_of_perpetual_life",
       north: "sams_sharps",
       south: "mage_school",
+      southeast: "shrine_of_maat",
     },
     stateModifiers: {},
     npcs: ["training_dummy"],
@@ -158,21 +159,20 @@ const rooms: Record<string, Room> = {
     id: "sams_sharps",
     name: "Sam's Sharps",
     description:
-      "A narrow shopfront that smells of oil, leather, and steel. A few swords and an axe hang from iron hooks on the stone wall behind the counter. A heavy wooden cabinet with iron hinges displays daggers and short blades on dark velvet. Shields lean in a small stack by the door. Behind the counter, Sam Slicker sits on a tall stool, one eye closed, examining the edge of something with a jeweler's loupe. A hand-painted sign behind him reads: ALL SALES FINAL. NO REFUNDS. NO EXCEPTIONS. ESPECIALLY YOU.",
-    look: "A narrow weapon shop smelling of oil and steel. Blades hang on the wall, shields by the door. Sam Slicker sits behind the counter. A sign reads: NO REFUNDS.",
-    glance: "Sam's weapon shop. Steel on the walls, Sam behind the counter.",
+      "A narrow shopfront that smells of oil, leather, and steel. A row of swords hangs from iron hooks on the stone wall behind the counter — short, long, and great two-handers, each oiled and gleaming. A heavy wooden cabinet with iron hinges displays a few short blades on dark velvet. Behind the counter, Sam Slicker sits on a tall stool, one eye closed, examining the edge of something with a jeweler's loupe. A hand-painted sign behind him reads: ALL SALES FINAL. NO REFUNDS. NO EXCEPTIONS. ESPECIALLY YOU.",
+    look: "A narrow sword shop smelling of oil and steel. Blades hang on the wall behind the counter. Sam Slicker sits behind it. A sign reads: NO REFUNDS.",
+    glance: "Sam's sword shop. Steel on the walls, Sam behind the counter.",
     exits: { south: "guild_courtyard" },
     stateModifiers: {},
     npcs: ["sam_slicker"],
     items: [],
     examinableObjects: [
-      { id: "wall_weapons", label: "The weapons on the wall" },
+      { id: "wall_weapons", label: "The swords on the wall" },
       { id: "wooden_cabinet", label: "The wooden display cabinet" },
-      { id: "shield_stack", label: "The shields by the door" },
       { id: "no_refunds_sign", label: "The NO REFUNDS sign" },
     ],
     visualDescription:
-      "INTERIOR scene — inside a small stone room, NOT outdoors. Low vaulted stone ceiling, pale stone walls, no windows. One sword and one mace hang from iron hooks on the back wall. A helmet sits on a wooden shelf. A few shields lean against the wall beneath them. A sturdy wooden workbench in the centre with oilcloths, a whetstone, and tools. A wooden counter near the arched doorway. A single bronze lamp casts warm amber light. Empty room — no people. Only stone walls, a few weapons, the workbench, and warm lamplight.",
+      "INTERIOR scene — inside a small stone room, NOT outdoors. Low vaulted stone ceiling, pale stone walls, no windows. Three swords — a short sword, a long sword, and a great two-handed sword — hang from iron hooks on the back wall. A sturdy wooden workbench in the centre with oilcloths, a whetstone, and tools. A wooden counter near the arched doorway. A single bronze lamp casts warm amber light. Empty room — no people. Only stone walls, swords, the workbench, and warm lamplight.",
     sceneTone: "aquilonian",
   },
 
@@ -231,33 +231,33 @@ const rooms: Record<string, Room> = {
   GUILD POSTINGS — OPEN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[1] THE BEGINNER'S CAVE
-    Goblin infestation, north of the city.
-    Bounty paid on goblin ears. Novice difficulty.
-    → Type: ENTER THE BEGINNER'S CAVE
+[1] THE MIRRORS OF TUZUN THUNE
+    A sealed wizard's tower in the western wilderness.
+    Investigation, light combat. Novice difficulty.
+    → Type: ENTER THE MIRRORS OF TUZUN THUNE
 
-[2] THE THIEVES GUILD
-    Social infiltration of the criminal underworld.
-    Moderate difficulty. Wit over strength.
-    → Type: ENTER THE THIEVES GUILD
+[2] THE SERPENT IN THE COURT
+    A noble court two days north has gone wrong.
+    Investigation, intrigue, sudden combat. Moderate.
+    → Type: ENTER THE SERPENT IN THE COURT
 
-[3] THE HAUNTED MANOR
-    Something is wrong at the Blackwood estate.
-    Moderate to deadly. Not for the faint of heart.
-    → Type: ENTER THE HAUNTED MANOR
+[3] THE PICTISH TIME-TOMB
+    A shaman in the western wild is opening something old.
+    Deadly. Trained heroes only.
+    → Type: ENTER THE PICTISH TIME-TOMB
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
-    look: "A wall of pinned notices. Three stand out on official Guild parchment — the Beginner's Cave, the Thieves Guild, and the Haunted Manor. Each has entry instructions.",
+    look: "A wall of pinned notices. Three stand out on official Guild parchment — the Mirrors of Tuzun Thune, the Serpent in the Court, and the Pictish Time-Tomb. Each has entry instructions.",
     glance: "The notice board. Three Guild postings pinned on official parchment.",
     exits: { west: "main_hall" },
     stateModifiers: {},
     npcs: [],
     items: [],
     examinableObjects: [
-      { id: "beginners_cave_notice", label: "Beginner's Cave notice" },
-      { id: "thieves_guild_notice", label: "Thieves Guild notice" },
-      { id: "haunted_manor_notice", label: "Haunted Manor notice" },
+      { id: "mirrors_notice", label: "Mirrors of Tuzun Thune notice" },
+      { id: "serpent_notice", label: "Serpent in the Court notice" },
+      { id: "pictish_tomb_notice", label: "Pictish Time-Tomb notice" },
       { id: "treasure_maps", label: "Dubious treasure maps" },
       { id: "wanted_posters", label: "Wanted posters" },
     ],
@@ -270,20 +270,20 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
   armory: {
     id: "armory",
     name: "The Guild Armory",
-    description: `A long narrow room lined with weapon racks and armor stands. The Guild maintains a basic selection of equipment for members who need to gear up quickly. A bored-looking attendant sits at a small desk near the door, occasionally polishing a helmet that doesn't need polishing.`,
-    look: "A narrow room lined with weapon racks and armor stands. A young attendant named Pip sits at a desk near the door. Basic equipment is available for Guild members.",
-    glance: "The armory. Racks of weapons, stands of armor, the attendant at his desk.",
+    description: `A long narrow room lined with armor stands. The Guild maintains a basic selection of well-worn protective gear for members who need to suit up quickly — patched leather cuirasses, dented iron helms, scuffed leather neckguards, and battered round shields. A bored-looking attendant sits at a small desk near the door, occasionally polishing a helmet that doesn't need polishing.`,
+    look: "A narrow room lined with armor stands — old leather cuirasses, iron helms, leather neckguards, and round wooden shields. A young attendant named Pip sits at a desk near the door.",
+    glance: "The armory. Stands of well-worn armor, the attendant at his desk.",
     exits: { south: "main_hall" },
     stateModifiers: {},
     npcs: ["armory_attendant"],
     items: [],
     examinableObjects: [
-      { id: "weapon_racks", label: "Weapon racks" },
       { id: "armor_stands", label: "Armor stands" },
+      { id: "shield_rack", label: "The shield rack" },
       { id: "armory_desk", label: "The attendant's desk" },
     ],
     visualDescription:
-      "A long vaulted chamber of pale stone with iron weapon racks lining both walls — spears, axes, swords, and shields of every condition from battered to nearly new. A grindstone sits in one corner beside a bucket of water gone rust-brown. Bronze lamp brackets throw warm amber light along the rows of steel. The floor is flagstone, worn smooth by generations of armored boots.",
+      "A long vaulted chamber of pale stone with iron armor stands and racks lining both walls — battered leather cuirasses, dented open-faced iron helms, stiff leather neckguards, and round iron-rimmed wooden shields, all of every condition from heavily-used to nearly retired. A grindstone sits in one corner beside a bucket of water gone rust-brown. Bronze lamp brackets throw warm amber light along the rows of leather and steel. The floor is flagstone, worn smooth by generations of armored boots.",
     sceneTone: "aquilonian",
   },
 
@@ -331,6 +331,33 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
       "An impossibly large chamber of dark polished stone and warm wood, far deeper than the exterior suggests. Floor-to-ceiling shelves crammed with glass bottles, leather-bound scrolls, and mysterious objects — some faintly glowing. A long glass-topped counter with neat rows of colourful potions. Bronze astrolabes and crystal spheres on high shelves. Warm amber light from no visible source. Dust motes suspended in air that hums with unseen energy. Ancient Aquilonian architecture crossed with an alchemist's workshop. No people visible.",
     sceneTone: "aquilonian",
   },
+
+  // ── Shrine of Ma'at ─────────────────────────────────────────
+  // Sprint 7b.B — first consecrated room in the game. Provides the
+  // temple modification for Bless (longer duration, reagents waived).
+  shrine_of_maat: {
+    id: "shrine_of_maat",
+    name: "The Shrine of Ma'at",
+    description:
+      "A small alcove off the guild courtyard, set into the stone as though the building folded itself inward to make room for it. The floor is swept clean. A low stone plinth holds a brass scale — one pan empty, one pan bearing a white feather that never moves despite the draft from the courtyard. The walls are carved with the 42 Oaths in tight columns, each glyph precise and unhurried. No lamp burns here, yet the stone seems to hold light from some earlier hour. Adventurers stop here before heading out — not the pious ones necessarily, just the serious ones.",
+    look: "A small stone alcove. A brass scale with a white feather on one pan. The 42 Oaths carved on every wall. No lamp, yet the stone holds light.",
+    glance: "The Shrine of Ma'at. Brass scale, feather, carved oaths.",
+    exits: { north: "guild_courtyard" },
+    stateModifiers: {},
+    npcs: [],
+    items: [],
+    examinableObjects: [
+      { id: "brass_scale", label: "The brass scale" },
+      { id: "white_feather", label: "The white feather" },
+      { id: "carved_oaths", label: "The carved Oaths" },
+    ],
+    visualDescription:
+      "A small stone alcove room with low vaulted ceiling. Smooth pale stone walls carved floor-to-ceiling with dense columns of hieroglyphic-style glyphs — 42 oaths, each rendered in careful relief. At the center, a low stone plinth supports an ancient brass balance scale. One pan holds a single white feather, perfectly still. The room glows with sourceless soft warm gold light — not torch light, something older. Clean swept stone floor. No shadows. Sacred stillness.",
+    sceneTone: "civilized",
+    consecrated: true,
+    deity: "maat",
+  },
+
 };
 
 // ── Brunt the Banker — Tier-based greeting pools ────────────

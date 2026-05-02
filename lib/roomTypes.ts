@@ -54,6 +54,13 @@ export interface Room {
 
   // Cold open (optional — only rooms that are session-start entry points need this)
   coldOpen?: RoomColdOpen;
+
+  // Sprint 7b.B — temple / shrine tags. Bless reads these for
+  // duration extension + reagent waiver; future Force-I spells may too.
+  /** True if this room is a temple, shrine, or sanctified space. */
+  consecrated?: boolean;
+  /** The deity this space is dedicated to (matches PANTHEON.md id). */
+  deity?: string;
 }
 
 // ── NPC Scripted Interactions ────────────────────────────────

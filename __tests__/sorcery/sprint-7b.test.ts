@@ -362,15 +362,10 @@ caseName("Wall of Stone (field) returns dev-not-implemented", () => {
   }
 });
 
-caseName("Teleport (movement) returns dev-not-implemented", () => {
+caseName("Teleport (movement) returns no-rune-target when no rune supplied (implemented in 7b.T)", () => {
   const s0 = fixtureState();
-  const r = handleInvoke(s0, "Mut Via"); // Teleport C3
-  eq(r.outcome.kind, "success", "kind");
-  if (r.outcome.kind === "success" && r.outcome.effect.kind === "dev-not-implemented") {
-    truthy(r.outcome.effect.reason.includes("movement"), "reason names the missing dispatcher");
-  } else {
-    throw new Error("expected dev-not-implemented for movement");
-  }
+  const r = handleInvoke(s0, "Mut Via"); // Teleport C3 — no rune label → no-rune-target gate
+  eq(r.outcome.kind, "no-rune-target", "kind");
 });
 
 // ── 7. Response composer ─────────────────────────────────────

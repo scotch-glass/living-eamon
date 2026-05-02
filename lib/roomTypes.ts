@@ -55,6 +55,10 @@ export interface Room {
   // Cold open (optional — only rooms that are session-start entry points need this)
   coldOpen?: RoomColdOpen;
 
+  // Sprint 7b.T — world/plane id. Default "thurian" when absent.
+  // Gate Travel reads this at cast time and stores it in MarkedRune.
+  planeId?: string;
+
   // Sprint 7b.B — temple / shrine tags. Bless reads these for
   // duration extension + reagent waiver; future Force-I spells may too.
   /** True if this room is a temple, shrine, or sanctified space. */

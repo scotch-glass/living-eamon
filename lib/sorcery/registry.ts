@@ -773,6 +773,36 @@ export function getSpellByWords(words: string[]): Spell | null {
   return null;
 }
 
+/**
+ * Prefix-match: find the longest spell whose words are a leading
+ * subsequence of `tokens`. Returns the spell and any remaining
+ * tokens (the argument the player appended, e.g. a rune label).
+ * Used by handleInvoke so `INVOKE Mut Via church` finds Teleport
+ * (words=["Mut","Via"]) with remainder=["church"].
+ */
+export function getSpellByWordPrefix(
+  tokens: string[]
+): { spell: Spell; remainder: string[] } | null {
+  if (tokens.length === 0) return null;
+  const lower = tokens.map(w => w.toLowerCase());
+  let best: { spell: Spell; remainder: string[] } | null = null;
+
+  for (const spell of SPELL_REGISTRY) {
+    const wl = spell.words.map(w => w.toLowerCase());
+    if (wl.length > lower.length) continue;
+    let ok = true;
+    for (let i = 0; i < wl.length; i++) {
+      if (wl[i] !== lower[i]) { ok = false; break; }
+    }
+    if (!ok) continue;
+    // Pick the spell with the most words matched (longest prefix wins).
+    if (!best || spell.words.length > best.spell.words.length) {
+      best = { spell, remainder: tokens.slice(spell.words.length) };
+    }
+  }
+  return best;
+}
+
 /** All spells of a given circle, in registry order. */
 export function getSpellsByCircle(circle: Circle): Spell[] {
   return SPELL_REGISTRY.filter(s => s.circle === circle);

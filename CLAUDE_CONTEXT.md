@@ -1072,37 +1072,31 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 ---
 
-## ⚡ Most recent session (2026-05-01) — Sprint 7 vocabulary swap + Sprint 7a confirmed + Sprint 7b Phase 1 shipped + canonical Light/Dark lore correction
+## ⚡ Most recent session (2026-05-02) — Pre-work B/C/F + S1 + Sprint 7b.B Bless shipped
 
-**The day's headline:** Sprint 7 advanced two sub-sprints in one session. (1) Vocabulary swap shipped (`ea02d20` → `c953c23`). (2) Sprint 7a discovered already on prod from a prior session (`aab3eed` → `6940c48`); CLAUDE_CONTEXT.md was lagging the ship. (3) **Sprint 7b Phase 1 shipped — INVOKE successes now actually deal damage to combat enemies, restore HP to the caster, and cure poison.** Phase-2 effect kinds (buff/debuff/summon/field/movement/conceal/reveal/transform/utility) return `no-effect-yet` until their supporting infrastructure lands. (4) **Canonical lore correction (load-bearing):** removed the inherited "low Illumination amplifies subsequent INVOKE" claim from GAME_DESIGN.md §11 and SORCERY.md §7. Added SORCERY.md §7.1 documenting the cosmological reasoning (Thoth's Principle of Correspondence — Light and Dark as polar continuum, not factions; Darkness unsustainable by its own physics).
+**The day's headline:** Five sprints landed in one session. (1) **Pre-work B** — combat 3-vs-3 position model + barrier infrastructure. (2) **Pre-work C** — Incognito dropped; Invisibility semi-transparency render is the entire deliverable. (3) **Pre-work F** — `lore/pantheon/PANTHEON.md` + `lore/maatic-library/oaths-of-maat.md` (42 Oaths) + 8 math-magic books. (4) **S1** — `OathPanel.tsx` (42 Oaths + PICSSI summary; 4th sidebar tab "oaths"). (5) **Sprint 7b.B Bless** — temp buff layer (`TempModifier` on `PlayerState`), room tags (`consecrated`/`deity` on `Room`), Shrine of Ma'at in guild-hall, Bless mechanics (10/15-turn duration, reagent waiver in consecrated rooms, +Illumination +10 / +Charisma +5), blessed poison/bleed resistance in combat engine, effect icon. 114/114 tests, typecheck clean.
 
-### Magic-system state on prod (main `6940c48`)
+### Magic-system state on prod (main `633028c`)
 
-- **Words of Power** — original Latinate vocabulary canonicalized in SORCERY.md §5b. 12 operators (Aug, Min, Mag, Crea, Solv, Mut, Tra, Ten, Lib, Dur, Vel, Pluv) + 30+ elements (Ign, Aqu, Aer, Terr, Vit, Mort, Mens, Cor, Tox, Via, Ict, Sag, Pot, Dex, Aeg, Mur, Camp, Ful, Bes, Sig, Loc, Fer, Arc, …). Grammar: `[operator] [element]` with `Mag` stacking. All 64 spell phrases unique.
-- **`lib/sorcery/`** — `types.ts` (Spell shape, CIRCLE_ILLUMINATION_DRAIN/MANA_COST/NARRATIVE_WARNING tables, InvokeOutcome union) · `registry.ts` (64-spell SPELL_REGISTRY + lookups by id/words/circle) · `invoke.ts` (`handleInvoke` parser + dispatcher with Circle→mana→reagent→Illum cascade, `composeInvokeResponse` for every outcome kind).
-- **`PlayerState.knownCircles: number[]`** in `lib/gameState.ts` — set by quest reward `unlockCircle` via `lib/quests/engine.ts:applyReward`. Idempotent, sorted ascending, persists across rebirth.
-- **`lib/gameEngine.ts`** — INVOKE prefix routes to `handleInvoke`; unrecognized/empty falls through to Jane for atmospheric fizzle, structured outcomes render via `composeInvokeResponse`.
-- **`__tests__/sorcery/sprint-7a.test.ts`** — 23 cases covering registry shape, parser case/order rules, all gate-cascade outcomes, success path with reagent consumption, narrative warnings at C2/C3, Illumination drain at C4 (−2) and C8 (−30), unlockCircle idempotency.
-
-### Sample vocabulary mappings (legacy → new)
-
-| Spell | Was | Now |
-|-------|-----|-----|
-| Heal | `In Mani` | `Aug Vit` |
-| Fireball | `Vas Flam` | `Mag Ign` |
-| Energy Bolt | `Corp Por` | `Mag Ict Arc` |
-| Resurrection | `An Corp` | `Solv Mort` |
-| Summon Daemon | `Kal Vas Xen Corp` | `Crea Bes Mort` |
+- **Words of Power** — Latinate vocabulary canonicalized in SORCERY.md §5b. 63 spells (Circle 5 = 7; Incognito dropped 2026-05-02). Grammar: `[operator] [element]` with `Mag` stacking.
+- **`lib/sorcery/`** — `types.ts` · `registry.ts` (63 spells) · `invoke.ts` (reagent-waiver logic for Bless in consecrated rooms) · `effects.ts` (damage / heal / cure / **Bless** implemented; others return `dev-not-implemented`).
+- **Temp buff layer** — `TempModifier` type + `tempModifiers: TempModifier[]` on `PlayerState` ([lib/gameState.ts](lib/gameState.ts)). Folded into `charismaEffective` + effective-illumination-for-maxMana at recompute. Ticked down by `tickWorldState`. Initialized to `[]` in factory + rebirth.
+- **Room tags** — `consecrated?: boolean; deity?: string;` on `Room` ([lib/roomTypes.ts](lib/roomTypes.ts)). Shrine of Ma'at (`id: shrine_of_maat`, `consecrated: true, deity: "maat"`) accessible southeast from guild courtyard.
+- **Blessed resistance** — combat engine rejects `bleed`, `severed_artery`, and `poison` injury applications when the target has `"blessed"` in `activeEffects`.
+- **Tests** — `sprint-7a.test.ts` (23) + `sprint-7b.test.ts` (20) + `sprint-7b-bless.test.ts` (18) = 114/114 total.
 
 ### What's still ahead in Sprint 7
 
 | Sub-sprint | Scope | State |
 |---|---|---|
 | 7-vocab + 7a | Vocabulary, registry, INVOKE handler, gates | ✅ shipped |
-| 7b Phase 1 | Numeric effect dispatch — damage / heal / cure actually fire | ✅ shipped (this session) |
-| 7b Phase 2 | Effect dispatch for buff / debuff / summon / field / movement / conceal / reveal / transform / utility — currently return `no-effect-yet` (resources still consumed, physical magnitude deferred) | ❌ each kind needs supporting infrastructure: new ActiveStatusEffect types for stat buffs, ally combat for summons, persistent zone state for fields, runebook model for movement |
-| 7c | Outer Dark — narrative-only consequences of low Illumination (different gods answer prayers, different NPC reactions, patron whispers at the lowest tiers). **NOT** a power-amplifier — corrected 2026-05-01: the Illumination → spell-power relation is one-way. Powerful sorcery darkens the soul; a darkened soul does NOT boost spell power. Light and Dark are **poles of the PICSSI Illumination continuum**, not factions of beings. SORCERY.md §7 + §7.1 is the source of truth (Thoth's Principle of Correspondence). | ❌ design-only; precise scope TBD |
-| 7d | The Order witness mechanic — public-room casting probability spike → investigation thread (SORCERY.md §4) | ❌ Phase 2 per spec |
+| 7b Phase 1 | Damage / heal / cure dispatchers | ✅ shipped |
+| 7b.B | Bless — temp buff layer, room tags, poison/bleed resistance | ✅ shipped 2026-05-02 |
+| 7b.T | Teleport family (Mark, Teleport, Recall, Gate Travel) — rune item type, `markedRunes` on PlayerState, `planeId` on Room | ❌ next sprint |
+| 7b.R | Corpse system + Resurrection (depends on 7b.RA art) | ❌ |
+| 7b.* | Remaining buff/debuff/summon/field/movement/conceal/reveal/transform/utility spells — see `~/.claude/plans/fluffy-bouncing-hanrahan.md` | ❌ |
+| 7c | Outer Dark — narrative consequences of low Illumination | ❌ design-only |
+| 7d | The Order witness mechanic | ❌ Phase 2 per spec |
 
 ### Hydration discipline (lesson from this session)
 

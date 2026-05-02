@@ -53,6 +53,8 @@ import {
   normalizeWeaponSkills,
   revealItemsInRoom,
   removeRevealedItem,
+  isDay,
+  type Corpse,
   type WeaponSkills,
 } from "./gameState";
 
@@ -113,6 +115,18 @@ export {
  * `stamina` bar shows immediate exhaustion while `fatiguePool` carries
  * tier debt across rounds and into the next fight if not recovered.
  */
+// Sprint 7b.R — checks if there is a hot flame source in the room.
+// First pass: looks for a campfire or pyre in the room's examinable objects.
+// Fire Field / Fireball residue plug in here when those spells land.
+// Sprint 7b.R — checks if there is a hot flame source in the room.
+// First pass: room-state "burnt" is an after-fire state — not a live flame.
+// Active fire (Fire Field / Fireball residue) plugs in here when those
+// spells land. For now always returns false; BURN uses this as its gate.
+function hasHotFlameSource(_state: WorldState, _roomId: string): boolean {
+  // Future: check active Fire Field barriers and Fireball residue flags.
+  return false;
+}
+
 function drainPlayerStaminaForStrike(
   state: WorldState,
   weaponId: string
@@ -4408,6 +4422,28 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
           },
         };
         finalState = setNPCCombatHp(finalState, session.enemyNpcId, null);
+
+        // Sprint 7b.R — create corpse in the world at the death room.
+        const dyingNpcDef = NPCS[session.enemyNpcId];
+        const corpseId = `corpse-${session.enemyNpcId}-${finalState.worldTurn}`;
+        const newCorpse: Corpse = {
+          id: corpseId,
+          originalNpcId: session.enemyNpcId,
+          name: `the body of ${session.enemyName}`,
+          roomId: finalState.player.currentRoom,
+          planeId: finalState.player.currentPlane,
+          timeOfDeath: finalState.worldTurn,
+          context: "surface",
+          sunExposed: isDay(finalState.worldTurn),
+          moonExposed: !isDay(finalState.worldTurn),
+          creatureKind: dyingNpcDef?.creatureKind ?? "human",
+          isHeroCorpse: false,
+        };
+        finalState = {
+          ...finalState,
+          corpses: { ...(finalState.corpses ?? {}), [corpseId]: newCorpse },
+        };
+
         // KARMA Sprint 5: combat-end PICSSI deltas — KARMA_SYSTEM.md §4c.
         // Routine kill = +1 Passion; dark-tagged enemy = +3 Illumination;
         // killing an innocent or friendly carries the catastrophic delta.
@@ -4841,6 +4877,118 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
       newState,
       stateChanged: true,
       conversationNpcId: SHOP_ROOM_NPC[destinationId] ?? null,
+    };
+  }
+
+  // ── BURY / BURN ────────────────────────────────────────
+  // Sprint 7b.R — funeral rites. Both require a surface corpse in the
+  // current room. BURY costs stamina (digging). BURN costs no stamina
+  // but requires a hot flame source present in the room.
+  // Hero corpse: awards +Spirituality AND +Standing (hiding the shame
+  // of failure). Other mortal corpses: +Spirituality only.
+
+  if (first === "BURY" || first === "BURN") {
+    const isBury = first === "BURY";
+    const target = tokens.slice(1).join(" ").trim().toLowerCase();
+
+    // Resolve corpse in current room matching target string
+    const roomCorpses = Object.values(newState.corpses ?? {}).filter(
+      c => c.roomId === p.currentRoom && c.context === "surface"
+    );
+    const corpse = roomCorpses.find(c =>
+      c.name.toLowerCase().includes(target) ||
+      c.originalNpcId.toLowerCase().includes(target) ||
+      c.id.toLowerCase().includes(target)
+    ) ?? (target === "" && roomCorpses.length === 1 ? roomCorpses[0] : null);
+
+    if (!corpse) {
+      const hint = roomCorpses.length === 0
+        ? "There are no bodies here awaiting burial."
+        : `There is ${roomCorpses.length > 1
+            ? `more than one body here — be specific: ${roomCorpses.map(c => c.name).join(", ")}.`
+            : `only one body here: ${roomCorpses[0]!.name}. Use ${first} without a name, or name it.`}`;
+      return {
+        responseType: "static",
+        staticResponse: hint,
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    if (isBury) {
+      // Stamina gate — digging is real labor
+      const BURY_STAMINA_COST = 20;
+      if (p.stamina < BURY_STAMINA_COST) {
+        return {
+          responseType: "static",
+          staticResponse: `You have not the strength to break this earth. Rest first. (Need ${BURY_STAMINA_COST} stamina; have ${p.stamina}.)`,
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+      // Consume stamina
+      newState = {
+        ...newState,
+        player: { ...newState.player, stamina: newState.player.stamina - BURY_STAMINA_COST },
+      };
+    } else {
+      // BURN — requires a hot flame source
+      const hasFlame = hasHotFlameSource(newState, p.currentRoom);
+      if (!hasFlame) {
+        return {
+          responseType: "static",
+          staticResponse: "You have nothing here to take this body to ash. You need a campfire, a pyre, or another source of strong flame.",
+          dynamicContext: null,
+          newState,
+          stateChanged: false,
+        };
+      }
+    }
+
+    // Apply the rite
+    const newContext: "buried" | "burnt" = isBury ? "buried" : "burnt";
+    newState = {
+      ...newState,
+      corpses: {
+        ...(newState.corpses ?? {}),
+        [corpse.id]: { ...corpse, context: newContext },
+      },
+    };
+
+    // PICSSI: +Spirituality for funeral rite; +Standing if hero's own corpse
+    const funeralDelta: import("./karma/types").KarmaDelta = { spirituality: 3 };
+    if (corpse.isHeroCorpse) funeralDelta.standing = 2;
+    newState = {
+      ...newState,
+      player: applyKarma(newState.player, funeralDelta),
+    };
+    newState = {
+      ...newState,
+      player: logKarmaDelta(
+        newState.player,
+        funeralDelta,
+        `funeral rite: ${newContext} ${corpse.name}`
+      ),
+    };
+
+    newState = addToChronicle(
+      newState,
+      `${p.name} performed a funeral rite — ${newContext} ${corpse.name}.`,
+      true
+    );
+
+    const riteNarrative = isBury
+      ? `**You break the earth with your hands — each scoop, a prayer. ${corpse.name} lies at rest now, returned to the ground.**${corpse.isHeroCorpse ? "\n\nThe shame of your failure is covered. Perhaps no one need know." : ""}`
+      : `**The flames take ${corpse.name}. It is done swiftly and without dignity, but it is done.** The smoke rises.${corpse.isHeroCorpse ? "\n\nThe evidence of your passing is gone." : ""}`;
+
+    return {
+      responseType: "static",
+      staticResponse: riteNarrative + "\n\n*(+Spirituality)" + (corpse.isHeroCorpse ? " (+Standing)*" : "*"),
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
     };
   }
 

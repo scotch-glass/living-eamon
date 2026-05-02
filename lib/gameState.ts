@@ -161,6 +161,34 @@ export interface PlayerInventoryItem {
   runeBinding?: { roomId: string; planeId: string; label: string };
 }
 
+// ── Corpse System (Sprint 7b.R) ───────────────────────────────
+// Mortal/immortal classification for NPCs and the hero.
+// "immortal" means Resurrection is impossible; the soul has no door.
+export type CreatureKind = "human" | "beast" | "undead" | "daemon" | "immortal";
+
+// A corpse persists in the world after death — in a room on the surface,
+// buried underground, or rendered to ash. Surface corpses accumulate
+// sun and moon exposure across the day/night cycle; both flags set means
+// Resurrection is no longer possible (the soul has gone on).
+export interface Corpse {
+  id: string;
+  originalNpcId: string;       // NPC id, or "hero" for hero corpse
+  name: string;                // "the body of Grak" — shown in room
+  roomId: string;
+  planeId: string;
+  timeOfDeath: number;         // worldTurn at moment of death
+  context: "surface" | "buried" | "burnt";
+  sunExposed: boolean;
+  moonExposed: boolean;
+  creatureKind: CreatureKind;
+  isHeroCorpse: boolean;
+}
+
+/** Simple day/night check. One cycle = 48 turns; first 24 = day. */
+export function isDay(worldTurn: number): boolean {
+  return worldTurn % 48 < 24;
+}
+
 // ── Temp Modifier Layer (Pre-work D, Sprint 7b.B) ────────────
 // Additive overlays that modify effective stat values for the
 // duration of a buff without writing through to the PICSSI ledger
@@ -538,6 +566,15 @@ export interface WorldState {
     itemId: string;
     expiresAtTime: string; // ISO 8601 timestamp
   }>>;
+
+  /**
+   * Sprint 7b.R — live corpse records. Keyed by corpse id.
+   * NPC death and hero death both write here. BURY/BURN update the
+   * context field; Resurrection removes the entry. Surface corpses
+   * accumulate sunExposed / moonExposed each world tick; once both
+   * are true the soul has gone on and Resurrection is impossible.
+   */
+  corpses: Record<string, Corpse>;
 }
 
 // ============================================================
@@ -844,6 +881,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
     },
 
     vendorTempStock: {},
+    corpses: {},
   };
 }
 
@@ -1256,6 +1294,29 @@ export function applyPlayerDeath(
     },
   };
 
+  // Create a hero corpse at the death room — persists in the world
+  // across rebirths. Hero can return, identify it, bury or burn it
+  // (+Spirituality + Standing). Cannot be Resurrected (soul already
+  // went to the church). See Sprint 7b.R + 7b.RF.
+  const heroCorpseId = `corpse-hero-${state.worldTurn}`;
+  const heroCorpse: Corpse = {
+    id: heroCorpseId,
+    originalNpcId: "hero",
+    name: `the body of ${state.player.name}`,
+    roomId: state.player.currentRoom,
+    planeId: state.player.currentPlane,
+    timeOfDeath: state.worldTurn,
+    context: "surface",
+    sunExposed: isDay(state.worldTurn),
+    moonExposed: !isDay(state.worldTurn),
+    creatureKind: "human",
+    isHeroCorpse: true,
+  };
+  newState = {
+    ...newState,
+    corpses: { ...(newState.corpses ?? {}), [heroCorpseId]: heroCorpse },
+  };
+
   newState = addToChronicle(
     newState,
     `${state.player.name} was slain by ${enemyName} and reborn in the Church of Perpetual Life.`,
@@ -1344,6 +1405,26 @@ export function tickWorldState(state: WorldState): WorldState {
         "Wore the gray church robe for another ten turns.",
         false
       );
+    }
+  }
+
+  // Tick corpse sun/moon exposure (Sprint 7b.R)
+  // Surface corpses accumulate sun or moon each tick depending on time
+  // of day. Once both flags are true, Resurrection is impossible.
+  if (newState.corpses && Object.keys(newState.corpses).length > 0) {
+    const day = isDay(newState.worldTurn);
+    let updatedCorpses: Record<string, Corpse> | null = null;
+    for (const [id, corpse] of Object.entries(newState.corpses)) {
+      if (corpse.context !== "surface") continue;
+      const newSun  = corpse.sunExposed  || day;
+      const newMoon = corpse.moonExposed || !day;
+      if (newSun !== corpse.sunExposed || newMoon !== corpse.moonExposed) {
+        if (!updatedCorpses) updatedCorpses = { ...newState.corpses };
+        updatedCorpses[id] = { ...corpse, sunExposed: newSun, moonExposed: newMoon };
+      }
+    }
+    if (updatedCorpses) {
+      newState = { ...newState, corpses: updatedCorpses };
     }
   }
 

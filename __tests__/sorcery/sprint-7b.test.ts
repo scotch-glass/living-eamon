@@ -321,19 +321,17 @@ caseName("Cure out of combat is a successful no-op", () => {
 
 console.log("[sprint-7b] dev-not-implemented markers");
 
-caseName("Resurrection returns dev-not-implemented (corpse model unbuilt)", () => {
+caseName("Resurrection with no corpse → resurrection-rejected 'no-corpse' (Sprint 7b.R wired)", () => {
   const s0 = fixtureState();
   const manaBefore = s0.player.currentMana;
   const r = handleInvoke(s0, "Solv Mort");
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind !== "success") return;
-  eq(r.outcome.effect.kind, "dev-not-implemented", "effect kind");
-  if (r.outcome.effect.kind === "dev-not-implemented") {
-    truthy(r.outcome.effect.reason.toLowerCase().includes("corpse"), "reason mentions corpse model");
+  eq(r.outcome.effect.kind, "resurrection-rejected", "effect kind");
+  if (r.outcome.effect.kind === "resurrection-rejected") {
+    eq(r.outcome.effect.reason, "no-corpse", "reason");
   }
   // Resources still consumed (Resurrection is C8, mana 50, illum -30).
-  // applyKarma recomputes maxMana from |illumination| (KARMA §2.2) and
-  // currentMana clamps — we just assert directional behavior.
   if (r.state.player.currentMana >= manaBefore) {
     throw new Error(`mana did not decrease: ${manaBefore} → ${r.state.player.currentMana}`);
   }

@@ -301,6 +301,23 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
         : "";
       return `**Three quiet warmths layer into your body — quickness of blood, keenness of eye, and something brighter at the edge of your soul.** (${effect.turnsGranted} turns; poison and bleeding blunted)${templeNote}`;
     }
+    case "resurrected":
+      return effect.returnedAsUndead
+        ? `**The body stirs. The soul returns — but it has tasted the other side and brought something back with it. ${effect.targetName} rises, changed.**`
+        : `**A breath. An eye that opens. ${effect.targetName} lives.**`;
+    case "resurrection-rejected":
+      switch (effect.reason) {
+        case "hero-corpse":
+          return `**The Art reaches and finds nothing — that soul has already gone to the church. A living body stands where it was.**`;
+        case "immortal":
+          return `**The Art reaches and finds no door. ${effect.targetName ?? "This creature"} was never mortal; there is nothing to call back.**`;
+        case "sun-and-moon":
+          return `**Too late. Both sun and moon have passed over ${effect.targetName ?? "the body"}. The soul has gone on and will not return for your asking.**`;
+        case "no-corpse":
+          return `**There is no body here to call back.**`;
+        case "not-in-room":
+          return `**There is no body here by that name.** (Have you the right room?)`;
+      }
     case "cunning-applied":
       return `**A sharpening gathers behind your eyes — thought quickens, and the Art follows.** (${effect.turnsGranted} turns; spells +33% strength and success)`;
     case "feeblemind-applied":

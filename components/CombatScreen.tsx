@@ -1475,10 +1475,14 @@ export default function CombatScreen({
 
           // Ghost-out enemies who are invisible.
           const enemyInvisible = slot.activeEffects.some(e => e.type === "invisible");
-          const enemySpriteOpacity = enemyInvisible ? 0.35 : 1;
+          // Dead state: session is finished and player won.
+          const enemyDead = slot.isMain && session.finished && session.playerWon === true;
+          const enemySpriteOpacity = enemyInvisible ? 0.35 : enemyDead ? 0.25 : 1;
           const enemySpriteFilter = enemyInvisible
             ? "drop-shadow(0 14px 24px rgba(0,0,0,0.5)) brightness(1.15) saturate(0.6) hue-rotate(200deg)"
-            : "drop-shadow(0 14px 24px rgba(0,0,0,0.85))";
+            : enemyDead
+              ? "grayscale(100%) brightness(0.4) drop-shadow(0 14px 24px rgba(0,0,0,0.85))"
+              : "drop-shadow(0 14px 24px rgba(0,0,0,0.85))";
 
           // Is the right side (enemies) the defender? Hero attacked them.
           // Only the main (targeted) enemy shakes — preview NPCs stay still.
@@ -1526,6 +1530,29 @@ export default function CombatScreen({
                       <BloodOverlay
                         splatters={enemyBlood}
                         spriteUrl={spriteUrl}
+                      />
+                    )}
+                    {/* Corpse on ground — floats at feet after death.
+                        Uses corpseImageUrl from NPC def when available;
+                        otherwise renders a dark body-shadow placeholder
+                        until Sprint 7b.RA art arrives. zIndex 2 sits
+                        above the standing sprite but below blood (3). */}
+                    {enemyDead && (
+                      <div
+                        aria-hidden
+                        style={{
+                          position: "absolute",
+                          bottom: -2,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: 170,
+                          height: 46,
+                          borderRadius: "50%",
+                          background: "radial-gradient(ellipse at 40% 60%, rgba(55,18,8,0.85) 0%, rgba(20,6,2,0.45) 55%, transparent 100%)",
+                          filter: "blur(5px)",
+                          zIndex: 2,
+                          pointerEvents: "none",
+                        }}
                       />
                     )}
                     {/* Red hit flash on enemy when struck */}

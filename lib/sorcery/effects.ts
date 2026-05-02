@@ -33,7 +33,7 @@
 // where casting eats a turn — flagged here for a Phase-2 decision.
 // ============================================================
 
-import type { WorldState, TempModifier, PlayerInventoryItem } from "../gameState";
+import type { WorldState, TempModifier, PlayerInventoryItem, Corpse } from "../gameState";
 import { addToChronicle, movePlayer } from "../gameState";
 import type {
   ActiveStatusEffect,
@@ -70,7 +70,7 @@ export function applyEffect(
       return applyDamage(state, spell);
 
     case "heal":
-      return applyHealOrCure(state, spell);
+      return applyHealOrCure(state, spell, arg);
 
     case "buff":
       if (spell.id === "bless")   return applyBless(state, spell);
@@ -180,20 +180,11 @@ function applyDamage(state: WorldState, spell: Spell): EffectDispatchResult {
 
 // ── Heal / Cure ──────────────────────────────────────────────
 
-function applyHealOrCure(state: WorldState, spell: Spell): EffectDispatchResult {
-  // Resurrection — corpse model not yet implemented. Returns a dev
-  // marker until the feature lands; no in-fiction prose for an
-  // unbuilt feature.
+function applyHealOrCure(state: WorldState, spell: Spell, arg?: string): EffectDispatchResult {
   if (spell.id === "resurrection") {
-    return {
-      kind: "applied",
-      state,
-      effect: {
-        kind: "dev-not-implemented",
-        reason: "Resurrection corpse model",
-      },
-    };
+    return applyResurrection(state, arg ?? null);
   }
+
 
   // Cure variants: remove poison status from caster (and combat
   // playerCombatant if active). No HP restored.
@@ -389,6 +380,111 @@ function applyBless(state: WorldState, spell: Spell): EffectDispatchResult {
     kind: "applied",
     state: next,
     effect: { kind: "blessed", turnsGranted: duration, inTemple },
+  };
+}
+
+// ── Resurrection (Sprint 7b.R) ───────────────────────────────
+// SORCERY.md §9.3 — Circle 8 heal (Solv Mort + arg = corpse target).
+//
+// Validates: mortal corpse in current room, neither sun nor moon
+// has yet exposed it (both = soul gone on). Restores the NPC to
+// alive. Undead-risk: >24 turns since death = 50% chance of
+// returning as undead (status applied to the NPC state).
+// Hero corpses and immortal creatures always reject.
+
+// Random 0..1 for undead roll — seeded only in tests.
+let _randFn: () => number = Math.random;
+/** Test-only: replace the RNG. Reset to Math.random after your test. */
+export function _setResurrectionRng(fn: () => number): void { _randFn = fn; }
+
+function applyResurrection(state: WorldState, arg: string | null): EffectDispatchResult {
+  const roomId  = state.player.currentRoom;
+
+  // Resolve corpse by matching arg against corpses in the current room.
+  const candidates = Object.values(state.corpses ?? {}).filter(
+    c => c.roomId === roomId && c.context === "surface"
+  );
+
+  let corpse: Corpse | null = null;
+  if (arg) {
+    const needle = arg.toLowerCase();
+    corpse = candidates.find(c =>
+      c.name.toLowerCase().includes(needle) ||
+      c.originalNpcId.toLowerCase().includes(needle)
+    ) ?? null;
+  } else if (candidates.length === 1) {
+    corpse = candidates[0]!;
+  }
+
+  if (!corpse) {
+    const targetName = arg ?? null;
+    // Distinguish "no corpse at all" from "named one not found".
+    const reason = candidates.length === 0 ? "no-corpse" : "not-in-room";
+    return {
+      kind: "applied",
+      state,
+      effect: { kind: "resurrection-rejected", reason, targetName },
+    };
+  }
+
+  if (corpse.isHeroCorpse) {
+    return {
+      kind: "applied",
+      state,
+      effect: { kind: "resurrection-rejected", reason: "hero-corpse", targetName: corpse.name },
+    };
+  }
+
+  if (corpse.creatureKind === "immortal") {
+    return {
+      kind: "applied",
+      state,
+      effect: { kind: "resurrection-rejected", reason: "immortal", targetName: corpse.name },
+    };
+  }
+
+  if (corpse.sunExposed && corpse.moonExposed) {
+    return {
+      kind: "applied",
+      state,
+      effect: { kind: "resurrection-rejected", reason: "sun-and-moon", targetName: corpse.name },
+    };
+  }
+
+  // Valid target. Remove the corpse and restore the NPC.
+  const turnsElapsed = state.worldTurn - corpse.timeOfDeath;
+  const returnedAsUndead = turnsElapsed > 24 && _randFn() < 0.5;
+
+  // Remove corpse from world.
+  const { [corpse.id]: _removed, ...remainingCorpses } = (state.corpses ?? {});
+
+  // Restore NPC state entry to alive.
+  const npcId = corpse.originalNpcId;
+  const existingNpcState = state.npcs[npcId];
+  let next: WorldState = {
+    ...state,
+    corpses: remainingCorpses,
+  };
+  if (existingNpcState) {
+    next = {
+      ...next,
+      npcs: {
+        ...next.npcs,
+        [npcId]: { ...existingNpcState, isAlive: true },
+      },
+    };
+  }
+
+  next = addToChronicle(
+    next,
+    `Resurrection: ${corpse.name} returned${returnedAsUndead ? " as undead" : ""}.`,
+    false
+  );
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "resurrected", targetName: corpse.name, returnedAsUndead },
   };
 }
 

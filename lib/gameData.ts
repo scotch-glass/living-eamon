@@ -7,6 +7,7 @@
 // ============================================================
 
 import type { NPCBodyType } from "./npcBodyType";
+import type { CreatureKind } from "./gameState";
 import type { Room } from "./roomTypes";
 import type { BodyZone, NPCCombatProfile } from "./combatTypes";
 
@@ -55,6 +56,18 @@ export interface NPC {
    *  Defaults to "medium" (human-sized) when omitted. Use "small"
    *  for dwarves/gnomes/halflings and "large" for trolls/giants/ogres. */
   spriteSize?: import("./spriteFraming").SpriteSize;
+  /**
+   * Sprint 7b.R — mortal/immortal classification for the corpse system.
+   * Default when absent = "human" (mortal). Immortals cannot be Resurrected.
+   * "daemon" and "undead" have special Illumination interactions with Resurrection.
+   */
+  creatureKind?: CreatureKind;
+  /**
+   * Sprint 7b.RA — path to a pre-generated corpse sprite (transparent PNG).
+   * When set, the combat screen shows this image at the enemy's feet after death
+   * instead of the CSS placeholder. Omit until 7b.RA art is approved.
+   */
+  corpseImageUrl?: string;
   merchant?: {
     inventory: string[];     // Item ids for sale
     haggleModifier: number;  // -1 easy to haggle, +1 hard

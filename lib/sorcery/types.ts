@@ -167,6 +167,9 @@ export type EffectResult =
   // Sprint 7b.cunning — Cunning / Feeblemind
   | { kind: "cunning-applied"; turnsGranted: number }
   | { kind: "feeblemind-applied"; turnsGranted: number }
+  // Sprint 7b.R — Resurrection
+  | { kind: "resurrected"; targetName: string; returnedAsUndead: boolean }
+  | { kind: "resurrection-rejected"; reason: "hero-corpse" | "immortal" | "sun-and-moon" | "no-corpse" | "not-in-room"; targetName: string | null }
   // Sprint 7b.T — rune travel family
   | { kind: "marked"; label: string; roomName: string }
   | { kind: "teleported"; runeLabel: string; destination: string }

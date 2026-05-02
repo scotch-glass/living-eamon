@@ -51,7 +51,7 @@ When you commit either of those files next session, both edits will go in togeth
 
 ### Next sprint per the approved plan
 
-The plan at `~/.claude/plans/fluffy-bouncing-hanrahan.md` has the recommended order. **Pre-work B — Combat-UI 3-vs-3 position model** is next on the pre-work list (load-bearing for Wall of Stone and Mass Curse / Mass Dispel). After that, **Pre-work C** (semi-transparency sprite layer for Incognito + Invisibility) and **Pre-work F** (pantheon stub list — Mythras, Grom, +2-4 others from PD-safe Howard corpus).
+The plan at `~/.claude/plans/fluffy-bouncing-hanrahan.md` has the recommended order. **Pre-work B — Combat-UI 3-vs-3 position model** is next on the pre-work list (load-bearing for Wall of Stone and Mass Curse / Mass Dispel). After that, **Pre-work C** (semi-transparency sprite layer for Incognito + Invisibility) and **Pre-work F** (pantheon stub list — Mythras, Crom, +2-4 others from PD-safe Howard corpus).
 
 Once pre-work clears, the per-spell sessions begin with **Sprint 7b.B — Bless** (foundational; lands the temp PICSSI/CHA buff layer + room tags inside its own sprint).
 

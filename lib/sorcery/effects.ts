@@ -73,7 +73,8 @@ export function applyEffect(
       return applyHealOrCure(state, spell);
 
     case "buff":
-      if (spell.id === "bless") return applyBless(state, spell);
+      if (spell.id === "bless")   return applyBless(state, spell);
+      if (spell.id === "cunning") return applyCunning(state);
       return {
         kind: "applied",
         state,
@@ -92,6 +93,13 @@ export function applyEffect(
       };
 
     case "debuff":
+      if (spell.id === "feeblemind") return applyFeeblemind(state);
+      return {
+        kind: "applied",
+        state,
+        effect: { kind: "dev-not-implemented", reason: `${spell.id} debuff dispatcher` },
+      };
+
     case "summon":
     case "field":
     case "reveal":
@@ -106,6 +114,20 @@ export function applyEffect(
         },
       };
   }
+}
+
+// ── Spell-strength multiplier ─────────────────────────────────
+// Reads the caster's tempModifiers for spell_strength delta and
+// returns a multiplier (e.g. 1.33 with Cunning, 0.67 with Feeblemind).
+// Only the player casts spells in the current engine; NPC dispatchers
+// will call an equivalent helper when NPC spellcasting lands.
+
+function spellStrengthMult(state: WorldState): number {
+  const mods = state.player.tempModifiers ?? [];
+  const delta = mods
+    .filter(m => m.stat === "spell_strength")
+    .reduce((sum, m) => sum + m.delta, 0);
+  return Math.max(0, 1 + delta / 100);
 }
 
 // ── Damage ───────────────────────────────────────────────────
@@ -131,7 +153,7 @@ function applyDamage(state: WorldState, spell: Spell): EffectDispatchResult {
     };
   }
 
-  const amount = rollRange(spell.damageRoll);
+  const amount = Math.round(rollRange(spell.damageRoll) * spellStrengthMult(state));
   const enemy = session.enemyCombatant;
   const newHp = Math.max(0, enemy.hp - amount);
   const updatedEnemy: CombatantState = { ...enemy, hp: newHp };
@@ -192,7 +214,7 @@ function applyHealOrCure(state: WorldState, spell: Spell): EffectDispatchResult 
     };
   }
 
-  const amount = rollRange(spell.healRoll);
+  const amount = Math.round(rollRange(spell.healRoll) * spellStrengthMult(state));
   return applyHpRestore(state, amount);
 }
 
@@ -367,6 +389,108 @@ function applyBless(state: WorldState, spell: Spell): EffectDispatchResult {
     kind: "applied",
     state: next,
     effect: { kind: "blessed", turnsGranted: duration, inTemple },
+  };
+}
+
+// ── Cunning / Feeblemind (Sprint 7b.cunning) ─────────────────
+// SORCERY.md §9.6 — ±33% spell strength AND spell success chance.
+//
+// Cunning (Circle 2 buff, Aug Mens): self-buff on the caster.
+//   Adds +33 to spell_strength and spell_success TempModifiers.
+//   spellStrengthMult() reads these when damage/heal rolls are made.
+//
+// Feeblemind (Circle 1 debuff, Min Mens): applied to the active enemy.
+//   Adds "feeblemind" status to enemyCombatant.activeEffects.
+//   NPC spell dispatchers will read this when NPC spellcasting lands.
+//   Out of combat → no-target.
+
+const CUNNING_FEEBLEMIND_DURATION = 10;
+const CUNNING_FEEBLEMIND_DELTA    = 33; // percentage points
+
+function applyCunning(state: WorldState): EffectDispatchResult {
+  const duration = CUNNING_FEEBLEMIND_DURATION;
+  const delta    = CUNNING_FEEBLEMIND_DELTA;
+
+  const statusEffect: ActiveStatusEffect = {
+    type: "cunning",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: duration,
+  };
+
+  const newMods: TempModifier[] = [
+    { stat: "spell_strength", delta,  turnsRemaining: duration, source: "cunning" },
+    { stat: "spell_success",  delta,  turnsRemaining: duration, source: "cunning" },
+  ];
+
+  const filteredEffects = state.player.activeEffects.filter(e => e.type !== "cunning");
+  const filteredMods    = (state.player.tempModifiers ?? []).filter(m => m.source !== "cunning");
+
+  let next: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      activeEffects: [...filteredEffects, statusEffect],
+      tempModifiers: [...filteredMods, ...newMods],
+    },
+  };
+
+  if (next.player.activeCombat) {
+    const session = next.player.activeCombat;
+    const combatEffects = session.playerCombatant.activeEffects.filter(e => e.type !== "cunning");
+    next = {
+      ...next,
+      player: {
+        ...next.player,
+        activeCombat: {
+          ...session,
+          playerCombatant: {
+            ...session.playerCombatant,
+            activeEffects: [...combatEffects, statusEffect],
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "cunning-applied", turnsGranted: duration },
+  };
+}
+
+function applyFeeblemind(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+  if (!session) return { kind: "no-target" };
+
+  const duration = CUNNING_FEEBLEMIND_DURATION;
+
+  const statusEffect: ActiveStatusEffect = {
+    type: "feeblemind",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: duration,
+  };
+
+  const enemyEffects = session.enemyCombatant.activeEffects.filter(e => e.type !== "feeblemind");
+  const updatedEnemy: CombatantState = {
+    ...session.enemyCombatant,
+    activeEffects: [...enemyEffects, statusEffect],
+  };
+
+  const next: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      activeCombat: { ...session, enemyCombatant: updatedEnemy },
+    },
+  };
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "feeblemind-applied", turnsGranted: duration },
   };
 }
 

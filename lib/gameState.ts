@@ -166,7 +166,11 @@ export interface PlayerInventoryItem {
 // duration of a buff without writing through to the PICSSI ledger
 // or base attributes. Expires by turn count. Recompute reads these
 // so derived caps stay in sync while the buff is active.
-export type TempModifierStat = "illumination" | "charisma";
+export type TempModifierStat =
+  | "illumination"
+  | "charisma"
+  | "spell_strength"   // % bonus to spell damage/heal magnitude (±33 = Cunning/Feeblemind)
+  | "spell_success";   // % bonus to spell-success chance (placeholder; hooked when fizzle lands)
 
 export interface TempModifier {
   stat: TempModifierStat;

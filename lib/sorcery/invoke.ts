@@ -301,6 +301,10 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
         : "";
       return `**Three quiet warmths layer into your body — quickness of blood, keenness of eye, and something brighter at the edge of your soul.** (${effect.turnsGranted} turns; poison and bleeding blunted)${templeNote}`;
     }
+    case "cunning-applied":
+      return `**A sharpening gathers behind your eyes — thought quickens, and the Art follows.** (${effect.turnsGranted} turns; spells +33% strength and success)`;
+    case "feeblemind-applied":
+      return `**A thickening reaches for their thoughts — speech thickens, and the Art slows.** (${effect.turnsGranted} turns; target spells −33% strength and success)`;
     case "marked":
       return `**The rune drinks in this place. "${effect.label}" — bound.** (${effect.roomName})`;
     case "teleported":

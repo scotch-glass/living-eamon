@@ -50,7 +50,10 @@ export type StatusEffectType =
   | "tongue_tied"       // Next CAST fizzles (POWER:Tongue-Tied → on self)
   | "marked_by_set"     // Next enemy strike +15 accuracy (POWER:Smelled By Set → on self)
   // ── Sprint 7b.B — Bless ──
-  | "blessed";          // Poison + bleed resistance; temp Illumination/CHA buff active
+  | "blessed"           // Poison + bleed resistance; temp Illumination/CHA buff active
+  // ── Sprint 7b.cunning — Cunning / Feeblemind ──
+  | "cunning"           // Caster's spells +33% strength and +33% success chance
+  | "feeblemind";       // Target's spells -33% strength and -33% success chance
 
 export interface ActiveStatusEffect {
   type: StatusEffectType;

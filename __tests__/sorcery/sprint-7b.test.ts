@@ -349,14 +349,12 @@ caseName("Bless (buff) returns 'blessed' effect and consumes mana (implemented i
   eq(r.state.player.currentMana, 100 - 9, "mana consumed");
 });
 
-caseName("Wall of Stone (field) returns dev-not-implemented", () => {
+caseName("Wall of Stone (field) out-of-combat returns dev-not-implemented (room-exit blocking pending)", () => {
   const s0 = fixtureState();
-  const r = handleInvoke(s0, "Crea Mur"); // Wall of Stone C3
+  const r = handleInvoke(s0, "Crea Mur"); // Wall of Stone C3, no active combat
   eq(r.outcome.kind, "success", "kind");
-  if (r.outcome.kind === "success" && r.outcome.effect.kind === "dev-not-implemented") {
-    truthy(r.outcome.effect.reason.includes("field"), "reason names the missing dispatcher");
-  } else {
-    throw new Error("expected dev-not-implemented for field");
+  if (r.outcome.kind === "success") {
+    eq(r.outcome.effect.kind, "dev-not-implemented", "effect is dev-not-implemented out of combat");
   }
 });
 

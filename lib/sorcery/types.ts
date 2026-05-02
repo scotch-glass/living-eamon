@@ -175,6 +175,8 @@ export type EffectResult =
   | { kind: "teleported"; runeLabel: string; destination: string }
   | { kind: "recalled"; runeLabel: string; destination: string }
   | { kind: "gate-opened"; runeLabel: string; destination: string; durationTurns: number }
+  // Sprint 7b.wall-of-stone
+  | { kind: "wall-erected"; boundary: 0 | 1 | 2 | 3; durationTurns: number }
   | { kind: "dev-not-implemented"; reason: string };
 
 /**

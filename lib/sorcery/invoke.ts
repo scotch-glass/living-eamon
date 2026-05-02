@@ -322,6 +322,8 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
       return `**A sharpening gathers behind your eyes — thought quickens, and the Art follows.** (${effect.turnsGranted} turns; spells +33% strength and success)`;
     case "feeblemind-applied":
       return `**A thickening reaches for their thoughts — speech thickens, and the Art slows.** (${effect.turnsGranted} turns; target spells −33% strength and success)`;
+    case "wall-erected":
+      return `**Stone answers. A wall rises between you and the enemy, solid as the earth that made it.** (${effect.durationTurns} turns; boundary ${effect.boundary})`;
     case "marked":
       return `**The rune drinks in this place. "${effect.label}" — bound.** (${effect.roomName})`;
     case "teleported":

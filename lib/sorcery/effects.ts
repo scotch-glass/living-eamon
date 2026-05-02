@@ -37,6 +37,7 @@ import type { WorldState, TempModifier, PlayerInventoryItem, Corpse } from "../g
 import { addToChronicle, movePlayer } from "../gameState";
 import type {
   ActiveStatusEffect,
+  Barrier,
   CombatantState,
   ActiveCombatSession,
 } from "../combatTypes";
@@ -100,8 +101,15 @@ export function applyEffect(
         effect: { kind: "dev-not-implemented", reason: `${spell.id} debuff dispatcher` },
       };
 
-    case "summon":
     case "field":
+      if (spell.id === "wall-of-stone") return applyWallOfStone(state);
+      return {
+        kind: "applied",
+        state,
+        effect: { kind: "dev-not-implemented", reason: `${spell.id} field dispatcher` },
+      };
+
+    case "summon":
     case "reveal":
     case "conceal":
     case "transform":
@@ -587,6 +595,61 @@ function applyFeeblemind(state: WorldState): EffectDispatchResult {
     kind: "applied",
     state: next,
     effect: { kind: "feeblemind-applied", turnsGranted: duration },
+  };
+}
+
+// ── Wall of Stone (Sprint 7b.wall-of-stone) ──────────────────
+// SORCERY.md §9.x — Circle 3 field spell (Crea Mur).
+//
+// In combat: places a stone-wall Barrier at boundary 0 (between hero
+//   and enemy slot 1), blocking strikes and spells that cross it for
+//   WALL_DURATION turns. Re-casting refreshes the duration.
+//   tickBarriers() in combatEngine.ts decrements it each round.
+//   isCrossingBarrier() in lib/combat/barriers.ts rejects strikes.
+//
+// Out of combat: room-exit blocking is not yet built; dev-not-implemented.
+
+const WALL_DURATION = 10;
+const WALL_BOUNDARY = 0 as const; // hero-side vs enemy-side centerline
+
+function applyWallOfStone(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+
+  if (!session) {
+    return {
+      kind: "applied",
+      state,
+      effect: { kind: "dev-not-implemented", reason: "wall-of-stone room-exit blocking not yet built" },
+    };
+  }
+
+  const newBarrier: Barrier = {
+    id: `wall-${state.worldTurn}`,
+    atBoundary: WALL_BOUNDARY,
+    kind: "stone-wall",
+    durationRemaining: WALL_DURATION,
+  };
+
+  // Replace any existing stone-wall at the same boundary (re-cast refreshes).
+  const filtered = session.barriers.filter(
+    b => !(b.kind === "stone-wall" && b.atBoundary === WALL_BOUNDARY)
+  );
+
+  const next: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      activeCombat: {
+        ...session,
+        barriers: [...filtered, newBarrier],
+      },
+    },
+  };
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "wall-erected", boundary: WALL_BOUNDARY, durationTurns: WALL_DURATION },
   };
 }
 

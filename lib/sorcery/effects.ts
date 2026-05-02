@@ -33,7 +33,7 @@
 // where casting eats a turn — flagged here for a Phase-2 decision.
 // ============================================================
 
-import type { WorldState, TempModifier, MarkedRune } from "../gameState";
+import type { WorldState, TempModifier, PlayerInventoryItem } from "../gameState";
 import { addToChronicle, movePlayer } from "../gameState";
 import type {
   ActiveStatusEffect,
@@ -389,31 +389,27 @@ function applyBless(state: WorldState, spell: Spell): EffectDispatchResult {
 
 const GATE_DURATION_TURNS = 5;
 
+// Rune binding extracted from an inventory item (marked_rune).
+type RuneBinding = { roomId: string; planeId: string; label: string };
+
 function applyMark(
   state: WorldState,
   arg: string | null
 ): EffectDispatchResult {
-  // Gate: must have an unmarked_rune in inventory.
-  const hasRune = state.player.inventory.some(
+  // Must have a blank rune stone in inventory.
+  const hasBlank = state.player.inventory.some(
     i => i.itemId === "unmarked_rune" && i.quantity > 0
   );
-  if (!hasRune) return { kind: "no-unmarked-rune" };
+  if (!hasBlank) return { kind: "no-unmarked-rune" };
 
-  const room = getRoom(state.player.currentRoom);
+  const room    = getRoom(state.player.currentRoom);
   const roomName = room?.name ?? state.player.currentRoom;
   const planeId  = room?.planeId ?? state.player.currentPlane ?? "thurian";
   const rawLabel = arg?.trim() ?? "";
   const label    = rawLabel.length > 0 ? rawLabel : `rune to ${roomName}`;
 
-  const newRune: MarkedRune = {
-    id: `rune-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    targetRoomId:  state.player.currentRoom,
-    targetPlaneId: planeId,
-    label,
-  };
-
-  // Consume 1 unmarked_rune from inventory.
-  const inventory = state.player.inventory.map(i => ({ ...i }));
+  // Consume 1 unmarked_rune.
+  const inventory: PlayerInventoryItem[] = state.player.inventory.map(i => ({ ...i }));
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].itemId === "unmarked_rune" && inventory[i].quantity > 0) {
       inventory[i].quantity -= 1;
@@ -421,12 +417,18 @@ function applyMark(
     }
   }
 
+  // Add a marked_rune item with the binding embedded per-instance.
+  const markedItem: PlayerInventoryItem = {
+    itemId: "marked_rune",
+    quantity: 1,
+    runeBinding: { roomId: state.player.currentRoom, planeId, label },
+  };
+
   let next: WorldState = {
     ...state,
     player: {
       ...state.player,
-      inventory: inventory.filter(i => i.quantity > 0),
-      markedRunes: [...(state.player.markedRunes ?? []), newRune],
+      inventory: [...inventory.filter(i => i.quantity > 0), markedItem],
     },
   };
   next = addToChronicle(next, `Mark bound: "${label}" → ${roomName}.`, false);
@@ -465,15 +467,15 @@ function applyTeleport(
   spellId: "teleport" | "recall"
 ): EffectDispatchResult {
   const label = arg?.trim().toLowerCase() ?? null;
-  const rune  = findRune(state, label);
+  const rune  = findRuneInInventory(state, label);
   if (!rune) return { kind: "no-rune-target", runeLabel: label };
 
-  const room        = getRoom(rune.targetRoomId);
-  const destination = room?.name ?? rune.targetRoomId;
+  const room        = getRoom(rune.roomId);
+  const destination = room?.name ?? rune.roomId;
 
-  // Runes are permanent magical devices — never consumed on use.
-  let next = movePlayer(state, rune.targetRoomId);
-  next = { ...next, player: { ...next.player, currentPlane: rune.targetPlaneId } };
+  // Rune stones stay in inventory — lost only if the hero dies carrying them.
+  let next = movePlayer(state, rune.roomId);
+  next = { ...next, player: { ...next.player, currentPlane: rune.planeId } };
   next = addToChronicle(
     next,
     `${spellId === "recall" ? "Recall" : "Teleport"}: arrived at ${destination}.`,
@@ -494,16 +496,16 @@ function applyGateTravel(
   arg: string | null
 ): EffectDispatchResult {
   const label = arg?.trim().toLowerCase() ?? null;
-  const rune  = findRune(state, label);
+  const rune  = findRuneInInventory(state, label);
   if (!rune) return { kind: "no-rune-target", runeLabel: label };
 
-  const room = getRoom(rune.targetRoomId);
-  const destination = room?.name ?? rune.targetRoomId;
+  const room        = getRoom(rune.roomId);
+  const destination = room?.name ?? rune.roomId;
 
-  // First pass: player is immediately transported (moongate entity +
-  // two-way traversal deferred to the moongate-gameplay sprint).
-  let next = movePlayer(state, rune.targetRoomId);
-  next = { ...next, player: { ...next.player, currentPlane: rune.targetPlaneId } };
+  // First pass: player is immediately transported; rune stone stays in inventory.
+  // Two-way moongate entity deferred to the moongate-gameplay sprint.
+  let next = movePlayer(state, rune.roomId);
+  next = { ...next, player: { ...next.player, currentPlane: rune.planeId } };
   next = addToChronicle(
     next,
     `Gate Travel: moongate to ${destination} opened (${GATE_DURATION_TURNS} turns; two-way traversal pending).`,
@@ -522,11 +524,20 @@ function applyGateTravel(
   };
 }
 
-/** Case-insensitive label lookup on player.markedRunes. */
-function findRune(state: WorldState, label: string | null): MarkedRune | null {
+/** Case-insensitive label lookup across marked_rune items in inventory. */
+function findRuneInInventory(
+  state: WorldState,
+  label: string | null
+): RuneBinding | null {
   if (!label) return null;
-  const runes = state.player.markedRunes ?? [];
-  return runes.find(r => r.label.toLowerCase() === label) ?? null;
+  for (const item of state.player.inventory) {
+    if (item.itemId === "marked_rune" && item.runeBinding) {
+      if (item.runeBinding.label.toLowerCase() === label) {
+        return item.runeBinding;
+      }
+    }
+  }
+  return null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────

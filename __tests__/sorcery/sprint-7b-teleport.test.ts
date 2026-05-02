@@ -74,19 +74,19 @@ function baseState(): WorldState {
   };
 }
 
-/** State with a pre-existing marked rune pointing to "guild_main_hall". */
+/** State with a pre-existing marked rune stone in inventory pointing to "guild_main_hall". */
 function stateWithRune(label = "inn"): WorldState {
   const s = baseState();
   return {
     ...s,
     player: {
       ...s.player,
-      markedRunes: [
+      inventory: [
+        ...s.player.inventory,
         {
-          id: "rune-test-001",
-          targetRoomId: "guild_main_hall",
-          targetPlaneId: "thurian",
-          label,
+          itemId: "marked_rune",
+          quantity: 1,
+          runeBinding: { roomId: "guild_main_hall", planeId: "thurian", label },
         },
       ],
     },
@@ -140,25 +140,23 @@ caseName("no blank rune → no-unmarked-rune, mana untouched", () => {
   eq(after.player.currentMana, before, "mana unchanged");
 });
 
-caseName("Mark with blank rune → markedRune created, rune consumed, auto-label", () => {
+caseName("Mark with blank rune → marked_rune item in inventory, blank consumed, auto-label", () => {
   const s = baseState();
-  const runeBefore = s.player.inventory.find(i => i.itemId === "unmarked_rune")!.quantity;
+  const blankBefore = s.player.inventory.find(i => i.itemId === "unmarked_rune")!.quantity;
   const { outcome, state: after } = handleInvoke(s, "Crea Sig Loc");
   eq(outcome.kind, "success", "outcome kind");
-  eq(after.player.markedRunes.length, 1, "one rune entry");
-  truthy(
-    after.player.markedRunes[0].label.includes("rune to"),
-    "auto-label contains 'rune to'"
-  );
-  const runeAfter = after.player.inventory.find(i => i.itemId === "unmarked_rune");
-  const qtyAfter = runeAfter?.quantity ?? 0;
-  eq(qtyAfter, runeBefore - 1, "unmarked_rune quantity decremented");
+  const markedItem = after.player.inventory.find(i => i.itemId === "marked_rune");
+  truthy(markedItem, "marked_rune item created");
+  truthy(markedItem!.runeBinding?.label.includes("rune to"), "auto-label contains 'rune to'");
+  const blankAfter = after.player.inventory.find(i => i.itemId === "unmarked_rune")?.quantity ?? 0;
+  eq(blankAfter, blankBefore - 1, "unmarked_rune quantity decremented");
 });
 
-caseName("Mark with custom label stores label verbatim", () => {
+caseName("Mark with custom label stores label verbatim on the item", () => {
   const s = baseState();
   const { state: after } = handleInvoke(s, "Crea Sig Loc my tavern");
-  eq(after.player.markedRunes[0].label, "my tavern", "custom label stored");
+  const item = after.player.inventory.find(i => i.itemId === "marked_rune");
+  eq(item?.runeBinding?.label, "my tavern", "custom label stored");
 });
 
 console.log("\n[sprint-7b-teleport] Teleport");
@@ -179,38 +177,38 @@ caseName("bad label → no-rune-target, mana untouched", () => {
   eq(after.player.currentMana, before, "mana unchanged");
 });
 
-caseName("valid label → player moves to targetRoomId, rune stays, mana consumed", () => {
+caseName("valid label → player moves to targetRoomId, rune stone stays in inventory, mana consumed", () => {
   const s = stateWithRune("inn");
   const before = s.player.currentMana;
   const { outcome, state: after } = handleInvoke(s, "Mut Via inn");
   eq(outcome.kind, "success", "outcome kind");
   if (outcome.kind === "success") eq(outcome.effect.kind, "teleported", "effect kind");
   eq(after.player.currentRoom, "guild_main_hall", "player moved");
-  eq(after.player.markedRunes.length, 1, "rune stays");
+  truthy(after.player.inventory.some(i => i.itemId === "marked_rune"), "rune stone stays in inventory");
   truthy(after.player.currentMana < before, "mana consumed");
 });
 
 console.log("\n[sprint-7b-teleport] Recall");
 
-caseName("Recall valid label → player moves, rune stays (permanent device)", () => {
+caseName("Recall valid label → player moves, rune stone stays in inventory", () => {
   const s = stateWithRune("inn");
   const { outcome, state: after } = handleInvoke(s, "Crea Tra Via inn");
   eq(outcome.kind, "success", "outcome kind");
   if (outcome.kind === "success") eq(outcome.effect.kind, "recalled", "effect kind");
   eq(after.player.currentRoom, "guild_main_hall", "player moved");
-  eq(after.player.markedRunes.length, 1, "rune stays — permanent magical device");
+  truthy(after.player.inventory.some(i => i.itemId === "marked_rune"), "rune stone stays in inventory");
 });
 
-caseName("Recall bad label → no-rune-target, rune untouched", () => {
+caseName("Recall bad label → no-rune-target, rune stone untouched", () => {
   const s = stateWithRune("inn");
   const { outcome, state: after } = handleInvoke(s, "Crea Tra Via cave");
   eq(outcome.kind, "no-rune-target", "outcome kind");
-  eq(after.player.markedRunes.length, 1, "rune not consumed");
+  truthy(after.player.inventory.some(i => i.itemId === "marked_rune"), "rune stone still in inventory");
 });
 
 console.log("\n[sprint-7b-teleport] Gate Travel");
 
-caseName("Gate Travel valid label → player moves, rune stays, gate-opened result", () => {
+caseName("Gate Travel valid label → player moves, rune stone stays, gate-opened result", () => {
   const s = stateWithRune("inn");
   const { outcome, state: after } = handleInvoke(s, "Mag Mut Via inn");
   eq(outcome.kind, "success", "outcome kind");
@@ -221,7 +219,7 @@ caseName("Gate Travel valid label → player moves, rune stays, gate-opened resu
     }
   }
   eq(after.player.currentRoom, "guild_main_hall", "player moved");
-  eq(after.player.markedRunes.length, 1, "rune stays");
+  truthy(after.player.inventory.some(i => i.itemId === "marked_rune"), "rune stone stays in inventory");
 });
 
 console.log("\n[sprint-7b-teleport] currentPlane");
@@ -232,18 +230,20 @@ caseName("teleporting to a thurian rune sets currentPlane = thurian", () => {
   eq(after.player.currentPlane, "thurian", "plane is thurian");
 });
 
-caseName("teleporting to an otherworld rune sets currentPlane to that plane", () => {
+caseName("teleporting to an otherworld rune stone sets currentPlane to that plane", () => {
   const s = baseState();
   const withOtherRune: WorldState = {
     ...s,
     player: {
       ...s.player,
-      markedRunes: [{
-        id: "rune-other",
-        targetRoomId: "guild_main_hall",
-        targetPlaneId: "outer-dark",
-        label: "dark place",
-      }],
+      inventory: [
+        ...s.player.inventory,
+        {
+          itemId: "marked_rune",
+          quantity: 1,
+          runeBinding: { roomId: "guild_main_hall", planeId: "outer-dark", label: "dark place" },
+        },
+      ],
     },
   };
   const { state: after } = handleInvoke(withOtherRune, "Mut Via dark place");
@@ -252,10 +252,11 @@ caseName("teleporting to an otherworld rune sets currentPlane to that plane", ()
 
 console.log("\n[sprint-7b-teleport] Rebirth");
 
-caseName("markedRunes cleared on rebirth", () => {
+caseName("marked rune stones stripped from inventory on rebirth (lost on death)", () => {
   const s = stateWithRune("inn");
   const { newState } = applyPlayerDeath(s, "a test enemy");
-  eq(newState.player.markedRunes.length, 0, "markedRunes wiped");
+  const hasMarked = newState.player.inventory.some(i => i.itemId === "marked_rune");
+  eq(hasMarked, false, "marked_rune items not in rebirth inventory");
 });
 
 caseName("currentPlane resets to thurian on rebirth", () => {

@@ -15,6 +15,7 @@ import type {
   BodyArmorMap,
   ActiveCombatSession,
   NPCCombatProfile,
+  Barrier,
 } from "./combatTypes";
 import {
   BODY_ZONES,
@@ -28,6 +29,7 @@ import { getWeaponCategory, type WeaponCategory, type WoundTier } from "./combat
 import { buildZoneStrikeNarrative } from "./combatZoneNarration";
 import type { WorldState } from "./gameState";
 import { FATIGUE_TIER_EVASION_PENALTY } from "./gameState";
+import { isCrossingBarrier, tickBarriers } from "./combat/barriers";
 import { NPCS, ITEMS, getEnemyDeathPool } from "./gameData";
 import { fatigueLevel } from "./karma/recompute";
 
@@ -370,6 +372,51 @@ export function resolveStrike(
   };
 }
 
+/**
+ * Pre-work B — barrier-aware wrapper around `resolveStrike`. If the line
+ * of effect from attacker to defender crosses an active barrier (e.g., a
+ * Wall of Stone), short-circuits with a null-damage resolution describing
+ * the wall in the way. No spell yet populates `barriers`, so this is a
+ * no-op until Sprint 7b.wall-of-stone wires the spell. Used by
+ * `resolveCombatRound`, `runEnemyTurn`, and the `POWER_OUTCOMES`
+ * "Bonus Strike" path so every in-combat strike is barrier-aware from a
+ * single point.
+ */
+function tryStrikeWithBarriers(
+  attacker: CombatantState,
+  defender: CombatantState,
+  zone: BodyZone,
+  cat: WeaponCategory,
+  barriers: Barrier[]
+): StrikeResolution {
+  if (
+    isCrossingBarrier(
+      attacker.side,
+      attacker.position,
+      defender.side,
+      defender.position,
+      barriers
+    )
+  ) {
+    return {
+      targetZone: zone,
+      evaded: false,
+      blocked: false,
+      armorStopped: false,
+      armorDamaged: 0,
+      armorBroken: false,
+      damageDealt: 0,
+      injuryInflicted: null,
+      injurySeverity: 0,
+      isCritical: false,
+      isCriticalFail: false,
+      weaponDropped: false,
+      narrative: `${attacker.name} cannot reach across the wall of stone.`,
+    };
+  }
+  return resolveStrike(attacker, defender, zone, cat);
+}
+
 // ── Apply Strike to Combatant ───────────────────────────────
 
 export function applyStrike(
@@ -556,6 +603,8 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
     strength: p.strength,
     agility: effectiveAgility, // Dexterity minus cumulative armor penalties
     fatigueTier: fatigueLevel(p),
+    side: "ally",
+    position: 1,
   };
 }
 
@@ -609,6 +658,8 @@ export function buildCombatantFromNPC(
     dexterity: 10,
     strength: 12,
     agility: profile?.agility ?? 20,
+    side: "enemy",
+    position: 1,
   };
 }
 
@@ -633,6 +684,10 @@ export function resolveCombatRound(
     .filter(Boolean)
     .join("\n");
 
+  // Pre-work B: compute the ticked barriers once. Returned in
+  // `updatedBarriers` on every return path; caller writes back to session.
+  const updatedBarriers = tickBarriers(session).barriers;
+
   // 2. Check for deaths from status ticks
   if (player.hp <= 0) {
     return {
@@ -647,6 +702,7 @@ export function resolveCombatRound(
       updatedPlayer: player,
       updatedEnemy: enemy,
       statusTickNarrative,
+      updatedBarriers,
     };
   }
   if (enemy.hp <= 0) {
@@ -662,6 +718,7 @@ export function resolveCombatRound(
       updatedPlayer: player,
       updatedEnemy: enemy,
       statusTickNarrative,
+      updatedBarriers,
     };
   }
 
@@ -724,7 +781,7 @@ export function resolveCombatRound(
   // Training dummies never strike back — they are inanimate wooden posts.
   // The player always acts "first" since there's nothing to contest initiative.
   if (enemyIsTrainingDummy) {
-    playerStrike = resolveStrike(player, enemy, playerTargetZone, playerWeaponCat);
+    playerStrike = tryStrikeWithBarriers(player, enemy, playerTargetZone, playerWeaponCat, session.barriers);
     enemy = applyStrike(enemy, playerStrike);
     player = applyWeaponDrop(player, playerStrike);
     if (enemy.hp <= 0) {
@@ -734,7 +791,7 @@ export function resolveCombatRound(
     // enemyStrike stays null — nothing swings at the hero.
   } else if (playerGoesFirst) {
     // Player strikes first
-    playerStrike = resolveStrike(player, enemy, playerTargetZone, playerWeaponCat);
+    playerStrike = tryStrikeWithBarriers(player, enemy, playerTargetZone, playerWeaponCat, session.barriers);
     enemy = applyStrike(enemy, playerStrike);
     player = applyWeaponDrop(player, playerStrike);
 
@@ -745,7 +802,7 @@ export function resolveCombatRound(
       enemyStrike = skipStrike(enemyTargetZone, enemy.name);
     } else {
       // Enemy strikes back
-      enemyStrike = resolveStrike(enemy, player, enemyTargetZone, enemyWeaponCat);
+      enemyStrike = tryStrikeWithBarriers(enemy, player, enemyTargetZone, enemyWeaponCat, session.barriers);
       player = applyStrike(player, enemyStrike);
       enemy = applyWeaponDrop(enemy, enemyStrike);
       if (player.hp <= 0) {
@@ -756,7 +813,7 @@ export function resolveCombatRound(
   } else if (enemyIsFeared) {
     // Enemy was meant to strike first but is feared — skip directly to player.
     enemyStrike = skipStrike(enemyTargetZone, enemy.name);
-    playerStrike = resolveStrike(player, enemy, playerTargetZone, playerWeaponCat);
+    playerStrike = tryStrikeWithBarriers(player, enemy, playerTargetZone, playerWeaponCat, session.barriers);
     enemy = applyStrike(enemy, playerStrike);
     player = applyWeaponDrop(player, playerStrike);
     if (enemy.hp <= 0) {
@@ -765,7 +822,7 @@ export function resolveCombatRound(
     }
   } else {
     // Enemy strikes first
-    enemyStrike = resolveStrike(enemy, player, enemyTargetZone, enemyWeaponCat);
+    enemyStrike = tryStrikeWithBarriers(enemy, player, enemyTargetZone, enemyWeaponCat, session.barriers);
     player = applyStrike(player, enemyStrike);
     enemy = applyWeaponDrop(enemy, enemyStrike);
 
@@ -774,7 +831,7 @@ export function resolveCombatRound(
       playerDied = true;
     } else {
       // Player strikes back
-      playerStrike = resolveStrike(player, enemy, playerTargetZone, playerWeaponCat);
+      playerStrike = tryStrikeWithBarriers(player, enemy, playerTargetZone, playerWeaponCat, session.barriers);
       enemy = applyStrike(enemy, playerStrike);
       player = applyWeaponDrop(player, playerStrike);
       if (enemy.hp <= 0) {
@@ -796,6 +853,7 @@ export function resolveCombatRound(
     updatedPlayer: player,
     updatedEnemy: enemy,
     statusTickNarrative,
+    updatedBarriers,
   };
 }
 
@@ -820,6 +878,7 @@ export function initCombatSession(
     combatLog: [],
     finished: false,
     playerWon: null,
+    barriers: [],
   };
 }
 
@@ -938,7 +997,7 @@ const POWER_OUTCOMES: PowerOutcome[] = [
     weight: 16, name: "Bonus Strike", tier: "good",
     apply: ctx => {
       const cat = getWeaponCategory(ctx.caster.weaponId);
-      const strike = resolveStrike(ctx.caster, ctx.enemy, "torso", cat);
+      const strike = tryStrikeWithBarriers(ctx.caster, ctx.enemy, "torso", cat, ctx.session.barriers);
       ctx.enemy = applyStrike(ctx.enemy, strike);
       ctx.log.push("An unseen hand guides your blade — you strike again before the spell even fades.");
       ctx.log.push(strike.narrative);
@@ -1349,17 +1408,20 @@ function runEnemyTurn(
     enemyTick.narrative,
   ].filter(Boolean).join("\n");
 
+  // Pre-work B: tick barriers once for this turn; reuse on every return.
+  const tickedBarriers = tickBarriers(session).barriers;
+
   // Death from ticks
   if (player.hp <= 0) {
     return {
-      session: { ...session, playerCombatant: player, enemyCombatant: enemy, finished: true, playerWon: false },
+      session: { ...session, playerCombatant: player, enemyCombatant: enemy, barriers: tickedBarriers, finished: true, playerWon: false },
       narrative: tickNarrative + (tickNarrative ? "\n\n" : "") + "Everything goes dark.",
       combatOver: true, playerWon: false, playerDied: true,
     };
   }
   if (enemy.hp <= 0) {
     return {
-      session: { ...session, playerCombatant: player, enemyCombatant: enemy, finished: true, playerWon: true },
+      session: { ...session, playerCombatant: player, enemyCombatant: enemy, barriers: tickedBarriers, finished: true, playerWon: true },
       narrative: (() => {
         const npcDef = NPCS[session.enemyNpcId];
         const pool = getEnemyDeathPool(npcDef?.bodyType);
@@ -1376,7 +1438,7 @@ function runEnemyTurn(
   const isDummy = NPCS[session.enemyNpcId]?.isTrainingDummy === true;
   if (isDummy) {
     return {
-      session: { ...session, playerCombatant: player, enemyCombatant: enemy },
+      session: { ...session, playerCombatant: player, enemyCombatant: enemy, barriers: tickedBarriers },
       narrative: tickNarrative,
       combatOver: false, playerWon: false, playerDied: false,
     };
@@ -1385,7 +1447,7 @@ function runEnemyTurn(
   // Feared_skip: enemy hesitates instead of striking.
   if (enemy.activeEffects.some(e => e.type === "feared_skip")) {
     return {
-      session: { ...session, playerCombatant: player, enemyCombatant: enemy },
+      session: { ...session, playerCombatant: player, enemyCombatant: enemy, barriers: tickedBarriers },
       narrative: tickNarrative + (tickNarrative ? "\n\n" : "") +
         `${enemy.name} hesitates — something behind them caught their eye — and the moment is lost.`,
       combatOver: false, playerWon: false, playerDied: false,
@@ -1394,7 +1456,7 @@ function runEnemyTurn(
 
   // Enemy strike (single round).
   const enemyTargetZone = chooseEnemyTargetZone(enemy, player);
-  const enemyStrike = resolveStrike(enemy, player, enemyTargetZone, "slash");
+  const enemyStrike = tryStrikeWithBarriers(enemy, player, enemyTargetZone, "slash", session.barriers);
   player = applyStrike(player, enemyStrike);
   if (enemyStrike.weaponDropped && enemy.weaponId !== "unarmed") {
     enemy = { ...enemy, droppedWeaponId: enemy.weaponId, weaponId: "unarmed" };
@@ -1412,6 +1474,7 @@ function runEnemyTurn(
       ...session,
       playerCombatant: player,
       enemyCombatant: enemy,
+      barriers: tickedBarriers,
       finished: playerDied,
       playerWon: playerDied ? false : null,
     },

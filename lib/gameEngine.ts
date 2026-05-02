@@ -4284,6 +4284,7 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       roundNumber: roundResult.roundNumber,
       playerCombatant: roundResult.updatedPlayer,
       enemyCombatant: roundResult.updatedEnemy,
+      barriers: roundResult.updatedBarriers,
       combatLog: session.combatLog, // finalized below once narrative is amended
       finished: roundResult.combatOver,
       playerWon: roundResult.combatOver ? roundResult.playerWon : null,

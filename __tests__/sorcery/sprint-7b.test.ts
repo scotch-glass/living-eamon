@@ -114,6 +114,8 @@ function makeCombatant(name: string, hp: number, effects: ActiveStatusEffect[]):
     dexterity: 50,
     strength: 50,
     agility: 50,
+    side: "ally",
+    position: 1,
   };
 }
 
@@ -121,15 +123,17 @@ function makeCombatSession(
   enemyHp: number,
   enemyEffects: ActiveStatusEffect[]
 ): ActiveCombatSession {
+  const enemy = makeCombatant("test orc", enemyHp, enemyEffects);
   return {
     enemyNpcId: "test_orc",
     enemyName: "test orc",
     roundNumber: 1,
     playerCombatant: makeCombatant("Tester", 50, []),
-    enemyCombatant: makeCombatant("test orc", enemyHp, enemyEffects),
+    enemyCombatant: { ...enemy, side: "enemy" },
     combatLog: [],
     finished: false,
     playerWon: null,
+    barriers: [],
   };
 }
 

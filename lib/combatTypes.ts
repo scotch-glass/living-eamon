@@ -95,6 +95,21 @@ export function createEmptyBodyArmorMap(): BodyArmorMap {
 
 // ── Combatant (unified player / NPC in combat) ──────────────
 
+/**
+ * Which side of the field a combatant stands on. The hero is always on the
+ * "ally" side (in slot 1); future allies fill ally slots 2 and 3. Enemies
+ * always carry "enemy". Pre-work B introduces the field; ally/multi-enemy
+ * combat lights up in later sprints. See `lib/combat/barriers.ts`.
+ */
+export type CombatantSide = "ally" | "enemy";
+
+/**
+ * Slot position on a side. 1 = closest to the opposing line; 3 = rear.
+ * Hero = ally slot 1; current single enemy = enemy slot 1. Slots 2 and 3
+ * stay vacant until ally combat / multi-enemy combat is wired.
+ */
+export type CombatantPosition = 1 | 2 | 3;
+
 export interface CombatantState {
   id: string;
   name: string;
@@ -126,6 +141,18 @@ export interface CombatantState {
    * reflects on the next swing. (Sprint 1.)
    */
   fatigueTier?: number;
+  /**
+   * Which side of the field this combatant stands on. Hero = "ally";
+   * current single enemy = "enemy". Pre-work B; consumed by barrier
+   * cross-check in `lib/combat/barriers.ts`.
+   */
+  side: CombatantSide;
+  /**
+   * Slot position on `side`. 1 = closest to the opposing line. Hero and
+   * the current single enemy both default to slot 1; slots 2 and 3 stay
+   * vacant until ally / multi-enemy combat is wired (Pre-work B).
+   */
+  position: CombatantPosition;
 }
 
 // ── Strike Resolution ───────────────────────────────────────
@@ -163,9 +190,32 @@ export interface CombatRoundResult {
   updatedPlayer: CombatantState;
   updatedEnemy: CombatantState;
   statusTickNarrative: string;   // Bleed damage, etc.
+  /**
+   * Active barriers after the round's tick. Caller writes this back onto
+   * the session. Empty array unless a spell put a wall in play. (Pre-work B.)
+   */
+  updatedBarriers: Barrier[];
 }
 
 // ── Active Combat Session (lives in WorldState) ─────────────
+
+/**
+ * A field barrier (e.g., a Wall of Stone) that blocks physical and magical
+ * actions across an inter-slot boundary. Boundary indices:
+ *   0 = between hero (ally slot 1) and enemy slot 1
+ *   1 = between enemy slot 1 and enemy slot 2
+ *   2 = between enemy slot 2 and enemy slot 3
+ *   3 = reserved for ally-side symmetry (between ally slots when ally combat lights up)
+ *
+ * Pre-work B introduces the structure with no spell that emits one; Sprint
+ * 7b.wall-of-stone wires the spell that populates it.
+ */
+export interface Barrier {
+  id: string;
+  atBoundary: 0 | 1 | 2 | 3;
+  kind: "stone-wall";
+  durationRemaining: number;
+}
 
 export interface ActiveCombatSession {
   enemyNpcId: string;
@@ -176,6 +226,12 @@ export interface ActiveCombatSession {
   combatLog: string[];           // Running narration (last 20)
   finished: boolean;
   playerWon: boolean | null;
+  /**
+   * Active field barriers. Default `[]`. Read by `isCrossingBarrier` in
+   * `lib/combat/barriers.ts` to reject cross-boundary strikes; ticked down
+   * in `tickBarriers`. (Pre-work B.)
+   */
+  barriers: Barrier[];
 }
 
 // ── NPC Combat Profile (optional on NPC definition) ─────────

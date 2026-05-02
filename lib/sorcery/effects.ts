@@ -95,6 +95,7 @@ export function applyEffect(
 
     case "debuff":
       if (spell.id === "feeblemind") return applyFeeblemind(state);
+      if (spell.id === "poison")     return applyPoison(state);
       return {
         kind: "applied",
         state,
@@ -595,6 +596,64 @@ function applyFeeblemind(state: WorldState): EffectDispatchResult {
     kind: "applied",
     state: next,
     effect: { kind: "feeblemind-applied", turnsGranted: duration },
+  };
+}
+
+// ── Poison (Sprint 7b.poison) ────────────────────────────────
+// SORCERY.md — Circle 3 debuff (Crea Tox). Applies a persistent
+// poison status to the active enemy. Uses the existing damagePerTurn
+// mechanism in tickStatusEffects (combatEngine.ts:489) — the field is
+// shared for both bleed and poison; the narrative now differentiates
+// by effect.type.
+//
+// Severity 2 at Circle 3 → 4 HP/turn. SORCERY.md defines 4 severity
+// tiers: 1=2/t, 2=4/t, 3=6/t, 4=8/t. Higher-tier variants (Poison
+// Field, Arch Poison) will use severity 3/4 when implemented.
+// Persistent: turnsRemaining = -1 (expires only via Cure / Arch Cure).
+// Out of combat → no-target (Force 0 analog: poison needs a foe).
+
+const POISON_SEVERITY = 2;
+const POISON_DAMAGE_PER_TURN = POISON_SEVERITY * 2; // 4 HP/turn
+
+function applyPoison(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+  if (!session) return { kind: "no-target" };
+
+  const poisonEffect: ActiveStatusEffect = {
+    type: "poison",
+    zone: "torso",
+    severity: POISON_SEVERITY,
+    turnsRemaining: -1,         // persistent until cured
+    damagePerTurn: POISON_DAMAGE_PER_TURN,
+  };
+
+  // Remove any existing poison on the enemy before applying (re-cast
+  // refreshes severity but doesn't stack multiple poison instances).
+  const enemyEffects = session.enemyCombatant.activeEffects.filter(
+    e => e.type !== "poison"
+  );
+  const updatedEnemy: CombatantState = {
+    ...session.enemyCombatant,
+    activeEffects: [...enemyEffects, poisonEffect],
+  };
+
+  const next: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      activeCombat: { ...session, enemyCombatant: updatedEnemy },
+    },
+  };
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: {
+      kind: "poison-applied",
+      targetName: session.enemyCombatant.name,
+      severity: POISON_SEVERITY,
+      damagePerTurn: POISON_DAMAGE_PER_TURN,
+    },
   };
 }
 

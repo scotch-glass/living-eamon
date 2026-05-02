@@ -1345,7 +1345,7 @@ export function tickWorldState(state: WorldState): WorldState {
       let dmg = 0;
       const remaining: ActiveStatusEffect[] = [];
       for (const effect of p.activeEffects) {
-        if (effect.bleedPerTurn) dmg += effect.bleedPerTurn;
+        if (effect.damagePerTurn) dmg += effect.damagePerTurn;
         const newTurns =
           effect.turnsRemaining === -1 ? -1 : effect.turnsRemaining - 1;
         if (newTurns !== 0) {

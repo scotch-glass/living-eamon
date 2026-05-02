@@ -267,7 +267,7 @@ caseName("Cure removes poison from playerCombatant during combat", () => {
     zone: "torso" as BodyZone,
     severity: 2,
     turnsRemaining: -1,
-    bleedPerTurn: 2,
+    damagePerTurn: 2,
   };
   const s0 = fixtureState({ withCombat: true });
   const session = s0.player.activeCombat!;

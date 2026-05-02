@@ -201,11 +201,11 @@ function buildStatusEffect(
 
   // Bleed-type effects have per-turn damage and expire
   if (injury.type === "bleed") {
-    base.bleedPerTurn = injury.severity;
+    base.damagePerTurn = injury.severity;
     base.turnsRemaining = randInt(2, 4) + injury.severity;
   }
   if (injury.type === "severed_artery") {
-    base.bleedPerTurn = injury.severity * 2;
+    base.damagePerTurn = injury.severity * 2;
     base.turnsRemaining = randInt(3, 6);
   }
 
@@ -496,11 +496,12 @@ export function tickStatusEffects(combatant: CombatantState): {
   const remaining: ActiveStatusEffect[] = [];
 
   for (const effect of combatant.activeEffects) {
-    if (effect.bleedPerTurn) {
-      totalDamage += effect.bleedPerTurn;
-      parts.push(
-        `Blood seeps from the ${effect.zone} wound. (${effect.bleedPerTurn} bleed damage)`
-      );
+    if (effect.damagePerTurn) {
+      totalDamage += effect.damagePerTurn;
+      const tickMsg = effect.type === "poison"
+        ? `Poison burns through the veins. (${effect.damagePerTurn} poison damage)`
+        : `Blood seeps from the ${effect.zone} wound. (${effect.damagePerTurn} bleed damage)`;
+      parts.push(tickMsg);
     }
     const newTurns =
       effect.turnsRemaining === -1 ? -1 : effect.turnsRemaining - 1;

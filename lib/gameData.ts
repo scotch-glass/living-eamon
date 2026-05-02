@@ -1143,11 +1143,22 @@ export const ITEMS: Record<string, Item> = {
   unmarked_rune: {
     id: "unmarked_rune",
     name: "Blank Rune",
-    description: "A smooth flat stone, palm-sized, unmarked and waiting. A sorcerer who knows the Mark invocation can bind a location's signature into it. The stone is consumed in the binding.",
+    description: "A smooth flat stone, palm-sized, unmarked and waiting. A sorcerer who knows the Mark invocation can bind a location's signature into it. Rare and expensive; bank yours — they are lost if you die carrying them.",
     glance: "blank rune stone",
-    shortDescription: "A blank rune ready to be marked with the Mark spell.",
+    shortDescription: "A blank rune stone. Use the Mark spell to bind a location to it.",
     type: "rune" as const,
     value: 50,
+    isCarryable: true,
+  },
+
+  marked_rune: {
+    id: "marked_rune",
+    name: "Marked Rune",
+    description: "A rune stone etched with the binding-signature of a place the sorcerer has stood. The label carved into its edge names the destination. Bank this stone — it is lost if you die carrying it.",
+    glance: "marked rune stone",
+    shortDescription: "A rune stone bound to a location. Use with Teleport, Recall, or Gate Travel.",
+    type: "rune" as const,
+    value: 200,
     isCarryable: true,
   },
 

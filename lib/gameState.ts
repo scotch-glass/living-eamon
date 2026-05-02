@@ -153,6 +153,12 @@ export interface NPCStateEntry {
 export interface PlayerInventoryItem {
   itemId: string;
   quantity: number;
+  /**
+   * Sprint 7b.T — per-instance binding for marked_rune items.
+   * Each marked rune stone is quantity 1 with its own binding.
+   * Lost on death (inventory is stripped at rebirth).
+   */
+  runeBinding?: { roomId: string; planeId: string; label: string };
 }
 
 // ── Temp Modifier Layer (Pre-work D, Sprint 7b.B) ────────────
@@ -169,17 +175,6 @@ export interface TempModifier {
   source: string;           // "bless", "pray-mithras", etc.
 }
 
-/**
- * Sprint 7b.T — a location binding created by the Mark spell.
- * Consumed by Recall (one-shot); read-only by Teleport and Gate Travel.
- * Per-life: cleared on rebirth.
- */
-export interface MarkedRune {
-  id: string;
-  targetRoomId: string;
-  targetPlaneId: string;
-  label: string;
-}
 
 export interface WeaponSkills {
   swordsmanship: number;
@@ -379,13 +374,6 @@ export interface PlayerState {
    * Ticked by tickWorldState; recompute reads them for derived caps.
    */
   tempModifiers: TempModifier[];
-
-  /**
-   * Sprint 7b.T — rune bindings created by the Mark spell.
-   * Teleport and Gate Travel read; Recall reads and consumes.
-   * Per-life: cleared on rebirth.
-   */
-  markedRunes: MarkedRune[];
 
   /**
    * Sprint 7b.T — current world/plane id. Default "thurian".
@@ -826,7 +814,6 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       activeCombat: null,
       activeEffects: [],
       tempModifiers: [],
-      markedRunes: [],
       currentPlane: "thurian",
       mounted: false,
       remembersOwnName: false,
@@ -1211,7 +1198,6 @@ export function applyPlayerDeath(
       activeCombat: null,
       activeEffects: [],
       tempModifiers: [],
-      markedRunes: [],
       currentPlane: "thurian",
       goreSplatters: [],
       weaponPoisonCharges: 0,

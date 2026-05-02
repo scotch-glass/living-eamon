@@ -453,16 +453,24 @@ export function applyStrike(
     }
   }
 
-  // Apply injury
+  // Apply injury — Bless resistance: skip bleed + poison effects while blessed.
   if (strike.injuryInflicted) {
     const effect = buildStatusEffect(
       { type: strike.injuryInflicted, severity: strike.injurySeverity },
       strike.targetZone
     );
-    updated = {
-      ...updated,
-      activeEffects: [...updated.activeEffects, effect],
-    };
+    const isBlessed   = updated.activeEffects.some(e => e.type === "blessed");
+    const isResisted  = isBlessed && (
+      effect.type === "bleed" ||
+      effect.type === "severed_artery" ||
+      effect.type === "poison"
+    );
+    if (!isResisted) {
+      updated = {
+        ...updated,
+        activeEffects: [...updated.activeEffects, effect],
+      };
+    }
   }
 
   // Accumulate wound level on zone

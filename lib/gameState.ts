@@ -155,6 +155,20 @@ export interface PlayerInventoryItem {
   quantity: number;
 }
 
+// ── Temp Modifier Layer (Pre-work D, Sprint 7b.B) ────────────
+// Additive overlays that modify effective stat values for the
+// duration of a buff without writing through to the PICSSI ledger
+// or base attributes. Expires by turn count. Recompute reads these
+// so derived caps stay in sync while the buff is active.
+export type TempModifierStat = "illumination" | "charisma";
+
+export interface TempModifier {
+  stat: TempModifierStat;
+  delta: number;
+  turnsRemaining: number;   // counts down per player turn; expires at 0
+  source: string;           // "bless", "pray-mithras", etc.
+}
+
 export interface WeaponSkills {
   swordsmanship: number;
   armor_expertise: number;
@@ -345,6 +359,14 @@ export interface PlayerState {
 
   /** Which barmaid the player chose when Aldric offered a drink. null = not yet chosen. */
   barmaidPreference: string | null;
+
+  /**
+   * Sprint 7b.B — active temp-stat modifiers (Bless, future buffs).
+   * Each entry modifies one effective stat for a turn-counted duration
+   * without writing through to the PICSSI ledger or base attributes.
+   * Ticked by tickWorldState; recompute reads them for derived caps.
+   */
+  tempModifiers: TempModifier[];
 
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
@@ -778,6 +800,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       weaponPoisonSeverity: 0,
       activeCombat: null,
       activeEffects: [],
+      tempModifiers: [],
       mounted: false,
       remembersOwnName: false,
       metZim: false,
@@ -1160,6 +1183,7 @@ export function applyPlayerDeath(
       necklace: null,
       activeCombat: null,
       activeEffects: [],
+      tempModifiers: [],
       goreSplatters: [],
       weaponPoisonCharges: 0,
       weaponPoisonSeverity: 0,
@@ -1253,6 +1277,17 @@ export function tickWorldState(state: WorldState): WorldState {
         hp: Math.max(0, p.hp - dmg),
         activeEffects: remaining,
       };
+    }
+
+    // Tick temp modifiers (Bless, future buffs) — decrement turn counters;
+    // expired entries are dropped. Derived stats (CHA_eff, maxMana) catch
+    // up on the next applyKarma call or page-load recompute — no circular
+    // import needed here.
+    if (p.tempModifiers?.length) {
+      const nextMods = p.tempModifiers
+        .map(m => ({ ...m, turnsRemaining: m.turnsRemaining - 1 }))
+        .filter(m => m.turnsRemaining > 0);
+      p = { ...p, tempModifiers: nextMods };
     }
 
     // Passive regen — HP + mana (gated by activeCombat above + stamina>0).

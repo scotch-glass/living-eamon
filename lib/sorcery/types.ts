@@ -159,6 +159,11 @@ export type EffectResult =
   | { kind: "damage-dealt"; targetName: string; amount: number; targetHpAfter: number }
   | { kind: "healed"; amount: number; hpAfter: number; hpBefore: number }
   | { kind: "cure-applied"; cured: number }       // count of poison stacks removed
+  | {
+      kind: "blessed";
+      turnsGranted: number;      // duration applied (10 normal, 15 in temple)
+      inTemple: boolean;         // true = consecrated room; reagents were waived
+    }
   | { kind: "dev-not-implemented"; reason: string };
 
 /**

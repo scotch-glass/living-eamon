@@ -40,6 +40,7 @@ export const EFFECT_COLORS: Record<StatusEffectType, string> = {
   hiccups: "#a78bfa",
   tongue_tied: "#a78bfa",
   marked_by_set: "#dc2626",
+  blessed: "#facc15",
 };
 
 // ── SVG paths (hand-crafted for 20×20 viewBox) ──
@@ -193,5 +194,13 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     animation: "glow",
     label: "Marked by Set",
     description: "The serpent god smelled you. Enemy strikes at +15.",
+  },
+  blessed: {
+    // Ma'atic feather of truth (upright quill with radiating light lines)
+    svgPath: "M10 2L10 18 M10 6L7 3 M10 6L13 3 M10 10L6 8 M10 10L14 8 M10 14L7 17 M10 14L13 17",
+    color: "#facc15",
+    animation: "glow",
+    label: "Blessed",
+    description: "Ma'at's light. Poison and bleeding blunted. Illumination and Charisma lifted.",
   },
 };

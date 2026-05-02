@@ -164,6 +164,11 @@ export type EffectResult =
       turnsGranted: number;      // duration applied (10 normal, 15 in temple)
       inTemple: boolean;         // true = consecrated room; reagents were waived
     }
+  // Sprint 7b.T — rune travel family
+  | { kind: "marked"; label: string; roomName: string }
+  | { kind: "teleported"; runeLabel: string; destination: string }
+  | { kind: "recalled"; runeLabel: string; destination: string }
+  | { kind: "gate-opened"; runeLabel: string; destination: string; durationTurns: number }
   | { kind: "dev-not-implemented"; reason: string };
 
 /**
@@ -177,6 +182,9 @@ export type InvokeOutcome =
   | { kind: "missing-reagents"; spell: Spell; missing: ReagentId[] }
   | { kind: "fizzle-no-reagents"; words: string[] } // attempted unknown invocation without any reagents
   | { kind: "no-target"; spell: Spell }           // Sprint 7b — damage spell cast with no active combat
+  // Sprint 7b.T — rune travel gates
+  | { kind: "no-rune-target"; spell: Spell; runeLabel: string | null }   // Teleport/Recall/Gate: rune not found
+  | { kind: "no-unmarked-rune"; spell: Spell }                           // Mark: no blank rune in inventory
   | {
       kind: "success";
       spell: Spell;

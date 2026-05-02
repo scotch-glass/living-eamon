@@ -33,8 +33,8 @@
 // where casting eats a turn — flagged here for a Phase-2 decision.
 // ============================================================
 
-import type { WorldState, TempModifier } from "../gameState";
-import { addToChronicle } from "../gameState";
+import type { WorldState, TempModifier, MarkedRune } from "../gameState";
+import { addToChronicle, movePlayer } from "../gameState";
 import type {
   ActiveStatusEffect,
   CombatantState,
@@ -45,20 +45,25 @@ import type { EffectResult, NumericRange, Spell } from "./types";
 
 /**
  * Discriminated return type. `applied` carries the new state and
- * what physically happened; `no-target` signals the caller to
+ * what physically happened; the other variants signal the caller to
  * abort BEFORE consuming mana / reagents / Illumination.
  */
 export type EffectDispatchResult =
   | { kind: "applied"; state: WorldState; effect: EffectResult }
-  | { kind: "no-target" };
+  | { kind: "no-target" }
+  | { kind: "no-rune-target"; runeLabel: string | null }
+  | { kind: "no-unmarked-rune" };
 
 /**
  * Apply a spell's numeric effect. Caller must already have passed
  * Circle / mana / reagent gates (see lib/sorcery/invoke.ts).
+ * `arg` carries any trailing argument the player appended (e.g. a
+ * rune label for Teleport / Recall / Gate Travel).
  */
 export function applyEffect(
   state: WorldState,
-  spell: Spell
+  spell: Spell,
+  arg?: string
 ): EffectDispatchResult {
   switch (spell.effectKind) {
     case "damage":
@@ -67,12 +72,6 @@ export function applyEffect(
     case "heal":
       return applyHealOrCure(state, spell);
 
-    // Phase-2 kinds — cast goes through, physical effect not yet
-    // implemented. Returns a dev-only marker that the composer
-    // renders as `[DEV] <effectKind> dispatcher not yet implemented`.
-    // No in-fiction camouflage: when the dispatcher lands the marker
-    // disappears, and until then it's flagged for any session that
-    // hits it.
     case "buff":
       if (spell.id === "bless") return applyBless(state, spell);
       return {
@@ -81,14 +80,23 @@ export function applyEffect(
         effect: { kind: "dev-not-implemented", reason: `${spell.id} buff dispatcher` },
       };
 
+    case "movement":
+      return applyMovement(state, spell, arg ?? null);
+
+    case "utility":
+      if (spell.id === "mark") return applyMark(state, arg ?? null);
+      return {
+        kind: "applied",
+        state,
+        effect: { kind: "dev-not-implemented", reason: `${spell.id} utility dispatcher` },
+      };
+
     case "debuff":
     case "summon":
-    case "movement":
     case "field":
     case "reveal":
     case "conceal":
     case "transform":
-    case "utility":
       return {
         kind: "applied",
         state,
@@ -360,6 +368,165 @@ function applyBless(state: WorldState, spell: Spell): EffectDispatchResult {
     state: next,
     effect: { kind: "blessed", turnsGranted: duration, inTemple },
   };
+}
+
+// ── Rune Travel (Sprint 7b.T) ─────────────────────────────────
+// SORCERY.md §9.1 — Mark / Teleport / Recall / Gate Travel.
+//
+// Mark (C6 utility):   consumes 1 unmarked_rune item, writes a
+//   MarkedRune entry onto player.markedRunes. Auto-generates label
+//   from room name; player can supply a custom label as `arg`.
+//
+// Teleport (C3 movement): resolves the rune label, calls movePlayer.
+//   Rune stays intact (cheap, reusable).
+//
+// Recall (C4 movement): same as Teleport but removes the rune entry
+//   (one-shot retreat).
+//
+// Gate Travel (C7 movement): first pass — acts like Teleport; rune
+//   stays. The two-way moongate entity (other beings traversing) is
+//   deferred to the moongate-gameplay sprint.
+
+const GATE_DURATION_TURNS = 5;
+
+function applyMark(
+  state: WorldState,
+  arg: string | null
+): EffectDispatchResult {
+  // Gate: must have an unmarked_rune in inventory.
+  const hasRune = state.player.inventory.some(
+    i => i.itemId === "unmarked_rune" && i.quantity > 0
+  );
+  if (!hasRune) return { kind: "no-unmarked-rune" };
+
+  const room = getRoom(state.player.currentRoom);
+  const roomName = room?.name ?? state.player.currentRoom;
+  const planeId  = room?.planeId ?? state.player.currentPlane ?? "thurian";
+  const rawLabel = arg?.trim() ?? "";
+  const label    = rawLabel.length > 0 ? rawLabel : `rune to ${roomName}`;
+
+  const newRune: MarkedRune = {
+    id: `rune-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    targetRoomId:  state.player.currentRoom,
+    targetPlaneId: planeId,
+    label,
+  };
+
+  // Consume 1 unmarked_rune from inventory.
+  const inventory = state.player.inventory.map(i => ({ ...i }));
+  for (let i = 0; i < inventory.length; i++) {
+    if (inventory[i].itemId === "unmarked_rune" && inventory[i].quantity > 0) {
+      inventory[i].quantity -= 1;
+      break;
+    }
+  }
+
+  let next: WorldState = {
+    ...state,
+    player: {
+      ...state.player,
+      inventory: inventory.filter(i => i.quantity > 0),
+      markedRunes: [...(state.player.markedRunes ?? []), newRune],
+    },
+  };
+  next = addToChronicle(next, `Mark bound: "${label}" → ${roomName}.`, false);
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "marked", label, roomName },
+  };
+}
+
+function applyMovement(
+  state: WorldState,
+  spell: Spell,
+  arg: string | null
+): EffectDispatchResult {
+  switch (spell.id) {
+    case "teleport":
+      return applyTeleport(state, arg, "teleport");
+    case "recall":
+      return applyTeleport(state, arg, "recall");
+    case "gate-travel":
+      return applyGateTravel(state, arg);
+    default:
+      return {
+        kind: "applied",
+        state,
+        effect: { kind: "dev-not-implemented", reason: `${spell.id} movement dispatcher` },
+      };
+  }
+}
+
+function applyTeleport(
+  state: WorldState,
+  arg: string | null,
+  spellId: "teleport" | "recall"
+): EffectDispatchResult {
+  const label = arg?.trim().toLowerCase() ?? null;
+  const rune  = findRune(state, label);
+  if (!rune) return { kind: "no-rune-target", runeLabel: label };
+
+  const room        = getRoom(rune.targetRoomId);
+  const destination = room?.name ?? rune.targetRoomId;
+
+  // Runes are permanent magical devices — never consumed on use.
+  let next = movePlayer(state, rune.targetRoomId);
+  next = { ...next, player: { ...next.player, currentPlane: rune.targetPlaneId } };
+  next = addToChronicle(
+    next,
+    `${spellId === "recall" ? "Recall" : "Teleport"}: arrived at ${destination}.`,
+    false
+  );
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: spellId === "recall"
+      ? { kind: "recalled",   runeLabel: rune.label, destination }
+      : { kind: "teleported", runeLabel: rune.label, destination },
+  };
+}
+
+function applyGateTravel(
+  state: WorldState,
+  arg: string | null
+): EffectDispatchResult {
+  const label = arg?.trim().toLowerCase() ?? null;
+  const rune  = findRune(state, label);
+  if (!rune) return { kind: "no-rune-target", runeLabel: label };
+
+  const room = getRoom(rune.targetRoomId);
+  const destination = room?.name ?? rune.targetRoomId;
+
+  // First pass: player is immediately transported (moongate entity +
+  // two-way traversal deferred to the moongate-gameplay sprint).
+  let next = movePlayer(state, rune.targetRoomId);
+  next = { ...next, player: { ...next.player, currentPlane: rune.targetPlaneId } };
+  next = addToChronicle(
+    next,
+    `Gate Travel: moongate to ${destination} opened (${GATE_DURATION_TURNS} turns; two-way traversal pending).`,
+    false
+  );
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: {
+      kind: "gate-opened",
+      runeLabel: rune.label,
+      destination,
+      durationTurns: GATE_DURATION_TURNS,
+    },
+  };
+}
+
+/** Case-insensitive label lookup on player.markedRunes. */
+function findRune(state: WorldState, label: string | null): MarkedRune | null {
+  if (!label) return null;
+  const runes = state.player.markedRunes ?? [];
+  return runes.find(r => r.label.toLowerCase() === label) ?? null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────

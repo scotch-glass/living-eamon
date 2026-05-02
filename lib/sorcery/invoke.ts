@@ -19,7 +19,7 @@
 import type { WorldState, PlayerState } from "../gameState";
 import { addToChronicle } from "../gameState";
 import { applyKarma, logKarmaDelta } from "../karma/recompute";
-import { getSpellByWords } from "./registry";
+import { getSpellByWords, getSpellByWordPrefix } from "./registry";
 import { applyEffect } from "./effects";
 import { getRoom } from "../adventures/registry";
 import type { InvokeOutcome, ReagentId, Spell } from "./types";
@@ -44,7 +44,17 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
     return { outcome: { kind: "fizzle-no-reagents", words: [] }, state };
   }
 
-  const spell = getSpellByWords(tokens);
+  // Try exact match first, then prefix match (for spells that take an
+  // argument, e.g. `INVOKE Mut Via church` → Teleport + arg "church").
+  let spell = getSpellByWords(tokens);
+  let spellArg: string | undefined;
+  if (!spell) {
+    const prefixMatch = getSpellByWordPrefix(tokens);
+    if (prefixMatch && prefixMatch.remainder.length > 0) {
+      spell = prefixMatch.spell;
+      spellArg = prefixMatch.remainder.join(" ");
+    }
+  }
   if (!spell) {
     return { outcome: { kind: "unrecognized" }, state };
   }
@@ -87,9 +97,15 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
   //    (buff/debuff/summon/field/etc.) return `no-effect-yet` —
   //    resources still get consumed in that case (the cast happened;
   //    only the physical magnitude is unimplemented).
-  const dispatch = applyEffect(state, spell);
+  const dispatch = applyEffect(state, spell, spellArg);
   if (dispatch.kind === "no-target") {
     return { outcome: { kind: "no-target", spell }, state };
+  }
+  if (dispatch.kind === "no-rune-target") {
+    return { outcome: { kind: "no-rune-target", spell, runeLabel: dispatch.runeLabel }, state };
+  }
+  if (dispatch.kind === "no-unmarked-rune") {
+    return { outcome: { kind: "no-unmarked-rune", spell }, state };
   }
 
   // 5. Consume mana + reagents, apply Illumination drain, chronicle
@@ -221,6 +237,18 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
       return `You speak the Words and the Art rises to meet them — gathers, coils, seeks the transmuted fear and malice required to destroy life from which ${spell.name} is made — and finds no such energy nor foe before you to take it. After a heartbeat the intent unwinds and slips back into the silences from which it came. Your reagents stay in your pouch unbroken; the mana stays in your blood unspilt.`;
     }
 
+    case "no-rune-target": {
+      const { spell, runeLabel } = outcome;
+      if (!runeLabel) {
+        return `*${spell.name}* reaches for a marked place to carry you — and finds your hands empty of any such binding. Mark a rune first.`;
+      }
+      return `*${spell.name}* reaches for a rune labelled "${runeLabel}" — and finds no such binding among those you carry. Check your marks.`;
+    }
+
+    case "no-unmarked-rune": {
+      return `*Mark* shapes itself in the air and seeks a stone to receive the place's signature — and finds none in your hands. Carry a Blank Rune to use this invocation.`;
+    }
+
     case "success": {
       const { spell, illuminationDrained, warning, effect } = outcome;
       const lines: string[] = [];
@@ -273,6 +301,14 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
         : "";
       return `**Three quiet warmths layer into your body — quickness of blood, keenness of eye, and something brighter at the edge of your soul.** (${effect.turnsGranted} turns; poison and bleeding blunted)${templeNote}`;
     }
+    case "marked":
+      return `**The rune drinks in this place. "${effect.label}" — bound.** (${effect.roomName})`;
+    case "teleported":
+      return `**The room folds. You are elsewhere.** (→ ${effect.destination} via "${effect.runeLabel}")`;
+    case "recalled":
+      return `**The rune pulls you home.** (→ ${effect.destination} via "${effect.runeLabel}")`;
+    case "gate-opened":
+      return `**An oval of silver fire opens in the air behind you, held open for ${effect.durationTurns} turns.** (→ ${effect.destination} via "${effect.runeLabel}")`;
     case "dev-not-implemented":
       // Development-only marker. By design principle (no in-fiction
       // prose for unbuilt features), this surfaces as a visible

@@ -4,8 +4,9 @@
 
 1. **Switch model to Sonnet** with `/model sonnet`. Opus 4.7 1M burns through quota fast on routine sprint work. Save Opus for hard reasoning or design calls; use Sonnet for editing, refactoring, file moves, commits, doc writes.
 2. Confirm working dir: `/Users/joshuamcclure/Desktop/living-eamon`
-3. Confirm branch: `dev`. Latest main commit at session start should be **`bb92d74`** (Merge: remove Beginner's Cave references).
-4. Paste the prompt below as your first message.
+3. Confirm branch: `dev`. Latest main commit at session start should be **`633028c`** (Merge Sprint 7b.B: Bless).
+4. Sprint 7b.B Bless is **fully committed and merged to main** — nothing to commit first thing this session.
+5. Paste the prompt below as your first message.
 
 ---
 
@@ -14,78 +15,86 @@
 You are being rehydrated into Living Eamon. Read this stack in order, no exploration agents needed:
 
 1. `CLAUDE.md` (root) — top-level rules + behavioral guidelines.
-2. `CLAUDE_CONTEXT.md` — project overview. The "Most recent session (2026-05-01)" block at the top tracks Sprint 7b state.
-3. **`SORCERY.md` §9** — canonical per-spell design notes for the spells with mechanics richer than a registry row. **§9.1** Mark/Teleport/Recall/Gate Travel rune system. **§9.2** Bless three-effect spec + temple-invocation modification + the two required room tags (`consecrated`, `deity`). **§9.2.1** pointer for the future Howard pantheon list. **§9.3** Resurrection corpse model + Sun-and-Moon rule + hero exception. **§7.1** is the cosmological one-way Illumination rule (Thoth's Principle of Correspondence — Light/Dark are continuum poles, not factions). **§7.2** is the **Two Fundamental Forces** with the canonical numbering: **Force I = Creative** (the *one* that generates), **Force 0 = Destructive** (zero because it generates nothing on its own).
-4. **`~/.claude/plans/fluffy-bouncing-hanrahan.md`** — Sprint 7b Phase 2 roadmap: cross-cutting pre-work + per-spell planning sessions + recommended order. **Approved by Scotch.**
-5. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index. Pay attention to `feedback_no_illumination_amplification.md` (one-way Illumination rule, load-bearing).
+2. `CLAUDE_CONTEXT.md` — project overview. Update the "Most recent session" block after confirming what shipped.
+3. **`SORCERY.md` §9**  — canonical per-spell design notes. **§9.1** Mark/Teleport/Recall/Gate Travel rune system. **§9.2** Bless (shipped). **§9.3** Resurrection corpse model. **§7.1–7.2** Illumination one-way rule + Force I/Force 0 numbering.
+4. **`~/.claude/plans/fluffy-bouncing-hanrahan.md`** — Sprint 7b Phase 2 roadmap. Next per-spell sprint is **Sprint 7b.T — Teleport family** (Mark, Teleport, Recall, Gate Travel).
+5. **`~/.claude/plans/i-accidentally-submitted-the-misty-map.md`** — system-sprint roadmap (S1 shipped; S2 PICSSI-location taxonomy, S3 The Word system, S4 Graphical Travel are deferred with seeds in memory).
+6. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index.
 
-After reading, confirm hydration with one paragraph naming: (a) what shipped this session (Sprint 7-vocab + 7a + 7b Phase 1 + Sprint 7b polish + Pre-work A demon→daemon rename + Beginner's Cave removal), (b) the canonical Force-I / Force-0 numbering and what it encodes, (c) the next pre-work or per-spell sprint per the approved roadmap.
+After reading, confirm hydration with one paragraph naming: (a) what shipped last session (Pre-work B/C/F, S1, Sprint 7b.B Bless), (b) what Sprint 7b.B Bless delivered and the two foundational infra pieces it built (temp buff layer + room tags), (c) the next sprint per the approved roadmap.
 
 ---
 
-## Where the work is (as of session end 2026-05-01)
+## Where the work is (as of session end 2026-05-02)
 
-### Shipped to prod (main `bb92d74`)
+### Committed to main (current state — `633028c`)
 
-- **Sprint 7-vocab + Sprint 7a + Sprint 7b Phase 1 + Sprint 7b polishes** — INVOKE numeric effects (damage / heal / cure) actually fire. Howard-pastiche prose on every player-facing response. Potential-form spell descriptions. Dev-only `[DEV] <reason> not yet implemented` markers for unbuilt effects (no in-fiction camouflage over dev holes).
-- **`SORCERY.md` §9** spec drops — Teleport rune system, Bless temple invocation + two room tags, Resurrection corpse model + hero exception.
-- **§7.2 Force I / Force 0 numbering** — canonical asymmetric labels for the Two Fundamental Forces (Creative = the *one* that generates; Destructive = the *zero* that generates nothing).
-- **Pre-work A — `demon` → `daemon` rename** (10 of 12 tracked files). Type-literal in `lib/gameData.ts` is now `"daemon"`; engine's `tags.includes("daemon")` aligned. No NPC currently uses the tag, so no data migration was needed.
-- **Beginner's Cave deleted** — orphaned `cave_treasure` item gone; roadmap docs scrubbed; Aldric's adventures table now lists the three Thurian-PD contracts (Mirrors of Tuzun Thune, Serpent in the Court, Pictish Time-Tomb).
+- **Pre-work B** — combat 3-vs-3 position model + barrier infrastructure.
+- **Pre-work C** — Incognito dropped; Invisibility semi-transparency render complete.
+- **Pre-work F** — `lore/pantheon/PANTHEON.md` + `lore/maatic-library/oaths-of-maat.md` (42 Oaths) + 8 math-magic books.
+- **S1** — `components/OathPanel.tsx` (42 Oaths inline + PICSSI summary; 4th sidebar tab "oaths"). `app/page.tsx` wired.
+- **Sprint 7b.B Bless** — fully committed and on main. See sorcery state below.
 
-### Sorcery state on prod
+### Sorcery state after 7b.B (on main)
 
-- **`lib/sorcery/`** — `types.ts` + `registry.ts` (64 spells, all with potential-form descriptions) + `invoke.ts` + `effects.ts`.
-- **Implemented effect kinds:** `damage` (per-spell `damageRoll`), `heal` (per-spell `healRoll`), `cure` (poison removal). Out-of-combat damage casts return `no-target` with metaphysical "transmuted fear and malice" prose; resources are spared.
-- **Stubbed effect kinds:** `buff`, `debuff`, `summon`, `field`, `movement`, `conceal`, `reveal`, `transform`, `utility`, plus Resurrection's corpse model. All return `{ kind: "dev-not-implemented", reason }` rendered as `[DEV] <reason> not yet implemented` in dev play. Each removal is a per-spell sprint per the approved plan.
-- **Tests:** 79/79 across 5 suites; typecheck clean.
+**Pre-work D (temp buff layer):**
+- `TempModifier` type + `tempModifiers: TempModifier[]` on `PlayerState` ([lib/gameState.ts](lib/gameState.ts)).
+- `recomputeDerivedStats` folds `tempModifiers` into `charismaEffective` and effective-Illumination-for-maxMana ([lib/karma/recompute.ts](lib/karma/recompute.ts)).
+- `tickWorldState` decrements `turnsRemaining` per turn; expired entries drop.
+- Initialized to `[]` in factory + rebirth.
 
-### Two files left in working tree (uncommitted) from this session
+**Pre-work E (room tags):**
+- `consecrated?: boolean; deity?: string;` added to `Room` interface ([lib/roomTypes.ts](lib/roomTypes.ts)).
+- **Shrine of Ma'at** added to guild-hall: `id: "shrine_of_maat"`, `consecrated: true, deity: "maat"`. Accessible `southeast` from the guild courtyard.
 
-These had pre-existing M state from prior sessions; my demon→daemon rename hunk is mixed in with their pre-existing edits, and I didn't bundle the prior-session work into a rename commit. Both are sitting in the working tree with the rename applied:
+**Bless mechanics ([lib/sorcery/effects.ts](lib/sorcery/effects.ts), [lib/sorcery/invoke.ts](lib/sorcery/invoke.ts)):**
+- Duration: **10 turns** normal room; **15 turns** in consecrated room.
+- Reagent waiver: garlic + mandrake_root are NOT consumed in a consecrated room. Mana (9) always consumed.
+- Adds `"blessed"` status effect + two `TempModifier` entries: `illumination +10` and `charisma +5`.
+- Re-casting Bless refreshes (replaces existing — no stacking).
 
-- **`lib/adventures/guild-hall-npcs.ts`** — rename hunk + a prior-session rewrite of Zim's heal-response (the "Beginner's Cave" line had already been replaced with "there's coin to be had in the field once you take a contract" — that change is still uncommitted).
-- **`app/updates/page.tsx`** — rename hunk + a prior-session block of work (new "Latest Design Decision" featured update card + a background-image path change from `/updates-bg.jpg` to `/art/scenes/updates-bg.jpg`).
+**Blessed resistance ([lib/combatEngine.ts](lib/combatEngine.ts)):**
+- Skips `bleed`, `severed_artery`, and `poison` injury applications when `"blessed"` is in `activeEffects`.
 
-When you commit either of those files next session, both edits will go in together. That's fine; just be aware the rename is bundled.
+**Tests:** 18 cases in `__tests__/sorcery/sprint-7b-bless.test.ts`. **114/114 total, 7 suites, typecheck clean.**
 
 ### Next sprint per the approved plan
 
-The plan at `~/.claude/plans/fluffy-bouncing-hanrahan.md` has the recommended order. Pre-work A, B, and F have shipped. Pre-work C is effectively complete — the Invisibility semi-transparency render in `components/CombatScreen.tsx:1090-1098` is the entire deliverable. Incognito was dropped 2026-05-02 (too costly relative to gameplay value; sprite-swap-vs-transparent design conflict with Invisibility); see `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` for the system-sprint roadmap that opened in its place.
+**Sprint 7b.T — Teleport family** (Mark, Teleport, Recall, Gate Travel) per `~/.claude/plans/fluffy-bouncing-hanrahan.md §Sprint 7b.T`. Four rune-based travel spells sharing infra — they ship together.
 
-Once pre-work clears, the per-spell sessions begin with **Sprint 7b.B — Bless** (foundational; lands the temp PICSSI/CHA buff layer + room tags inside its own sprint).
+Infra needed (not yet built):
+- `"rune"` item type + `unmarked_rune` item in `lib/gameData.ts`.
+- `markedRunes: Array<{ id, targetRoomId, targetPlaneId, label }>` on `PlayerState`.
+- `planeId?: string` on `Room` + `currentPlane: string` on `PlayerState` (default `"thurian"`).
+- Mark, Teleport, Recall, Gate Travel dispatchers in `lib/sorcery/effects.ts`.
+- INVOKE argument parsing for rune labels in `lib/sorcery/invoke.ts`.
 
-### Spec-to-canonical doc port pending
+Run a focused planning session against `fluffy-bouncing-hanrahan.md §Sprint 7b.T` before implementing.
 
-These canonical specs live ONLY in the plan file right now; they need to be ported into `SORCERY.md §9.4+` at the start of each per-spell sprint:
+**Alternative pivot:** S2 (PICSSI-location taxonomy), S3 (The Word system), or S4 (Graphical Travel) — each per `~/.claude/plans/i-accidentally-submitted-the-misty-map.md`. None block on sorcery; Scotch chooses the order.
 
-- **§9.4 Wall of Stone** — combat-positional barrier, 3-vs-3 layout, three boundary targeting options, circular caging, 5-turn duration.
-- **§9.5 Summon Daemon** — live-NPC-target requirement, reverse-mode (cast on a live daemon = dispel + raise Illumination), and the rule that Dispel / Mass Dispel have **no effect on daemons** (Summon Daemon is the only spell that can dispel a daemon).
-- **§9.6 Cunning / Feeblemind** — magical buffs/debuffs on the target's **spellcasting** (±33% spell strength + spell-success).
-- **§9.7 Polymorph** — caster-size-class restriction (combat UI can't fit cross-size morphs).
-- **§9.8 Create Food** — spawn-on-ground (`TAKE` to inventory), not auto-add.
-- **§9.10 Field spells share trap mechanics** — the field/trap unified entity model.
-- **§9.11 Hero corpse persistence** — created on death, persists in world, can be buried/burned by the hero himself for **+Spirituality AND +Standing** (concealing the shame of failure), but cannot be resurrected (body goes cold too fast).
-- **§9.12 Funeral rites + Spirituality** — `BURY <corpse>` (stamina cost) + `BURN <corpse>` (no stamina, requires hot flame source: campfire / pyre / Fire Field / Fireball residue). Both grant +Spirituality; hero-own-corpse grants +Spirituality AND +Standing.
+### Pre-existing uncommitted M-state (from prior sessions — DO NOT commit without explicit instruction)
 
-### Deferred / dormant
+Many files in the working tree were already M at the start of the previous session. Notable ones:
+- `app/updates/page.tsx` — prior-session work (new design-decision card + background-image path change).
+- `lib/adventures/guild-hall-npcs.ts` — prior-session Zim heal-response rewrite.
+- `CLAUDE.md`, `app/layout.tsx`, `app/splash/page.tsx`, `app/login/page.tsx`, `app/register/page.tsx`, `app/legal/page.tsx` — pre-existing from wardrobe / UI work.
+- Wardrobe Engine (`lib/wardrobe/`, `app/api/wardrobe/`, `lib/weaponCarry.ts`, etc.) — dormant.
 
-- **Sprint 7b.S Summons + Sprint 7b.dispel + Sprint 7b.mass-dispel** — blocked on ally combat unblock (ally-combat is dormant per `project_ally_combat_flee_spec.md`).
-- **Sprint 7c — Outer Dark narrative consequences** (low Illumination triggers different gods answering prayers, NPC reactions, patron whispers — narrative only, NOT a power amplifier per the canonical one-way rule).
-- **Sprint 7d — The Order witness mechanic** — Phase 2 per spec.
-- **Wardrobe Engine + painter-curation** — uncommitted, separate from sorcery work. Do not commit unless asked.
+Surface these to Scotch before bundling into any commit.
 
 ---
 
 ## Discipline / process notes (load-bearing)
 
-- **Per-spell planning sessions, not one big sprint.** Scotch directive mid-plan: each spell that has design complexity gets its own focused planning session before implementation. The roadmap (`fluffy-bouncing-hanrahan.md`) is the *list* of sessions to run, not a single execution plan.
-- **No in-fiction prose for unbuilt features.** Scotch principle: "Build the feature, the nothing will be gone. Do not create something to explain nothing." `[DEV] <reason> not yet implemented` markers are dead code by release; until then they shout. Don't paper over dev gaps with fictional prose.
-- **One-way Illumination rule** (canonical, `SORCERY.md §7.1` + memory `feedback_no_illumination_amplification.md`). Powerful sorcery darkens the soul. A darkened soul does **not** boost spell power. Light and Dark are **poles of the PICSSI Illumination continuum**, not factions of beings.
-- **Force I = Creative, Force 0 = Destructive.** The numbering encodes the asymmetry (1 generates, 0 generates nothing). Force I works anywhere; Force 0 (damage spells only) requires a foe to supply the duress/malice transmutation input.
-- **Hydration discipline.** The most-recent-session block in CLAUDE_CONTEXT.md can lag actual repo state. Always run `git log --oneline --all --graph | head -20` and compare to what the doc claims is shipped. If the log shows a sprint commit the doc doesn't mention, treat the log as authoritative and update the doc before proceeding.
-- **Spell descriptions are POTENTIAL form**, not declarative. *"Energy gathers to pull stone up from the earth in the shape of a wall"*, not *"Stone rises from the floor"*. The description sets up intent; the effect line resolves it.
-- **Howard-pastiche voice** for player-facing INVOKE responses — sparse-mystical-archaic with sensory detail. Sample: *"You speak the Words and the Art rises to meet them — gathers, coils, seeks the transmuted fear and malice required to destroy life from which Magic Arrow is made..."*
+- **Per-spell planning sessions, not one big sprint.** Each spell with design complexity gets its own focused planning session before implementation. `fluffy-bouncing-hanrahan.md` is the list of sessions to run.
+- **No in-fiction prose for unbuilt features.** `[DEV] <reason> not yet implemented` markers are dead code by release. Don't paper over dev gaps with fictional prose.
+- **One-way Illumination rule** (`SORCERY.md §7.1` + memory `feedback_no_illumination_amplification.md`). Powerful sorcery darkens the soul. A darkened soul does NOT boost spell power.
+- **Force I = Creative, Force 0 = Destructive.** The numbering encodes asymmetry (1 generates, 0 generates nothing on its own).
+- **Temp modifiers don't write through.** `TempModifier` values add to effective stats at recompute time without touching `picssi.*` or base attributes. Expired modifiers dropped by `tickWorldState`.
+- **Shrine of Ma'at is the first consecrated room.** `id: "shrine_of_maat"`, accessible southeast from the guild courtyard.
+- **Hydration discipline.** `git log --oneline --all --graph | head -20` is authoritative over any doc.
+- **Spell descriptions are POTENTIAL form.** *"Three quiet warmths gather, ready to layer themselves..."* not *"Three warmths layer."*
 
 ---
 
@@ -95,17 +104,15 @@ These canonical specs live ONLY in the plan file right now; they need to be port
 git add <specific files>
 git commit -m "Sprint NX: <what>"
 git push origin dev
-git stash push -u -m wip
 git checkout main
 git merge --no-ff dev -m "Merge Sprint NX"
 git push origin main
 git checkout dev
-git stash pop
 ```
 
-- Run typecheck before committing: `npx tsc --noEmit; echo exit=$?`
-- Run quest tests: `npm run test:quests` (auto-discovers `__tests__/**/*.test.ts` recursively, including the sorcery suites)
-- **Avoid bundling pre-existing M-state hunks into your sprint commit.** If a file you need to edit was already M at session start, surface the entanglement to Scotch rather than bundling unrelated work.
+- Typecheck before committing: `npx tsc --noEmit; echo exit=$?`
+- Full test suite: `npm run test:quests`
+- **Never bundle pre-existing M-state into a sprint commit.**
 
 ---
 
@@ -115,7 +122,7 @@ git stash pop
 - **Prod DB:** Supabase. User has authorized prod migration pushes.
 - **Vercel:** auto-deploys from `main`. Build failures are silent unless you check the dashboard.
 - **Dev server:** runs on port **3001** (Docker holds 3000).
-- **Date format:** when saving project memories, always convert relative dates to ISO. Today is **2026-05-01**.
+- **Date format:** when saving project memories, always convert relative dates to ISO. Today is **2026-05-02**.
 
 ---
 
@@ -123,31 +130,38 @@ git stash pop
 
 ### Sorcery (current state)
 
-- `lib/sorcery/types.ts` — `Spell`, `Circle`, `ReagentId`, `EffectResult` (damage-dealt / healed / cure-applied / dev-not-implemented), `InvokeOutcome` (incl. `no-target`)
-- `lib/sorcery/registry.ts` — 64 spells with potential-form descriptions, per-spell `damageRoll` / `healRoll` where applicable
-- `lib/sorcery/invoke.ts` — `handleInvoke` (gate cascade) + `composeInvokeResponse` (Howard-pastiche renderer with branched success variants)
-- `lib/sorcery/effects.ts` — `applyEffect` dispatcher; damage/heal/cure implemented; Phase-2 kinds return `dev-not-implemented` markers
-- `__tests__/sorcery/sprint-7a.test.ts` — 23 cases (registry + parser + gate cascade + unlockCircle wiring)
-- `__tests__/sorcery/sprint-7b.test.ts` — 20 cases (effect dispatch + composer + dev markers)
+- `lib/sorcery/types.ts` — `Spell`, `Circle`, `ReagentId`, `EffectResult` (damage-dealt / healed / cure-applied / **blessed** / dev-not-implemented), `InvokeOutcome`
+- `lib/sorcery/registry.ts` — 63 spells (Circle 5 = 7; Incognito dropped 2026-05-02)
+- `lib/sorcery/invoke.ts` — `handleInvoke` + `composeInvokeResponse`; temple reagent-waiver logic for Bless
+- `lib/sorcery/effects.ts` — `applyEffect` dispatcher; damage/heal/cure/Bless implemented; others return `dev-not-implemented`
+- `__tests__/sorcery/sprint-7a.test.ts` — 23 cases
+- `__tests__/sorcery/sprint-7b.test.ts` — 20 cases
+- `__tests__/sorcery/sprint-7b-bless.test.ts` — 18 cases
+
+### Sprint 7b.B infra (now on main)
+
+- `lib/gameState.ts` — `TempModifier` type; `tempModifiers: TempModifier[]` on `PlayerState`
+- `lib/karma/recompute.ts` — `tempModifiers` folded into `charismaEffective` + effective-illumination-for-maxMana
+- `lib/combatTypes.ts` — `"blessed"` added to `StatusEffectType`
+- `lib/effectIconData.ts` — `"blessed"` entry (feather SVG, gold glow)
+- `lib/roomTypes.ts` — `consecrated?: boolean; deity?: string;` on `Room`
+- `lib/adventures/guild-hall.ts` — `shrine_of_maat` room (`consecrated: true, deity: "maat"`)
 
 ### Canonical specs
 
-- `SORCERY.md` — §1–8 the system; §9.1–9.3 per-spell designs (Teleport / Bless / Resurrection); §7.1–7.2 cosmology
+- `SORCERY.md` — §1–8 the system; §9.1–9.3 per-spell designs; §7.1–7.2 cosmology
 - `KARMA_SYSTEM.md` §2.10 — Illumination as a karma stock
 - `GAME_DESIGN.md` §11 — PICSSI Illumination dimension
-- `~/.claude/plans/fluffy-bouncing-hanrahan.md` — Sprint 7b Phase 2 roadmap (approved)
+- `lore/pantheon/PANTHEON.md` — full deity roster
+- `lore/maatic-library/oaths-of-maat.md` — 42 Oaths
+- `~/.claude/plans/fluffy-bouncing-hanrahan.md` — Sprint 7b Phase 2 roadmap
+- `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` — S1–S4 system sprints
 
-### Karma + quest engine (unchanged this session, listed for continuity)
+### Karma + quest engine (unchanged this session)
 
-- `lib/karma/recompute.ts` — applyKarma, clampPicssi, recomputeDerivedStats, logKarmaDelta. **Note: no temp PICSSI / attribute buff layer yet — Sprint 7b.B Bless will add it.**
+- `lib/karma/recompute.ts` — applyKarma, clampPicssi, recomputeDerivedStats (reads tempModifiers), logKarmaDelta
 - `lib/karma/combat-deltas.ts` — 13 combat-PICSSI rules; ally branches dormant
-- `lib/quests/engine.ts` — registerQuest, getQuest, validateRegistry, acceptQuest, emitQuestEvent, completeStep, applyReward (10-channel fan-out incl. unlockCircle)
-- `lib/quests/dialogue.ts` — multi-stage NPC dialogue resolver
-
-### Combat (unchanged this session, but Sprint 7b.B+ will hook into it)
-
-- `lib/combatTypes.ts` — `ActiveStatusEffect`, existing types include haste / shield_aura / invisible / feared_skip / numb_hand / hiccups / tongue_tied / marked_by_set + 9 injury types. `blessed` and other new spell-driven types arrive in the per-spell sprints.
-- `lib/combatEngine.ts` — combat round resolution; status-effect hooks at `calculateEvasionChance`, `calculateShieldBlockChance`, armor-pen path; `tickStatusEffects` + out-of-combat tick in `tickWorldState`.
+- `lib/quests/engine.ts` — registerQuest, acceptQuest, emitQuestEvent, completeStep, applyReward (unlockCircle)
 
 ---
 

@@ -76,7 +76,7 @@ export interface Item {
   bookPagePrompt?: string;
   /** Grok Imagine prompt for the inventory icon (square, transparent PNG via rembg). */
   iconPrompt?: string;
-  type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key";
+  type: "weapon" | "armor" | "clothing" | "spell" | "consumable" | "treasure" | "key" | "rune";
   value: number;             // Gold value
   stats?: {
     damage?: string;         // e.g. "1d6+2"
@@ -1135,6 +1135,19 @@ export const ITEMS: Record<string, Item> = {
     type: "armor",
     value: 10,
     stats: { zoneSlot: "neck", zoneCover: 25, zoneDurability: 12, dexPenalty: 1 },
+    isCarryable: true,
+  },
+
+  // ── Runes ──
+
+  unmarked_rune: {
+    id: "unmarked_rune",
+    name: "Blank Rune",
+    description: "A smooth flat stone, palm-sized, unmarked and waiting. A sorcerer who knows the Mark invocation can bind a location's signature into it. The stone is consumed in the binding.",
+    glance: "blank rune stone",
+    shortDescription: "A blank rune ready to be marked with the Mark spell.",
+    type: "rune" as const,
+    value: 50,
     isCarryable: true,
   },
 

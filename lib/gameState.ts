@@ -169,6 +169,18 @@ export interface TempModifier {
   source: string;           // "bless", "pray-mithras", etc.
 }
 
+/**
+ * Sprint 7b.T — a location binding created by the Mark spell.
+ * Consumed by Recall (one-shot); read-only by Teleport and Gate Travel.
+ * Per-life: cleared on rebirth.
+ */
+export interface MarkedRune {
+  id: string;
+  targetRoomId: string;
+  targetPlaneId: string;
+  label: string;
+}
+
 export interface WeaponSkills {
   swordsmanship: number;
   armor_expertise: number;
@@ -367,6 +379,19 @@ export interface PlayerState {
    * Ticked by tickWorldState; recompute reads them for derived caps.
    */
   tempModifiers: TempModifier[];
+
+  /**
+   * Sprint 7b.T — rune bindings created by the Mark spell.
+   * Teleport and Gate Travel read; Recall reads and consumes.
+   * Per-life: cleared on rebirth.
+   */
+  markedRunes: MarkedRune[];
+
+  /**
+   * Sprint 7b.T — current world/plane id. Default "thurian".
+   * Changes when Gate Travel crosses planes. Per-life.
+   */
+  currentPlane: string;
 
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
@@ -801,6 +826,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       activeCombat: null,
       activeEffects: [],
       tempModifiers: [],
+      markedRunes: [],
+      currentPlane: "thurian",
       mounted: false,
       remembersOwnName: false,
       metZim: false,
@@ -1184,6 +1211,8 @@ export function applyPlayerDeath(
       activeCombat: null,
       activeEffects: [],
       tempModifiers: [],
+      markedRunes: [],
+      currentPlane: "thurian",
       goreSplatters: [],
       weaponPoisonCharges: 0,
       weaponPoisonSeverity: 0,

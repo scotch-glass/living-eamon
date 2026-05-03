@@ -55,9 +55,11 @@ import {
   revealItemsInRoom,
   removeRevealedItem,
   isDay,
+  pushResidue,
   type Corpse,
   type WeaponSkills,
 } from "./gameState";
+import { COMBAT_RESIDUE } from "./world/spellResidue";
 
 import type { TimeOfDay } from "./weatherService";
 
@@ -1517,6 +1519,16 @@ function buildRoomDescription(
       state.worldTurn
     );
     if (weatherLine) description += "\n\n" + weatherLine;
+  }
+
+  // Sprint G5 — active room residue descriptions (semiverbose + verbose only)
+  if (verbosity !== "nonverbose") {
+    const residues = state.rooms[roomId]?.activeResidue;
+    if (residues?.length) {
+      for (const r of residues) {
+        description += "\n\n" + r.description;
+      }
+    }
   }
 
   // Robe humiliation — only on semiverbose and verbose (skip nonverbose)
@@ -4328,6 +4340,17 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     };
 
     let finalState = newState;
+
+    // Sprint G5 — blood residue on critical hit
+    if (roundResult.playerStrike?.isCritical && roundResult.playerStrike.damageDealt > 0) {
+      finalState = pushResidue(
+        finalState,
+        finalState.player.currentRoom,
+        COMBAT_RESIDUE.critical_hit,
+        "critical_hit",
+        0
+      );
+    }
 
     // ── Stamina drain — every swing costs by weapon weight ──
     // KARMA_SYSTEM.md §2.3. Drains regardless of hit/miss/evade

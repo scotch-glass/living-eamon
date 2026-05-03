@@ -99,5 +99,11 @@ export function worldStateToPlayerRecord(
     lastTickAt: state.lastTickAt ?? Date.now(),
     // Sprint G3 — current weather snapshot
     currentWeather: state.currentWeather ?? null,
+    // Sprint G5 — room residues (sparse: only rooms that have active residue)
+    roomResidue: Object.fromEntries(
+      Object.entries(state.rooms)
+        .filter(([, r]) => r.activeResidue?.length)
+        .map(([id, r]) => [id, r.activeResidue])
+    ),
   };
 }

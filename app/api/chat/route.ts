@@ -507,6 +507,18 @@ export async function POST(request: NextRequest) {
           // Sprint G3 — weather snapshot
           currentWeather:
             (savedPlayer as { current_weather?: WorldState["currentWeather"] }).current_weather ?? undefined,
+          // Sprint G5 — restore active room residues
+          rooms: (() => {
+            const saved = (savedPlayer as { room_residue?: Record<string, import("../../../lib/gameState").ResidueEntry[]> }).room_residue;
+            if (!saved || typeof saved !== "object") return initial.rooms;
+            const merged = { ...initial.rooms };
+            for (const [roomId, residues] of Object.entries(saved)) {
+              if (Array.isArray(residues) && residues.length > 0) {
+                merged[roomId] = { ...(merged[roomId] ?? { roomId, currentState: "normal", previousState: "normal", causedBy: null, causeDescription: null, turnsInState: 0, recovery: null, revealedItems: [] }), activeResidue: residues };
+              }
+            }
+            return merged;
+          })(),
         };
 
         // Client holds the live session; DB load can lag behind async savePlayer.

@@ -45,6 +45,7 @@ const rooms: Record<string, Room> = {
     sceneTone: "grimdark",
     sceneAtmosphereOverride: CHURCH_ATMOSPHERE_OVERRIDE,
     timeOfDay: "indoor",
+    picssiContacts: ["spirituality"],
 
     // ── Cold Open ─────────────────────────────────────────────
     coldOpen: {
@@ -155,6 +156,7 @@ const rooms: Record<string, Room> = {
     sceneTone: "aquilonian",
     timeOfDay: "day",
     outdoor: true,
+    picssiContacts: ["standing"],
   },
 
   // ── Sam's Sharps ───────────────────────────────────────────
@@ -224,6 +226,7 @@ const rooms: Record<string, Room> = {
       "A vast warm hall of pale Aquilonian marble with high vaulted ceilings supported by fluted columns. Long oak tables with tankards, plates, and candles — a place of food and drink, not combat. A long wooden bar along one wall with barrels and bottles behind it. A notice board covered in pinned parchment in one corner. A massive stone fireplace with a bright, friendly crackling fire casting warm orange light across the room. Iron-and-bronze chandeliers overhead. Empty room — no people, no figures, no statues, no carvings of humans. Only architecture, furniture, firelight, and warmth.",
     sceneTone: "aquilonian",
     timeOfDay: "indoor",
+    picssiContacts: ["passion", "standing"],
   },
 
   // ── Notice Board ────────────────────────────────────────────
@@ -270,6 +273,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
       "A marble alcove off the Main Hall, its walls covered floor-to-ceiling in layered parchment notices pinned to cork boards framed in dark wood — bounty postings, hand-drawn maps, wanted portraits, contract seals stamped in red wax. Three large official guild notices on heavy vellum stand out in the centre. Bronze lamp brackets cast warm light that makes the older papers curl at the edges.",
     sceneTone: "aquilonian",
     timeOfDay: "indoor",
+    picssiContacts: ["integrity"],
   },
 
   // ── Guild Armory ────────────────────────────────────────────
@@ -339,6 +343,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
       "An impossibly large chamber of dark polished stone and warm wood, far deeper than the exterior suggests. Floor-to-ceiling shelves crammed with glass bottles, leather-bound scrolls, and mysterious objects — some faintly glowing. A long glass-topped counter with neat rows of colourful potions. Bronze astrolabes and crystal spheres on high shelves. Warm amber light from no visible source. Dust motes suspended in air that hums with unseen energy. Ancient Aquilonian architecture crossed with an alchemist's workshop. No people visible.",
     sceneTone: "aquilonian",
     timeOfDay: "indoor",
+    picssiContacts: ["illumination"],
   },
 
   // ── Shrine of Ma'at ─────────────────────────────────────────
@@ -366,6 +371,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     consecrated: true,
     deity: "maat",
     timeOfDay: "indoor",
+    picssiContacts: ["spirituality", "integrity"],
   },
 
 };

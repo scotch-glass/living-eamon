@@ -1115,7 +1115,67 @@ Sprint 7b (numeric effect dispatch) is the natural next chunk: turning successfu
 
 ---
 
-## ⚡ Previous session (2026-04-30) — Quest Engine 8a→8d shipped + client bundle crash hotfix
+## ⚡ Previous session (2026-05-03) — Sprint G1–G7, 7b.buffs, Persistence A/B/C, Sprint 8e + 8f shipped
+
+**The session's headline:** Living World epic (G1–G7 fully shipped), sorcery Sprint 7b.buffs (all 16 spell dispatchers done), persistence audit sprints A/B/C, Stobaean Fragment dialogues (Sprint 8e), and Zim's 15 turn-in branches + Circle unlock wiring (Sprint 8f) all landed on main.
+
+### Shipped to prod (main) — this session
+
+- **Sprint G — Living World epic (G1–G7):**
+  - G1: Real-time clock + on-demand catch-up (`WorldState.realTimeMs`, `lastTickAt`, `tickRealTime`)
+  - G2: Per-room time-of-day + day/night atmospheric descriptions
+  - G3: Eivissa weather via Open-Meteo + weather descriptions library
+  - G4: Per-spell environmental side-effect catalog (`lib/world/spellResidue.ts`)
+  - G5: Room damage state + real-time decay
+  - G6: NPC-driven repair (mason / carpenter / smith / scribe)
+  - G7: Residue description pools (3 variants per residue type)
+  - Follow-on: residue glance filter + combat description rewrites (commit `d2617ea`)
+
+- **Sprint 7b — Sorcery sub-sprints (fully shipped as of 7b.buffs):**
+  - 7b Phase 1: numeric effect dispatch + canonical Light/Dark lore
+  - 7b.T: Teleport family — Mark / Teleport / Recall / Gate Travel + permanent rune stones
+  - 7b.R: Corpse system, BURY/BURN, Resurrection
+  - 7b.B: Bless — temp buff layer + room tags + poison/bleed resistance
+  - 7b.cunning + 7b.feeblemind: spell-strength multiplier
+  - 7b.wall-of-stone: Wall of Stone + combat barrier integration
+  - 7b.poison: Poison spell + bleedPerTurn → damagePerTurn rename
+  - 7b.buffs: 9 remaining spell dispatchers (Agility, Strength, Weaken, Clumsy, Curse, Protection, Reactive Armor, Night Sight, Paralyze)
+  - **16+ spells fully implemented.** Remaining unimplemented: field spells, summons, invisibility, polymorph, create-food, dispel, telekinesis, harm/magic-arrow duplicates, mind-blast, blade-spirits, energy-bolt, explosion, lightning, chain-lightning, flamestrike, mana-drain, mana-vampire, mass-curse, meteor-swarm, earthquake, energy-vortex.
+
+- **Sprints A/B/C (code-review-driven):**
+  - A: Persistence audit + gap-fill (10 fields; canonical serializer `lib/persistence/playerRecord.ts`)
+  - B: Critical-hit prescript hardening (80 unique variants)
+  - C: Dev-mode disclaimer in CLAUDE_CONTEXT.md
+
+- **Sprint 8e — Stobaean Hermetic fragments + Logos Teleios:**
+  - 14 fragment files at `lore/stobaean-fragments/SH-*.md`
+  - 11 new-NPC `registerQuestDialogue` entries (old_bram, sister_hela, maelis_the_seer, cassian_the_gravewright, tavren_of_the_long_road, goodwife_yssa, master_orin_quill, rhonen_the_merchant, tava_the_lash, brother_inan, mother_khe_anun)
+  - `lore/logos-teleios/` — Logos Teleios Lament (Mead 1906, US-PD); Brother Inan's branch delivers both SH 3.3 and the Lament at scroll-14
+  - Extension-pattern dialogues for Aldric/Hokas/Vivian deferred to remote-NPC assignment per Scotch's 2026-04-30 directive
+
+- **Sprint 8f — Zim's 15 turn-in branches + Circle unlock wiring (commit `4d85066`):**
+  - `CIRCLE_BY_SCROLL` constant: odd scrolls 1/3/5/7/9/11/13/15 → Circles 1–8 on `buildStep.reward.unlockCircle`
+  - 15 `registerQuestDialogue` branches for `zim_the_wizard` — full emotional arc (amazement → threshold); no fallback (extension pattern, legacy NPCScript fires pre-quest)
+  - Each branch fires a spell teach via `fireOnceReward.knownSpells` + chronicle; keyed by `zim-scroll-N` / `zim-threshold`
+  - `__tests__/quests/sprint-8f-zim.test.ts` — 8 cases (registry, branch-1 fire-once + re-talk, extension null pre-quest, branch-15 questCompleted, odd/even circle wiring, fireOnceKey uniqueness)
+
+### Next sprint options (Scotch picks)
+
+- **Option 1 — Sprint 8h:** `THE WAY` / `WAY` / `TEACHINGS` codex command — 9-section in-fiction tome that grows with quest progress. `lib/quests/codex.ts` + `lib/quests/lines/way-of-thoth-codex.ts`. Not blocked.
+- **Option 2 — Sprint 7b Phase 3:** Next unblocked spells (Invisibility + Reveal, Create-food, Harm + Magic Arrow as damage variants, field spells). Each spell gets a focused session.
+- **Option 3 — System sprints (S2/S3/S4):** PICSSI-location taxonomy, The Word system, Graphical travel. Each gets a planning session first.
+- **Option 4 — Sprint 8g (difficulty-curve calibration):** Blocked until KARMA Sprints 4–6 (atom encounter loader, combat-PICSSI deltas, virtue UI) ship. Defer.
+
+### Known follow-ups not yet ticketed
+
+- `components/CombatScreen.tsx:732-734, 1025-1027` — dead `__CRITICAL__` detection. Marker never injected; visual flash + crit wound + vignette never fire. Future combat-UI sprint should wire `StrikeResolution.isCritical` → client signal.
+- Zim's custom spell IDs (daylight, firebolt, haste, ward, detect, cleanse, shield, steelskin, silence, resist, mirror, banish, invoke-light) are in `knownSpells` but NOT in `lib/sorcery/registry.ts`. Become castable when added in a future wave.
+- 8f Wave 2+: 14 new NPCs' rooms (Chapel of the Lamp / Salt Marsh / Necropolis / Yssa's Cottage / Library Annex / Watchtower / Pre-Thurian Vault / Lighthouse) do NOT yet exist.
+- Three SH fragments (SH 1.1 / 18.3 / 19.7) await remote-NPC assignment in adventure modules.
+
+---
+
+## ⚡ Earlier session (2026-04-30) — Quest Engine 8a→8d shipped + client bundle crash hotfix
 
 **The day's headline:** Quest Engine bedrock + event hooks (8a/8b), client-bundle hotfix, multi-stage NPC dialogue resolver (8c), Vivian-arc + Way-of-Thoth scaffolding (8d) all landed on prod in one day. Registry is now non-empty: `vivian-arc` + `way-of-thoth` are live, validating clean.
 
@@ -1151,15 +1211,9 @@ Sprint 7b (numeric effect dispatch) is the natural next chunk: turning successfu
 
 **Architectural rule going forward:** Any client component (`"use client"`) that needs game-engine functionality MUST import from [lib/gameEngineClient.ts](lib/gameEngineClient.ts), never from [lib/gameEngine.ts](lib/gameEngine.ts). The eslint rule in `eslint.config.mjs` (lines 46–57) enforces this — don't disable it.
 
-### Next sprint: 8e — Stobaean Hermetic fragments + Logos Teleios
+### Sprints 8e + 8f shipped (2026-05-03)
 
-Authoring sprint, no engine changes:
-- 14 fragment files at `lore/stobaean-fragments/SH-*.md` (Walter Scott, *Hermetica Vol. III* 1924, US-PD)
-- `lore/logos-teleios/` — partial-text excerpt (Mead 1906, US-PD)
-- Stobaean Fragments wired into specific Way-of-Thoth steps as `talk-to-npc`-triggered dialogue lines that fire once per legacy lifetime (use Sprint 8c's `fireOnceReward` mechanic via `lib/quests/dialogue.ts`)
-- DoD: each fragment fires once per legacy life and persists across rebirth; *Logos Teleios* found in Scroll 14 vault; Brother Inan dialogue triggers correctly.
-
-After 8e (in plan order): 8f 14 new NPCs (Old Bram, Sister Hela, Maelis, Cassian, Tavren, Yssa, Orin, Rhonen, Tava, Brother Inan, Mother Khe-Anun + Aldric/Hokas/Vivian extensions) + Zim's 15 turn-in branches + `unlockCircle` reward · 8g difficulty-curve calibration · 8h `THE WAY` codex command. Sprint 7 (Sorcery + Outer Dark) remains deferred until Sprint 8 done.
+**Sprint 8e and 8f are fully shipped** — see the 2026-05-03 session block above for details. Next options: 8h `THE WAY` codex command, Sprint 7b Phase 3 (next spells), or System Sprints S2/S3/S4.
 
 ### Deferred / dormant
 

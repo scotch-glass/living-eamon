@@ -79,6 +79,12 @@ export interface Room {
   consecrated?: boolean;
   /** The deity this space is dedicated to (matches PANTHEON.md id). */
   deity?: string;
+
+  // S2 — PICSSI-location taxonomy. When applyKarma fires in a room whose
+  // picssiContacts includes the virtue being adjusted, the delta is
+  // multiplied by PICSSI_LOCATION_MULTIPLIER (1.5×). Multiple tags allowed.
+  // See: lore/thurian-cartography/WORLD_LOCATIONS.md taxonomy table.
+  picssiContacts?: import("./karma/types").PicssiVirtue[];
 }
 
 // ── NPC Scripted Interactions ────────────────────────────────

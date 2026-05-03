@@ -2,69 +2,203 @@
 
 ## Before you start the session
 
-1. **Switch model to Sonnet** with `/model sonnet`. Opus 4.7 1M burns through quota fast on routine sprint work. Save Opus for hard reasoning or design calls; use Sonnet for editing, refactoring, file moves, commits, doc writes.
+1. **Switch model to Sonnet** with `/model sonnet`. Save Opus for hard reasoning or design calls.
 2. Confirm working dir: `/Users/joshuamcclure/Desktop/living-eamon`
-3. Confirm branch: `dev`. Latest main commit at session start should be **`3af7d8b`** (Merge Sprint B: critical-hit prescript hardening).
-4. All sprints below are **fully committed and merged to main** — nothing to commit first thing this session.
+3. Confirm branch: `dev`. Latest committed on dev: **`918244c`** (Sprint 8h: THE WAY / WAY / TEACHINGS codex command).
+4. **Uncommitted Sprint S2 work is staged in the working tree** — see "This session — S2 shipped (UNCOMMITTED)" below. Either commit it first or carry forward; do NOT bundle with a new sprint.
 5. Paste the prompt below as your first message.
 
 ---
 
 ## Hydration prompt (paste as first message)
 
-You are being rehydrated into Living Eamon. Read this stack in order, no exploration agents needed:
+You are being rehydrated into Living Eamon. Read this stack in order:
 
-1. `CLAUDE.md` (root) — top-level rules + behavioral guidelines. Note the **dev-mode disclaimer** added 2026-05-03 — there are no real users, schema changes are safe.
-2. `CLAUDE_CONTEXT.md` — project overview. Update the "Most recent session" block after confirming what shipped.
-3. **`~/.claude/plans/your-recommended-sprint-1-moonlit-taco.md`** — the 2026-05-03 code-review-driven plan. Sprints A/B/C shipped. Sprint G (Living World epic — real-time tick, Eivissa weather, per-spell environmental residue, NPC repair) is documented but not implemented; it is broken into 7 sub-sprints (G1–G7), each requiring its own focused planning session before implementation.
-4. **`SORCERY.md` §9** — canonical per-spell design notes.
-5. **`~/.claude/plans/fluffy-bouncing-hanrahan.md`** — Sprint 7b Phase 2 roadmap. Next per-spell sprints: stat-buff/debuff family (Strength, Agility, Clumsy, Weaken) and Paralyze.
-6. **`~/.claude/plans/i-accidentally-submitted-the-misty-map.md`** — system-sprint roadmap (S1 shipped; S2 PICSSI-location taxonomy, S3 The Word system, S4 Graphical Travel deferred with seeds in memory).
-7. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index. Note the new `project_persistence_architecture.md` entry.
+1. `CLAUDE.md` (root) — top-level rules + behavioral guidelines.
+2. `CLAUDE_CONTEXT.md` — project overview. Reflects G1–G7, 7b.buffs, A/B/C, 8a–8h, S2.
+3. **`~/.claude/plans/i-accidentally-submitted-the-misty-map.md`** — S1–S4 system sprint plan. S2 just shipped; S3 (Word system) and S4 (graphical travel) are next.
+4. **`~/.claude/plans/zim-can-be-the-encapsulated-sunset.md`** — canonical Way-of-Thoth design.
+5. **`~/.claude/plans/fluffy-bouncing-hanrahan.md`** — Sprint 7b Phase 2 roadmap.
+6. **`~/.claude/plans/your-recommended-sprint-1-moonlit-taco.md`** — Sprint G epic. Fully shipped. No further work needed.
+7. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index.
 
-After reading, confirm hydration with one paragraph naming: (a) what shipped last session (Sprints A/B/C from the 2026-05-03 code review), (b) what infrastructure those sprints left standing, (c) the next sprint options per the approved roadmaps, (d) which next sprint Scotch should pick from.
+After reading, confirm hydration with one paragraph naming: (a) what was done in the most recent session (Sprint S2 PICSSI-location taxonomy + confirmed Zim's spells are guild magic), (b) what the next sprint options are, (c) what known follow-ups remain unticketed.
 
 ---
 
-## Where the work is (as of session end 2026-05-03 evening)
+## Shipped state
 
-### Committed to main (`3af7d8b`)
+### Committed to dev/main (latest: `918244c`)
 
-- **Sprint C** — Dev-mode disclaimer at top of [CLAUDE_CONTEXT.md](CLAUDE_CONTEXT.md). Future agents now know there are no real users; destructive migrations are safe.
-- **Sprint A** — Persistence audit + gap-fill. 10 fields that the engine read/wrote but never round-tripped through page refresh:
-  - **Player-scoped:** `knownCircles`, `tempModifiers`, `currentPlane`, `previousRoom`, `prisonTurnsRemaining`, `lastAction`
-  - **World-scoped (per-player world):** `worldTurn`, `corpses`, `vendorTempStock`, `activeEvents`
-  - Migration `20260503150000_persistence_audit_gap_fill.sql` adds the columns; **already applied to prod** via Supabase Management API.
-  - Serializer extracted from `app/api/chat/route.ts` to [lib/persistence/playerRecord.ts](lib/persistence/playerRecord.ts) — canonical WorldState → row-record mapper.
-  - Load deserializer in `app/api/chat/route.ts` updated to read the 10 fields back.
-  - New test suite `__tests__/persistence/round-trip.test.ts` — 12 cases, all green.
-- **Sprint B** — Critical-hit prescript hardening.
-  - Removed dormant `__CRITICAL__` Jane rewrite at `app/api/chat/route.ts` (dead code — engine never injected the marker).
-  - Expanded `CRITICAL_PREFIXES` and `CRIT_ATTACKER_GORE` in `lib/combatZoneNarration.ts` from 2 → 10 lines per body zone (8 → 80 unique variants total).
-  - Howard-canon visceral house style; matches existing tone.
+**Sprint G — Living World epic (fully shipped)**
+- G1–G7: Real-time clock, weather, residue, room damage, NPC repair (complete)
 
-### Persistence state (on main)
+**Sprint 7b — Sorcery sub-sprints (fully shipped through 7b.buffs)**
+- 25+ spells implemented across Circles 1–8
 
-**Single source of truth:** `players` row in Supabase. World-scoped state (rooms, corpses, vendorTempStock, worldTurn, activeEvents) is per-player on the same row — there is no separate `world_state` table.
+**Sprints A/B/C** — Persistence audit, critical-hit hardening, dev disclaimer
 
-**Canonical serializer:** [lib/persistence/playerRecord.ts](lib/persistence/playerRecord.ts).
+**Quest Engine (Sprints 8a–8h — FULLY COMPLETE)**
+- 8h: THE WAY / WAY / TEACHINGS codex — 9-section growing in-fiction journal
 
-**6-step checklist for adding a new persistent field** (saved as project memory `project_persistence_architecture.md`):
-1. Define on `PlayerState` or `WorldState` in [lib/gameState.ts](lib/gameState.ts).
-2. Add to serializer in `lib/persistence/playerRecord.ts`.
-3. Add column mapping in `savePlayer()` at `lib/supabase.ts:28`.
-4. Add deserializer line in load path at `app/api/chat/route.ts:350-580`.
-5. Write Supabase migration in `supabase/migrations/`; apply it.
-6. Add round-trip test case to `__tests__/persistence/round-trip.test.ts`.
+**Design documentation (prior session, no code)**
+- `lore/thurian-cartography/WORLD_LOCATIONS.md` — 30 named locations, full nation lore
+- `lore/thurian-cartography/TRAVEL_MATRIX.md` — routes, zone danger, encounter tables, 23 scene-background prompts
+- `lore/thurian-cartography/LOOT_TABLES.md` — 5-tier loot system, caravan tables, 6 Great Rune-Blades
+- `public/art/living-eamon-map.png` — canonical travel screen background
 
-### Sorcery state (unchanged this session)
+### This session — S2 shipped (UNCOMMITTED)
 
-Same as session 2026-05-03 morning: 16 of ~64 spells implemented; dispatcher pattern intact; 9 sorcery test suites green.
+**Sprint S2 — PICSSI ↔ location-type taxonomy** — code complete, all tests green, ready to commit.
 
-### Tests
+| File | Change |
+|---|---|
+| `lib/roomTypes.ts` | Added `picssiContacts?: PicssiVirtue[]` to `Room` |
+| `lib/karma/recompute.ts` | Added `PICSSI_LOCATION_MULTIPLIER = 1.5` + `scaleDeltaForRoom(delta, contacts)` helper |
+| `lib/karma/resolve.ts` | `applyChoice` scales atom deltas by room contacts |
+| `lib/karma/activities.ts` | `applyActivity` scales gain + loss deltas by room contacts |
+| `lib/gameEngine.ts` | `applyCombatDeltas` and funeral handler scale by room contacts |
+| `lib/adventures/guild-hall.ts` | 6 rooms tagged (see table below) |
+| `__tests__/karma/picssi-locations.test.ts` | 14 tests, all passing |
 
-10 suites total, all passing. Typecheck clean.
+**Tagged rooms:**
+| Room | Tags |
+|---|---|
+| `church_of_perpetual_life` | `["spirituality"]` |
+| `guild_courtyard` | `["standing"]` |
+| `main_hall` | `["passion", "standing"]` |
+| `notice_board` | `["integrity"]` |
+| `mage_school` | `["illumination"]` |
+| `shrine_of_maat` | `["spirituality", "integrity"]` |
 
+Untagged: `sams_sharps`, `armory`, `guild_vault` (vendor rooms — no clean taxonomy fit).
+
+**Mechanic:** when `applyKarma` fires in a room whose `picssiContacts` includes the virtue being adjusted, that virtue's delta is multiplied by 1.5× (rounded). Applied symmetrically to gains AND losses. The log records the scaled delta.
+
+**Verification:** `npx tsc --noEmit` clean. `npx tsx __tests__/karma/picssi-locations.test.ts` → 14/14 passing. Existing suites green: 8e, 8f-zim, 8h-codex, persistence round-trip.
+
+**To commit:**
+```
+git add lib/roomTypes.ts lib/karma/recompute.ts lib/karma/resolve.ts lib/karma/activities.ts lib/gameEngine.ts lib/adventures/guild-hall.ts __tests__/karma/picssi-locations.test.ts HYDRATE_NEXT_SESSION.md CLAUDE_CONTEXT.md
+git commit -m "Sprint S2: PICSSI-location taxonomy + 1.5x multiplier"
+git checkout main && git merge --no-ff dev -m "Merge Sprint S2"
+git checkout dev
+```
+
+### Diagnostic finding — Zim's 13 spell IDs are CAST (guild magic), NOT sorcery
+
+User asked to confirm whether the 13 spell IDs Zim teaches across scrolls 1–14 (`greater-heal`, `daylight`, `firebolt`, `haste`, `ward`, `detect`, `cleanse`, `shield`, `steelskin`, `silence`, `resist`, `mirror`, `banish`, `invoke-light`) are sorcery or guild magic.
+
+**Confirmed: guild magic (CAST).** Evidence:
+- `lib/gameState.ts:417` comment: `/** Official guild magic — autocomplete for CAST */` on `knownSpells`
+- These are added to `knownSpells` (CAST), not `knownCircles` (INVOKE)
+- SORCERY.md §2 lists the canonical 4 CAST spells (BLAST, HEAL, LIGHT, SPEED) and notes "Additional Guild spells planned for Phase 2" — these are exactly that
+- They have plain English names, not Latin Words of Power
+- Zim is a guild wizard, not an Adept
+
+**TWO BUGS surfaced:**
+1. **Case mismatch** — `lib/gameEngine.ts:3037` does `rest.toUpperCase()` before `knownSpells.includes(spellName)`, but quest rewards store IDs in lowercase (`"daylight"`). So `CAST DAYLIGHT` would fail with "You haven't learned DAYLIGHT" even after Zim teaches it.
+2. **No mechanical handlers** — none of the 13 new CAST spells have implementations in `resolveCombatSpell` or anywhere else. They'd fall through to Jane (or fail at the case check first).
+
+**Fix path** (own sprint when scheduled):
+- Normalize lookup in CAST handler — either lowercase both sides or store uppercase in rewards
+- Add mechanical handlers in `lib/combatEngine.ts:resolveCombatSpell` (or sibling) per spell
+- Do NOT add these to `lib/sorcery/registry.ts`
+
+---
+
+## Sorcery state (post-7b.buffs)
+
+**Implemented (25+ spells):** heal, magic-arrow, agility, strength, cure, harm, protection, bless, fireball, poison, teleport, mark, recall, gate-travel, wall-of-stone, resurrection, cunning, feeblemind, weaken, clumsy, curse, arch-protection, reactive-armor, night-sight, paralyze
+
+**Remaining unimplemented per `fluffy-bouncing-hanrahan.md`:**
+- **Unblocked now:** invisibility, reveal, create-food, telekinesis
+- **Field spells + trap system:** fire-field, poison-field, energy-field, paralyze-field, magic-trap, remove-trap, dispel-field
+- **Blocked on ally combat:** summon-creature, summon-air/fire/earth/water-elemental, summon-daemon, dispel, mass-dispel, blade-spirits
+- **Combat attack spells:** magic-lock, unlock, mind-blast, energy-bolt, explosion, lightning, chain-lightning, flamestrike, mana-drain, mana-vampire, mass-curse, meteor-swarm, earthquake, energy-vortex
+- **Transform:** polymorph (blocked on size-class model)
+
+---
+
+## Next sprint options (Scotch picks)
+
+### Option 1 — Commit S2, then S3 (The Word system)
+S2 is the natural prerequisite for S3 — Words sworn in Integrity-tagged rooms now carry stronger stakes via the multiplier. Per `i-accidentally-submitted-the-misty-map.md` §S3:
+- Add `givenWords: Word[]` on PlayerState
+- Hook `acceptQuest` to create a Word
+- `OathPanel.tsx` (also serves S1's Tenets display)
+- `applyPlayerDeath` must explicitly preserve `givenWords` across rebirth (per Scotch's directive)
+- Mithras-blessed Words (rooms with `deity: "mithras"`) carry ×2 break-penalty
+- New `lib/quests/words.ts` + `__tests__/quests/words.test.ts`
+
+### Option 2 — Fix Zim's 13 CAST spells
+Closes a real bug. Two parts:
+- Normalize CAST handler lookup (case-insensitive)
+- Add mechanical implementations for all 13 in `resolveCombatSpell`
+- May need design pass for what each spell mechanically does (some are obvious, others — `mirror`, `banish`, `invoke-light` — need spec)
+
+### Option 3 — S4 Graphical Travel system
+All design docs complete (TRAVEL_MATRIX.md, LOOT_TABLES.md, WORLD_LOCATIONS.md). 7 sub-sprints:
+- S4a: World-map data model + first painting
+- S4b: Starting-city map (Ostavar)
+- S4c: WorldMap.tsx + click-to-travel + confirm flow
+- S4d: Travel-execution + progress bar + flavor rotation
+- S4e: Travel-mode mechanics (walk/horse/ship/air/Gate)
+- S4f: Encounter tables + flavor pools
+- S4g: Pegasus introduction arc
+
+### Option 4 — Sprint 7b Phase 3 (sorcery)
+Invisibility + Reveal (unblocked), Create Food (trivial Circle 1 close), or Telekinesis. Each is its own per-spell planning session.
+
+### Option 5 — Pre-generate travel scene backgrounds (art sprint)
+23 Grok Imagine Pro scenes spec'd in `TRAVEL_MATRIX.md` with prompt seeds and priority order. Pure art, no code. Populates `public/art/scenes/travel/`. Can run parallel to any code sprint.
+
+### Option 6 — S1 Tenets display
+The 42 Oaths are authored in `lore/maatic-library/oaths-of-maat.md` but have no player-facing surface yet. Three deliverables: `READ OATHS` command, temple-wall LOOK branch, `OathPanel.tsx`. ~1–2 days. Could land alongside S3 since both need OathPanel.
+
+---
+
+## Known follow-ups not yet ticketed
+
+- **Zim's 13 CAST spells broken** — case mismatch + no mechanical handlers (see "Diagnostic finding" above). Real bug; player can't actually cast anything Zim teaches.
+- **CombatScreen dead `__CRITICAL__` detection** at `components/CombatScreen.tsx:732-734, 1025-1027`. Marker never injected; visual flash + crit wound + vignette never fire.
+- **8f Wave 2+ rooms** (Chapel of the Lamp / Salt Marsh / Necropolis / Yssa's Cottage / Library Annex / Watchtower / Pre-Thurian Vault / Lighthouse) do not exist yet. Without these, 8e/8f NPCs (Sister Hela, Maelis, Cassian, etc.) have no home.
+- **Three SH fragments** (SH 1.1 / 18.3 / 19.7) await remote-NPC assignment (Aldric, Vivian, Hokas).
+- **Way codex §7 Black Vellum** is a stub. Khepratha / Lady Vela / The Anonym encounter flags not yet wired.
+- **Ostavar map pin** not yet placed on `living-eamon-map.png` — currently treated as co-located with City of Wonders for route math; needs a final decision before S4 travel UI builds.
+- **23 travel scene backgrounds** not yet generated — spec + Grok prompts in `TRAVEL_MATRIX.md`.
+- **Rune-blade item IDs** not yet in `lib/gameData.ts` — blades are designed but have no code representation.
+- **Beyond guild-hall: PICSSI taxonomy retro-tag** — only guild-hall rooms are tagged. Future adventure modules author tags from the start; revisit if more pre-existing rooms need tagging.
+
+---
+
+## Persistence state (unchanged since Sprint A)
+
+**Single source of truth:** `players` row in Supabase. Canonical serializer: `lib/persistence/playerRecord.ts`.
+
+**6-step checklist for adding a new persistent field:**
+1. Define on `PlayerState` or `WorldState` in `lib/gameState.ts`
+2. Add to serializer in `lib/persistence/playerRecord.ts`
+3. Add column mapping in `savePlayer()` at `lib/supabase.ts`
+4. Add deserializer line in load path at `app/api/chat/route.ts`
+5. Write Supabase migration in `supabase/migrations/`; apply via Management API
+6. Add round-trip test to `__tests__/persistence/round-trip.test.ts`
+
+**Note:** S2 added no new persistent fields — `picssiContacts` lives on the static `Room` definition (in `lib/adventures/`), not `PlayerState`. No migration needed.
+
+---
+
+## Tests (all suites — confirm green before any sprint commit)
+
+```
+npx tsx __tests__/karma/picssi-locations.test.ts    # NEW — 14 cases, S2
+npx tsx __tests__/quests/sprint-8e.test.ts
+npx tsx __tests__/quests/sprint-8f-zim.test.ts
+npx tsx __tests__/quests/sprint-8h-codex.test.ts
+npx tsc --noEmit
+```
+
+All other suites:
 - `sprint-7a.test.ts` — 23 cases
 - `sprint-7b.test.ts` — 20 cases
 - `sprint-7b-bless.test.ts` — 18 cases
@@ -73,63 +207,23 @@ Same as session 2026-05-03 morning: 16 of ~64 spells implemented; dispatcher pat
 - `sprint-7b-corpse.test.ts` — 12 cases
 - `sprint-7b-wall.test.ts` — 11 cases
 - `sprint-7b-poison.test.ts` — 10 cases
-- `sprint-7b.test.ts` — 20 cases
-- **`__tests__/persistence/round-trip.test.ts`** — 12 cases (NEW this session)
-
-### Next sprint options per the approved plans
-
-**Three live roadmaps. Scotch picks the next thread.**
-
-#### Option 1 — Sprint G (Living World epic) — `your-recommended-sprint-1-moonlit-taco.md`
-
-Promoted to the top of the work queue by the 2026-05-03 code review + Scotch's scope expansion. Real-time-anchored world: 1 in-game hour = 1 real hour; Eivissa weather via Open-Meteo; per-spell environmental residues (scorch, blood, rubble) with decay; NPC-driven repair scaled by Circle. **Each of G1–G7 is its own focused planning session before implementation.**
-
-- **G1** — Real-time clock + on-demand catch-up infrastructure (`WorldState.realTimeMs`, `lastTickAt`, `tickRealTime`)
-- **G2** — Per-room time-of-day field + day/night descriptions library
-- **G3** — Eivissa weather via Open-Meteo + weather descriptions library
-- **G4** — Per-spell environmental side-effect catalog (`lib/world/spellResidue.ts`)
-- **G5** — Room damage state + real-time decay
-- **G6** — NPC-driven repair logic (mason / carpenter / smith / scribe)
-- **G7** — Authoring sweep (200–400 lines of weather/day/night/residue prose)
-
-#### Option 2 — Continue sorcery roadmap — `fluffy-bouncing-hanrahan.md`
-
-Sprint 7b.stat-debuffs (Clumsy + Weaken) — Circle 1/2 enemy debuffs targeting dexterity and strength. Then Sprint 7b.stat-buffs (Strength + Agility) and Sprint 7b.paralyze.
-
-#### Option 3 — System sprints — `i-accidentally-submitted-the-misty-map.md`
-
-S2 (PICSSI-location taxonomy), S3 (The Word system), S4 (Graphical Travel) — none block on sorcery; each gets its own focused planning session.
-
-### Pre-existing uncommitted M-state (unchanged from prior session — DO NOT commit without explicit instruction)
-
-The same files are M at session start as in prior sessions:
-- `app/updates/page.tsx`, `lib/adventures/guild-hall-npcs.ts` — prior-session work
-- `CLAUDE.md`, `app/layout.tsx`, `app/splash/page.tsx`, `app/login/page.tsx`, `app/register/page.tsx`, `app/legal/page.tsx`, `app/board/page.tsx` — pre-existing UI work
-- Wardrobe Engine (`lib/wardrobe/`, `app/api/wardrobe/`, `lib/weaponCarry.ts`, etc.) — dormant
-- Various `app/api/*-image/` routes — prior session
-
-Surface these to Scotch before bundling into any commit.
-
-### Known follow-ups not yet ticketed
-
-- **CombatScreen has dead `__CRITICAL__` detection** at `components/CombatScreen.tsx:732-734, 1025-1027`. The marker was never injected so the visual flash + crit wound + vignette never fired. A future combat-UI sprint should re-establish crit visual feedback through a proper signal (e.g., `lastStrikeWasCrit: boolean` on `ActiveCombatSession` or `StrikeResolution.isCritical` propagated to client).
-- **Supabase CLI `db push` is broken** due to remote migration history mismatch (a pre-existing duplicate policy in `20260411120000_grok_imagine_error_log.sql`). Workaround used this session: Supabase Management API direct SQL execution. See "Operational facts" below.
+- `__tests__/persistence/round-trip.test.ts` — 12 cases
+- `sprint-8h-codex.test.ts` — 24 cases
 
 ---
 
-## Discipline / process notes (load-bearing)
+## Discipline / process notes
 
-- **The game is in dev mode. No real users.** Schema changes, destructive migrations, drop-and-recreate are all safe. Plan for paying users; do not yet protect data as if any are present. (Captured in `CLAUDE_CONTEXT.md` top-of-file block.)
-- **Per-spell planning sessions, not one big sprint.** Each spell with design complexity gets its own focused planning session before implementation.
-- **Per-sub-sprint planning sessions for Sprint G.** Same pattern — G1, G2, G3, etc. each get a focused session.
-- **No in-fiction prose for unbuilt features.** `[DEV] <reason> not yet implemented` markers are dead code by release.
-- **One-way Illumination rule** (`SORCERY.md §7.1`). Powerful sorcery darkens the soul; a darkened soul does NOT boost spell power.
-- **Force I = Creative, Force 0 = Destructive.** Damage spells need a foe (Force 0). Field spells that are combat-only use `no-target` (not `dev-not-implemented`) when cast outside combat.
-- **Temp modifiers don't write through.** `TempModifier` values add to effective stats at recompute time without touching `picssi.*` or base attributes.
-- **`damagePerTurn` is the canonical field name** on `ActiveStatusEffect` for per-round HP drain — shared by bleed and poison; the narrative in `tickStatusEffects` differentiates by `effect.type`.
-- **Hydration discipline.** `git log --oneline --all --graph | head -20` is authoritative over any doc.
+- **The game is in dev mode. No real users.** Schema changes, destructive migrations are safe.
+- **Per-sprint planning sessions.** Each spell, each sub-sprint gets its own focused session.
+- **Circle unlocks on scroll read, not Zim dialogue.**
+- **`fireOnceKey` scoped to QuestState.scratch** (legacy-scope → survives rebirth).
+- **Temp modifiers don't write through.** Values add at recompute time; never touch `picssi.*` base attributes.
+- **`damagePerTurn` is canonical** on `ActiveStatusEffect` for per-round HP drain.
 - **Spell descriptions are POTENTIAL form.** Howard-canon house style.
-- **When adding a persistent field, follow the 6-step checklist** in `project_persistence_architecture.md`. The round-trip test catches gaps automatically.
+- **Quest codex is generic.** Future quests opt in via `Quest.codexCommands` + `Quest.codexRenderer`.
+- **PICSSI multiplier is symmetric.** Gains and losses both scale 1.5× in tagged rooms.
+- **Hydration discipline.** `git log --oneline --all --graph | head -20` is authoritative over any doc.
 
 ---
 
@@ -144,20 +238,17 @@ git checkout dev
 ```
 
 - Typecheck before committing: `npx tsc --noEmit`
-- Run tests: `npx tsx __tests__/<dir>/<suite>.test.ts`
+- Run tests: `npx tsx __tests__/<suite>.test.ts`
 - **Never bundle pre-existing M-state into a sprint commit.**
-- **Never use apostrophes inside `<<'EOF'` heredoc bodies in commit messages** — bash parses them as quote-end markers and the commit fails.
+- **Never use apostrophes inside `<<'EOF'` heredoc bodies.**
 
 ---
 
 ## Operational facts
 
-- **Branch model:** `dev` is the working branch; `main` is what Vercel deploys. Always merge dev → main with `--no-ff`.
-- **Prod DB:** Supabase. User has authorized prod migration pushes.
-- **Vercel:** auto-deploys from `main`. Build failures are silent unless you check the dashboard.
-- **Dev server:** runs on port **3001** (Docker holds 3000).
-- **Date format:** when saving project memories, always convert relative dates to ISO. Today is **2026-05-03** at session-end.
-- **Supabase migration apply method (CURRENT):** `npx supabase db push` is broken due to remote migration history mismatch. **Workaround:** use the Supabase Management API directly:
+- **Branch model:** `dev` is working; `main` is Vercel deploy target. Always merge with `--no-ff`.
+- **Dev server:** port **3001** (Docker holds 3000). Test with `curl http://localhost:3001/api/chat`.
+- **Supabase migration apply method:** `npx supabase db push` is broken. Use Management API:
 
   ```bash
   SUPABASE_ACCESS_TOKEN=$(grep '^SUPABASE_ACCESS_TOKEN=' .env.local | cut -d= -f2- | tr -d '"')
@@ -169,49 +260,47 @@ git checkout dev
     -d "$(jq -nc --arg q "$SQL" '{query: $q}')"
   ```
 
-  `[]` response = success (DDL returns no rows). Verify schema with a follow-up SELECT against `information_schema.columns`.
-
 ---
 
-## Files to know
+## Key files
 
-### Persistence (NEW this session)
+### S2 — PICSSI-location taxonomy (this session)
+- `lib/roomTypes.ts` — `picssiContacts?: PicssiVirtue[]` on `Room`
+- `lib/karma/recompute.ts` — `PICSSI_LOCATION_MULTIPLIER`, `scaleDeltaForRoom`
+- `lib/karma/resolve.ts` — atom-choice scaling
+- `lib/karma/activities.ts` — activity-gain/loss scaling
+- `lib/gameEngine.ts` — combat + funeral scaling
+- `lib/adventures/guild-hall.ts` — 6 rooms tagged
+- `__tests__/karma/picssi-locations.test.ts` — 14 cases
 
-- [lib/persistence/playerRecord.ts](lib/persistence/playerRecord.ts) — canonical `worldStateToPlayerRecord` serializer
-- [lib/supabase.ts](lib/supabase.ts) — `savePlayer()` writes the row; column mappings at lines 28–160
-- [app/api/chat/route.ts](app/api/chat/route.ts) — `POST` handler hydrates state from row at lines 350–580
-- [supabase/migrations/20260503150000_persistence_audit_gap_fill.sql](supabase/migrations/20260503150000_persistence_audit_gap_fill.sql) — applied to prod
-- [__tests__/persistence/round-trip.test.ts](__tests__/persistence/round-trip.test.ts) — round-trip coverage
+### World Map & Travel System
+- `lore/thurian-cartography/WORLD_LOCATIONS.md` — 30-location registry
+- `lore/thurian-cartography/TRAVEL_MATRIX.md` — route matrix, zone danger, scene background spec
+- `lore/thurian-cartography/LOOT_TABLES.md` — loot tiers, 6 Great Blades
+- `public/art/living-eamon-map.png` — travel screen background
 
-### Sorcery (current state — unchanged this session)
+### Quest Engine
+- `lib/quests/types.ts`, `lib/quests/engine.ts`, `lib/quests/dialogue.ts`, `lib/quests/log.ts`
+- `lib/quests/codex.ts` — resolveCodexCommand dispatcher
+- `lib/quests/lines/way-of-thoth.ts` — fully committed (8f + 8h)
+- `lib/quests/lines/way-of-thoth-codex.ts` — 9-section codex renderer
 
-- `lib/sorcery/types.ts` — `Spell`, `Circle`, `ReagentId`, `EffectResult` (15 variants), `InvokeOutcome`
-- `lib/sorcery/registry.ts` — 63 spells across 8 Circles
-- `lib/sorcery/invoke.ts` — `handleInvoke` + `composeInvokeResponse`
-- `lib/sorcery/effects.ts` — `applyEffect` dispatcher
-- `lib/combat/barriers.ts` — `isCrossingBarrier` + `tickBarriers`
-- `lib/gameState.ts` — `Corpse`, `CreatureKind`, `isDay()`, `TempModifier`, `TempModifierStat`; `WorldState.corpses`
+### Persistence
+- `lib/persistence/playerRecord.ts` — canonical serializer
+- `lib/supabase.ts` — savePlayer() column mappings
+- `app/api/chat/route.ts` — load path (lines 350–580)
 
-### Combat narration (CHANGED this session)
+### Living World (Sprint G)
+- `lib/world/spellResidue.ts`, `lib/world/weather.ts`, `lib/world/roomDamage.ts`
 
-- [lib/combatZoneNarration.ts](lib/combatZoneNarration.ts) — `CRITICAL_PREFIXES` (~440), `CRIT_ATTACKER_GORE` (~565); both now 10 lines/zone
+### Sorcery
+- `lib/sorcery/types.ts`, `lib/sorcery/registry.ts`, `lib/sorcery/invoke.ts`, `lib/sorcery/effects.ts`
 
 ### Canonical specs
-
-- `SORCERY.md` — magic systems
-- `KARMA_SYSTEM.md` §2.10 — Illumination as karma stock
-- `GAME_DESIGN.md` §11 — PICSSI Illumination dimension
-- `lore/pantheon/PANTHEON.md` — full deity roster
-- `lore/maatic-library/oaths-of-maat.md` — 42 Oaths
-- `~/.claude/plans/your-recommended-sprint-1-moonlit-taco.md` — **2026-05-03 code-review plan** (Sprints A/B/C done, Sprint G epic deferred)
+- `SORCERY.md`, `KARMA_SYSTEM.md`, `GAME_DESIGN.md` §11
+- `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` — S1–S4 system sprints (S2 done)
+- `~/.claude/plans/zim-can-be-the-encapsulated-sunset.md` — Way-of-Thoth design
 - `~/.claude/plans/fluffy-bouncing-hanrahan.md` — Sprint 7b Phase 2 roadmap
-- `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` — S1–S4 system sprints
-
-### Karma + quest engine (unchanged this session)
-
-- `lib/karma/recompute.ts` — `applyKarma`, `clampPicssi`, `recomputeDerivedStats`, `logKarmaDelta`
-- `lib/karma/combat-deltas.ts` — 13 combat-PICSSI rules
-- `lib/quests/engine.ts` — `registerQuest`, `acceptQuest`, `emitQuestEvent`, `completeStep`, `applyReward`
 
 ---
 

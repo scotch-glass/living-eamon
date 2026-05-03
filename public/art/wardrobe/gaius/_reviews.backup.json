@@ -1,0 +1,167 @@
+{
+  "gray_robe_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Robe is nonstandard. Redo.",
+    "updatedAt": "2026-04-24T13:02:40.779Z"
+  },
+  "gray_robe_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:02:42.995Z"
+  },
+  "gray_robe_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:02:44.639Z"
+  },
+  "loincloth_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:15.534Z"
+  },
+  "loincloth_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:14.149Z"
+  },
+  "loincloth_polearm_casual": {
+    "state": "rejected",
+    "notes": "The skin color is too dark.",
+    "updatedAt": "2026-04-24T13:05:25.264Z"
+  },
+  "common_clothes_unarmed_casual": {
+    "state": "rejected",
+    "notes": "Shirt is corrupted. redo.",
+    "updatedAt": "2026-04-24T13:04:04.330Z"
+  },
+  "gray_robe_back_bow_casual": {
+    "state": "rejected",
+    "notes": "The bow should not be worn over the shoulder. It should be carried like in the character's right hand similar to a staff.",
+    "updatedAt": "2026-04-24T13:07:58.597Z"
+  },
+  "gray_robe_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:06.946Z"
+  },
+  "loincloth_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:35.341Z"
+  },
+  "loincloth_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Skin color is too dark. Redo",
+    "updatedAt": "2026-04-24T13:06:55.803Z"
+  },
+  "loincloth_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:58.454Z"
+  },
+  "loincloth_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:07:00.391Z"
+  },
+  "common_clothes_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:07:34.479Z"
+  },
+  "common_clothes_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:08:06.808Z"
+  },
+  "common_clothes_hip_haft_casual": {
+    "state": "rejected",
+    "notes": "Shirt is corrupted. Redo.",
+    "updatedAt": "2026-04-24T13:08:14.864Z"
+  },
+  "common_clothes_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:08:16.890Z"
+  },
+  "common_clothes_back_bow_casual": {
+    "state": "rejected",
+    "notes": "Shirt is corrupted. Also the bow should be carried in the character's right hand like a staff.",
+    "updatedAt": "2026-04-24T13:08:42.110Z"
+  },
+  "chain_mail_unarmed_casual": {
+    "state": "rejected",
+    "notes": "Chainmail includes a partial hood. There should be no hood. Redo.",
+    "updatedAt": "2026-04-24T13:10:06.822Z"
+  },
+  "chain_mail_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Chainmail is corrupted. Redo",
+    "updatedAt": "2026-04-24T13:09:48.466Z"
+  },
+  "chain_mail_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "Chainmail is corrupted. Redo.",
+    "updatedAt": "2026-04-24T13:10:16.775Z"
+  },
+  "chain_mail_hip_haft_casual": {
+    "state": "rejected",
+    "notes": "This Chainmail includes a partial hood. Redo without any hood.",
+    "updatedAt": "2026-04-24T13:13:30.662Z"
+  },
+  "leather_armor_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "Leather armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:11:48.518Z"
+  },
+  "leather_armor_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:11:56.716Z"
+  },
+  "leather_armor_back_bow_casual": {
+    "state": "rejected",
+    "notes": "Leather armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:12:01.086Z"
+  },
+  "leather_armor_polearm_casual": {
+    "state": "rejected",
+    "notes": "Leather armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:12:03.381Z"
+  },
+  "leather_armor_unarmed_casual": {
+    "state": "rejected",
+    "notes": "Leather armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:12:18.378Z"
+  },
+  "leather_armor_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Leather armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:12:21.258Z"
+  },
+  "leather_armor_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "Leather armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:12:46.237Z"
+  },
+  "chain_mail_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "chainmail armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:13:06.079Z"
+  },
+  "chain_mail_back_bow_casual": {
+    "state": "rejected",
+    "notes": "chainmail armor should cover the torso fully, and no part of the torso should be exposed.",
+    "updatedAt": "2026-04-24T13:13:14.813Z"
+  },
+  "chain_mail_polearm_casual": {
+    "state": "rejected",
+    "notes": "This Chainmail includes a partial hood. Redo without any hood.",
+    "updatedAt": "2026-04-24T13:13:34.912Z"
+  },
+  "gray_robe_unarmed_casual": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:16:34.308Z"
+  }
+}

@@ -39,3 +39,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# wardrobe scratch (local WIP PNGs / diff masks)
+lib/wardrobe/scratch/
+public/wardrobe-scratch/
+
+# python venv for rembg (rebuild locally with: python3 -m venv .venv && .venv/bin/pip install rembg pillow onnxruntime)
+.venv/
+
+# Vivian LoRA training assets — NSFW PNGs and large safetensors live in R2, not git.
+# README stubs in these directories ARE tracked (negation rules).
+scripts/lora/vivian/training-set/*
+!scripts/lora/vivian/training-set/README.md
+scripts/lora/vivian/output/*
+!scripts/lora/vivian/output/README.md
+
+# Training-set mirror for QA browser viewing (Next.js doesn't follow symlinks under public/).
+public/art/lora/vivian-training/
+
+# Vivian eros batch — generated PNGs streamed from Vast during inference
+public/art/lora/vivian-eros/

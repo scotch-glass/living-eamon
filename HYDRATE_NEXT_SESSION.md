@@ -50,7 +50,7 @@ After reading, confirm hydration with one paragraph naming: (a) what was done in
 - `lib/world/travelNodes.ts` — `TravelNode` type + 19-node registry with (x,y) over map (origin, 6 cities, 5 POIs, 4 nation hubs, 3 wilderness)
 - `lib/world/travelMatrix.ts` — `ZoneType` union (15 types), `DangerRating`, `TravelLeg` type; 30 authored legs covering all routes; `getLegsFrom` / `getLeg` / `getRouteZones` / `sceneIdForZone` helpers
 - `lib/roomTypes.ts:AdventureModule` — extended with `locationId?`, `travelZones?`, `travelDays?`
-- `lib/adventures/guild-hall.ts` — `GUILD_HALL` anchored to `ostavar` node
+- `lib/adventures/guild-hall.ts` — `GUILD_HALL` anchored to `valus` node
 
 **Sprint S2 — PICSSI ↔ location-type taxonomy**
 - `Room.picssiContacts?: PicssiVirtue[]` + `scaleDeltaForRoom()` at 4 karma chokepoints

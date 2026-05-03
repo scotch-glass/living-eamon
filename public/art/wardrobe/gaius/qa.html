@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gaius Wardrobe — QA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #15110c;
+    --panel: #1e1810;
+    --panel-hover: #26201a;
+    --border: rgba(180,140,60,0.35);
+    --text: #e7d8b5;
+    --muted: #8f7f5f;
+    --approve: #5a8a3a;
+    --approve-bright: #84c24c;
+    --reject: #a83232;
+    --reject-bright: #e64848;
+    --pending: #3a3228;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+  header {
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: 0.04em; }
+  header .stats { color: var(--muted); font-size: 13px; }
+  header .stats b { color: var(--text); }
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+    padding: 20px;
+  }
+  .cell {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .cell.approved { border-color: var(--approve-bright); background: #1e2415; }
+  .cell.rejected { border-color: var(--reject-bright); background: #2a1816; }
+  .cell .key {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11.5px;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    word-break: break-all;
+  }
+  .cell .img-wrap {
+    aspect-ratio: 3 / 4.266;
+    background: var(--pending);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .cell .img-wrap img {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  .cell .img-wrap.pending::after {
+    content: "pending…";
+    color: var(--muted);
+    font-style: italic;
+    font-size: 13px;
+  }
+  .cell .img-wrap.pending img { display: none; }
+  .cell .controls {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .cell .controls label {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; cursor: pointer; user-select: none;
+    padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .cell .controls label:hover { background: var(--panel-hover); }
+  .cell .controls label.approve input:checked + span { color: var(--approve-bright); font-weight: bold; }
+  .cell .controls label.reject  input:checked + span { color: var(--reject-bright); font-weight: bold; }
+  .cell .controls .flex { flex: 1; }
+  .cell .saved {
+    font-size: 11px; color: var(--muted); font-style: italic;
+  }
+  .cell .notes {
+    width: 100%; min-height: 52px; resize: vertical;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 6px 8px; font-family: Georgia, serif; font-size: 13px;
+    display: none;
+  }
+  .cell.rejected .notes { display: block; }
+  .toolbar {
+    display: flex; gap: 12px; align-items: center;
+  }
+  .toolbar button {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 6px 14px; cursor: pointer; font-family: Georgia, serif;
+    font-size: 13px;
+  }
+  .toolbar button:hover { background: var(--panel-hover); }
+  .toolbar button.primary {
+    background: #4a3a18;
+    border-color: var(--approve-bright);
+    color: #fef4d8;
+    font-weight: bold;
+  }
+  .toolbar button.primary:hover { background: #6b5320; }
+  .toolbar .submit-msg { color: var(--muted); font-size: 12px; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Gaius Wardrobe — QA</h1>
+  <div class="toolbar">
+    <div class="stats" id="stats">loading…</div>
+    <span class="submit-msg" id="submitMsg"></span>
+    <button id="download">Download JSON</button>
+    <button id="submit" class="primary">Submit feedback to Claude</button>
+  </div>
+</header>
+<main id="grid"></main>
+<script>
+(() => {
+  const EQUIPMENT = ["loincloth", "gray_robe", "common_clothes", "leather_armor", "chain_mail"];
+  const WEAPONS   = ["unarmed", "hip_short_blade", "hip_long_blade", "hip_haft_mace", "hip_haft_axe", "back_two_hander", "staff_bow", "polearm"];
+  const STANCES   = ["casual"];
+  const COMBOS = [];
+  for (const e of EQUIPMENT) for (const w of WEAPONS) for (const s of STANCES) {
+    COMBOS.push(`${e}_${w}_${s}`);
+  }
+
+  const grid = document.getElementById("grid");
+  const stats = document.getElementById("stats");
+  const downloadBtn = document.getElementById("download");
+
+  let reviewState = {}; // { key: { state: "approved"|"rejected"|null, notes: string } }
+
+  async function loadReviews() {
+    try {
+      const r = await fetch("/api/wardrobe/qa-review?t=" + Date.now());
+      if (r.ok) reviewState = await r.json();
+    } catch (e) {
+      console.warn("could not load reviews", e);
+    }
+  }
+
+  async function saveReview(key, patch) {
+    reviewState[key] = { ...(reviewState[key] || {}), ...patch, updatedAt: new Date().toISOString() };
+    try {
+      await fetch("/api/wardrobe/qa-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, ...reviewState[key] }),
+      });
+    } catch (e) {
+      console.error("save failed", e);
+    }
+    updateStats();
+  }
+
+  function updateStats() {
+    const approvedCount = Object.values(reviewState).filter(r => r.state === "approved").length;
+    const rejectedCount = Object.values(reviewState).filter(r => r.state === "rejected").length;
+    const presentCount = document.querySelectorAll(".cell:not(.pending-combo)").length;
+    stats.innerHTML = `<b>${presentCount}</b>/${COMBOS.length} arrived · <b style="color:var(--approve-bright)">${approvedCount}</b> approved · <b style="color:var(--reject-bright)">${rejectedCount}</b> rejected`;
+  }
+
+  function renderCell(key) {
+    const cell = document.createElement("section");
+    cell.className = "cell pending-combo";
+    cell.dataset.key = key;
+    cell.innerHTML = `
+      <div class="key">${key}</div>
+      <div class="img-wrap pending">
+        <img alt="${key}" />
+      </div>
+      <div class="controls">
+        <label class="approve">
+          <input type="radio" name="r_${key}" value="approved" />
+          <span>✓ approve</span>
+        </label>
+        <label class="reject">
+          <input type="radio" name="r_${key}" value="rejected" />
+          <span>✗ reject</span>
+        </label>
+        <div class="flex"></div>
+        <span class="saved"></span>
+      </div>
+      <textarea class="notes" placeholder="why was this rejected?"></textarea>
+    `;
+    const img = cell.querySelector("img");
+    const imgWrap = cell.querySelector(".img-wrap");
+    const src = `/art/wardrobe/gaius/${key}.png`;
+    img.onload = () => {
+      imgWrap.classList.remove("pending");
+      cell.classList.remove("pending-combo");
+      updateStats();
+    };
+    img.onerror = () => {
+      imgWrap.classList.add("pending");
+      cell.classList.add("pending-combo");
+    };
+    img.src = src;
+
+    const approveInput = cell.querySelector('input[value="approved"]');
+    const rejectInput = cell.querySelector('input[value="rejected"]');
+    const notes = cell.querySelector("textarea");
+    const saved = cell.querySelector(".saved");
+
+    const prior = reviewState[key] || {};
+    if (prior.state === "approved") { approveInput.checked = true; cell.classList.add("approved"); }
+    if (prior.state === "rejected") { rejectInput.checked = true; cell.classList.add("rejected"); }
+    if (prior.notes) notes.value = prior.notes;
+
+    function onStateChange(state) {
+      cell.classList.toggle("approved", state === "approved");
+      cell.classList.toggle("rejected", state === "rejected");
+      saveReview(key, { state, notes: state === "rejected" ? notes.value : (prior.notes || "") });
+      saved.textContent = "saved";
+      setTimeout(() => { saved.textContent = ""; }, 1200);
+    }
+    approveInput.addEventListener("change", () => onStateChange("approved"));
+    rejectInput.addEventListener("change", () => onStateChange("rejected"));
+
+    let noteTimer = null;
+    notes.addEventListener("input", () => {
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(() => {
+        saveReview(key, { state: "rejected", notes: notes.value });
+        saved.textContent = "saved";
+        setTimeout(() => { saved.textContent = ""; }, 1200);
+      }, 600);
+    });
+
+    return cell;
+  }
+
+  function refreshImages() {
+    // Reload every image with cache-bust so new forge outputs appear.
+    const imgs = document.querySelectorAll(".cell .img-wrap img");
+    imgs.forEach((img) => {
+      const key = img.closest(".cell").dataset.key;
+      img.src = `/art/wardrobe/gaius/${key}.png?t=${Date.now()}`;
+    });
+  }
+
+  downloadBtn.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(reviewState, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gaius-wardrobe-reviews.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  const submitBtn = document.getElementById("submit");
+  const submitMsg = document.getElementById("submitMsg");
+  submitBtn.addEventListener("click", async () => {
+    submitBtn.disabled = true;
+    submitMsg.textContent = "submitting…";
+    submitMsg.style.color = "var(--muted)";
+    try {
+      const r = await fetch("/api/wardrobe/qa-submit", { method: "POST" });
+      const j = await r.json();
+      if (r.ok && j.ok) {
+        const s = j.submission.summary;
+        submitMsg.textContent = `✓ submitted at ${new Date(j.submission.submittedAt).toLocaleTimeString()} — ${s.approvedCount} approved / ${s.rejectedCount} rejected / ${s.pendingCount} pending`;
+        submitMsg.style.color = "var(--approve-bright)";
+      } else {
+        throw new Error(j.error || "submit failed");
+      }
+    } catch (e) {
+      submitMsg.textContent = "✗ submit failed: " + (e instanceof Error ? e.message : String(e));
+      submitMsg.style.color = "var(--reject-bright)";
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  (async () => {
+    await loadReviews();
+    COMBOS.forEach((key) => grid.appendChild(renderCell(key)));
+    updateStats();
+    // Poll for new images every 5 seconds.
+    setInterval(refreshImages, 5000);
+  })();
+})();
+</script>
+</body>
+</html>

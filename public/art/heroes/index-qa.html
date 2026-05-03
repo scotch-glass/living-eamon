@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hero Masters — Inspection</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #15110c;
+    --panel: #1e1810;
+    --panel-hover: #26201a;
+    --border: rgba(180,140,60,0.35);
+    --text: #e7d8b5;
+    --muted: #8f7f5f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+  header {
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: 0.04em; }
+  header .stats { color: var(--muted); font-size: 13px; }
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+    padding: 20px;
+  }
+  .cell {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .cell .name {
+    font-size: 18px;
+    letter-spacing: 0.03em;
+    color: var(--text);
+  }
+  .cell .slug {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: -6px;
+  }
+  .cell .img-wrap {
+    aspect-ratio: 3 / 4.266;
+    background: #221b13;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cell .img-wrap img {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  .cell .meta {
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .cell .meta .row { display: flex; gap: 8px; }
+  .cell .meta .k { color: var(--muted); min-width: 72px; }
+  .cell .meta .v { color: var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hero Masters — Inspection</h1>
+  <div class="stats" id="stats">loading…</div>
+</header>
+<main id="grid"></main>
+<script>
+(() => {
+  const list = [{"slug":"kane","heroName":"Kane","ageBand":"young","skinTone":"olive","hairColor":"black","hairLength":"long","facialHair":"clean","eyeColor":"blue"},{"slug":"dural","heroName":"Dural","ageBand":"middle","skinTone":"olive","hairColor":"black","hairLength":"bald","facialHair":"beard","eyeColor":"amber"},{"slug":"gaius","heroName":"Gaius","ageBand":"young","skinTone":"olive","hairColor":"brown","hairLength":"short","facialHair":"stubble","eyeColor":"brown"},{"slug":"orin","heroName":"Orin","ageBand":"grizzled","skinTone":"olive","hairColor":"grey","hairLength":"long","facialHair":"beard","eyeColor":"grey"},{"slug":"vard","heroName":"Vard","ageBand":"middle","skinTone":"olive","hairColor":"red","hairLength":"medium","facialHair":"beard","eyeColor":"green"},{"slug":"selek","heroName":"Selek","ageBand":"young","skinTone":"olive","hairColor":"black","hairLength":"bald","facialHair":"clean","eyeColor":"brown"},{"slug":"halvar","heroName":"Halvar","ageBand":"grizzled","skinTone":"olive","hairColor":"white","hairLength":"short","facialHair":"stubble","eyeColor":"grey"},{"slug":"roderic","heroName":"Roderic","ageBand":"middle","skinTone":"olive","hairColor":"blond","hairLength":"long","facialHair":"clean","eyeColor":"blue"},{"slug":"corin","heroName":"Corin","ageBand":"young","skinTone":"olive","hairColor":"black","hairLength":"medium","facialHair":"stubble","eyeColor":"green"},{"slug":"marik","heroName":"Marik","ageBand":"grizzled","skinTone":"olive","hairColor":"black","hairLength":"bald","facialHair":"beard","eyeColor":"brown"},{"slug":"talon","heroName":"Talon","ageBand":"grizzled","skinTone":"olive","hairColor":"black","hairLength":"bald","facialHair":"clean","eyeColor":"amber"},{"slug":"aldan","heroName":"Aldan","ageBand":"middle","skinTone":"olive","hairColor":"brown","hairLength":"long","facialHair":"stubble","eyeColor":"blue"},{"slug":"rurik","heroName":"Rurik","ageBand":"young","skinTone":"olive","hairColor":"blond","hairLength":"short","facialHair":"clean","eyeColor":"amber"},{"slug":"thane","heroName":"Thane","ageBand":"middle","skinTone":"olive","hairColor":"grey","hairLength":"medium","facialHair":"beard","eyeColor":"grey"},{"slug":"karn","heroName":"Karn","ageBand":"grizzled","skinTone":"olive","hairColor":"white","hairLength":"long","facialHair":"beard","eyeColor":"blue"},{"slug":"hollan","heroName":"Hollan","ageBand":"young","skinTone":"olive","hairColor":"brown","hairLength":"short","facialHair":"clean","eyeColor":"grey"},{"slug":"lev","heroName":"Lev","ageBand":"middle","skinTone":"olive","hairColor":"black","hairLength":"bald","facialHair":"stubble","eyeColor":"green"},{"slug":"seward","heroName":"Seward","ageBand":"grizzled","skinTone":"olive","hairColor":"red","hairLength":"short","facialHair":"stubble","eyeColor":"green"},{"slug":"ivorn","heroName":"Ivorn","ageBand":"middle","skinTone":"olive","hairColor":"blond","hairLength":"medium","facialHair":"beard","eyeColor":"violet"},{"slug":"draxan","heroName":"Draxan","ageBand":"young","skinTone":"olive","hairColor":"brown","hairLength":"long","facialHair":"stubble","eyeColor":"brown"}];
+
+  const grid = document.getElementById("grid");
+  const stats = document.getElementById("stats");
+
+  for (const h of list) {
+    const cell = document.createElement("section");
+    cell.className = "cell";
+    cell.innerHTML = `
+      <div class="name">${h.heroName}</div>
+      <div class="slug">${h.slug}</div>
+      <div class="img-wrap"><img src="/art/heroes/${h.slug}.png?t=${Date.now()}" alt="${h.slug}" loading="lazy" /></div>
+      <div class="meta">
+        <div class="row"><div class="k">age</div><div class="v">${h.ageBand}</div></div>
+        <div class="row"><div class="k">skin</div><div class="v">${h.skinTone}</div></div>
+        <div class="row"><div class="k">hair</div><div class="v">${h.hairColor} / ${h.hairLength}</div></div>
+        <div class="row"><div class="k">beard</div><div class="v">${h.facialHair}</div></div>
+        <div class="row"><div class="k">eyes</div><div class="v">${h.eyeColor}</div></div>
+      </div>
+    `;
+    grid.appendChild(cell);
+  }
+  stats.textContent = `${list.length} heroes`;
+})();
+</script>
+</body>
+</html>

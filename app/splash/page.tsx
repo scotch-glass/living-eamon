@@ -227,9 +227,9 @@ export default function SplashPage() {
               textShadow: "0 1px 12px rgba(0, 0, 0, 0.7)",
             }}
           >
-            Living Eamon is a persistent, AI-driven sword-and-sorcery adventure set in
+            Living Eamon is a persistent, sword-and-sorcery adventure set in
             Robert E.&nbsp;Howard&rsquo;s sword and sorcery age. Hunt forbidden reagents under the
-            full moon, avoiding the Order&rsquo;s inquisitive eye. Carry your scars, your virtues, and your legend from one realm to the next. Everything you do is written down — you are the immortal hero - famed or shamed across worlds.
+            full moon, avoiding the Order&rsquo;s inquisitive eye. Carry your scars, your virtues, and your legend from one realm to the next. Everything you do is written down — you are the Perpetual Hero — famed or shamed across worlds.
           </p>
 
           {/* CTA — also spans all columns, centered */}

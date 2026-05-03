@@ -53,9 +53,9 @@ export interface TravelLeg {
 // getLeg() checks both directions for convenience.
 // ============================================================
 export const TRAVEL_LEGS: TravelLeg[] = [
-  // ── From Ostavar ──────────────────────────────────────────
+  // ── From Valus ────────────────────────────────────────────
   {
-    from: "ostavar",
+    from: "valus",
     to: "poi_lake_of_visions",
     daysFoot: 1,
     daysHorse: 1,
@@ -65,7 +65,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 1,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "poi_accursed_gardens",
     daysFoot: 1,
     daysHorse: 1,
@@ -75,17 +75,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 1,
   },
   {
-    from: "ostavar",
-    to: "city_of_wonders",
-    daysFoot: 1,
-    daysHorse: 1,
-    daysShip: null,
-    zones: ["civilization"],
-    dangerRating: "safe",
-    encounterRolls: 1,
-  },
-  {
-    from: "ostavar",
+    from: "valus",
     to: "city_kamula",
     daysFoot: 1,
     daysHorse: 1,
@@ -95,7 +85,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 1,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "city_vanara",
     daysFoot: 2,
     daysHorse: 1,
@@ -105,7 +95,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 2,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "poi_forbidden_lake",
     daysFoot: 2,
     daysHorse: 1,
@@ -115,7 +105,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 2,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "city_blaal",
     daysFoot: 4,
     daysHorse: 2,
@@ -125,7 +115,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 4,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "poi_skull_of_silence",
     daysFoot: 7,
     daysHorse: 4,
@@ -135,7 +125,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 7,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "nation_thule",
     daysFoot: 6,
     daysHorse: 3,
@@ -145,7 +135,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 6,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "city_talunia",
     daysFoot: 7,
     daysHorse: 4,
@@ -155,7 +145,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 7,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "city_stagus",
     daysFoot: 11,
     daysHorse: 6,
@@ -165,7 +155,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 11,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "nation_commoria",
     daysFoot: 9,
     daysHorse: 5,
@@ -176,7 +166,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
   },
   {
     // Ship-only: 3 days at sea
-    from: "ostavar",
+    from: "valus",
     to: "nation_atlantis",
     daysFoot: null,
     daysHorse: null,
@@ -187,7 +177,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
   },
   {
     // Ship-only: 7 days at sea
-    from: "ostavar",
+    from: "valus",
     to: "nation_lemuria",
     daysFoot: null,
     daysHorse: null,
@@ -197,7 +187,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
     encounterRolls: 7,
   },
   {
-    from: "ostavar",
+    from: "valus",
     to: "geo_lost_lands",
     daysFoot: 8,
     daysHorse: 5,
@@ -208,7 +198,7 @@ export const TRAVEL_LEGS: TravelLeg[] = [
   },
   {
     // Sea crossing (3d) + overland (2d) on Atlantis
-    from: "ostavar",
+    from: "valus",
     to: "poi_tiger_valley",
     daysFoot: null,
     daysHorse: null,

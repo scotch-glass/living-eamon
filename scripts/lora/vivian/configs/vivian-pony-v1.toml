@@ -1,0 +1,93 @@
+# kohya_ss / sd-scripts SDXL LoRA training config — Vivian on Pony Realism v23
+#
+# Launch:
+#   accelerate launch --num_cpu_threads_per_process=4 sdxl_train_network.py \
+#       --config_file=/root/training/configs/vivian-pony-v1.toml
+#
+# Hyperparameter rationale lives in scripts/lora/VIVIAN_LORA_PLAN.md §6.
+# All paths below assume the Vast instance layout described in §4 of the plan.
+# TODO markers indicate values that must be set manually before launch.
+
+[model_arguments]
+# TODO: confirm Pony Realism v23 actually exists on HF; fall back to v22 if not.
+# Either point at a single .safetensors checkpoint OR an HF repo id.
+pretrained_model_name_or_path = "/root/models/pony-realism-v23/model.safetensors"
+v2 = false
+v_parameterization = false
+
+[additional_network_arguments]
+network_module = "networks.lora"
+network_dim = 32
+network_alpha = 16
+network_train_unet_only = false
+network_train_text_encoder_only = false
+
+[optimizer_arguments]
+optimizer_type = "AdamW8bit"
+learning_rate = 1e-4
+unet_lr = 1e-4
+text_encoder_lr = 5e-5
+lr_scheduler = "cosine_with_restarts"
+lr_scheduler_num_cycles = 3
+lr_warmup_steps = 100
+max_grad_norm = 1.0
+
+[dataset_arguments]
+# TODO: confirm this is where rclone dropped the training set.
+# Folder layout kohya expects: /root/training/data/<repeat>_<concept>/
+# E.g. /root/training/data/10_vivian1/01_front_softbox.png + 01_front_softbox.txt
+# The leading "10_" tells kohya to repeat each image 10× per epoch.
+train_data_dir = "/root/training/data"
+resolution = "1024,1024"
+enable_bucket = true
+min_bucket_reso = 832
+max_bucket_reso = 1216
+bucket_reso_steps = 64
+bucket_no_upscale = true
+caption_extension = ".txt"
+shuffle_caption = true
+keep_tokens = 1
+caption_dropout_rate = 0.0
+caption_tag_dropout_rate = 0.0
+
+[training_arguments]
+output_dir = "/root/training/output/vivian-pony-v1"
+output_name = "vivian-pony-v1"
+save_model_as = "safetensors"
+save_every_n_steps = 250
+save_last_n_steps = 4   # only keep the latest 4 mid-run checkpoints to save disk
+max_train_steps = 1500
+train_batch_size = 1
+gradient_accumulation_steps = 1
+gradient_checkpointing = true
+mixed_precision = "bf16"
+full_bf16 = false
+xformers = true
+cache_latents = true
+cache_latents_to_disk = true
+no_half_vae = true   # SDXL VAE is fp32-stable; avoids the black-image bug
+seed = 42
+clip_skip = 2        # Pony convention; do not change
+max_data_loader_n_workers = 2
+persistent_data_loader_workers = true
+
+[saving_arguments]
+save_precision = "bf16"
+save_state = false
+
+[sample_prompt_arguments]
+sample_every_n_steps = 250
+sample_sampler = "euler_a"
+
+# TODO: write sample prompts to /root/training/configs/vivian-pony-v1-samples.txt
+# kohya reads them with --sample_prompts on the CLI; one per line.
+# Suggested content (drop into that file):
+#   score_9, score_8_up, source_realistic, vivian1, 1girl, solo, head and shoulders portrait, soft window light --w 832 --h 1216 --d 1 --s 28 --l 7
+#   score_9, source_realistic, vivian1, 1girl, solo, three quarter view, candlelight --w 832 --h 1216 --d 2 --s 28 --l 7
+#   score_9, source_realistic, vivian1, 1girl, solo, full body, plain wall, soft light --w 832 --h 1216 --d 3 --s 28 --l 7
+#   score_9, rating_explicit, source_realistic, vivian1, 1girl, solo, nude, reclining, candlelight, anatomically correct breasts and pink nipples, nipples visible --w 1216 --h 832 --d 4 --s 28 --l 7
+
+[logging_arguments]
+log_with = "tensorboard"
+logging_dir = "/root/training/output/vivian-pony-v1/logs"
+log_prefix = "vivian-pony-v1"

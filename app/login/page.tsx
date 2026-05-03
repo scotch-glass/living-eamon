@@ -14,7 +14,7 @@ function LoginContent() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
-        backgroundImage: "url(/login-bg.jpg)",
+        backgroundImage: "url(/art/scenes/login-bg.jpg)",
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
         backgroundPosition: "center",

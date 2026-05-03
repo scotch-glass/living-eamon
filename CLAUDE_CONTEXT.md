@@ -175,8 +175,8 @@ Barmaid selection system — Aldric's drink offer triggers __BARMAID_SELECT__ to
 Image cache safety — soft-delete (deleted_at), approved flag, scripts/image-cache.sh management tool
 Supabase CLI linked — migrations via Management API (scripts/db-push.sh)
 
-§5.1 — Starting Area: Ostavar (Aquilonian Hub)
-Ostavar is styled after Robert E. Howard's (REH's) Aquilonia — the REH equivalent of Tolkien's Gondor. Marble colonnades, gilt towers, Frazetta/Brom art style.
+§5.1 — Starting Area: Valus, the City of Wonders (Aquilonian Visual Style)
+Valus is the capital of Valusia — the greatest Thurian-Age empire. Art style draws from Howard's Aquilonia: marble colonnades, gilt towers, Frazetta/Brom palace interiors.
 
 Current rooms (lib/adventures/guild-hall.ts):
 - Church of Perpetual Life (spawn/respawn, grimdark tone, cold open with __YESNO__)
@@ -1292,11 +1292,11 @@ Total Sprints 0–6: ~16–18 dev-days, ~3–4 calendar weeks pairing with Claud
 ### 1. Setting pivot — Thurian Age, not Hyborian
 - Game's in-fiction era is now Howard's pre-Cataclysmic **Thurian Age** (Kull's era).
 - Hyborian-Age kingdoms (Aquilonia, Stygia, Cimmeria) are FUTURE prophecy from the player's vantage, not past lore.
-- **But Aquilonian VISUAL STYLE remains the canonical art-prompt reference** for Ostavar — styles are immortal, fiction-era is Thurian. Players never read "Aquilonia" in-game; the art still reads late-Aquilonian.
+- **But Aquilonian VISUAL STYLE remains the canonical art-prompt reference** for Valus — styles are immortal, fiction-era is Thurian. Players never read "Aquilonia" in-game; the art still reads late-Aquilonian.
 - The Order's mission is now **preventive** — they're trying to stop the Cataclysm from happening (again). There has been at least one prior Cataclysm; their secret chronicles record it.
 - Recursive **"earlier civilization" principle** (canonical): Pre-Thurian Builders' ruins exist beneath Thurian-era civilization. New §10.2a in GAME_DESIGN.md.
 - GAME_DESIGN.md §10 fully rewritten. The Order section in §6 updated with Cataclysm-preventive frame.
-- New memory: `project_thurian_age_setting.md`. Updated: `project_ostavar_aquilonia.md` (style vs. era decoupled).
+- New memory: `project_thurian_age_setting.md`. Updated: `project_ostavar_aquilonia.md` (style vs. era decoupled; hub city renamed from Ostavar → Valus, the City of Wonders).
 
 ### 2. Beginner's Cave removed → three Thurian-PD adventures
 The Notice Board, autocomplete, Aldric dialogue, and ENTER fallback all updated. Three modules planned:

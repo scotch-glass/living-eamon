@@ -2,7 +2,7 @@
 // LIVING EAMON — QA Church Background
 //
 // Generates the church interior scene used as the backdrop on the QA page
-// (public/hero-masters/qa.html). Reuses Grok Imagine Pro with a landscape
+// (public/art/heroes/qa.html). Reuses Grok Imagine Pro with a landscape
 // aspect ratio and NO background removal (it's a scene, not a sprite).
 //
 // Usage:  npx tsx scripts/forge-qa-church-bg.ts [--force]
@@ -34,7 +34,7 @@ if (!XAI_KEY) {
 
 const grok = new OpenAI({ apiKey: XAI_KEY, baseURL: "https://api.x.ai/v1" });
 
-const outDir = path.join(root, "public", "hero-masters");
+const outDir = path.join(root, "public", "art", "heroes");
 const outPath = path.join(outDir, "qa-church-bg.jpg");
 
 const force = process.argv.includes("--force");

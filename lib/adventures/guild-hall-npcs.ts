@@ -293,7 +293,7 @@ function zimReagentSpeech(): string[] {
     "",
     `He leans in and drops his voice. "Also — and this is important — if you find any magical items, bring them to me before you use them. I identify things for a small fee. It's important because some items are cursed, and —"`,
     "",
-    `He looks around the empty shop, then whispers: "...or have been corrupted by demons or even darker ancient forces."`,
+    `He looks around the empty shop, then whispers: "...or have been corrupted by daemons or even darker ancient forces."`,
     "",
     `He crosses himself — shoulder, shoulder, forehead, heart, then kisses his fingertips. The gesture is quick and practiced, like someone who does it a lot.`,
     "",
@@ -369,7 +369,7 @@ export function getZimHealResponseLines(input: string, gold: number): string[] {
       "",
       `"You don't have a hundred gold yet, do you." It's not a question.`,
       "",
-      `He sighs. "The offer stands. All of them stand. Come back when you've earned it — the Beginner's Cave pays well enough for goblins. I'll be here." He gestures at the books. "I'm always here."`,
+      `He sighs. "The offer stands. All of them stand. Come back when you've earned it — there's coin to be had in the field once you take a contract. I'll be here." He gestures at the books. "I'm always here."`,
       "",
       ...reagents,
     ];

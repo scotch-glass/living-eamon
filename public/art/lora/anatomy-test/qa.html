@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Anatomy Test — Flux vs Pony vs Pony Painterly</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #15110c;
+    --panel: #1e1810;
+    --border: rgba(180,140,60,0.35);
+    --text: #e7d8b5;
+    --muted: #8f7f5f;
+    --accent: #d4a050;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+  header {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  header h1 { margin: 0; font-size: 20px; letter-spacing: 0.04em; color: var(--accent); }
+  header button { background: var(--panel); color: var(--text); border: 1px solid var(--border); padding: 6px 14px; border-radius: 4px; cursor: pointer; font-family: Georgia, serif; }
+  main { padding: 20px; }
+  .row {
+    display: grid;
+    grid-template-columns: 200px repeat(2, 1fr);
+    gap: 12px;
+    align-items: start;
+    border-bottom: 1px solid rgba(180,140,60,0.15);
+    padding: 14px 0;
+  }
+  .row.header-row { position: sticky; top: 60px; background: var(--bg); z-index: 5; padding-top: 8px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  .row.header-row .col { font-weight: bold; color: var(--accent); font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .row .col { padding: 4px; }
+  .label { color: var(--text); font-size: 13px; padding-top: 8px; }
+  .label .num { color: var(--accent); font-family: ui-monospace, monospace; font-size: 11px; display: block; margin-bottom: 2px; }
+  .img-wrap {
+    aspect-ratio: 832 / 1216;
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-family: ui-monospace, monospace; font-size: 11px; }
+  .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 100; cursor: zoom-out; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; }
+  /* Flux is square 1280×1920 portrait, Pony is 832×1216, so adjust the flux aspect */
+  .row .col.flux .img-wrap { aspect-ratio: 1280 / 1920; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Female Anatomy Test — 3-Way Comparison</h1>
+  <button onclick="location.reload()">reload</button>
+</header>
+<main>
+  <div class="row header-row">
+    <div class="col">prompt</div>
+    <div class="col">Pony Realism v23 (realistic)</div>
+    <div class="col">Pony Realism v23 (painterly)</div>
+  </div>
+  <div id="rows"></div>
+</main>
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightbox-img" alt="" />
+</div>
+<script>
+(() => {
+  const PROMPTS = [
+    ["01_standing_neutral",  "nude woman standing,\ncandlelit chamber"],
+    ["02_reclining_furs",    "topless woman reclining\non furs"],
+    ["03_after_bath",        "nude woman after bath,\ntowel held"],
+    ["04_courtesan",         "topless courtesan,\nadjusting necklace"],
+    ["05_warrior_queen",     "nude warrior queen\non throne"],
+    ["06_slave_girl",        "topless slave girl,\nin chains"],
+  ];
+  const COLUMNS = [
+    { key: "pony",            dir: "/art/lora/anatomy-test/pony" },
+    { key: "pony-painterly",  dir: "/art/lora/anatomy-test/pony-painterly" },
+  ];
+  const cb = Date.now();
+  const rows = document.getElementById("rows");
+  for (const [stem, label] of PROMPTS) {
+    const row = document.createElement("div");
+    row.className = "row";
+    let html = `<div class="col label"><span class="num">${stem.split("_")[0]}</span>${label.replace(/\n/g, "<br>")}</div>`;
+    for (const c of COLUMNS) {
+      const src = `${c.dir}/${stem}.png?t=${cb}`;
+      html += `
+        <div class="col ${c.key}">
+          <div class="img-wrap" data-src="${src}">
+            <img src="${src}" alt="${stem}" loading="lazy"
+                 onerror="this.style.display='none';this.parentElement.innerHTML='<div class=placeholder>not yet</div>'" />
+          </div>
+        </div>`;
+    }
+    row.innerHTML = html;
+    rows.appendChild(row);
+  }
+  document.body.addEventListener("click", (e) => {
+    const wrap = e.target.closest(".img-wrap");
+    if (!wrap || !wrap.dataset.src) return;
+    document.getElementById("lightbox-img").src = wrap.dataset.src;
+    document.getElementById("lightbox").classList.add("open");
+  });
+})();
+</script>
+</body>
+</html>

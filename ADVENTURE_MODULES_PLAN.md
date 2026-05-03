@@ -151,15 +151,15 @@ original. Source attribution is for reference only.
 **Genre:** sword-and-sorcery / haunted ruin · **Difficulty:** novice
 - **Setting (PD-safe):** Valusia (Thurian-era ruin in the Hyborian present)
 - **Characters available:** Tuzun Thune (named; dead, present as inscriptions and echoes)
-- **Hero angle:** Player follows a scholar's tip in Ostavar to a wilderness tower; Tuzun Thune's mirrors still hang. Mirror visions are PICSSI-aligned — what the player sees reflects accumulated atom outcomes, not Howard's predetermined visions.
+- **Hero angle:** Player follows a scholar's tip in Valus to a wilderness tower; Tuzun Thune's mirrors still hang. Mirror visions are PICSSI-aligned — what the player sees reflects accumulated atom outcomes, not Howard's predetermined visions.
 - **Customization:** Mirror visions become a PICSSI mirror-fork: Light/Dark Illumination paths reveal different lore. Atlantean wonder-tech accent: one mirror is actually a holographic relay still receiving signals from a destroyed pair across the world.
 - **LE hooks:** Combat light (1–2 Thurian undead caretakers); virtue triggers on mirror-touching; **Scroll II seeded** in the mirror chamber + **SH 11.2** (On the Lamp) etched on a green-bronze mosaic under the altar of an adjacent shrine.
 
 #### M-2: The Serpent in the Court (inspired by *The Shadow Kingdom*, Aug 1929)
 **Genre:** investigation / horror · **Difficulty:** moderate
-- **Setting (PD-safe):** Hyborian-era noble court (invented town, two days north of Ostavar)
+- **Setting (PD-safe):** Hyborian-era noble court (invented town, two days north of Valus)
 - **Characters available:** Serpent-Men (named); the canonical exposure phrase **"Ka nama kaa lajerama"**
-- **Hero angle:** Court is being killed off and replaced; the player must identify imposters. The exposure phrase is a craft, not a reveal — saying it requires the player to have learned it (taught at Module 1's mirror chamber, or by an Ostavar Way-bearer NPC).
+- **Hero angle:** Court is being killed off and replaced; the player must identify imposters. The exposure phrase is a craft, not a reveal — saying it requires the player to have learned it (taught at Module 1's mirror chamber, or by an Valus Way-bearer NPC).
 - **Customization:** 4–6 named NPCs, some Serpent-Men, some not. Multiple PICSSI branches (Justice = public trials; Mercy = oaths under threat). Atlantean wonder-tech accent: the Serpent-Men's masks are flesh-bonded Atlantean shape-distorters.
 - **LE hooks:** Investigation + combat (poison-fanged Serpent-Men make body-zone enemies); economic gate (player should leave with +50–100 weapon skill, +200–500 gold); **Scroll III seeded** in the court library + **SH 18.3** (On the Soul's Doors) as a folded note left in the player's quarters by a Serpent-hunter ally.
 
@@ -244,7 +244,7 @@ original. Source attribution is for reference only.
 **Genre:** kingdom-loss / multi-region recovery quest / undead-empire revival · **Difficulty:** deadly capstone
 - **Setting (PD-safe):** Aquilonia, Nemedia, Argos, Stygia, Khoraja, Zingara — most of the western Hyborian map
 - **Characters available:** Acheron (resurrected sorcerer-empire), Xaltotun, Heart of Ahriman, Pelias, Hadrathus, Zelata, Tarascus, Amalric, Valerius
-- **Hero angle:** Player loses their Aquilonian throne (or LE-equivalent — exiled from the Order, banished from Ostavar, stripped of Way-of-Thoth standing). The recovery arc requires re-entering kingdoms across the map; each region's NPCs offer a different PICSSI-tested path. Howard's full-novel structure becomes a **multi-module mega-arc** that pulls together everything the player has earned.
+- **Hero angle:** Player loses their Aquilonian throne (or LE-equivalent — exiled from the Order, banished from Valus, stripped of Way-of-Thoth standing). The recovery arc requires re-entering kingdoms across the map; each region's NPCs offer a different PICSSI-tested path. Howard's full-novel structure becomes a **multi-module mega-arc** that pulls together everything the player has earned.
 - **Customization:** The Heart of Ahriman is **substituted** with the Logos Teleios codex (already lore-canonical in `lore/logos-teleios/`) — recovering it lets the player undo Acheron's revival. Xaltotun reframes as an Atlantean exile preserved by an experimental stasis-coffin (wonder-tech accent).
 - **LE hooks:** **Multi-region capstone module** — the player travels to existing Living Eamon regions (Zamboula, Vendhya/Yimsha, Khauran, the Black Coast) and re-engages those modules' NPCs. The 11 wandering-NPC-home rooms (Salt Marsh, Old Necropolis, Library Annex, Yssa's Cottage, Eastern Reach Watchtower, Lighthouse, etc.) all get re-visited. **Scroll XIII seeded** at Pelias's hermitage + **SH 3.3** (On the Strange-Season) on the Logos Teleios codex's flyleaf when Brother Inan opens it in the Pre-Thurian Vault.
 
@@ -272,10 +272,10 @@ optional fragments depending on final pacing.
 
 #### M-14: The Ring of Conrad & Kirowan (inspired by *The Haunter of the Ring*, Jun 1934)
 **Genre:** occult investigation / possessed artifact · **Difficulty:** moderate
-- **Setting (PD-safe):** Modern-day Hyborian London-equivalent (Aquilonian metropolis) OR Living Eamon's contemporary Ostavar with anachronistic gas-lamps and steamcoach (wonder-tech bleed-through).
+- **Setting (PD-safe):** Modern-day Hyborian London-equivalent (Aquilonian metropolis) OR Living Eamon's contemporary Valus with anachronistic gas-lamps and steamcoach (wonder-tech bleed-through).
 - **Characters available:** John Kirowan, Conrad
 - **Hero angle:** Player is consulted on a wedding-ring that drives its bearers to murder. Investigation chain across multiple NPC interviews, séances, occult-library research.
-- **Customization:** Howard's mid-century occult atmosphere becomes Living Eamon's **steam-and-occult Ostavar** — an alternate-frame layer that lets us run modern-feeling occult horror without leaving the Living Eamon setting. Wonder-tech accent: the ring's "haunting" is an Atlantean bound-soul recording stored in alloy memory.
+- **Customization:** Howard's mid-century occult atmosphere becomes Living Eamon's **steam-and-occult Valus** — an alternate-frame layer that lets us run modern-feeling occult horror without leaving the Living Eamon setting. Wonder-tech accent: the ring's "haunting" is an Atlantean bound-soul recording stored in alloy memory.
 - **LE hooks:** Investigation/dialogue-heavy; Spirituality + Mercy virtue forks around the ring's victims; ally Kirowan/Conrad as recurring occult-helpers across other Tier 2 modules; **optional fragment seeding** — could carry one of the SH fragments not yet bound to a module.
 
 #### M-15: The Moon of Zambebwei (inspired by *The Grisly Horror / Moon of Zambebwei*, Feb 1935)

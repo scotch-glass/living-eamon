@@ -19,7 +19,7 @@ export default function LegalPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
-        backgroundImage: "url(/legal-bg.jpg)",
+        backgroundImage: "url(/art/scenes/legal-bg.jpg)",
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
         backgroundPosition: "center",

@@ -1,6 +1,6 @@
 # Logos Teleios — The Perfect Discourse
 
-A codex of unknown age, found in a Pre-Thurian vault below the Old Necropolis of Ostavar. The leather is older than the binding; the binding is older than the inks. Brother Inan, who carries it now, was Order before he read it.
+A codex of unknown age, found in a Pre-Thurian vault below the Old Necropolis of Valus. The leather is older than the binding; the binding is older than the inks. Brother Inan, who carries it now, was Order before he read it.
 
 In the Way-of-Thoth quest line, the codex is recovered at **Step 14** during the Pre-Thurian vault expedition. Reading it triggers Scroll XIV's Illumination award and unlocks the path to Mother Khe-Anun at the Lighthouse of the Last Word.
 

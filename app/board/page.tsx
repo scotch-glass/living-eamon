@@ -71,7 +71,7 @@ export default function BoardPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
-        backgroundImage: "url(/board-bg.jpg)",
+        backgroundImage: "url(/art/scenes/board-bg.jpg)",
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
         backgroundPosition: "center",

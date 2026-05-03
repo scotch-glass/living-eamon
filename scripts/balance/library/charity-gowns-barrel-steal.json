@@ -4,7 +4,7 @@
   "pdSource": "original-living-eamon",
   "pdSafe": true,
   "patternType": "slow-pressure",
-  "tags": ["tavern", "main-hall", "ostavar", "petty-theft", "honor-decay", "low-stakes-but-cumulative"],
+  "tags": ["tavern", "main-hall", "valus", "petty-theft", "honor-decay", "low-stakes-but-cumulative"],
   "triggers": [
     { "type": "examine-object", "target": "gowns_barrel" }
   ],

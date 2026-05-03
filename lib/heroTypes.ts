@@ -19,7 +19,11 @@ export type HairColor =
   | "grey"
   | "white";
 
-export type HairLength = "short" | "medium" | "long" | "bald";
+// Long and medium hair were removed 2026-04-25: the head/body composite
+// system requires hair to stop above the chin-line cut, so anything that
+// reaches the shoulders is permanently disallowed. See lib/wardrobe/CLAUDE_CONTEXT.md
+// and the project_head_body_composite_locked memory for context.
+export type HairLength = "short" | "bald";
 
 export type FacialHair = "clean" | "stubble" | "beard" | "full_beard";
 

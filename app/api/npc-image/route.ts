@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { NPCS } from "../../../lib/gameData";
 import { grokImageToTransparentPng } from "../../../lib/imageProcessing";
+import { canonicalFraming } from "../../../lib/spriteFraming";
 
 const grok = new OpenAI({
   apiKey: process.env.XAI_API_KEY!,
@@ -69,7 +70,11 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 2. Generate with Grok Imagine ───────────────────────────
-    const result = await callGrokImagine(npc.spritePrompt);
+    // NPCs always render screen-right → face screen-left. Canonical
+    // framing applies size scale (default medium) + feet-at-bottom
+    // so every sprite renders at a predictable CSS height.
+    const fullPrompt = `${npc.spritePrompt} ${canonicalFraming("right", npc.spriteSize ?? "medium")}`;
+    const result = await callGrokImagine(fullPrompt);
     if (!result.b64) {
       return NextResponse.json({ url: null, error: result.error });
     }
@@ -101,7 +106,7 @@ export async function GET(request: NextRequest) {
       room_state: "normal",
       tone: "sprite",
       image_url: urlData.publicUrl,
-      prompt_used: npc.spritePrompt,
+      prompt_used: fullPrompt.slice(0, 4000),
     });
     if (cacheErr) console.error("NPC sprite cache insert failed:", cacheErr);
 

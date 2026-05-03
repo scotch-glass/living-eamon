@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: "Living Eamon",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/art/brand/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Living Eamon — a barbarian, a rescued woman, Persian warriors, a lich, and a distant flying saucer under a stormy sky",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "Living Eamon — One Hero. A Thousand Realms.",
     description:
       "Inspired by Robert E. Howard's tales of sword and sorcery.",
-    images: ["/og-image.jpg"],
+    images: ["/art/brand/og-image.jpg"],
   },
 };
 

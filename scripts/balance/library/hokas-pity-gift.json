@@ -4,7 +4,7 @@
   "pdSource": "original-living-eamon",
   "pdSafe": true,
   "patternType": "moral-fork",
-  "tags": ["tavern", "main-hall", "ostavar", "pity", "unarmed", "low-stakes"],
+  "tags": ["tavern", "main-hall", "valus", "pity", "unarmed", "low-stakes"],
   "triggers": [
     { "type": "talk-to-npc", "target": "hokas_tokas" }
   ],

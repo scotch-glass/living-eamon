@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { SPRITE_RENDER_MAX_HEIGHT } from "../lib/spriteFraming";
 
 export interface NPCSpriteProps {
   /** NPC id to display (must have a spritePrompt). null = hide. */
@@ -81,7 +82,7 @@ export default function NPCSprite({ npcId }: NPCSpriteProps) {
           src={url}
           alt=""
           style={{
-            maxHeight: "100%",
+            maxHeight: SPRITE_RENDER_MAX_HEIGHT,
             width: "auto",
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4))",
           }}

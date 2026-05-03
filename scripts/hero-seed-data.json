@@ -1,23 +1,12 @@
 [
   {
-    "slug": "kane",
-    "heroName": "Kane",
-    "ageBand": "young",
-    "skinTone": "pale",
-    "hairColor": "black",
-    "hairLength": "long",
-    "facialHair": "clean",
-    "eyeColor": "blue",
-    "id": "c30e2801-e104-4def-a44a-5ce3b3a909a9"
-  },
-  {
     "slug": "dural",
     "heroName": "Dural",
     "ageBand": "middle",
-    "skinTone": "bronze",
+    "skinTone": "olive",
     "hairColor": "black",
     "hairLength": "bald",
-    "facialHair": "full_beard",
+    "facialHair": "beard",
     "eyeColor": "amber",
     "id": "7e847428-0ccd-41d4-b417-c16c530696f8"
   },
@@ -33,32 +22,10 @@
     "id": "4367b53e-d8d2-4e35-953f-4270b70a89b2"
   },
   {
-    "slug": "orin",
-    "heroName": "Orin",
-    "ageBand": "grizzled",
-    "skinTone": "weathered_tan",
-    "hairColor": "grey",
-    "hairLength": "long",
-    "facialHair": "beard",
-    "eyeColor": "grey",
-    "id": "dfd77139-0a71-430a-ab56-c127e8891f45"
-  },
-  {
-    "slug": "vard",
-    "heroName": "Vard",
-    "ageBand": "middle",
-    "skinTone": "pale",
-    "hairColor": "red",
-    "hairLength": "medium",
-    "facialHair": "beard",
-    "eyeColor": "green",
-    "id": "05a0ca75-3745-4ca7-a13c-9fc655bfea67"
-  },
-  {
     "slug": "selek",
     "heroName": "Selek",
     "ageBand": "young",
-    "skinTone": "tan",
+    "skinTone": "olive",
     "hairColor": "black",
     "hairLength": "bald",
     "facialHair": "clean",
@@ -69,7 +36,7 @@
     "slug": "halvar",
     "heroName": "Halvar",
     "ageBand": "grizzled",
-    "skinTone": "tan",
+    "skinTone": "olive",
     "hairColor": "white",
     "hairLength": "short",
     "facialHair": "stubble",
@@ -77,35 +44,13 @@
     "id": "607dd79e-e7d1-4487-93bd-2e91af5f47b1"
   },
   {
-    "slug": "roderic",
-    "heroName": "Roderic",
-    "ageBand": "middle",
-    "skinTone": "bronze",
-    "hairColor": "blond",
-    "hairLength": "long",
-    "facialHair": "clean",
-    "eyeColor": "blue",
-    "id": "00c60f79-75a5-4c70-a87d-c1e16bf322a0"
-  },
-  {
-    "slug": "corin",
-    "heroName": "Corin",
-    "ageBand": "young",
-    "skinTone": "olive",
-    "hairColor": "black",
-    "hairLength": "medium",
-    "facialHair": "stubble",
-    "eyeColor": "green",
-    "id": "576a7176-6713-491b-9c14-64eae1b77203"
-  },
-  {
     "slug": "marik",
     "heroName": "Marik",
     "ageBand": "grizzled",
-    "skinTone": "weathered_tan",
+    "skinTone": "olive",
     "hairColor": "black",
     "hairLength": "bald",
-    "facialHair": "full_beard",
+    "facialHair": "beard",
     "eyeColor": "brown",
     "id": "04f205b9-cb35-438f-9566-fdc83f983b75"
   },
@@ -113,7 +58,7 @@
     "slug": "talon",
     "heroName": "Talon",
     "ageBand": "grizzled",
-    "skinTone": "tan",
+    "skinTone": "olive",
     "hairColor": "black",
     "hairLength": "bald",
     "facialHair": "clean",
@@ -121,21 +66,10 @@
     "id": "5e905f56-4a52-4d47-b937-3bf2487a3e27"
   },
   {
-    "slug": "aldan",
-    "heroName": "Aldan",
-    "ageBand": "middle",
-    "skinTone": "pale",
-    "hairColor": "brown",
-    "hairLength": "long",
-    "facialHair": "stubble",
-    "eyeColor": "blue",
-    "id": "d58ee631-171f-4a9e-abb7-c44c547966c2"
-  },
-  {
     "slug": "rurik",
     "heroName": "Rurik",
     "ageBand": "young",
-    "skinTone": "bronze",
+    "skinTone": "olive",
     "hairColor": "blond",
     "hairLength": "short",
     "facialHair": "clean",
@@ -143,32 +77,10 @@
     "id": "b437a5d0-ba9e-4b5f-a6c0-41d095b93b8f"
   },
   {
-    "slug": "thane",
-    "heroName": "Thane",
-    "ageBand": "middle",
-    "skinTone": "olive",
-    "hairColor": "grey",
-    "hairLength": "medium",
-    "facialHair": "beard",
-    "eyeColor": "grey",
-    "id": "c1b1871f-b21e-4762-86bc-5b9dd7070245"
-  },
-  {
-    "slug": "karn",
-    "heroName": "Karn",
-    "ageBand": "grizzled",
-    "skinTone": "tan",
-    "hairColor": "white",
-    "hairLength": "long",
-    "facialHair": "beard",
-    "eyeColor": "blue",
-    "id": "5dd11338-54ad-40e0-9d0b-56aba730fde4"
-  },
-  {
     "slug": "hollan",
     "heroName": "Hollan",
     "ageBand": "young",
-    "skinTone": "pale",
+    "skinTone": "olive",
     "hairColor": "brown",
     "hairLength": "short",
     "facialHair": "clean",
@@ -179,7 +91,7 @@
     "slug": "lev",
     "heroName": "Lev",
     "ageBand": "middle",
-    "skinTone": "weathered_tan",
+    "skinTone": "olive",
     "hairColor": "black",
     "hairLength": "bald",
     "facialHair": "stubble",
@@ -193,30 +105,8 @@
     "skinTone": "olive",
     "hairColor": "red",
     "hairLength": "short",
-    "facialHair": "full_beard",
+    "facialHair": "stubble",
     "eyeColor": "green",
     "id": "d6021ef4-ec6d-4b48-9646-ccb6ac1d94cc"
-  },
-  {
-    "slug": "ivorn",
-    "heroName": "Ivorn",
-    "ageBand": "middle",
-    "skinTone": "bronze",
-    "hairColor": "blond",
-    "hairLength": "medium",
-    "facialHair": "beard",
-    "eyeColor": "violet",
-    "id": "18f4a777-31f5-4fa5-b772-51b2f1b2bb2d"
-  },
-  {
-    "slug": "draxan",
-    "heroName": "Draxan",
-    "ageBand": "young",
-    "skinTone": "tan",
-    "hairColor": "brown",
-    "hairLength": "long",
-    "facialHair": "stubble",
-    "eyeColor": "brown",
-    "id": "11c562b3-bd58-4e81-bc8a-4d8a8ebab967"
   }
 ]

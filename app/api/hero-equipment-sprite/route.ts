@@ -4,6 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { grokImageToTransparentPng } from "../../../lib/imageProcessing";
+import { canonicalFraming } from "../../../lib/spriteFraming";
+import {
+  EQUIPMENT_FRAMING,
+  WEAPON_CARRY_FRAMING,
+  STANCE_FRAMING,
+  FRESH_REBIRTH_FRAMING,
+  type Equipment,
+  type Stance,
+  type WeaponCarry,
+} from "../../../lib/wardrobe";
 
 const grok = new OpenAI({
   apiKey: process.env.XAI_API_KEY!,
@@ -15,72 +25,23 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_KEY!
 );
 
-/**
- * Framing addendums for each (equipment × stance) combination.
- *
- * For `equipment === "loincloth"` + `stance === "casual"` we return the
- * hero's stored master image directly — that IS the loincloth casual pose
- * that was generated at character creation. All other combos require a
- * fresh Grok Imagine Pro call using the hero's Identity Block + the
- * framing below, then cache the result.
- *
- * Adding a new equipment state means adding one entry here — no schema
- * or client changes required.
- */
-type Equipment = "loincloth" | "gray_robe";
-type Stance = "casual" | "combat";
-
-const EQUIPMENT_FRAMING: Record<Equipment, string> = {
-  loincloth:
-    "Clothed only in a dark leather loincloth, bare-chested and fully barefoot, torso and limbs exposed.",
-  gray_robe: [
-    "Dressed only in a coarse gray sackcloth robe of the Church of",
-    "Perpetual Life — a thin, ill-fitting hospital-gown-style garment",
-    "that ties loosely at the nape of the neck and falls just above the",
-    "knee. The robe covers the front and sides but is open at the back,",
-    "held together only by a single thin tie; the gap exposes the hero's",
-    "bare muscled spine, shoulder blades, and the small of his back. His",
-    "bare legs are visible below the knee. The garment is barely long",
-    "enough to be decent — a shameful and humbling vestment given to the",
-    "freshly-rebirthed.",
-  ].join(" "),
-};
-
-const STANCE_FRAMING: Record<Stance, string> = {
-  casual: [
-    "Casual standing pose, three-quarter angle facing the camera, feet",
-    "shoulder-width apart, arms relaxed at the sides, weight balanced,",
-    "expression stoic. Not ready for combat — simply standing.",
-  ].join(" "),
-  combat: [
-    "Combat-ready stance, three-quarter angle facing the camera, feet",
-    "braced in a fighter's guard, weight low and balanced, arms raised",
-    "ready to strike or defend, jaw set, eyes hard. Coiled to move.",
-  ].join(" "),
-};
-
-const BACKDROP_FRAMING = [
-  "Rendered on a pure white studio backdrop, cleanly isolated from any",
-  "environment, no background elements, no props except what is worn.",
-  "Even studio lighting. Full body in frame from head to feet with",
-  "comfortable margin.",
-  "Fresh-rebirth state: unscarred smooth skin, no battle marks, no",
-  "blood, no dirt or grime, no tan lines or sunburn, no visible wounds,",
-  "no bandages, no eye patches, no brands.",
-].join(" ");
+// Equipment/weapon/stance framing types + prompt blocks are the single
+// source of truth in lib/wardrobe/prompts/body.ts — imported above.
+// Wardrobe V2 refactor (2026-04-24) ended the duplication that used to
+// live here and in scripts/forge-hero-equipment-variant.ts.
 
 async function callGrokImagine(prompt: string): Promise<{
   b64: string | null;
   error: string | null;
 }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // `aspect_ratio` is xAI-specific and not in the OpenAI SDK typings.
     const response = await grok.images.generate({
       model: "grok-imagine-image-pro",
       prompt,
       response_format: "b64_json",
       aspect_ratio: "3:4",
-    } as any);
+    } as Parameters<typeof grok.images.generate>[0] & { aspect_ratio: string });
     const b64 =
       (response as { data?: { b64_json?: string }[] }).data?.[0]?.b64_json ??
       null;
@@ -109,6 +70,7 @@ export async function GET(request: NextRequest) {
   const heroMasterId = (searchParams.get("heroMasterId") ?? "").trim();
   const equipment = (searchParams.get("equipment") ?? "loincloth") as Equipment;
   const stance = (searchParams.get("stance") ?? "casual") as Stance;
+  const weapon = (searchParams.get("weapon") ?? "unarmed") as WeaponCarry;
 
   if (!heroMasterId) {
     return NextResponse.json(
@@ -128,6 +90,12 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
+  if (!(weapon in WEAPON_CARRY_FRAMING)) {
+    return NextResponse.json(
+      { url: null, error: `unknown weapon: ${weapon}` },
+      { status: 400 }
+    );
+  }
 
   try {
     // ── Load the master row (we need the Identity Block + fallback URL) ──
@@ -144,7 +112,12 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Default state: return the master image directly ──
-    if (equipment === "loincloth" && stance === "casual") {
+    // loincloth + unarmed + casual = the canonical master reference.
+    if (
+      equipment === "loincloth" &&
+      weapon === "unarmed" &&
+      stance === "casual"
+    ) {
       return NextResponse.json({
         url: master.master_image_url,
         cached: true,
@@ -153,8 +126,10 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Cache check for variations ──
+    // Cache key encodes all three dimensions; unarmed is a first-class
+    // value in the key so lookups are unambiguous.
     const cacheRoomId = `hero_eq_${heroMasterId}`;
-    const cacheRoomState = `${equipment}_${stance}`;
+    const cacheRoomState = `${equipment}_${weapon}_${stance}`;
     const { data: cached } = await supabaseAdmin
       .from("scene_image_cache")
       .select("image_url")
@@ -172,12 +147,19 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Generate ──
+    // Heroes always render screen-left and face screen-right.
+    // Canonical framing enforces shared figure-fill + feet-at-bottom
+    // so the hero and on-screen NPCs render at identical size.
     const prompt = [
       master.identity_block,
       EQUIPMENT_FRAMING[equipment],
+      WEAPON_CARRY_FRAMING[weapon],
       STANCE_FRAMING[stance],
-      BACKDROP_FRAMING,
-    ].join(" ");
+      FRESH_REBIRTH_FRAMING,
+      canonicalFraming("left"),
+    ]
+      .filter((s) => s.length > 0)
+      .join(" ");
 
     const result = await callGrokImagine(prompt);
     if (!result.b64) {

@@ -2,7 +2,7 @@
 // LIVING EAMON — Upload Hero Masters to Supabase
 //
 // Reads scripts/hero-seed-data.json, uploads each approved PNG from
-// public/hero-masters/{slug}.png to the `hero-masters` Supabase storage
+// public/art/heroes/{slug}.png to the `hero-masters` Supabase storage
 // bucket (creates bucket if missing), and upserts one row per hero into
 // `public.hero_masters`.
 //
@@ -53,7 +53,7 @@ interface SeedHero extends HeroCustomization {
 
 const BUCKET = "hero-masters";
 const seedPath = path.join(root, "scripts", "hero-seed-data.json");
-const spriteDir = path.join(root, "public", "hero-masters");
+const spriteDir = path.join(root, "public", "art", "heroes");
 
 // ── Ensure bucket exists ─────────────────────────────────────────────
 

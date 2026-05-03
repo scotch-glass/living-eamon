@@ -1,33 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SPRITE_RENDER_MAX_HEIGHT } from "../lib/spriteFraming";
 
-export type HeroEquipment = "loincloth" | "gray_robe";
+export type HeroEquipment =
+  | "loincloth"
+  | "gray_robe"
+  | "common_clothes"
+  | "leather_armor"
+  | "chain_mail"
+  | "plate_armor";
 export type HeroStance = "casual" | "combat";
+export type HeroWeaponCarry =
+  | "unarmed"
+  | "hip_short_blade"
+  | "hip_long_blade"
+  | "back_two_hander";
 
 interface Props {
   heroMasterId: string | null | undefined;
   equipment: HeroEquipment;
   stance: HeroStance;
-  /** Optional CSS class for the wrapper. */
-  className?: string;
-  /** Inline style overrides for the wrapper. */
-  style?: React.CSSProperties;
+  weapon: HeroWeaponCarry;
 }
 
 /**
- * Shows the player's chosen hero master, wearing the specified
- * equipment, in the specified stance. Fetches the URL from
- * /api/hero-equipment-sprite which generates + caches variations on
- * demand. Default (loincloth/casual) short-circuits to the master URL
- * already stored with the hero.
+ * Renders the player's chosen hero master as a viewport-height sprite.
+ * Intended to be placed inside an outer fixed flex container that
+ * matches NPCSprite's pattern (top:0, bottom:0, display:flex,
+ * alignItems:flex-end). The component returns a fragment so the <img>
+ * is a direct flex child of that container — no nested wrapper that
+ * could constrain sizing.
  */
 export default function HeroScenePortrait({
   heroMasterId,
   equipment,
   stance,
-  className,
-  style,
+  weapon,
 }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -46,6 +55,7 @@ export default function HeroScenePortrait({
       heroMasterId,
       equipment,
       stance,
+      weapon,
     });
     fetch(`/api/hero-equipment-sprite?${params.toString()}`)
       .then((r) => r.json())
@@ -69,33 +79,19 @@ export default function HeroScenePortrait({
     return () => {
       cancelled = true;
     };
-  }, [heroMasterId, equipment, stance]);
+  }, [heroMasterId, equipment, stance, weapon]);
 
   if (!heroMasterId) return null;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        pointerEvents: "none",
-        ...style,
-      }}
-    >
+    <>
       {url && (
         <img
           src={url}
           alt="Your hero"
           style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            objectPosition: "center bottom",
+            maxHeight: SPRITE_RENDER_MAX_HEIGHT,
+            width: "auto",
             filter: "drop-shadow(0 16px 24px rgba(0, 0, 0, 0.65))",
             opacity: loading ? 0.6 : 1,
             transition: "opacity 0.4s",
@@ -105,30 +101,44 @@ export default function HeroScenePortrait({
       {loading && !url && (
         <div
           style={{
-            position: "absolute",
-            inset: 0,
             display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            paddingBottom: 24,
-            color: "#8a7a60",
-            fontSize: 11,
-            fontFamily: "Georgia, serif",
-            fontStyle: "italic",
-            letterSpacing: "0.08em",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+            paddingLeft: 40,
+            paddingBottom: 48,
           }}
         >
-          forging thy likeness…
+          <div
+            style={{
+              width: 120,
+              height: 180,
+              borderRadius: 6,
+              background:
+                "linear-gradient(180deg, rgba(60,45,25,0.35) 0%, rgba(30,20,10,0.55) 100%)",
+              border: "1px solid rgba(180,140,60,0.25)",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.5)",
+              animation: "le-pulse 1.8s ease-in-out infinite",
+            }}
+          />
+          <div
+            style={{
+              color: "#d9c48a",
+              fontSize: 13,
+              fontFamily: "Georgia, serif",
+              fontStyle: "italic",
+              letterSpacing: "0.08em",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+            }}
+          >
+            forging thy likeness…
+          </div>
         </div>
       )}
       {err && !loading && (
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            alignSelf: "center",
             color: "#7f1d1d",
             fontSize: 10,
             fontFamily: "Georgia, serif",
@@ -139,6 +149,6 @@ export default function HeroScenePortrait({
           {err}
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -8,6 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { NPCS, ITEMS, ITEM_ICON_PROMPTS, buildItemIconPrompt } from "./gameData";
 import { grokImageToTransparentPng } from "./imageProcessing";
+import { canonicalFraming } from "./spriteFraming";
 
 let hasRun = false;
 
@@ -68,11 +69,15 @@ async function doPregenerate() {
     try {
       console.log(`[spritePregen] Generating ${npc.name} (${npcId})...`);
 
+      // NPCs render screen-right, face screen-left. Canonical framing
+      // applies size scale (default medium) + feet-at-bottom.
+      const fullPrompt = `${npc.spritePrompt} ${canonicalFraming("right", npc.spriteSize ?? "medium")}`;
+
       // Generate with Grok Imagine
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await grok.images.generate({
         model: "grok-imagine-image-pro",
-        prompt: npc.spritePrompt!,
+        prompt: fullPrompt,
         response_format: "b64_json",
         aspect_ratio: "3:4",
       } as any);
@@ -106,7 +111,7 @@ async function doPregenerate() {
         room_state: "normal",
         tone: "sprite",
         image_url: urlData.publicUrl,
-        prompt_used: npc.spritePrompt,
+        prompt_used: fullPrompt.slice(0, 4000),
       });
 
       console.log(`[spritePregen] ✓ ${npc.name} done.`);

@@ -11,7 +11,7 @@ export default function UpdatesPage() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
-        backgroundImage: "url(/updates-bg.jpg)",
+        backgroundImage: "url(/art/scenes/updates-bg.jpg)",
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -81,6 +81,122 @@ export default function UpdatesPage() {
           >
             What Jane has built. What she is building. What is yet to come.
           </p>
+        </div>
+
+        {/* Latest Design Decision — featured update */}
+        <div
+          style={{
+            background: "rgba(45, 22, 0, 0.55)",
+            border: "1px solid rgba(251, 191, 36, 0.4)",
+            borderRadius: 8,
+            padding: 32,
+            maxWidth: 900,
+            margin: "0 auto 48px",
+            boxShadow: "0 0 24px rgba(251, 191, 36, 0.08)",
+          }}
+        >
+          <div
+            style={{
+              color: "#fbbf24",
+              fontSize: 11,
+              fontFamily: "Georgia, serif",
+              fontWeight: 700,
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
+            Latest Design Decision · April 26, 2026
+          </div>
+          <h2
+            style={{
+              color: "#fbbf24",
+              fontSize: 24,
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
+              marginBottom: 16,
+              letterSpacing: "0.03em",
+            }}
+          >
+            The PICSSI Virtue System Replaces the Ten-Virtue Ledger
+          </h2>
+          <div
+            style={{
+              color: "#c5ad75",
+              fontSize: 14,
+              fontFamily: "Georgia, serif",
+              lineHeight: 1.8,
+            }}
+          >
+            <p style={{ margin: "0 0 16px 0" }}>
+              Living Eamon&rsquo;s old ten-virtue moral ledger
+              (Honesty, Compassion, Valor, Justice, Sacrifice, Honor, Spirituality, Humility, Grace, Mercy)
+              tracked behavior consistency. It told the game whether you had &ldquo;been honest enough&rdquo;
+              or &ldquo;been valorous enough.&rdquo; It did not change how the world reacted to you.
+            </p>
+            <p style={{ margin: "0 0 16px 0" }}>
+              <strong style={{ color: "#fbbf24" }}>PICSSI</strong> (pronounced <em>Pixy</em>) replaces it
+              with a behavioral consequence engine. Six dimensions, each one drives <em>which NPCs flirt
+              with you, which gods listen to your prayers, which dark patrons answer your INVOKE spells,
+              which quests will accept you, and what title you ultimately earn as Lord</em>.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "auto 1fr",
+                columnGap: 16,
+                rowGap: 12,
+                margin: "20px 0",
+                paddingLeft: 12,
+              }}
+            >
+              <div style={{ color: "#fbbf24", fontWeight: 700 }}>Passion</div>
+              <div style={{ color: "#a8a097" }}>
+                Fervor, drive, inner fire. Attracts romantic women.
+              </div>
+              <div style={{ color: "#fbbf24", fontWeight: 700 }}>Integrity</div>
+              <div style={{ color: "#a8a097" }}>
+                Keeping your word literally; if unkeepable, owning the failure transparently. Attracts wise women.
+              </div>
+              <div style={{ color: "#fbbf24", fontWeight: 700 }}>Courage</div>
+              <div style={{ color: "#a8a097" }}>
+                Passion in the face of danger. Scales with the overwhelming-ness of the opposition. Attracts romantic women.
+              </div>
+              <div style={{ color: "#fbbf24", fontWeight: 700 }}>Standing</div>
+              <div style={{ color: "#a8a097" }}>
+                The narrative-virtue triumphant body — winning, masculinity, virility. (Distinct from the combat stat STR.) Attracts lusty women.
+              </div>
+              <div style={{ color: "#fbbf24", fontWeight: 700 }}>Spirituality</div>
+              <div style={{ color: "#a8a097" }}>
+                Praying to a god even when hopeless — the Conan-Crom paradigm. Crom witnesses but does not intervene; he blesses successful heroes after the fact. Attracts spiritual women.
+              </div>
+              <div style={{ color: "#fbbf24", fontWeight: 700 }}>Illumination</div>
+              <div style={{ color: "#a8a097" }}>
+                Light vs. Darkness inside the soul. Sorcery (INVOKE) darkens; killing daemons and saving innocents lights. Attracts at <em>both</em> extremes (saintly OR abyssal); midline attracts no one along this axis.
+              </div>
+            </div>
+
+            <p style={{ margin: "0 0 16px 0" }}>
+              <strong style={{ color: "#fbbf24" }}>PICSSI is per-life, not per-character.</strong>
+              {" "}Death at the Church of Perpetual Life wipes your scores; the reborn hero starts at midline on every axis.
+              Every life is its own PICSSI arc, and your choices in <em>this</em> life dictate <em>this</em> life&rsquo;s
+              reactions, prayer reach, and quest access.
+            </p>
+            <p style={{ margin: "0 0 16px 0" }}>
+              The end-game promise: extreme PICSSI scores attract followers with similarly extreme scores.
+              The more extreme yours, the more extreme they become. The goal is to gather a Band of Heroes
+              — or a Band of Villains — over which to rule as a titled Lord. <em>Lord Vard the Destroyer.
+              Lord Cedric the Lightbringer. Lord Elric the Dark Lord.</em> The title you earn at apotheosis is
+              the multi-dimensional shape of your soul.
+            </p>
+            <p style={{ margin: 0, color: "#8a7a60", fontSize: 13, fontStyle: "italic" }}>
+              The old ten-virtue keys (Compassion, Justice, Sacrifice, Humility, Grace, Mercy) have no direct
+              PICSSI counterpart. Their effect — NPC reactions to charitable behavior — folds into Illumination.
+              Existing live characters reset to midline PICSSI on first load post-migration; the systems are
+              not shape-compatible and do not map cleanly across.
+            </p>
+          </div>
         </div>
 
         {/* Status Summary */}
@@ -178,7 +294,10 @@ export default function UpdatesPage() {
               This is a <strong style={{ color: "#c5ad75" }}>living roadmap</strong> that grows as the game is built. New systems are discovered and planned as we work. The list below shows what we know we need; many more features will emerge during development.
             </p>
             <p style={{ margin: "0 0 12px 0" }}>
-              <strong style={{ color: "#c5ad75" }}>MVP (Current)</strong> — A theoretically playable game: one hero, one city, combat, magic, banking, consequences. Rough around the edges but functional.
+              <strong style={{ color: "#c5ad75" }}>Pre-Alpha (Current)</strong> — Foundational systems landing: one hero, one city, combat, magic, banking, consequences, karma. Rough around the edges and not yet feature-complete.
+            </p>
+            <p style={{ margin: "0 0 12px 0" }}>
+              <strong style={{ color: "#c5ad75" }}>MVP</strong> — A theoretically playable game with the full Valus hub experience and one complete adventure module.
             </p>
             <p style={{ margin: "0 0 12px 0" }}>
               <strong style={{ color: "#c5ad75" }}>Alpha Test</strong> — Adventure modules, expanded world map, balance tuning. Testers help us find what breaks and what doesn't feel right.

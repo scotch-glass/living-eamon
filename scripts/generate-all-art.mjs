@@ -185,7 +185,7 @@ function buildPrompt(item) {
 }
 
 const DELAY_MS = 600;
-const outDir = path.join(root, "public", "uo-art", "items");
+const outDir = path.join(root, "public", "art", "items");
 
 function delay(ms) {
   return new Promise((r) => setTimeout(r, ms));

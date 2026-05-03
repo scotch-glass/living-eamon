@@ -402,9 +402,9 @@ export const COMBAT_RESIDUE: Record<CombatEventKind, SpellResidue> = {
     decayHours: 24,
     repairRequired: false,
     descriptions: [
-      "Blood on the floor speaks plainly of what was done here.",
-      "A critical blow landed here — the stone carries the evidence.",
-      "The floor is dark where the fight reached its worst moment.",
+      "Blood splattered on the floor speaks plainly of what was done here.",
+      "A bloody fight occured here — the stone carries the evidence.",
+      "The floor is dark with gore where the fight reached its worst moment.",
     ],
   },
   bleed_proc: {
@@ -412,9 +412,9 @@ export const COMBAT_RESIDUE: Record<CombatEventKind, SpellResidue> = {
     decayHours: 24,
     repairRequired: false,
     descriptions: [
-      "A trail of blood marks where the bleeding wound was not tended to.",
+      "A trail of blood marks where a bleeding wound left it's mess.",
       "Blood has dripped across the floor in the pattern of someone still moving, still fighting.",
-      "The wound bled long enough to reach the stone; the trail gives the fight's geography away.",
+      "Here, a wound bled long enough to make randomly artistic patterns on the stone; the trail gives the fight's geography away.",
     ],
   },
   poison_hit: {
@@ -422,9 +422,9 @@ export const COMBAT_RESIDUE: Record<CombatEventKind, SpellResidue> = {
     decayHours: 24,
     repairRequired: false,
     descriptions: [
-      "A slick residue on the stone marks where the venom touched the ground.",
+      "A slick residue on the stone marks where some kind of venom touched the ground.",
       "Venom hit the floor here — the discoloration is already setting into the stone.",
-      "Where the poison fell, the stone has changed color; the process is slow but it doesn't stop.",
+      "Where the poison fell, the stone has changed color; the process is slow and it stills smells.",
     ],
   },
 };

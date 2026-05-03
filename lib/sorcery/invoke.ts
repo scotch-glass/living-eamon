@@ -337,6 +337,25 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
       return `**The rune pulls you home.** (→ ${effect.destination} via "${effect.runeLabel}")`;
     case "gate-opened":
       return `**An oval of silver fire opens in the air behind you, held open for ${effect.durationTurns} turns.** (→ ${effect.destination} via "${effect.runeLabel}")`;
+    // Sprint 7b.buffs
+    case "strength-applied":
+      return `**Your arms fill with a power they did not have before.** (${effect.delta} STR; ${effect.turnsGranted} turns)`;
+    case "agility-applied":
+      return `**Your limbs quicken — the weight of the world shifts.** (${effect.delta} DEX; ${effect.turnsGranted} turns)`;
+    case "protection-applied":
+      return `**A warding gathers around your body, cool and implacable.** (${effect.turnsGranted} turns; −25% incoming damage)`;
+    case "reactive-armor-applied":
+      return `**Your skin hardens — not stone, but close. Blades will regret landing.** (${effect.turnsGranted} turns; 20% reflection)`;
+    case "night-sight-applied":
+      return `**The dark loosens its grip. Shapes resolve in the shadow.** (${effect.turnsGranted} turns)`;
+    case "weaken-applied":
+      return `**${effect.targetName}'s grip falters; the strength runs out of them like water.** (${effect.turnsGranted} turns; −20% damage)`;
+    case "clumsy-applied":
+      return `**${effect.targetName}'s feet tangle. The heaviness settles into their limbs.** (${effect.turnsGranted} turns; easier to evade)`;
+    case "curse-applied":
+      return `**Three quiet wrongs settle into ${effect.targetName}'s body — slowness, fog, weakness.** (${effect.turnsGranted} turns; reduced accuracy)`;
+    case "paralyze-applied":
+      return `**${effect.targetName} locks. Every muscle forgets it is permitted to move.** (${effect.turnsGranted} turns; cannot act)`;
     case "dev-not-implemented":
       // Development-only marker. By design principle (no in-fiction
       // prose for unbuilt features), this surfaces as a visible

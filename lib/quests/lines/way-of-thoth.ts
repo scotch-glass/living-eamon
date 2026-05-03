@@ -21,6 +21,12 @@ import { registerQuest } from "../engine";
 import { registerQuestDialogue } from "../dialogue";
 import type { Quest, QuestStep } from "../types";
 
+// Odd-numbered scrolls unlock a Circle of Sorcery (on step reward, not
+// Zim dialogue). Circle unlocks are idempotent in applyReward.
+const CIRCLE_BY_SCROLL: Partial<Record<number, 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8>> = {
+  1: 1, 3: 2, 5: 3, 7: 4, 9: 5, 11: 6, 13: 7, 15: 8,
+};
+
 const SCROLL_TITLES: Record<number, string> = {
   1:  "The Way of Thoth",
   2:  "The Seven Principles of Thoth",
@@ -41,6 +47,7 @@ const SCROLL_TITLES: Record<number, string> = {
 
 function buildStep(n: number): QuestStep {
   const next = n < 15 ? `scroll-${n + 1}` : null;
+  const circle = CIRCLE_BY_SCROLL[n];
   return {
     id: `scroll-${n}`,
     hint:
@@ -55,6 +62,7 @@ function buildStep(n: number): QuestStep {
     },
     reward: {
       chronicle: `You read Scroll ${roman(n)} — ${SCROLL_TITLES[n]} — and felt a thread of the Way tighten.`,
+      ...(circle !== undefined ? { unlockCircle: circle } : {}),
     },
     nextStep: next,
   };
@@ -495,5 +503,419 @@ fragmentDialogue({
 //   lore/stobaean-fragments/SH-{1.1,18.3,19.7}.md
 // — frontmatter currently marks deliveryNpc: tbd-pd-module.
 // ============================================================
+
+// ============================================================
+// SPRINT 8f — Zim's 15 turn-in branches + Circle-unlock wiring
+//
+// Extension pattern: no `fallback` — legacy NPCScript in
+// lib/gameData.ts fires pre-quest. These 15 branches own Zim's
+// TALK response once "way-of-thoth" is accepted.
+//
+// onStep:"scroll-(N+1)" fires exactly when the player has read
+// scroll N and awaits scroll N+1 — the canonical turn-in beat.
+//
+// Circle unlocks are on buildStep.reward.unlockCircle, NOT here.
+// Zim's role: spell-teacher + emotional anchor only.
+// ============================================================
+
+registerQuestDialogue({
+  npcId: "zim_the_wizard",
+  // No fallback: extension pattern. Legacy NPCScript fires pre-quest.
+  branches: [
+
+    // ── Branch 1 · Scroll I → Circle 1 · Amazement ───────────
+    {
+      id: "zim-turn-in-1",
+      when: { questId: "way-of-thoth", onStep: "scroll-2" },
+      lines: [
+        "Zim is at his workbench when you enter — sorting glass rods by color with the focus of a man who has been failing to think about something else. He looks up. His hands go still.",
+        "",
+        '"You read it." Not a question. "The actual scroll. Not just handled — read." He sets the last rod down and comes around the bench. "Most would have sold it. I assumed most would."',
+        "",
+        "He studies you for a long moment, as if revising a number.",
+        "",
+        '"Greater Heal. Not the hedgerow version — the form that reaches the marrow." He pulls a folded paper from his coat and puts it in your hand. "I have been carrying that for someone worth giving it to. It seems the scroll found them first."',
+        "",
+        "*(He teaches you Greater Heal with the care of a man making a correction he should have made years ago.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["greater-heal"],
+        chronicle:
+          "Zim looked at you differently after the first scroll. He gave you Greater Heal — not as payment, but as recognition.",
+      },
+      fireOnceKey: "zim-scroll-1",
+    },
+
+    // ── Branch 2 · Scroll II · Curiosity ─────────────────────
+    {
+      id: "zim-turn-in-2",
+      when: { questId: "way-of-thoth", onStep: "scroll-3" },
+      lines: [
+        "Zim has been waiting for you. The bench is cleared and his hands are folded. He looks up the moment the door opens.",
+        "",
+        '"Tell me what it did," he says. "Not what it said — what it did. There is a difference and I want to know which one you noticed."',
+        "",
+        "He listens with the attention of someone adding to a record they have been keeping for a long time.",
+        "",
+        '"Daylight. Not a torch — a conjured light that does not burn or cast shadow in the usual way." He slides a slim tube of pale crystal across the bench. "Learn the Word and the light answers. You will want it in the places the scroll is sending you."',
+        "",
+        "*(He teaches you Daylight with the precision of someone who has memorized the spell but hasn't cast it in years.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["daylight"],
+        chronicle:
+          "After the second scroll, Zim began to ask questions. He gave you Daylight and seemed more interested in your answer than the spell.",
+      },
+      fireOnceKey: "zim-scroll-2",
+    },
+
+    // ── Branch 3 · Scroll III → Circle 2 · Awed ──────────────
+    {
+      id: "zim-turn-in-3",
+      when: { questId: "way-of-thoth", onStep: "scroll-4" },
+      lines: [
+        "He is reading when you arrive and sets the book face-down in the middle of a sentence. The gesture says: you matter more than the page.",
+        "",
+        '"Three." He says it quietly, as if checking the number against something. "I did not think three was possible at this pace."',
+        "",
+        "He moves to the cabinet along the far wall — the locked one — and opens it with a key from his breast pocket.",
+        "",
+        '"Firebolt. The direct form. Not the blunt Circle-3 detonation — a directed bolt that carries intent the way an arrow does and heat the way fire does." He speaks the Words slowly, twice over, until you have them. "You are being prepared for something. I am beginning to understand what."',
+        "",
+        "*(He teaches you Firebolt with the solemnity of a man arming an ally before a campaign.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["firebolt"],
+        chronicle:
+          "Three scrolls in, Zim opened the locked cabinet and gave you Firebolt. He seemed awed in a way he was working to conceal.",
+      },
+      fireOnceKey: "zim-scroll-3",
+    },
+
+    // ── Branch 4 · Scroll IV · Nervous ───────────────────────
+    {
+      id: "zim-turn-in-4",
+      when: { questId: "way-of-thoth", onStep: "scroll-5" },
+      lines: [
+        "The humor has gone from his face. He is pacing when you arrive — two steps left, two right — and he stops when he sees you but does not quite settle.",
+        "",
+        '"Four. And still walking. Good." He does not sound entirely convinced that good is the right word.',
+        "",
+        '"The scrolls are not just teaching you. The ones who carry them have started to notice that someone is collecting. The knowledge draws attention. The attention has weight." He pauses. "Are you fast on your feet?"',
+        "",
+        "Before you answer he is already reciting the Words.",
+        "",
+        '"Haste. For when thinking cannot fix what speed might." He speaks the form quickly, as if in a hurry already. "Learn it. You will need it sooner than you think."',
+        "",
+        "*(He teaches you Haste without ceremony. The joke is gone from his face and does not come back.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["haste"],
+        chronicle:
+          "Something changed in Zim after the fourth scroll. He gave you Haste and said nothing else. The humor was gone from him.",
+      },
+      fireOnceKey: "zim-scroll-4",
+    },
+
+    // ── Branch 5 · Scroll V → Circle 3 · First Fear ──────────
+    {
+      id: "zim-turn-in-5",
+      when: { questId: "way-of-thoth", onStep: "scroll-6" },
+      lines: [
+        "He knows. You do not need to tell him about the Circle. He can see it in the way you stand.",
+        "",
+        '"The third Circle." His voice is careful and even. "You can feel it, can\'t you. It is not a door that opens and closes. It stays open."',
+        "",
+        "He sits on the stool beside the bench — something you have not seen him do before.",
+        "",
+        '"I was taught Ward before the third Circle by a woman who said I would regret it if I wasn\'t ready, and regret it worse if I was. She was right on both counts." He speaks the Words. "Ward. A shell of will between you and what comes for you. Cast it when you do not know what is in the room with you yet."',
+        "",
+        "He holds your gaze.",
+        "",
+        '"The things that notice you at Circle 3 are not interested in the scroll. They are interested in the door."',
+        "",
+        "*(He teaches you Ward. His fear is real and he does not try to soften it.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["ward"],
+        chronicle:
+          "After the fifth scroll and the third Circle, Zim showed his first genuine fear. He gave you Ward with the air of a man arming someone going somewhere he cannot follow.",
+      },
+      fireOnceKey: "zim-scroll-5",
+    },
+
+    // ── Branch 6 · Scroll VI · Self-Reflection ────────────────
+    {
+      id: "zim-turn-in-6",
+      when: { questId: "way-of-thoth", onStep: "scroll-7" },
+      lines: [
+        "He is not at the bench. He is sitting by the window with his back to the room, looking at the street below. He speaks without turning.",
+        "",
+        '"I had a teacher. When I was younger than you. She gave me my first scroll the same way — just put it in my hands and said: read this first, ask questions after." A pause. "I read it. I did not come back. I was a coward of a different kind than you are."',
+        "",
+        "Now he turns.",
+        "",
+        '"I have wondered, since you started coming back, whether I could have walked this far. I do not think I could have. That is worth knowing about yourself."',
+        "",
+        '"Detect. Not to find what is in front of you — to find what is behind, above, below, and has been there since before you entered." He teaches you the Words. "Use it when you think you are alone."',
+        "",
+        "*(He teaches you Detect with the focus of a man who has been thinking about his own failures and has arrived somewhere that helped.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["detect"],
+        chronicle:
+          "After the sixth scroll, Zim spoke of his own teacher and his own failures. He gave you Detect — and you understood the gift was also a reckoning.",
+      },
+      fireOnceKey: "zim-scroll-6",
+    },
+
+    // ── Branch 7 · Scroll VII → Circle 4 · Open Dread ────────
+    {
+      id: "zim-turn-in-7",
+      when: { questId: "way-of-thoth", onStep: "scroll-8" },
+      lines: [
+        "He knows about the fourth Circle before you say it. He has been waiting for this one.",
+        "",
+        '"Circle Four." He says it flat and even. "The door has been open since Three. But at Four, what lives on the other side has a name for you now. Not your name — a name for what you are. The kind of name that travels."',
+        "",
+        "He walks to the far end of the bench and back.",
+        "",
+        '"The cost is not pain. Pain is cheap and the body pays it and forgets. The cost is erosion. Every casting at this circle and above shaves something from the Illumination. Not catastrophic — not at this circle. But cumulative." He stops. "You are not afraid enough. That is the right amount. But you should know."',
+        "",
+        '"Cleanse. To purge what attaches to you when you reach through the high circles. Cast it after anything above Circle 3." He speaks the Words. "Do not skip it."',
+        "",
+        "*(He teaches you Cleanse with the bluntness of someone who has watched the alternative.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["cleanse"],
+        chronicle:
+          "After the seventh scroll, Zim named the dread plainly. He gave you Cleanse and explained the erosion cost at Circle Four without softening it.",
+      },
+      fireOnceKey: "zim-scroll-7",
+    },
+
+    // ── Branch 8 · Scroll VIII · Sober ───────────────────────
+    {
+      id: "zim-turn-in-8",
+      when: { questId: "way-of-thoth", onStep: "scroll-9" },
+      lines: [
+        "He is quiet when you arrive. The kind of quiet that has settled after a decision.",
+        "",
+        '"Eight." He says it and nods once. Not approval — acknowledgment. "You are past the halfway mark."',
+        "",
+        "He does not mention what waits at the other end of that mark.",
+        "",
+        '"Shield. Not armor — armor absorbs. A shield deflects. The distinction matters at the circles you are about to enter." He teaches you the Words without preamble. "Hold it and the blow goes elsewhere. It costs mana faster than the other Circle-4 forms. Worth the price."',
+        "",
+        "He lets a moment pass.",
+        "",
+        '"You should sleep while you still do it easily."',
+        "",
+        "*(He teaches you Shield with the efficiency of a man who has stripped everything unnecessary from his words.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["shield"],
+        chronicle:
+          "The eighth scroll found Zim sober and deliberate. He gave you Shield without ceremony and told you to sleep while it was still simple.",
+      },
+      fireOnceKey: "zim-scroll-8",
+    },
+
+    // ── Branch 9 · Scroll IX → Circle 5 · Genuine Terror ─────
+    {
+      id: "zim-turn-in-9",
+      when: { questId: "way-of-thoth", onStep: "scroll-10" },
+      lines: [
+        "His hands are not steady. He does not pretend they are.",
+        "",
+        '"Five." The word comes out carefully. "I need you to understand something. The things in Circle 5 are not abstractions in a text. They existed before the scrolls existed. They will exist after."',
+        "",
+        "He picks up a tool from the bench and puts it down again.",
+        "",
+        '"I am afraid. I was afraid at Three. I was afraid at Four. At Five I am afraid in a way I have not been since I was a child and my teacher told me what was in the dark beyond the fire." He meets your eyes. "This is the good kind of fear. It means you understand what you are doing."',
+        "",
+        '"Steelskin. Because at Circle 5 the things that come for you hit hard and without warning." He speaks the Words. His voice is level. "You will know when to cast it."',
+        "",
+        "*(He teaches you Steelskin. He is frightened and he is still here. That, too, is a teaching.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["steelskin"],
+        chronicle:
+          "After the ninth scroll and the fifth Circle, Zim was afraid and made no attempt to hide it. He gave you Steelskin and named the fear as comprehension, not weakness.",
+      },
+      fireOnceKey: "zim-scroll-9",
+    },
+
+    // ── Branch 10 · Scroll X · Conspiratorial ────────────────
+    {
+      id: "zim-turn-in-10",
+      when: { questId: "way-of-thoth", onStep: "scroll-11" },
+      lines: [
+        '"Old Bram is gone."',
+        "",
+        "He says it when you sit down. No preamble.",
+        "",
+        '"Two weeks ago. Someone saw him taken off the street near the alms-corner. Not arrested — taken. There is a difference." He keeps his voice low. "He was of the Way. You met him. You know what that means."',
+        "",
+        "He leans across the bench.",
+        "",
+        '"It means they know what you are doing. Not your name — not yet. But they know someone is walking the scrolls, and they have decided to start removing the network." A pause. "Old Bram was Circle 2. Gentle man. He knew nothing that could have helped them — and they took him anyway."',
+        "",
+        '"Silence. To become something that makes no noise in the Aether when you cast. The things that follow you at this stage can hear a Word spoken at fifty paces of the other world." He speaks the form quietly. "Cast it on yourself before you enter any space you are not certain of."',
+        "",
+        "*(He teaches you Silence. What he cannot teach you is what happened to Old Bram.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["silence"],
+        chronicle:
+          "After the tenth scroll, Zim told you Old Bram was gone — taken, not arrested. He gave you Silence with the urgency of a man counting losses and not done counting.",
+      },
+      fireOnceKey: "zim-scroll-10",
+    },
+
+    // ── Branch 11 · Scroll XI → Circle 6 · Resigned ──────────
+    {
+      id: "zim-turn-in-11",
+      when: { questId: "way-of-thoth", onStep: "scroll-12" },
+      lines: [
+        "Something has cleared from his face since the last time. The noise is gone — the nervous energy, the pacing. What is left is simple and direct.",
+        "",
+        '"Eleven." He nods. "You are going to finish this, aren\'t you. I stopped believing that was possible for someone my age. I am beginning to believe it is possible for you."',
+        "",
+        "He does not say this warmly. He says it like a man updating a record.",
+        "",
+        '"Circle 6 means the Word is beginning to hear itself in you. That is what the Circle unlocks — not your access to the spell, but the spell\'s access to you. They are different directions."',
+        "",
+        '"Resist. To hold what the high circles throw at you without letting it through." He speaks the Words. "Not a shield — Resist is what happens after the shield fails. Cast it when you are inside something you cannot leave quickly."',
+        "",
+        "*(He teaches you Resist. He is resigned the way a man is resigned when he has accepted the weight and decided it is his to carry.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["resist"],
+        chronicle:
+          "After the eleventh scroll, Zim was resigned in a way that had stripped him of noise. He gave you Resist and explained the difference between a shield and what comes after a shield fails.",
+      },
+      fireOnceKey: "zim-scroll-11",
+    },
+
+    // ── Branch 12 · Scroll XII · Mournful ────────────────────
+    {
+      id: "zim-turn-in-12",
+      when: { questId: "way-of-thoth", onStep: "scroll-13" },
+      lines: [
+        '"Maelis is dead."',
+        "",
+        "He does not look up when you enter. He is sitting at the bench with his hands flat on the surface and his eyes on the middle distance.",
+        "",
+        '"She was the seer. The one in the reed hut on the salt marsh. She dreamed things before they happened and she was almost always right." A pause. "Khepratha found her two nights ago. She was not built for fighting. That was never the point of her."',
+        "",
+        "He closes his eyes for a moment.",
+        "",
+        '"She heard me once, in a dream, she said — before we had ever met. She described the room we were standing in when she told me. Every detail correct." He opens his eyes. "That kind of person is not common. That kind of person is not replaceable."',
+        "",
+        '"Mirror. To throw back what comes for you through the Aether — spells, intentions, the attention of things that should not have found you." He speaks the Words. "Maelis knew this one. She is the reason I know it."',
+        "",
+        "*(He teaches you Mirror. He does not say anything else for a long time.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["mirror"],
+        chronicle:
+          "Maelis the Seer was dead by the twelfth scroll. Zim gave you Mirror in her memory, and said she was the reason he knew it.",
+      },
+      fireOnceKey: "zim-scroll-12",
+    },
+
+    // ── Branch 13 · Scroll XIII → Circle 7 · Defiant ─────────
+    {
+      id: "zim-turn-in-13",
+      when: { questId: "way-of-thoth", onStep: "scroll-14" },
+      lines: [
+        "He is standing when you arrive. Not pacing — standing, as if he has decided something.",
+        "",
+        '"Thirteen. Circle 7." He says it and then says what he has been thinking: "We are losing people. Old Bram, Maelis. Others I have not told you about because they were taken before you started and I did not want to weight the first half of your walk with the full count." He pauses. "But you have arrived at Circle 7 anyway."',
+        "",
+        "He says the next thing with some surprise.",
+        "",
+        '"I find that I am no longer afraid. Not because the danger is less. Because watching you walk this far has convinced me that the Way is going to outlast its enemies. I am not certain of that. But I feel it."',
+        "",
+        '"Banish. To drive out what has no right to be here — spirits, bound entities, presences that slipped through someone\'s broken working and stayed." He speaks the Words. "It is not a weapon. It is a correction. Say it with that intention."',
+        "",
+        "*(He teaches you Banish with a conviction that has come from somewhere he did not have access to a week ago.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["banish"],
+        chronicle:
+          "The thirteenth scroll found Zim defiant for the first time since his fear began. He gave you Banish and said the Way was going to outlast its enemies — and seemed surprised to believe it.",
+      },
+      fireOnceKey: "zim-scroll-13",
+    },
+
+    // ── Branch 14 · Scroll XIV · Reverent ────────────────────
+    {
+      id: "zim-turn-in-14",
+      when: { questId: "way-of-thoth", onStep: "scroll-15" },
+      lines: [
+        "He already knows about the Logos Teleios. He does not say how.",
+        "",
+        '"The Perfect Discourse." He says it very quietly. "I read it once, in a translation, twenty years ago. In a library that does not exist anymore, kept by a man who does not exist anymore. I thought I understood it." He shakes his head. "I understood the words."',
+        "",
+        "He sits and folds his hands.",
+        "",
+        '"Brother Inan found the original. That should not be possible — the Pre-Thurian vault has been sealed for a thousand years. And yet." He looks at you. "And yet here you are, having read it. The Way does not explain this. It is just the Way."',
+        "",
+        '"Invoke Light." He speaks the Words first, before explaining them — as if they are an offering. Then: "The direct call to the Word. Not a light-spell — a declaration. You are saying: the Word that built this place is real, and I am standing in it, and I am asking it to answer. The most demanding form I know. It asks something of you every time."',
+        "",
+        "*(He teaches you Invoke Light with the reverence of a man who has stopped pretending he is a skeptic.)*",
+      ],
+      fireOnceReward: {
+        knownSpells: ["invoke-light"],
+        chronicle:
+          "After the fourteenth scroll and the Logos Teleios, Zim taught you Invoke Light. He read the Words aloud before he explained them — as if making an offering rather than giving a lesson.",
+      },
+      fireOnceKey: "zim-scroll-14",
+    },
+
+    // ── Branch 15 · Quest Complete · The Threshold ────────────
+    {
+      id: "zim-threshold",
+      when: { questId: "way-of-thoth", questCompleted: true },
+      lines: [
+        "He is waiting for you. The bench has been cleared completely — tools, glass, catalogue cards, everything. The surface is bare.",
+        "",
+        '"You have all fifteen." It is not a question and not quite a congratulation. Something between. "Sit down."',
+        "",
+        "You sit. He sits across from you.",
+        "",
+        '"There is one more thing I can teach you. I have not decided whether I should, but I am going to — because you have earned the right to know it, and because if I do not tell you, you will learn it from someone worse."',
+        "",
+        "He folds his hands on the bare bench.",
+        "",
+        '"The binding rite. The Words that call the fifteen scrolls from their fifteen hands and weave them into a single Book. Whoever speaks the rite holds the whole of the Way — every Circle, every Word, every working, simultaneously, without the progression." He speaks the rite once, quietly, in full. "That is what it does."',
+        "",
+        "He lets the silence sit.",
+        "",
+        '"Here is what I am asking you. The greatest Adepts who have tried this are dead, or worse. Not because the rite failed — because it worked. The Book is not meant to be held by a single soul. It was sundered for a reason. The world\'s memory of why is very long."',
+        "",
+        "He stands.",
+        "",
+        '"I am asking you not to bind the Book. I have no authority to forbid you anything, not now, not after this walk. I am asking." He looks at you steadily. "The choice is yours and it has always been yours. Make it knowing what I told you."',
+        "",
+        '"Whatever you choose: you have walked the Way further than I have. Further than anyone I have trained. That is true and I want you to know it."',
+        "",
+        "He picks up a glass rod from the shelf — the last thing left — and turns it over in his fingers.",
+        "",
+        '"Go. The lighthouse is waiting."',
+        "",
+        "*(Zim turns back to the shelf. He does not watch you leave.)*",
+      ],
+      fireOnceReward: {
+        legacyChronicle:
+          "You completed the Way of Thoth and returned to Zim at the threshold. He taught you the binding rite and asked you not to use it. The choice was yours. It has always been yours.",
+      },
+      fireOnceKey: "zim-threshold",
+    },
+
+  ],
+});
 
 export default WAY_OF_THOTH;

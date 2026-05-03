@@ -69,11 +69,17 @@ export function recomputeDerivedStats(p: PlayerState): PlayerState {
   // floored at 6 so the hero stays playable. STR_eff is the only stat
   // VD touches; mana, courage, and the rest are unaffected.
   const vdPenalty = p.vdActive ? 2 : 0;
+  const tempStrBonus = (p.tempModifiers ?? []).reduce(
+    (s, m) => s + (m.stat === "strength" ? m.delta : 0), 0
+  );
+  const tempDexBonus = (p.tempModifiers ?? []).reduce(
+    (s, m) => s + (m.stat === "dexterity" ? m.delta : 0), 0
+  );
   const strEff = Math.max(
     6,
-    p.strength + Math.min(10, Math.floor(passion / 10)) - vdPenalty
+    p.strength + Math.min(10, Math.floor(passion / 10)) - vdPenalty + tempStrBonus
   );
-  const dexEff = p.dexterity + Math.min(10, Math.floor(courage / 10));
+  const dexEff = p.dexterity + Math.min(10, Math.floor(courage / 10)) + tempDexBonus;
 
   // Temp modifier bonuses (Sprint 7b.B — Bless + future buffs).
   // Sum all active charisma and illumination deltas without touching

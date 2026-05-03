@@ -82,6 +82,9 @@ function calculateEvasionChance(
     if (e.type === "damaged_eye") base += 5 * e.severity;
     // Numb hand: attacker can't hit anything — bump defender evasion sky-high.
     if (e.type === "numb_hand") base += 95;
+    // Sprint 7b.buffs: spell debuffs on attacker reduce accuracy
+    if (e.type === "clumsied") base += 15 * e.severity;
+    if (e.type === "cursed")   base += 10 * e.severity;
   }
 
   return clamp(base, 0, 95);
@@ -228,6 +231,7 @@ export function resolveStrike(
     armorDamaged: 0,
     armorBroken: false,
     damageDealt: 0,
+    reflectedDamage: 0,
     injuryInflicted: null,
     injurySeverity: 0,
     isCritical: false,
@@ -335,7 +339,17 @@ export function resolveStrike(
   // TEMP: force every hit to be a crit for blood/gore testing
   const isCrit = true;
   // const isCrit = Math.random() < getCritChance(attacker.weaponSkillValue);
-  const finalDmg = Math.max(1, Math.floor(baseDmg * strengthMod * zoneMult * (isCrit ? 2 : 1)));
+  let finalDmg = Math.max(1, Math.floor(baseDmg * strengthMod * zoneMult * (isCrit ? 2 : 1)));
+
+  // Sprint 7b.buffs — attacker/defender spell-effect modifiers on damage
+  const weakenedSev = attacker.activeEffects.reduce((s, e) => e.type === "weakened" ? s + e.severity : s, 0);
+  if (weakenedSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * (1 - 0.2 * weakenedSev)));
+  const protAuraSev = defender.activeEffects.reduce((s, e) => e.type === "protection_aura" ? s + e.severity : s, 0);
+  if (protAuraSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * (1 - 0.25 * protAuraSev)));
+  const reactArmSev = defender.activeEffects.reduce((s, e) => e.type === "reactive_armor" ? s + e.severity : s, 0);
+  const reflectedDamage = reactArmSev > 0 && finalDmg > 0
+    ? Math.max(1, Math.floor(finalDmg * 0.2 * reactArmSev))
+    : 0;
 
   // Armor still takes durability loss on penetrating hits
   let armorDmg = 0;
@@ -363,6 +377,7 @@ export function resolveStrike(
     armorDamaged: armorDmg,
     armorBroken,
     damageDealt: finalDmg,
+    reflectedDamage,
     injuryInflicted,
     injurySeverity,
     isCritical: isCrit,
@@ -406,6 +421,7 @@ function tryStrikeWithBarriers(
       armorDamaged: 0,
       armorBroken: false,
       damageDealt: 0,
+      reflectedDamage: 0,
       injuryInflicted: null,
       injurySeverity: 0,
       isCritical: false,
@@ -778,6 +794,7 @@ export function resolveCombatRound(
     armorDamaged: 0,
     armorBroken: false,
     damageDealt: 0,
+    reflectedDamage: 0,
     injuryInflicted: null,
     injurySeverity: 0,
     isCritical: false,
@@ -785,7 +802,7 @@ export function resolveCombatRound(
     weaponDropped: false,
     narrative: `${attackerName} hesitates — something behind them caught their eye — and the moment is lost.`,
   });
-  const enemyIsFeared = enemy.activeEffects.some(e => e.type === "feared_skip");
+  const enemyIsFeared = enemy.activeEffects.some(e => e.type === "feared_skip" || e.type === "paralyzed");
 
   // Training dummies never strike back — they are inanimate wooden posts.
   // The player always acts "first" since there's nothing to contest initiative.
@@ -814,13 +831,16 @@ export function resolveCombatRound(
       enemyStrike = tryStrikeWithBarriers(enemy, player, enemyTargetZone, enemyWeaponCat, session.barriers);
       player = applyStrike(player, enemyStrike);
       enemy = applyWeaponDrop(enemy, enemyStrike);
+      if (enemyStrike.reflectedDamage > 0) {
+        enemy = { ...enemy, hp: Math.max(0, enemy.hp - enemyStrike.reflectedDamage) };
+      }
       if (player.hp <= 0) {
         combatOver = true;
         playerDied = true;
       }
     }
   } else if (enemyIsFeared) {
-    // Enemy was meant to strike first but is feared — skip directly to player.
+    // Enemy was meant to strike first but is feared/paralyzed — skip directly to player.
     enemyStrike = skipStrike(enemyTargetZone, enemy.name);
     playerStrike = tryStrikeWithBarriers(player, enemy, playerTargetZone, playerWeaponCat, session.barriers);
     enemy = applyStrike(enemy, playerStrike);
@@ -834,6 +854,9 @@ export function resolveCombatRound(
     enemyStrike = tryStrikeWithBarriers(enemy, player, enemyTargetZone, enemyWeaponCat, session.barriers);
     player = applyStrike(player, enemyStrike);
     enemy = applyWeaponDrop(enemy, enemyStrike);
+    if (enemyStrike.reflectedDamage > 0) {
+      enemy = { ...enemy, hp: Math.max(0, enemy.hp - enemyStrike.reflectedDamage) };
+    }
 
     if (player.hp <= 0) {
       combatOver = true;
@@ -1453,12 +1476,12 @@ function runEnemyTurn(
     };
   }
 
-  // Feared_skip: enemy hesitates instead of striking.
-  if (enemy.activeEffects.some(e => e.type === "feared_skip")) {
+  // Feared_skip / paralyzed: enemy cannot act this round.
+  if (enemy.activeEffects.some(e => e.type === "feared_skip" || e.type === "paralyzed")) {
     return {
       session: { ...session, playerCombatant: player, enemyCombatant: enemy, barriers: tickedBarriers },
       narrative: tickNarrative + (tickNarrative ? "\n\n" : "") +
-        `${enemy.name} hesitates — something behind them caught their eye — and the moment is lost.`,
+        `${enemy.name} cannot act — the sorcery holds them fast.`,
       combatOver: false, playerWon: false, playerDied: false,
     };
   }
@@ -1467,6 +1490,10 @@ function runEnemyTurn(
   const enemyTargetZone = chooseEnemyTargetZone(enemy, player);
   const enemyStrike = tryStrikeWithBarriers(enemy, player, enemyTargetZone, "slash", session.barriers);
   player = applyStrike(player, enemyStrike);
+  // Reactive armor: reflected damage hits the enemy back.
+  if (enemyStrike.reflectedDamage > 0) {
+    enemy = { ...enemy, hp: Math.max(0, enemy.hp - enemyStrike.reflectedDamage) };
+  }
   if (enemyStrike.weaponDropped && enemy.weaponId !== "unarmed") {
     enemy = { ...enemy, droppedWeaponId: enemy.weaponId, weaponId: "unarmed" };
   }

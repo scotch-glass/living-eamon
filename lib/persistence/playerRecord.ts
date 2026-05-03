@@ -45,6 +45,8 @@ export function worldStateToPlayerRecord(
     pending_atom: state.player.pendingAtom,
     karma_log: state.player.karmaLog,
     quests: state.player.quests,
+    // Sprint S3 — Words; persist across rebirth.
+    givenWords: state.player.givenWords ?? [],
     reputationScore: state.player.reputationScore,
     reputationLevel: state.player.reputationLevel,
     knownAs: state.player.knownAs,

@@ -87,6 +87,8 @@ export async function savePlayer(player: Record<string, unknown>) {
     pending_atom: player.pending_atom ?? null,
     karma_log: (player.karma_log as unknown[] | undefined) ?? [],
     quests: (player.quests as Record<string, unknown> | undefined) ?? {},
+    // Sprint S3 — Words ledger
+    given_words: (player.givenWords as unknown[] | undefined) ?? [],
     reputation_score: player.reputationScore,
     reputation_level: player.reputationLevel,
     known_as: player.knownAs,

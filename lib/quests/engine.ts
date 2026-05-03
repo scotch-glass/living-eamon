@@ -22,6 +22,8 @@ import type { WorldState, PlayerState } from "../gameState";
 import { addToChronicle } from "../gameState";
 import { applyKarma, logKarmaDelta } from "../karma/recompute";
 import { NPCS } from "../gameData";
+import { getRoom } from "../adventures/registry";
+import { createWord, fulfillWord } from "./words";
 import type {
   Quest,
   QuestEvent,
@@ -117,6 +119,16 @@ export function acceptQuest(state: WorldState, questId: string): WorldState {
   if (state.player.quests?.[questId]) return state;
   if (!checkPrerequisites(state, quest.acceptancePrerequisites)) return state;
 
+  // S3 — every quest acceptance generates a Word. Multiplier baked at
+  // swear-time: Mithras-temple ×2, Integrity-tagged room ×1.5 (S2 stack).
+  const swornAtRoom = state.player.currentRoom;
+  const word = createWord(
+    quest,
+    swornAtRoom,
+    state.worldTurn ?? 0,
+    getRoom(swornAtRoom)
+  );
+
   let next: WorldState = {
     ...state,
     player: {
@@ -125,6 +137,7 @@ export function acceptQuest(state: WorldState, questId: string): WorldState {
         ...(state.player.quests ?? {}),
         [questId]: newQuestState(quest.startStep, quest.scope),
       },
+      givenWords: [...(state.player.givenWords ?? []), word],
     },
   };
   if (quest.acceptReward) {
@@ -252,7 +265,7 @@ export function completeStep(
     },
   };
 
-  // Quest finalized — apply completion reward + chronicle line
+  // Quest finalized — apply completion reward + chronicle line, fulfill Word
   if (!nextStepId) {
     if (quest.completionReward) {
       next = applyReward(next, quest.completionReward, `quest:${questId}:complete`);
@@ -260,6 +273,7 @@ export function completeStep(
     if (quest.completionChronicle) {
       next = addToChronicle(next, quest.completionChronicle, true);
     }
+    next = fulfillWord(next, questId);
   }
 
   // Re-emit synthetic event so chained quests can react

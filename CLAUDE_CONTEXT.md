@@ -1,5 +1,12 @@
 Living Eamon — Claude Context & Rehydration Guide
 
+> **Development status (2026-05-03):** The game is in active development.
+> There are NO real users. Every row in the Supabase `players` (and any
+> other) table is a development account. Schema changes, destructive
+> migrations, and DB rewrites are safe — no production user data exists.
+> Plan for paying users; do not yet protect against data loss as if any
+> are present.
+
 
 ## Behavioral Guidelines
 

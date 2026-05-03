@@ -45,8 +45,11 @@ function fixtureWorldState(): WorldState {
   const corpse: Corpse = {
     id: "corpse-1",
     originalNpcId: "goblin-1",
-    location: { roomId: "main_hall", context: "surface" },
+    name: "the body of a goblin",
+    roomId: "main_hall",
+    planeId: "thurian",
     timeOfDeath: 5,
+    context: "surface",
     sunExposed: false,
     moonExposed: false,
     creatureKind: "human",
@@ -126,7 +129,7 @@ caseName("corpses round-trip", () => {
   const corpses = rec.corpses as Record<string, Corpse>;
   truthy(corpses["corpse-1"], "corpse exists");
   eq(corpses["corpse-1"].originalNpcId, "goblin-1", "corpse originalNpcId");
-  eq(corpses["corpse-1"].location.context, "surface", "corpse context");
+  eq(corpses["corpse-1"].context, "surface", "corpse context");
 });
 
 caseName("vendor_temp_stock round-trips", () => {

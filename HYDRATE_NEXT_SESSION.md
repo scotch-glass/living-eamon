@@ -4,7 +4,7 @@
 
 1. **Switch model to Sonnet** with `/model sonnet`. Save Opus for hard reasoning or design calls.
 2. Confirm working dir: `/Users/joshuamcclure/Desktop/living-eamon`
-3. Confirm branch: `dev`. Latest committed on dev: **`c97e628`** (Sprint S5: Fix Zim CAST spells).
+3. Confirm branch: `dev`. Latest committed on dev: **`f473367`** (Sprint S4a: World-map data model).
 4. No uncommitted work. Working tree is clean on dev.
 5. Paste the prompt below as your first message.
 
@@ -21,7 +21,7 @@ You are being rehydrated into Living Eamon. Read this stack in order:
 5. **`~/.claude/plans/fluffy-bouncing-hanrahan.md`** — Sprint 7b Phase 2 roadmap.
 6. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index.
 
-After reading, confirm hydration with one paragraph naming: (a) what was done in the most recent session (S2–S3–S1+ system sprints + S5 Zim CAST fix), (b) what the next sprint options are, (c) what known follow-ups remain unticketed.
+After reading, confirm hydration with one paragraph naming: (a) what was done in the most recent session (S4a world-map data model), (b) what the next sprint options are, (c) what known follow-ups remain unticketed.
 
 ---
 
@@ -45,6 +45,12 @@ After reading, confirm hydration with one paragraph naming: (a) what was done in
 - `lore/thurian-cartography/TRAVEL_MATRIX.md` — routes, zone danger, encounter tables, 23 scene-background prompts
 - `lore/thurian-cartography/LOOT_TABLES.md` — 5-tier loot system, caravan tables, 6 Great Rune-Blades
 - `public/art/living-eamon-map.png` — canonical travel screen background
+
+**Sprint S4a — World-map data model**
+- `lib/world/travelNodes.ts` — `TravelNode` type + 19-node registry with (x,y) over map (origin, 6 cities, 5 POIs, 4 nation hubs, 3 wilderness)
+- `lib/world/travelMatrix.ts` — `ZoneType` union (15 types), `DangerRating`, `TravelLeg` type; 30 authored legs covering all routes; `getLegsFrom` / `getLeg` / `getRouteZones` / `sceneIdForZone` helpers
+- `lib/roomTypes.ts:AdventureModule` — extended with `locationId?`, `travelZones?`, `travelDays?`
+- `lib/adventures/guild-hall.ts` — `GUILD_HALL` anchored to `ostavar` node
 
 **Sprint S2 — PICSSI ↔ location-type taxonomy**
 - `Room.picssiContacts?: PicssiVirtue[]` + `scaleDeltaForRoom()` at 4 karma chokepoints
@@ -111,7 +117,7 @@ After reading, confirm hydration with one paragraph naming: (a) what was done in
 
 ### Option 1 — S4 Graphical Travel system (multi-sprint epic)
 All design docs complete. Sub-sprints:
-- **S4a** — World-map data model: author the node graph (city/port/ruin nodes, `(x,y)` over the existing `living-eamon-map.png`), anchor each adventure to a node
+- ~~**S4a** — World-map data model~~ ✓ **SHIPPED** (`lib/world/travelNodes.ts` + `travelMatrix.ts`)
 - **S4b** — Starting-city map for Ostavar (Ultima-style top-down, Grok-Imagine-Pro)
 - **S4c** — `WorldMap.tsx` component: renders painting + node overlay + hero token + click-to-travel confirm flow
 - **S4d** — Travel execution: progress bar, flavor rotation, encounter pause

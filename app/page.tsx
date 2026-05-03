@@ -1505,7 +1505,7 @@ export default function Home() {
               )}
 
               {sidebarTab === "oaths" && (
-                <OathPanel picssi={player.picssi} />
+                <OathPanel picssi={player.picssi} givenWords={player.givenWords ?? []} />
               )}
 
               {/* Footer — Sign out only */}

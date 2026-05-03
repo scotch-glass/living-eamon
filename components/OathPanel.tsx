@@ -1,83 +1,24 @@
 // ============================================================
-// LIVING EAMON — OathPanel (S1)
-// Read-only display of the 42 Oaths of Ma'at + the hero's
-// current PICSSI scores. The litany is canonical content
-// (`lore/maatic-library/oaths-of-maat.md`) duplicated here as
-// a TS const so the component renders without a fetch.
+// LIVING EAMON — OathPanel (S1 + S3 extension 2026-05-03)
+// Sidebar tab showing:
+//   - the hero's current 6 PICSSI scores
+//   - the player's active Words (S3) — sworn quests
+//   - the canonical 42 Oaths of Ma'at
 //
-// v1 = static read; per-oath delta tracking lands in S2 once
-// PICSSI deltas can be tagged with the oath they touched.
+// Data lives in lib/oaths.ts (canonical lore) and PlayerState.givenWords.
 // ============================================================
 
 import type { PicssiState } from "../lib/karma/types";
+import { OATHS_OF_MAAT, type OathTag } from "../lib/oaths";
+import type { Word } from "../lib/quests/words";
 
-type OathTag =
-  | "passion"
-  | "integrity"
-  | "courage"
-  | "standing"
-  | "spirituality"
-  | "illumination";
-
-interface Oath {
-  n: number;
-  text: string;
-  tags: OathTag[];
-}
-
-const OATHS: Oath[] = [
-  { n: 1,  text: "I walk the way of Ma'at.", tags: ["integrity", "spirituality"] },
-  { n: 2,  text: "I do not prey upon the weak.", tags: ["integrity", "illumination"] },
-  { n: 3,  text: "I take only what I earn.", tags: ["integrity"] },
-  { n: 4,  text: "I defend innocent lives.", tags: ["illumination", "courage"] },
-  { n: 5,  text: "I steal no laborer's bread.", tags: ["integrity"] },
-  { n: 6,  text: "I steal no offering from the altar.", tags: ["spirituality"] },
-  { n: 7,  text: "I do not plunder temples.", tags: ["spirituality"] },
-  { n: 8,  text: "My word is true.", tags: ["integrity"] },
-  { n: 9,  text: "I eat only what is mine.", tags: ["integrity"] },
-  { n: 10, text: "I speak grievance openly.", tags: ["integrity", "courage"] },
-  { n: 11, text: "I honor the marriage bond.", tags: ["integrity", "passion"] },
-  { n: 12, text: "I bring no tears to the innocent.", tags: ["illumination", "passion"] },
-  { n: 13, text: "I strike with purpose, not pleasure.", tags: ["illumination"] },
-  { n: 14, text: "I do not strike first.", tags: ["integrity", "courage"] },
-  { n: 15, text: "I name the world truly.", tags: ["integrity"] },
-  { n: 16, text: "I claim only what I have raised.", tags: ["integrity"] },
-  { n: 17, text: "I do not listen at doors.", tags: ["integrity"] },
-  { n: 18, text: "I speak only to a man's face.", tags: ["integrity", "courage"] },
-  { n: 19, text: "I am slow to anger.", tags: ["courage", "integrity"] },
-  { n: 20, text: "I break no heart-bond.", tags: ["passion", "integrity"] },
-  { n: 21, text: "My body is a vessel of Light.", tags: ["spirituality", "illumination"] },
-  { n: 22, text: "I rule no man by fear.", tags: ["illumination"] },
-  { n: 23, text: "I walk within just law.", tags: ["spirituality", "integrity"] },
-  { n: 24, text: "I am master of my temper.", tags: ["courage", "integrity"] },
-  { n: 25, text: "I hear the wounding truth.", tags: ["integrity", "illumination"] },
-  { n: 26, text: "I doubt with reverence.", tags: ["spirituality"] },
-  { n: 27, text: "I take no joy in killing.", tags: ["courage", "illumination"] },
-  { n: 28, text: "I sow no discord.", tags: ["integrity", "illumination"] },
-  { n: 29, text: "I weigh before I strike.", tags: ["integrity"] },
-  { n: 30, text: "I do not pry into the hidden.", tags: ["integrity"] },
-  { n: 31, text: "I speak with measure.", tags: ["integrity"] },
-  { n: 32, text: "I leave the world less wronged.", tags: ["illumination"] },
-  { n: 33, text: "I turn no Words against the just.", tags: ["spirituality", "illumination"] },
-  { n: 34, text: "I block no flowing thing.", tags: ["spirituality"] },
-  { n: 35, text: "I do not shout.", tags: ["integrity", "standing"] },
-  { n: 36, text: "I curse no silent god.", tags: ["spirituality"] },
-  { n: 37, text: "I know my smallness.", tags: ["spirituality", "integrity"] },
-  { n: 38, text: "What is the gods' is the gods'.", tags: ["spirituality"] },
-  { n: 39, text: "I honor the graves of the old.", tags: ["spirituality", "illumination"] },
-  { n: 40, text: "I take no bread from a child.", tags: ["illumination"] },
-  { n: 41, text: "I spare the sacred beasts.", tags: ["spirituality"] },
-  { n: 42, text: "I stand before the feather. What I am, I am.", tags: ["passion", "integrity", "courage", "standing", "spirituality", "illumination"] },
-];
-
-// Painterly palette per virtue. Tweakable in S2 when per-oath deltas land.
 const TAG_COLOR: Record<OathTag, string> = {
-  passion:      "#ef4444", // rose-red
-  integrity:    "#3b82f6", // deep blue
-  courage:      "#f97316", // ember orange
-  standing:     "#fbbf24", // royal gold
-  spirituality: "#a855f7", // temple violet
-  illumination: "#facc15", // candle cream
+  passion:      "#ef4444",
+  integrity:    "#3b82f6",
+  courage:      "#f97316",
+  standing:     "#fbbf24",
+  spirituality: "#a855f7",
+  illumination: "#facc15",
 };
 
 const TAG_LABEL: Record<OathTag, string> = {
@@ -128,11 +69,83 @@ function PicssiSummary({ picssi }: PicssiSummaryProps): React.ReactElement {
   );
 }
 
-interface OathPanelProps {
-  picssi: PicssiState;
+function WordStatusBadge({ status, mithraic }: { status: Word["status"]; mithraic: boolean }): React.ReactElement {
+  const palette: Record<Word["status"], { bg: string; fg: string; label: string }> = {
+    active:    { bg: "#1e3a5f", fg: "#7eb6ff", label: mithraic ? "ACTIVE · MITHRAIC" : "ACTIVE" },
+    fulfilled: { bg: "#1e3a1e", fg: "#7ed47e", label: "FULFILLED" },
+    broken:    { bg: "#3a1e1e", fg: "#ff7e7e", label: "BROKEN" },
+  };
+  const p = palette[status];
+  return (
+    <span style={{
+      backgroundColor: p.bg,
+      color: p.fg,
+      padding: "1px 5px",
+      borderRadius: 2,
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: "0.08em",
+    }}>
+      {p.label}
+    </span>
+  );
 }
 
-export default function OathPanel({ picssi }: OathPanelProps): React.ReactElement {
+interface WordsSectionProps {
+  words: Word[];
+}
+
+function WordsSection({ words }: WordsSectionProps): React.ReactElement {
+  const active = words.filter(w => w.status === "active");
+  const closed = words.filter(w => w.status !== "active");
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, color: "#4a2e15" }}>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, #4a2e15, transparent)" }} />
+        <span style={{ fontSize: 10, color: "#92400e", letterSpacing: "0.15em" }}>WORDS GIVEN</span>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, #4a2e15, transparent)" }} />
+      </div>
+
+      {words.length === 0 ? (
+        <div style={{ color: "#7a6f5a", fontSize: 10, fontStyle: "italic", textAlign: "center", padding: "8px 0" }}>
+          No Words sworn. Every quest accepted is a Word given.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {[...active, ...closed].map(w => (
+            <div
+              key={w.id}
+              style={{
+                backgroundColor: "#0d0a06",
+                padding: "6px 8px",
+                borderRadius: 3,
+                border: "1px solid #2a1d0e",
+                fontSize: 11,
+                lineHeight: 1.45,
+                opacity: w.status === "active" ? 1 : 0.7,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 6, alignItems: "flex-start" }}>
+                <span style={{ color: "#cdb78a", flex: 1 }}>{w.questTitle}</span>
+                <WordStatusBadge status={w.status} mithraic={w.mithraic} />
+              </div>
+              <div style={{ color: "#7a6f5a", fontSize: 9, marginTop: 2 }}>
+                Sworn turn {w.swornAtTurn} · stake ×{w.breakPenaltyMultiplier}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface OathPanelProps {
+  picssi: PicssiState;
+  givenWords?: Word[];
+}
+
+export default function OathPanel({ picssi, givenWords = [] }: OathPanelProps): React.ReactElement {
   return (
     <div style={{ fontFamily: "Georgia, serif" }}>
       {/* Header — current PICSSI scores */}
@@ -142,6 +155,9 @@ export default function OathPanel({ picssi }: OathPanelProps): React.ReactElemen
         </div>
         <PicssiSummary picssi={picssi} />
       </div>
+
+      {/* S3 — Words given */}
+      <WordsSection words={givenWords} />
 
       {/* Litany header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, color: "#4a2e15" }}>
@@ -158,7 +174,7 @@ export default function OathPanel({ picssi }: OathPanelProps): React.ReactElemen
 
       {/* The 42 */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {OATHS.map(oath => (
+        {OATHS_OF_MAAT.map(oath => (
           <div
             key={oath.n}
             style={{
@@ -173,7 +189,6 @@ export default function OathPanel({ picssi }: OathPanelProps): React.ReactElemen
               lineHeight: 1.45,
             }}
           >
-            {/* Number */}
             <span
               style={{
                 color: "#7a6f5a",
@@ -187,10 +202,8 @@ export default function OathPanel({ picssi }: OathPanelProps): React.ReactElemen
               {oath.n}.
             </span>
 
-            {/* Oath text */}
             <span style={{ color: "#cdb78a", flex: 1 }}>{oath.text}</span>
 
-            {/* Tag badges */}
             <span style={{ display: "flex", gap: 3, flexShrink: 0 }}>
               {oath.tags.map(tag => (
                 <span
@@ -216,7 +229,6 @@ export default function OathPanel({ picssi }: OathPanelProps): React.ReactElemen
         ))}
       </div>
 
-      {/* Footer note */}
       <div style={{ color: "#5a4f3a", fontSize: 9, fontStyle: "italic", textAlign: "center", marginTop: 14, lineHeight: 1.4 }}>
         Per-oath karmic accounting will land in a later sprint;<br/>
         for now, watch thy six virtues above.

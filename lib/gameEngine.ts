@@ -91,6 +91,7 @@ import {
 import type { KarmaDelta } from "./karma/types";
 import { emitQuestEvent } from "./quests/engine";
 import { resolveQuestDialogue } from "./quests/dialogue";
+import { formatOathsLitany, READ_OATHS_FIRST_FLAG } from "./oaths";
 import { handleInvoke, composeInvokeResponse } from "./sorcery/invoke";
 import { getTimeOfDayLine } from "./world/timeOfDayDescriptions";
 import { getWeatherLine } from "./world/weatherDescriptions";
@@ -1497,6 +1498,12 @@ function buildRoomDescription(
       const npcNames = presentNpcs.map(npc => NPCS[npc.npcId]?.name ?? npc.npcId).join(", ");
       description += `\n\nPresent here: ${npcNames}.`;
     }
+  }
+
+  // S1 — Ma'atic temples carry the Forty-Two Oaths inscribed on the walls.
+  // Skip nonverbose to keep glances tight; hint READ OATHS to teach the verb.
+  if (verbosity !== "nonverbose" && room.consecrated && room.deity === "maat") {
+    description += "\n\nThe Forty-Two Oaths are carved into the stone here. (READ OATHS to recite them.)";
   }
 
   // Exits — always shown
@@ -3392,6 +3399,45 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
       return {
         responseType: "static",
         staticResponse: buildRoomDescription(newState, "notice_board", "verbose"),
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    // S1 — READ OATHS in any Ma'atic-consecrated room.
+    // First read each life grants +1 Spirituality (logged); later reads are flavor.
+    if (trimmed.toUpperCase().replace(/\s+/g, " ").trim() === "READ OATHS") {
+      const room = getRoom(p.currentRoom);
+      if (room?.consecrated && room.deity === "maat") {
+        let postState = newState;
+        const firstRead = !p.flagsLife?.[READ_OATHS_FIRST_FLAG];
+        if (firstRead) {
+          const delta: KarmaDelta = scaleDeltaForRoom({ spirituality: 1 }, room.picssiContacts);
+          let pp = applyKarma(postState.player, delta);
+          pp = logKarmaDelta(pp, delta, "read-oaths:first");
+          postState = {
+            ...postState,
+            player: {
+              ...pp,
+              flagsLife: { ...(pp.flagsLife ?? {}), [READ_OATHS_FIRST_FLAG]: true },
+            },
+          };
+        }
+        const litany = formatOathsLitany();
+        const tail = firstRead
+          ? "\n\nThe carved stones drink your voice. Something settles in you — Spirituality rises."
+          : "\n\nThe carved stones drink your voice. The Forty-Two stand as they always stand.";
+        return {
+          responseType: "static",
+          staticResponse: litany + tail,
+          dynamicContext: null,
+          newState: postState,
+          stateChanged: true,
+        };
+      }
+      return {
+        responseType: "static",
+        staticResponse: "There are no Oaths inscribed in this place. Speak them where Ma'at is named.",
         dynamicContext: null,
         newState,
         stateChanged: false,

@@ -94,5 +94,8 @@ export function worldStateToPlayerRecord(
     corpses: state.corpses ?? {},
     vendorTempStock: state.vendorTempStock ?? {},
     activeEvents: state.activeEvents ?? [],
+    // Sprint G1 — real-time clock
+    realTimeMs: state.realTimeMs ?? Date.now(),
+    lastTickAt: state.lastTickAt ?? Date.now(),
   };
 }

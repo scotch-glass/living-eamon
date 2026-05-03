@@ -136,6 +136,9 @@ export async function savePlayer(player: Record<string, unknown>) {
     vendor_temp_stock:
       (player.vendorTempStock as Record<string, unknown> | undefined) ?? {},
     active_events: (player.activeEvents as unknown[] | undefined) ?? [],
+    // Sprint G1 — real-time clock
+    real_time_ms: typeof player.realTimeMs === "number" ? player.realTimeMs : Date.now(),
+    last_tick_at: typeof player.lastTickAt === "number" ? player.lastTickAt : Date.now(),
     last_seen: new Date().toISOString(),
   };
 

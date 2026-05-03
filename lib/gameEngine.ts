@@ -1522,13 +1522,21 @@ function buildRoomDescription(
   }
 
   // Sprint G5/G6 — active room residue descriptions + repair NPC presence
+  // Only fire, explosion, and structural catastrophe residues appear in the
+  // room glance. Blood, poison, stain, and other spell debris are suppressed
+  // here — they surface via EXAMINE "magic residue" (G8).
+  const GLANCE_VISIBLE_SOURCES = new Set([
+    "fireball", "fire-field", "flamestrike", "summon-fire-elemental",
+    "explosion", "meteor-swarm", "earthquake",
+  ]);
   if (verbosity !== "nonverbose") {
     const residues = state.rooms[roomId]?.activeResidue;
     if (residues?.length) {
-      for (const r of residues) {
+      const glanceResidues = residues.filter(r => r.fromSpellId && GLANCE_VISIBLE_SOURCES.has(r.fromSpellId));
+      for (const r of glanceResidues) {
         description += "\n\n" + r.description;
       }
-      // Sprint G6 — show repair NPCs working (deduplicated by id)
+      // Sprint G6 — show repair NPCs for any residue (not just glance-visible)
       const repairNpcIds = [...new Set(residues.flatMap(r => r.repairNpcId ? [r.repairNpcId] : []))];
       for (const npcId of repairNpcIds) {
         const npc = NPCS[npcId];

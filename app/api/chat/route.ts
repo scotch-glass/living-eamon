@@ -461,6 +461,8 @@ export async function POST(request: NextRequest) {
               ((savedPlayer as { karma_log?: Array<{ at: string; delta: Record<string, number>; source: string }> }).karma_log) ?? [],
             quests:
               ((savedPlayer as { quests?: Record<string, import("../../../lib/quests/types").QuestState> }).quests) ?? {},
+            givenWords:
+              ((savedPlayer as { given_words?: import("../../../lib/quests/words").Word[] }).given_words) ?? [],
             // Sprint A — persistence gap-fill (2026-05-03)
             knownCircles:
               ((savedPlayer as { known_circles?: number[] }).known_circles) ?? [],

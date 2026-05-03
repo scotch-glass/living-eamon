@@ -405,6 +405,14 @@ export interface PlayerState {
    */
   quests: Record<string, import("./quests/types").QuestState>;
 
+  /**
+   * Sprint S3 — Words given. Every quest acceptance generates one.
+   * **Persists across rebirth** — the Perpetual Hero must return to
+   * honor his Word (per Scotch 2026-05-02). applyPlayerDeath does NOT
+   * wipe this array. See lib/quests/words.ts.
+   */
+  givenWords: import("./quests/words").Word[];
+
   // Consequences
   bounty: number;              // Gold bounty on player's head (0 = none)
   isWanted: boolean;
@@ -893,6 +901,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       currentAdventure: null,
       completedAdventures: [],
       quests: {},
+      givenWords: [],
 
       bounty: 0,
       isWanted: false,
@@ -1353,6 +1362,10 @@ export function applyPlayerDeath(
           ([, qs]) => qs.scope === "legacy"
         )
       ),
+      // Sprint S3 — Words persist across rebirth. The Perpetual Hero
+      // must return to honor his Word (per Scotch 2026-05-02). This is
+      // the explicit exception to the per-life wipe.
+      givenWords: state.player.givenWords ?? [],
     },
   };
 

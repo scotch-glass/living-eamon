@@ -47,6 +47,7 @@ import {
   checkAndDecrementJaneCalls,
 } from "../../../lib/supabase";
 import { createServerSupabase } from "../../../lib/supabaseAuthServer";
+import { worldStateToPlayerRecord } from "../../../lib/persistence/playerRecord";
 
 const grok = new OpenAI({
   apiKey: process.env.XAI_API_KEY || process.env.GROK_API_KEY,
@@ -241,81 +242,9 @@ function buildJaneContext(dynamicContext: string, state: WorldState): string {
     "\n\nENGINE CONTEXT:\n" + dynamicContext;
 }
 
-function worldStateToPlayerRecord(state: WorldState): Record<string, unknown> {
-  return {
-    barrelStock: state.barrelStock,
-    id: state.player.id,
-    name: state.player.name,
-    hp: state.player.hp,
-    maxHp: state.player.maxHp,
-    strength: state.player.strength,
-    dexterity: state.player.dexterity,
-    charisma: state.player.charisma,
-    maxMana: state.player.maxMana,
-    currentMana: state.player.currentMana,
-    gold: state.player.gold,
-    bankedGold: state.player.bankedGold,
-    weapon: state.player.weapon,
-    armor: state.player.armor,
-    shield: state.player.shield,
-    inventory: state.player.inventory,
-    // PICSSI virtues (KARMA Sprint 2 — virtues column dropped).
-    picssi_passion: state.player.picssi.passion,
-    picssi_integrity: state.player.picssi.integrity,
-    picssi_courage: state.player.picssi.courage,
-    picssi_standing: state.player.picssi.standing,
-    picssi_spirituality: state.player.picssi.spirituality,
-    picssi_illumination: state.player.picssi.illumination,
-    combat_victories: state.player.combatVictories,
-    vd_active: state.player.vdActive,
-    scrolls_read: state.player.scrollsRead,
-    pending_riddle: state.player.pendingRiddle,
-    npc_affection: state.player.npcAffection,
-    flags_life: state.player.flagsLife,
-    flags_legacy: state.player.flagsLegacy,
-    pending_atom: state.player.pendingAtom,
-    karma_log: state.player.karmaLog,
-    quests: state.player.quests,
-    reputationScore: state.player.reputationScore,
-    reputationLevel: state.player.reputationLevel,
-    knownAs: state.player.knownAs,
-    currentRoom: state.player.currentRoom,
-    currentAdventure: state.player.currentAdventure,
-    completedAdventures: state.player.completedAdventures,
-    bounty: state.player.bounty,
-    isWanted: state.player.isWanted,
-    turnCount: state.player.turnCount,
-    visitedRooms: state.player.visitedRooms ?? [],
-    receivedSamStarterOutfit: state.player.receivedSamStarterOutfit,
-    receivedHokasUnarmedGift: state.player.receivedHokasUnarmedGift,
-    barmaidPreference: state.player.barmaidPreference ?? null,
-    helmet: state.player.helmet ?? null,
-    gorget: state.player.gorget ?? null,
-    bodyArmor: state.player.bodyArmor ?? null,
-    limbArmor: state.player.limbArmor ?? null,
-    boots: state.player.boots ?? null,
-    ringLeft: state.player.ringLeft ?? null,
-    ringRight: state.player.ringRight ?? null,
-    cuffLeft: state.player.cuffLeft ?? null,
-    cuffRight: state.player.cuffRight ?? null,
-    necklace: state.player.necklace ?? null,
-    activeCombat: state.player.activeCombat ?? null,
-    activeEffects: state.player.activeEffects ?? [],
-    weaponPoisonCharges: state.player.weaponPoisonCharges ?? 0,
-    weaponPoisonSeverity: state.player.weaponPoisonSeverity ?? 0,
-    mounted: state.player.mounted ?? false,
-    remembersOwnName: state.player.remembersOwnName ?? false,
-    metZim: state.player.metZim ?? false,
-    weaponSkills: state.player.weaponSkills,
-    knownSpells: state.player.knownSpells ?? [],
-    knownDeities: state.player.knownDeities ?? [],
-    goreSplatters: state.player.goreSplatters ?? [],
-    stamina: state.player.stamina,
-    maxStamina: state.player.maxStamina,
-    fatiguePool: state.player.fatiguePool,
-    actionBudget: state.player.actionBudget,
-  };
-}
+// Sprint A (2026-05-03): worldStateToPlayerRecord extracted to
+// lib/persistence/playerRecord.ts so the round-trip test can import it
+// without booting the API surface.
 
 export async function POST(request: NextRequest) {
   try {
@@ -530,6 +459,21 @@ export async function POST(request: NextRequest) {
               ((savedPlayer as { karma_log?: Array<{ at: string; delta: Record<string, number>; source: string }> }).karma_log) ?? [],
             quests:
               ((savedPlayer as { quests?: Record<string, import("../../../lib/quests/types").QuestState> }).quests) ?? {},
+            // Sprint A — persistence gap-fill (2026-05-03)
+            knownCircles:
+              ((savedPlayer as { known_circles?: number[] }).known_circles) ?? [],
+            tempModifiers:
+              ((savedPlayer as { temp_modifiers?: import("../../../lib/gameState").TempModifier[] }).temp_modifiers) ?? [],
+            currentPlane:
+              ((savedPlayer as { current_plane?: string }).current_plane) ?? "thurian",
+            previousRoom:
+              ((savedPlayer as { previous_room?: string | null }).previous_room) ?? null,
+            prisonTurnsRemaining:
+              typeof (savedPlayer as { prison_turns_remaining?: number }).prison_turns_remaining === "number"
+                ? (savedPlayer as { prison_turns_remaining: number }).prison_turns_remaining
+                : 0,
+            lastAction:
+              ((savedPlayer as { last_action?: string | null }).last_action) ?? null,
           },
           barrelStock:
             (savedPlayer as { barrel_stock?: { gowns?: number; charityClothes?: number } }).barrel_stock
@@ -538,6 +482,17 @@ export async function POST(request: NextRequest) {
                   charityClothes: (savedPlayer as { barrel_stock: { charityClothes?: number } }).barrel_stock.charityClothes ?? 10,
                 }
               : initial.barrelStock,
+          // Sprint A — world-scoped persistence gap-fill (per-player world)
+          worldTurn:
+            typeof (savedPlayer as { world_turn?: number }).world_turn === "number"
+              ? (savedPlayer as { world_turn: number }).world_turn
+              : initial.worldTurn,
+          corpses:
+            ((savedPlayer as { corpses?: Record<string, import("../../../lib/gameState").Corpse> }).corpses) ?? initial.corpses,
+          vendorTempStock:
+            ((savedPlayer as { vendor_temp_stock?: WorldState["vendorTempStock"] }).vendor_temp_stock) ?? initial.vendorTempStock,
+          activeEvents:
+            ((savedPlayer as { active_events?: import("../../../lib/gameState").ActiveEvent[] }).active_events) ?? initial.activeEvents,
         };
 
         // Client holds the live session; DB load can lag behind async savePlayer.

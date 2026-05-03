@@ -1,11 +1,15 @@
 // ============================================================
 // TRAVEL NODE REGISTRY
 // All map nodes a player can travel to, with pixel coordinates
-// over the living-eamon-map.png (2560×1693).
+// over the living-eamon-map.png (2092×1382).
 //
 // Origin (0,0) = top-left corner of the image.
 // These coordinates drive the hero marker position in the S4c
 // WorldMap component.
+//
+// Coordinates hand-placed 2026-05-03 by dragging pins in the
+// WorldMap PLACE PINS tool. Values are raw source-pixel coords
+// as reported by the tool (display_px / SCALE).
 // ============================================================
 
 export type NodeType = "origin" | "city" | "landmark" | "nation_hub" | "wilderness";
@@ -16,7 +20,7 @@ export interface TravelNode {
   id: string;
   name: string;
   type: NodeType;
-  /** Pixel coordinates on living-eamon-map.png (2560×1693). */
+  /** Pixel coordinates on living-eamon-map.png (2092×1382). */
   x: number;
   y: number;
   /** Travel modes available at or from this node. Defaults to all land modes. */
@@ -30,8 +34,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "valus",
     name: "Valus, the City of Wonders",
     type: "origin",
-    x: 600,
-    y: 530,
+    x: 980,
+    y: 800,
     availableModes: ["walk", "horse", "ship", "gate"],
     lore: "The Guild of Free Adventurers — capital of Valusia, hub of all roads.",
   },
@@ -39,8 +43,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "city_vanara",
     name: "Vanara",
     type: "city",
-    x: 490,
-    y: 380,
+    x: 790,
+    y: 522,
     availableModes: ["walk", "horse"],
     lore: "Western Valusian city; gateway to the northern road.",
   },
@@ -48,8 +52,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "city_kamula",
     name: "Kamula",
     type: "city",
-    x: 620,
-    y: 420,
+    x: 1006,
+    y: 592,
     availableModes: ["walk", "horse"],
     lore: "Central Valusian trade city, near the Mirrors.",
   },
@@ -57,8 +61,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "city_talunia",
     name: "Talunia",
     type: "city",
-    x: 1160,
-    y: 560,
+    x: 1372,
+    y: 787,
     availableModes: ["walk", "horse", "ship"],
     lore: "Eastern trade hub where Grondarite iron meets western gold.",
   },
@@ -66,8 +70,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "city_blaal",
     name: "Blaal",
     type: "city",
-    x: 820,
-    y: 690,
+    x: 1000,
+    y: 996,
     availableModes: ["walk", "horse"],
     lore: "Thuranian river city; last safe stop before the Lost Lands.",
   },
@@ -75,8 +79,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "city_stagus",
     name: "Stagus",
     type: "city",
-    x: 1540,
-    y: 650,
+    x: 1690,
+    y: 794,
     availableModes: ["walk", "horse", "ship"],
     lore: "River frontier city at the mouth of the Stagus. The road ends here.",
   },
@@ -84,8 +88,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "poi_skull_of_silence",
     name: "Skull of Silence",
     type: "landmark",
-    x: 980,
-    y: 230,
+    x: 1182,
+    y: 358,
     availableModes: ["walk", "horse"],
     lore: "Black-stone castle in the Zalgara heights. The Silence is imprisoned within.",
   },
@@ -93,8 +97,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "poi_lake_of_visions",
     name: "Lake of Visions",
     type: "landmark",
-    x: 500,
-    y: 510,
+    x: 746,
+    y: 772,
     availableModes: ["walk", "horse"],
     lore: "Mystical lake in central Valusia. Oracle and Outer Dark whispers.",
   },
@@ -102,8 +106,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "poi_accursed_gardens",
     name: "Accursed Gardens",
     type: "landmark",
-    x: 640,
-    y: 565,
+    x: 1002,
+    y: 816,
     availableModes: ["walk", "horse"],
     lore: "Ruined noble estate two miles east of Valus. Cursed flora.",
   },
@@ -111,8 +115,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "poi_forbidden_lake",
     name: "Forbidden Lake",
     type: "landmark",
-    x: 510,
-    y: 640,
+    x: 954,
+    y: 868,
     availableModes: ["walk", "horse"],
     lore: "On the Valusia/Farsun border. Farsunians will not speak of it.",
   },
@@ -120,8 +124,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "poi_tiger_valley",
     name: "Tiger Valley",
     type: "landmark",
-    x: 320,
-    y: 245,
+    x: 506,
+    y: 327,
     availableModes: ["walk", "horse"],
     lore: "Deep in Atlantis. Predator wilderness; hunting and survival.",
   },
@@ -129,8 +133,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "nation_thule",
     name: "Thule",
     type: "nation_hub",
-    x: 680,
-    y: 130,
+    x: 760,
+    y: 236,
     availableModes: ["walk", "horse", "ship"],
     lore: "Cold northern kingdom of tall, gray-eyed warriors. Ancient sea traders.",
   },
@@ -138,8 +142,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "nation_commoria",
     name: "Commoria",
     type: "nation_hub",
-    x: 1050,
-    y: 175,
+    x: 1278,
+    y: 281,
     availableModes: ["walk", "horse"],
     lore: "Fortress-citadels carved into mountainsides. Court of assassins and whisper-brokers.",
   },
@@ -147,8 +151,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "nation_lemuria",
     name: "Lemuria",
     type: "nation_hub",
-    x: 1820,
-    y: 400,
+    x: 1810,
+    y: 236,
     availableModes: ["ship"],
     lore: "Eastern sea-coast nation of golden-eyed scholars and fierce warriors.",
   },
@@ -156,8 +160,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "nation_atlantis",
     name: "Atlantis",
     type: "nation_hub",
-    x: 210,
-    y: 200,
+    x: 398,
+    y: 273,
     availableModes: ["ship"],
     lore: "Island nation of wonders. Blue-eyed Celtic raiders and ancient science.",
   },
@@ -165,8 +169,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "geo_lost_lands",
     name: "Lost Lands",
     type: "wilderness",
-    x: 900,
-    y: 1100,
+    x: 1234,
+    y: 1119,
     availableModes: ["walk", "horse"],
     lore: "Unmapped southern reaches. Eldar, Dwarves, and older things.",
   },
@@ -174,7 +178,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "geo_worlds_end",
     name: "World's End",
     type: "wilderness",
-    x: 2000,
+    x: 1970,
     y: 700,
     availableModes: ["walk", "horse"],
     lore: "Past Stagus, the road simply stops. Nothing is mapped beyond.",
@@ -183,8 +187,8 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     id: "geo_jungles",
     name: "Thurian Deep Jungle",
     type: "wilderness",
-    x: 1650,
-    y: 1050,
+    x: 1936,
+    y: 1170,
     availableModes: ["walk"],
     lore: "Serpent-Man temple complexes hidden in vine-choked ancient ruins.",
   },

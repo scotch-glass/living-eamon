@@ -139,6 +139,8 @@ export async function savePlayer(player: Record<string, unknown>) {
     // Sprint G1 — real-time clock
     real_time_ms: typeof player.realTimeMs === "number" ? player.realTimeMs : Date.now(),
     last_tick_at: typeof player.lastTickAt === "number" ? player.lastTickAt : Date.now(),
+    // Sprint G3 — weather snapshot
+    current_weather: player.currentWeather ?? null,
     last_seen: new Date().toISOString(),
   };
 

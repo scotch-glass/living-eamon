@@ -91,6 +91,7 @@ import { emitQuestEvent } from "./quests/engine";
 import { resolveQuestDialogue } from "./quests/dialogue";
 import { handleInvoke, composeInvokeResponse } from "./sorcery/invoke";
 import { getTimeOfDayLine } from "./world/timeOfDayDescriptions";
+import { getWeatherLine } from "./world/weatherDescriptions";
 import { renderActiveQuests, renderQuestLog } from "./quests/log";
 import "./quests/load"; // side-effect: registers all quest line modules
 import {
@@ -1506,6 +1507,16 @@ function buildRoomDescription(
       state.worldTurn
     );
     if (todLine) description += "\n\n" + todLine;
+  }
+
+  // Sprint G3 — weather line (outdoor rooms, semiverbose + verbose only)
+  if (verbosity !== "nonverbose" && room.outdoor && state.currentWeather) {
+    const weatherLine = getWeatherLine(
+      state.currentWeather.kind,
+      room.sceneTone ?? "civilized",
+      state.worldTurn
+    );
+    if (weatherLine) description += "\n\n" + weatherLine;
   }
 
   // Robe humiliation — only on semiverbose and verbose (skip nonverbose)

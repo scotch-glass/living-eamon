@@ -10,6 +10,7 @@ import { RoomState } from "./gameData";
 import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 import type { PicssiState } from "./karma/types";
 import type { RoomTimeOfDay } from "./roomTypes";
+import type { WeatherKind } from "./world/weatherDescriptions";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -588,6 +589,13 @@ export interface WorldState {
    */
   realTimeMs: number;
   lastTickAt: number;
+
+  /**
+   * Sprint G3 — current Eivissa weather, refreshed from Open-Meteo
+   * every ~30 minutes. Applied to outdoor rooms in buildRoomDescription.
+   * Undefined until the first weather fetch (renders as "sunny" fallback).
+   */
+  currentWeather?: { kind: WeatherKind; temp: number; fetchedAt: number };
 }
 
 // ============================================================

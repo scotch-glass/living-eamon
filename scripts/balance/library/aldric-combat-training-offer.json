@@ -4,7 +4,7 @@
   "pdSource": "the-stag-company",
   "pdSafe": true,
   "patternType": "graduated-test",
-  "tags": ["main-hall", "ostavar", "aldric", "tutorial", "combat", "first-meeting", "early-game"],
+  "tags": ["main-hall", "valus", "aldric", "tutorial", "combat", "first-meeting", "early-game"],
   "triggers": [
     { "type": "talk-to-npc", "target": "old_mercenary" }
   ],

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vivian — pose training set</title>
+<style>
+  body {
+    margin: 0;
+    background: #14141a;
+    color: #e8e4d6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 24px;
+  }
+  h1 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    color: #fbbf24;
+    margin: 0 0 6px;
+  }
+  p.lede {
+    margin: 0 0 16px;
+    color: #b8b3a0;
+    max-width: 720px;
+    line-height: 1.5;
+  }
+  .toolbar {
+    margin-bottom: 24px;
+    color: #908a78;
+    font-size: 13px;
+  }
+  .toolbar input {
+    background: #1f1f28;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: #e8e4d6;
+    padding: 4px 10px;
+    border-radius: 4px;
+    width: 60px;
+  }
+  .master-ref {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #14141a;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+    margin-bottom: 24px;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .master-ref img {
+    width: 200px;
+    height: auto;
+    border: 2px solid rgba(251, 191, 36, 0.6);
+    border-radius: 6px;
+    background: repeating-conic-gradient(#2a2a36 0% 25%, #1f1f28 0% 50%) 50% / 16px 16px;
+  }
+  .master-ref .label {
+    color: #fbbf24;
+    font-family: Georgia, serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .master-ref .desc {
+    color: #b8b3a0;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 480px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 18px;
+    max-width: 1800px;
+  }
+  .card {
+    background: #1f1f28;
+    border: 1px solid rgba(251, 191, 36, 0.18);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card h2 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    color: #fbbf24;
+    margin: 0;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.12);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 16px;
+  }
+  .card h2 .slug {
+    font-size: 11px;
+    color: #908a78;
+    font-family: -apple-system, sans-serif;
+  }
+  .img-wrap {
+    background:
+      repeating-conic-gradient(#2a2a36 0% 25%, #1f1f28 0% 50%) 50% / 18px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+  .img-wrap img {
+    max-width: 100%;
+    max-height: 600px;
+    display: block;
+  }
+  .caption {
+    padding: 8px 14px 12px;
+    font-size: 11px;
+    color: #908a78;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    line-height: 1.4;
+    border-top: 1px solid rgba(251, 191, 36, 0.06);
+    word-break: break-word;
+  }
+</style>
+</head>
+<body>
+  <h1>Vivian — pose training set</h1>
+  <p class="lede">
+    LoRA training images generated via xAI image-to-image off the locked master.
+    Compare each pose against the sticky master reference at the top — same person?
+    Same eyes / jaw / hair color / build? If yes, the reference is honored. If no,
+    we got prompt-only Vivian.
+  </p>
+
+  <div class="master-ref">
+    <img id="master-img" src="/art/npcs/vivian/master/vivian_master_v1.png" alt="Vivian master (v6)" />
+    <div>
+      <div class="label">Master reference (v6)</div>
+      <div class="desc">
+        This is the canonical Vivian identity. Every pose below was generated with
+        this image as the input reference. They should all look like the SAME woman.
+        Compare facial structure, eyes, hair color, body build.
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    Newest first. Probe range: <input id="max-n" type="number" value="50" min="1" max="200" />
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    async function probe(n) {
+      const idStr = String(n).padStart(2, "0");
+      try {
+        const r = await fetch(`/art/lora/vivian-training/v${idStr}.png`, { method: "HEAD" });
+        return r.ok ? idStr : null;
+      } catch (_e) {
+        return null;
+      }
+    }
+
+    async function loadCaption(idStr) {
+      try {
+        const r = await fetch(`/art/lora/vivian-training/v${idStr}.txt`);
+        if (!r.ok) return null;
+        return (await r.text()).trim();
+      } catch (_e) {
+        return null;
+      }
+    }
+
+    async function build() {
+      const grid = document.getElementById("grid");
+      const maxN = parseInt(document.getElementById("max-n").value, 10);
+      grid.innerHTML = "";
+
+      const checks = [];
+      for (let i = 1; i <= maxN; i++) checks.push(probe(i));
+      const results = await Promise.all(checks);
+      const present = results.filter((r) => r).sort((a, b) => parseInt(b) - parseInt(a));
+
+      if (present.length === 0) {
+        grid.innerHTML = "<p style=\"color:#908a78\">No training images yet.</p>";
+        return;
+      }
+
+      const cb = Date.now();
+      for (const idStr of present) {
+        const caption = await loadCaption(idStr);
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h2>v${idStr}</h2>
+          <div class="img-wrap"><img src="/art/lora/vivian-training/v${idStr}.png?t=${cb}" alt="Vivian v${idStr}" /></div>
+          ${caption ? `<div class="caption">${caption}</div>` : ""}
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    document.getElementById("max-n").addEventListener("change", build);
+    build();
+  </script>
+</body>
+</html>

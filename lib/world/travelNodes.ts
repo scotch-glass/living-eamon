@@ -26,23 +26,14 @@ export interface TravelNode {
 }
 
 export const TRAVEL_NODES: Record<string, TravelNode> = {
-  ostavar: {
-    id: "ostavar",
-    name: "Ostavar",
+  valus: {
+    id: "valus",
+    name: "Valus, the City of Wonders",
     type: "origin",
-    x: 595,
-    y: 525,
+    x: 600,
+    y: 530,
     availableModes: ["walk", "horse", "ship", "gate"],
-    lore: "The Guild of Free Adventurers — hub of all roads.",
-  },
-  city_of_wonders: {
-    id: "city_of_wonders",
-    name: "City of Wonders",
-    type: "city",
-    x: 605,
-    y: 540,
-    availableModes: ["walk", "horse", "ship", "gate"],
-    lore: "Kull's capital. Greatest city of the Thurian Age.",
+    lore: "The Guild of Free Adventurers — capital of Valusia, hub of all roads.",
   },
   city_vanara: {
     id: "city_vanara",
@@ -114,7 +105,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     x: 640,
     y: 565,
     availableModes: ["walk", "horse"],
-    lore: "Ruined noble estate two miles east of the City of Wonders. Cursed flora.",
+    lore: "Ruined noble estate two miles east of Valus. Cursed flora.",
   },
   poi_forbidden_lake: {
     id: "poi_forbidden_lake",

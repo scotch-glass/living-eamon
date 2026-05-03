@@ -114,7 +114,7 @@ flagged with ⚠ — those are trademark-adjacent in the popular mind.
 #### Nations & Kingdoms — Hyborian Era (post-Cataclysm, from Essay)
 | Term | Source | Notes |
 |---|---|---|
-| Aquilonia | Essay | Central western kingdom. Ostavar (our invented city) is visually styled after it. Usable in narrative. |
+| Aquilonia | Essay | Central western kingdom. Valus, the City of Wonders is visually styled after it for art prompts. Usable in narrative. |
 | Argos | Essay | |
 | Asgard | Essay | Northern Aesir homeland. |
 | Border Kingdom | Essay | |
@@ -209,7 +209,7 @@ flagged with ⚠ — those are trademark-adjacent in the popular mind.
 | Term | Source | Notes |
 |---|---|---|
 | Aurelion | Public_Domain_Rules.md | Invented frame city for Phase 1 content. |
-| Ostavar | MODULE_PLAN + CLAUDE_CONTEXT | **Invented** city. Visually styled after Aquilonia but the name and all specifics are ours. |
+| Valus | WORLD_LOCATIONS + GAME_DESIGN §10.4 | The City of Wonders — canonical Thurian-Age capital of Valusia. Guild Hall hub. Art-prompt style: late-Aquilonian. |
 | Jane | Living Eamon original | The ancient intelligence / narrator. Our IP. |
 | The Eamon Chronicle | Living Eamon original | Persistent deed-log system. Our IP. |
 | The Order | Living Eamon original | Inquisition faction that prosecutes Occultists. Our IP. |
@@ -505,21 +505,19 @@ in the Main Hall.
 
 ---
 
-### 10.4 Ostavar and the Thurian Kingdoms
+### 10.4 Valus and the Thurian Kingdoms
 
-**Ostavar — the player's starting hub** — is a Living-Eamon-
-invented Thurian-Age city. **Visually it is styled after Howard's
-late-Aquilonian civic architecture** — marble colonnades, gilt
+**Valus — the City of Wonders, capital of Valusia — is the player's starting hub.** The Guild of Free Adventurers operates here. **Visually it is styled after Howard's late-Aquilonian civic architecture** — marble colonnades, gilt
 towers, silk banners, Frazetta/Brom palace and temple interiors —
 even though the in-fiction era is the Thurian Age, thousands of
 years before Aquilonia rises. Visual styles are immortal:
 marble cities look like marble cities whether they stand in
 Valusia or Aquilonia, and Howard's architectural language is the
-designed-from-the-start tonal anchor for Ostavar's civic
+designed-from-the-start tonal anchor for Valus's civic
 buildings. Players will never read the word "Aquilonia" in-game,
 but the art will continue to read late-Aquilonian.
 
-**Tone for Ostavar is "aquilonian"** in the scene-image system —
+**Tone for Valus is "aquilonian"** in the scene-image system —
 this is an art-prompt reference, not an in-fiction location tag.
 Continue using "Aquilonian style" / "Hyborian style" / "Frazetta
 palace" / "Brom temple" freely in image-generation prompts and
@@ -530,7 +528,7 @@ player reads.
 When future modules introduce other regions, use these
 era-appropriate in-fiction names paired with Howard-derived
 visual styles:
-- **Ostavar (Thurian-era city)** → late-Aquilonian visual style:
+- **Valus (City of Wonders, Thurian-era capital)** → late-Aquilonian visual style:
   marble, gilt, civilized, Frazetta palace, Brom temple-interior
 - **Valusia** (in-fiction the great Thurian empire) → ancient
   mottled marble, serpent-columns, brass and bronze, late-imperial
@@ -1172,7 +1170,7 @@ The Order considers runebooks strong evidence of Occult practice.
 
 **The Fertility Temple paradox** *(canonical)*:
 
-The Temple of the Fertility God in Ostavar (and analogous temples in other Thurian-Age cities) is, in the same building:
+The Temple of the Fertility God in Valus (and analogous temples in other Thurian-Age cities) is, in the same building:
 
 - The most popular **brothel** in the city — the temple's "sacred prostitutes" are dancers, courtesans, and ritual partners. Visiting here = brothel rest activity (Passion +, Spirituality −, VD risk).
 - The most effective **cure** for venereal disease in the city — praying at the fertility-god's altar has the highest chance of removing `vdActive`.

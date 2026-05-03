@@ -18,6 +18,7 @@ import type {
   ScarCount,
   SkinTone,
 } from "./heroTypes";
+import { canonicalFraming } from "./spriteFraming";
 
 // ─── Phrase helpers ─────────────────────────────────────────────────
 
@@ -69,12 +70,10 @@ function hairClause(color: HairColor, length: HairLength): string {
     grey: "iron-grey",
     white: "snow-white",
   };
-  const templates: Record<Exclude<HairLength, "bald">, (c: string) => string> = {
-    short: (c) => `Close-cropped ${c} hair`,
-    medium: (c) => `${capitalize(c)} hair cut to the shoulder, loose`,
-    long: (c) => `Long ${c} hair falling well past the shoulders, loose and unbound`,
-  };
-  return templates[length](colorName[color]);
+  // Only "short" remains here — "medium" and "long" were removed 2026-04-25
+  // because the head/body composite system requires hair to stop above the
+  // chin-line cut.
+  return `Close-cropped ${colorName[color]} hair`;
 }
 
 function capitalize(s: string): string {
@@ -146,15 +145,21 @@ function distinguishingMarkClause(mark?: string): string {
 
 // ─── Base template ──────────────────────────────────────────────────
 
+// PHYSIQUE ONLY — NO default wardrobe clause. The old template baked
+// in "clothed only in a dark leather loincloth, bare-chested and fully
+// barefoot" which then conflicted with every subsequent equipment
+// clause (common_clothes, leather_armor, chain_mail…). Grok compromised
+// by rendering ripped-open shirts, bare midriffs under cuirasses,
+// erased boots, etc. — the root cause of the repeated wardrobe-QA
+// rejections on 2026-04-24. Wardrobe is now owned entirely by the
+// caller (EQUIPMENT_FRAMING in lib/wardrobe/prompts/body.ts).
 const HERO_BASE_TEMPLATE = [
   "Photorealistic painted-realism male warrior from Living Eamon,",
   "in the spirit of Frank Frazetta and Gerald Brom.",
   "Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and",
   "trapezius, powerful arms with defined brachialis and deltoids, chiseled",
   "abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic",
-  "warrior silhouette. Clothed only in a dark leather loincloth, bare-chested",
-  "and fully barefoot (no shoes, no sandals, no footwear of any kind), with",
-  "torso and limbs exposed.",
+  "warrior silhouette.",
 ].join(" ");
 
 // ─── Public API ─────────────────────────────────────────────────────
@@ -198,11 +203,8 @@ export function buildIdentityBlock(h: HeroCustomization): string {
 // because those scenes have their own environment.
 
 const FORGE_FRAMING = [
-  "Rendered on a pure white studio backdrop, cleanly isolated from any",
-  "environment, no background elements, no props except what is worn.",
-  "Three-quarter standing pose facing the camera, arms slightly away from",
-  "the body, weight balanced, gaze direct and unflinching. Even studio",
-  "lighting. Full body in frame from head to feet with comfortable margin.",
+  "Neutral standing pose, arms slightly away from the body, weight",
+  "balanced, gaze direct and unflinching.",
   "Fresh-rebirth state: unscarred smooth skin, no battle marks, no blood,",
   "no dirt or grime, no tan lines or sunburn, no visible wounds, no",
   "bandages, no eye patches, no brands. The hero as he awakens on the",
@@ -215,5 +217,6 @@ const FORGE_FRAMING = [
  * Used by the Grok Imagine Pro master-generation call.
  */
 export function buildForgeGenerationPrompt(h: HeroCustomization): string {
-  return `${buildIdentityBlock(h)} ${FORGE_FRAMING}`;
+  // Heroes always render screen-left → face screen-right.
+  return `${buildIdentityBlock(h)} ${FORGE_FRAMING} ${canonicalFraming("left")}`;
 }

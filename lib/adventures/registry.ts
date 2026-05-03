@@ -9,10 +9,11 @@ import { GUILD_HALL } from "./guild-hall";
 
 const MODULES: AdventureModule[] = [
   GUILD_HALL,
-  // Future adventures registered here:
-  // BEGINNERS_CAVE,
-  // THIEVES_GUILD,
-  // HAUNTED_MANOR,
+  // The first three adventures ship as Thurian-Age PD Robert E. Howard
+  // adaptations (see lore/hyborian-pd/MODULE_PLAN.md):
+  //   MIRRORS_OF_TUZUN_THUNE,   // The Mirrors of Tuzun Thune (1929)
+  //   SERPENT_IN_THE_COURT,     // The Shadow Kingdom (1929)
+  //   PICTISH_TIME_TOMB,        // Kings of the Night (1930)
 ];
 
 /** All rooms from all registered modules, keyed by room id. */

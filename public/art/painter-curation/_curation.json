@@ -1,0 +1,937 @@
+{
+  "frazetta_disagreement_1985": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:09:39.292Z"
+  },
+  "vallejo_aries_1988": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:14.879Z"
+  },
+  "vallejo_friends": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:12:55.403Z"
+  },
+  "vallejo_mythology_1990_cover": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:12.152Z"
+  },
+  "vallejo_archangel_1996": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:10.637Z"
+  },
+  "vallejo_aztec_serpent_1985": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:25.325Z"
+  },
+  "vallejo_jeannies_kitten": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:08.230Z"
+  },
+  "vallejo_red_sonja_5_1985": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:13:12.515Z"
+  },
+  "vallejo_mythology_1994_centrepiece": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:30.342Z"
+  },
+  "vallejo_superman_darkseid": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:58.779Z"
+  },
+  "vallejo_green_princess": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:40.371Z"
+  },
+  "kelly_conan_people_black_circle": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:28.676Z"
+  },
+  "vallejo_guide_to_barsoom_1976": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:25.551Z"
+  },
+  "vallejo_savage_sword_conan_5": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:13:27.573Z"
+  },
+  "kelly_castaways_in_time": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:51.358Z"
+  },
+  "kelly_hannibal": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:52.529Z"
+  },
+  "kelly_tarzan_silverback": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:58.762Z"
+  },
+  "kelly_sun_warrior": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:12:57.308Z"
+  },
+  "kelly_dragon_distress": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:13:05.311Z"
+  },
+  "kelly_green_woman": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:13:02.262Z"
+  },
+  "kelly_walking_dead_richmond": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:13:11.463Z"
+  },
+  "kelly_legends_cthulu": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:23.243Z"
+  },
+  "brunner_alien_worlds_6_cover": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:13:13.496Z"
+  },
+  "brunner_bran_mak_morn_plate1": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:31.090Z"
+  },
+  "kelly_creepy_81_prelim": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:35.619Z"
+  },
+  "kelly_cthulhu_old_one": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:38.010Z"
+  },
+  "kelly_expendables": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:44.347Z"
+  },
+  "kelly_tarzan_jane": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:45.723Z"
+  },
+  "kelly_book_of_soldiers": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:53.510Z"
+  },
+  "kelly_book_of_dreams": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:14:55.140Z"
+  },
+  "vallejo_dragon_maiden": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:15:20.052Z"
+  },
+  "vallejo_red_sonja": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:15:21.456Z"
+  },
+  "frazetta_fighting_man_of_mars": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:23:34.190Z"
+  },
+  "frazetta_mina": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:23:42.236Z"
+  },
+  "frazetta_perfect_nude_middle_earth": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:23:32.277Z"
+  },
+  "frazetta_barbarian_slave_girl": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:11:54.950Z"
+  },
+  "frazetta_jungle_trouble": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:15:58.081Z"
+  },
+  "frazetta_dejah_thoris_c": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:23:46.465Z"
+  },
+  "frazetta_dragula": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:16:01.187Z"
+  },
+  "frazetta_king_kong": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:11:51.366Z"
+  },
+  "frazetta_spa_fon_5": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:16:14.210Z"
+  },
+  "frazetta_dejah_thoris_b": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:01.656Z"
+  },
+  "frazetta_young_nude_horse": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:03.206Z"
+  },
+  "frazetta_princess_of_mars": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:08.802Z"
+  },
+  "frazetta_death_dealer_1973": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:11:47.529Z"
+  },
+  "frazetta_eowyn_nazghul": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:07.285Z"
+  },
+  "frazetta_bathing_girl": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:14.182Z"
+  },
+  "vallejo_flight": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:53.226Z"
+  },
+  "brunner_flesh_fantasy_2_mirage": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:46.089Z"
+  },
+  "brunner_flesh_fantasy_1_cover": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:24:54.160Z"
+  },
+  "brunner_dr_strange_4_recreation": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:25:08.347Z"
+  },
+  "brunner_dr_strange_clea_1978": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:25:23.277Z"
+  },
+  "brunner_elric_portfolio_frontispiece": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:25:36.710Z"
+  },
+  "brunner_elric_boiling_sea": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:25:48.176Z"
+  },
+  "brunner_elric_forest_of_troos": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:26:07.327Z"
+  },
+  "brunner_bran_mak_morn_interior": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T11:26:14.472Z"
+  },
+  "frazetta_egyptian_queen_1969": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:43.330Z"
+  },
+  "frazetta_conan_the_buccaneer_1971": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:23:27.115Z"
+  },
+  "frazetta_conan_the_usurper_1967": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:23:27.945Z"
+  },
+  "frazetta_conan_of_cimmeria_1969": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:23:28.904Z"
+  },
+  "frazetta_conan_the_avenger_1968": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:23:30.404Z"
+  },
+  "frazetta_conan_the_warrior_1967": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:23:33.687Z"
+  },
+  "vallejo_conan_of_aquilonia_1977": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:23:34.933Z"
+  },
+  "manual_grok-style_sorcerer-29": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:44:58.104Z"
+  },
+  "manual_grok-style_sorcerer-30": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:24:15.574Z"
+  },
+  "manual_grok-style_sorcerer-28": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:45:38.381Z"
+  },
+  "manual_grok-style_sorcerer-27": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:45:47.920Z"
+  },
+  "manual_grok-style_savages-21": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:46:14.071Z"
+  },
+  "manual_grok-style_savages-23": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:46:23.533Z"
+  },
+  "manual_grok-style_savages-27": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:46:38.204Z"
+  },
+  "manual_grok-style_savages-26": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:46:49.533Z"
+  },
+  "manual_grok-style_savages-25": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:46:59.920Z"
+  },
+  "manual_grok-style_savages-24": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:34.525Z"
+  },
+  "manual_grok-style_savages-28": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:47:23.669Z"
+  },
+  "manual_grok-style_savages-29": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:47:36.637Z"
+  },
+  "manual_grok-style_savages-30": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:47:44.441Z"
+  },
+  "manual_grok-style_savages-31": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:22:40.085Z"
+  },
+  "manual_grok-style_savages-35": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:48:09.433Z"
+  },
+  "manual_grok-style_savages-34": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:48:16.553Z"
+  },
+  "manual_grok-style_savages-33": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:48:25.345Z"
+  },
+  "manual_grok-style_savages-32": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:48:38.873Z"
+  },
+  "manual_grok-style_savages-36": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:48:52.542Z"
+  },
+  "manual_grok-style_savages-37": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:03.413Z"
+  },
+  "manual_grok-style_savages-38": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:08.617Z"
+  },
+  "manual_grok-style_savages-39": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:15.083Z"
+  },
+  "manual_grok-style_sorcerer-02": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:25.867Z"
+  },
+  "manual_grok-style_sorcerer-03": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:35.513Z"
+  },
+  "manual_grok-style_savages-40": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:43.349Z"
+  },
+  "manual_grok-style_sorcerer-07": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:49:54.186Z"
+  },
+  "manual_grok-style_sorcerer-11": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:22.983Z"
+  },
+  "manual_frazetta_conan-1": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:09:50.308Z"
+  },
+  "manual_frazetta_conan-2": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:13:26.479Z"
+  },
+  "manual_frazetta_conan-11": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:50:36.255Z"
+  },
+  "manual_frazetta_conan-12": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:50:37.466Z"
+  },
+  "manual_frazetta_conan-10": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:50:39.524Z"
+  },
+  "manual_frazetta_conan-3": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:50:48.454Z"
+  },
+  "manual_frazetta_conan-4": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:50:49.826Z"
+  },
+  "manual_frazetta_conan-5": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:58.152Z"
+  },
+  "manual_frazetta_conan-6": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:20:55.259Z"
+  },
+  "manual_frazetta_conan-7": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:50:59.413Z"
+  },
+  "manual_frazetta_conan-8": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:00.955Z"
+  },
+  "manual_frazetta_conan-9": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:02.514Z"
+  },
+  "manual_brunner_elric-1": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:21:05.051Z"
+  },
+  "manual_grok-style_damsel-03": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:10.655Z"
+  },
+  "manual_grok-style_damsel-02": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:14.580Z"
+  },
+  "manual_grok-style_damsel-01": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:18.242Z"
+  },
+  "manual_brunner_elric-2": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:13:44.284Z"
+  },
+  "manual_grok-style_damsel-04": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:29.822Z"
+  },
+  "manual_grok-style_damsel-05": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T14:51:34.245Z"
+  },
+  "manual_grok-style_sorcerer-26": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:10:05.133Z"
+  },
+  "manual_grok-style_sorcerer-25": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:10:15.585Z"
+  },
+  "manual_grok-style_sorcerer-24": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:24:03.861Z"
+  },
+  "manual_grok-style_sorcerer-23": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:10:43.010Z"
+  },
+  "manual_grok-style_sorcerer-22": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:11:03.937Z"
+  },
+  "manual_grok-style_sorcerer-21": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:11:18.471Z"
+  },
+  "manual_grok-style_sorcerer-20": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:11:31.157Z"
+  },
+  "manual_grok-style_damsel-06": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:02.330Z"
+  },
+  "manual_grok-style_damsel-07": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:03.429Z"
+  },
+  "manual_grok-style_damsel-09": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:11.446Z"
+  },
+  "manual_grok-style_damsel-08": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:16.300Z"
+  },
+  "manual_grok-style_damsel-10": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:18.920Z"
+  },
+  "manual_grok-style_orcs-01": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:21.167Z"
+  },
+  "manual_grok-style_orcs-02": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:25.366Z"
+  },
+  "manual_grok-style_orcs-03": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:26.890Z"
+  },
+  "manual_grok-style_orcs-04": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:28.883Z"
+  },
+  "manual_grok-style_orcs-05": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:43.434Z"
+  },
+  "manual_grok-style_orcs-06": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:52.662Z"
+  },
+  "manual_grok-style_orcs-07": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:14:57.447Z"
+  },
+  "manual_grok-style_orcs-09": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:09.963Z"
+  },
+  "manual_grok-style_orcs-08": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:21:43.237Z"
+  },
+  "manual_grok-style_orcs-10": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:19.751Z"
+  },
+  "manual_grok-style_orcs-11": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:21.364Z"
+  },
+  "manual_grok-style_orcs-12": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:28.367Z"
+  },
+  "manual_grok-style_orcs-13": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:38.113Z"
+  },
+  "manual_grok-style_orcs-16": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:45.551Z"
+  },
+  "manual_grok-style_orcs-14": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:48.413Z"
+  },
+  "manual_grok-style_orcs-15": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:52.879Z"
+  },
+  "manual_grok-style_orcs-17": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:15:58.753Z"
+  },
+  "manual_grok-style_orcs-18": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:06.584Z"
+  },
+  "manual_grok-style_orcs-19": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:08.271Z"
+  },
+  "manual_grok-style_orcs-20": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:16.702Z"
+  },
+  "manual_grok-style_orcs-21": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:21.176Z"
+  },
+  "manual_grok-style_orcs-22": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:29.155Z"
+  },
+  "manual_grok-style_orcs-23": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:38.847Z"
+  },
+  "manual_grok-style_orcs-24": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:49.421Z"
+  },
+  "manual_grok-style_orcs-25": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:16:55.528Z"
+  },
+  "manual_grok-style_orcs-26": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:00.192Z"
+  },
+  "manual_grok-style_orcs-27": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:15.908Z"
+  },
+  "manual_grok-style_orcs-28": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:20.823Z"
+  },
+  "manual_grok-style_orcs-29": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:27.057Z"
+  },
+  "manual_grok-style_savages-03": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:31.753Z"
+  },
+  "manual_grok-style_savages-01": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:48.583Z"
+  },
+  "manual_grok-style_orcs-30": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:22:06.985Z"
+  },
+  "manual_grok-style_savages-02": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:17:54.229Z"
+  },
+  "manual_grok-style_savages-06": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:00.300Z"
+  },
+  "manual_grok-style_savages-07": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:05.404Z"
+  },
+  "manual_grok-style_savages-05": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:10.285Z"
+  },
+  "manual_grok-style_savages-04": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:18.487Z"
+  },
+  "manual_grok-style_savages-08": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:22.169Z"
+  },
+  "manual_grok-style_savages-09": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:23.763Z"
+  },
+  "manual_grok-style_savages-10": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:34.342Z"
+  },
+  "manual_grok-style_savages-11": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:36.029Z"
+  },
+  "manual_grok-style_savages-15": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:38.525Z"
+  },
+  "manual_grok-style_savages-14": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:41.167Z"
+  },
+  "manual_grok-style_savages-13": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:49.063Z"
+  },
+  "manual_grok-style_savages-12": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:50.709Z"
+  },
+  "manual_grok-style_savages-16": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:18:56.713Z"
+  },
+  "manual_grok-style_savages-18": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:02.558Z"
+  },
+  "manual_grok-style_savages-17": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:03.795Z"
+  },
+  "manual_grok-style_savages-19": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:12.416Z"
+  },
+  "manual_grok-style_savages-20": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:18.096Z"
+  },
+  "manual_grok-style_savages-22": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:19:23.968Z"
+  },
+  "manual_grok-style_sorcerer-01": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:22:59.138Z"
+  },
+  "manual_grok-style_sorcerer-06": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:11.027Z"
+  },
+  "manual_grok-style_sorcerer-05": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:14.519Z"
+  },
+  "manual_grok-style_sorcerer-04": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:16.164Z"
+  },
+  "manual_grok-style_sorcerer-08": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:19.169Z"
+  },
+  "manual_grok-style_sorcerer-09": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:20.198Z"
+  },
+  "manual_grok-style_sorcerer-10": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:21.609Z"
+  },
+  "manual_grok-style_sorcerer-13": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:26.140Z"
+  },
+  "manual_grok-style_sorcerer-12": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:27.641Z"
+  },
+  "manual_grok-style_sorcerer-14": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:29.085Z"
+  },
+  "manual_grok-style_sorcerer-15": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:33.606Z"
+  },
+  "manual_grok-style_sorcerer-19": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:37.382Z"
+  },
+  "manual_grok-style_sorcerer-18": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:38.668Z"
+  },
+  "manual_grok-style_sorcerer-17": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:47.639Z"
+  },
+  "manual_grok-style_sorcerer-16": {
+    "state": "rejected",
+    "notes": "",
+    "updatedAt": "2026-04-26T15:23:51.537Z"
+  }
+}

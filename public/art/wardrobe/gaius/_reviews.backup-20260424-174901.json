@@ -1,0 +1,177 @@
+{
+  "gray_robe_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:02:42.995Z"
+  },
+  "gray_robe_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:02:44.639Z"
+  },
+  "loincloth_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:15.534Z"
+  },
+  "gray_robe_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:06.946Z"
+  },
+  "loincloth_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:35.341Z"
+  },
+  "loincloth_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:58.454Z"
+  },
+  "loincloth_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:07:00.391Z"
+  },
+  "loincloth_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:01:23.599Z"
+  },
+  "chain_mail_polearm_casual": {
+    "state": "rejected",
+    "notes": "Boots are corrupted. Redo make the boots deep brown.",
+    "updatedAt": "2026-04-24T15:04:13.539Z"
+  },
+  "chain_mail_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "Boots are corrupted. Make the boots deep brown",
+    "updatedAt": "2026-04-24T15:04:18.301Z"
+  },
+  "chain_mail_back_bow_casual": {
+    "state": "rejected",
+    "notes": "Boots are corrupted. Make the boots deep brown",
+    "updatedAt": "2026-04-24T15:04:23.383Z"
+  },
+  "chain_mail_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Boots are corrupted. Make the boots deep brown",
+    "updatedAt": "2026-04-24T15:04:34.831Z"
+  },
+  "chain_mail_unarmed_casual": {
+    "state": "rejected",
+    "notes": "Boots are corrupted. Make the boots deep brown",
+    "updatedAt": "2026-04-24T15:04:38.655Z"
+  },
+  "leather_armor_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:05:03.636Z"
+  },
+  "leather_armor_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:05:06.536Z"
+  },
+  "leather_armor_polearm_casual": {
+    "state": "rejected",
+    "notes": "Redo. The leather armor must cover the entire torso. Make the boots deep brown",
+    "updatedAt": "2026-04-24T15:05:26.812Z"
+  },
+  "leather_armor_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:05:41.261Z"
+  },
+  "common_clothes_polearm_casual": {
+    "state": "rejected",
+    "notes": "Redo. The shirt should cover the both arms and the entire torso.",
+    "updatedAt": "2026-04-24T15:06:07.307Z"
+  },
+  "leather_armor_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:06:16.707Z"
+  },
+  "leather_armor_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:06:20.202Z"
+  },
+  "leather_armor_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "Redo. The leather armor must cover the entire torso. Make the boots deep brown",
+    "updatedAt": "2026-04-24T15:06:38.431Z"
+  },
+  "common_clothes_back_bow_casual": {
+    "state": "rejected",
+    "notes": "The shirt should cover the entire torso. The shirt should cover the entire torso. Make the boots deep brown.",
+    "updatedAt": "2026-04-24T15:07:28.011Z"
+  },
+  "common_clothes_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "The shirt should cover the entire torso. The shirt should cover the entire torso. Make the boots deep brown.",
+    "updatedAt": "2026-04-24T15:07:34.941Z"
+  },
+  "common_clothes_hip_haft_casual": {
+    "state": "rejected",
+    "notes": "The shirt should cover the entire torso. The shirt should cover the entire torso. Make the boots deep brown.",
+    "updatedAt": "2026-04-24T15:07:36.925Z"
+  },
+  "common_clothes_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "The shirt should cover the entire torso. The shirt should cover the entire torso. Make the boots deep brown.",
+    "updatedAt": "2026-04-24T15:07:39.333Z"
+  },
+  "common_clothes_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:43.228Z"
+  },
+  "common_clothes_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:53.631Z"
+  },
+  "gray_robe_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:58.078Z"
+  },
+  "gray_robe_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:04.952Z"
+  },
+  "gray_robe_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:09.284Z"
+  },
+  "gray_robe_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:14.680Z"
+  },
+  "loincloth_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:17.607Z"
+  },
+  "loincloth_back_bow_casual": {
+    "state": "rejected",
+    "notes": "The bow was erased.",
+    "updatedAt": "2026-04-24T15:08:30.136Z"
+  },
+  "chain_mail_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:09:51.618Z"
+  },
+  "chain_mail_hip_haft_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:09:54.807Z"
+  }
+}

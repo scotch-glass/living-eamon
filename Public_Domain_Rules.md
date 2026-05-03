@@ -149,7 +149,7 @@ the marks remain protected.
 
 **Player-facing branding:**
 - Game title: **"Living Eamon"** (no reference to Conan, Hyboria, or Howard in the title itself)
-- Setting: **Aurelion** (invented city) and **Ostavar** (invented city)
+- Setting: **Aurelion** (invented city) and **Valus, the City of Wonders** (canonical Thurian-Age capital of Valusia)
 - Narrative frame: sword-and-sorcery, Thurian Age, Howard-voice
 - Disclaimer footer: "Inspired by works by Robert E. Howard now in the public domain. Not affiliated with Conan Properties Inc."
 
@@ -224,7 +224,7 @@ Trademark restrictions (§2) persist forever regardless of unlock.
 
 ✅ **USE INSTEAD:**
 - "Living Eamon"
-- "Aurelion," "Ostavar" (invented)
+- "Aurelion," "Valus, the City of Wonders" (Thurian-Age canonical)
 - "Thurian Age," "the age before the Cataclysm"
 - Sword-and-sorcery, Howard's sword-and-sorcery tales
 - Kingdoms from the essay (Aquilonia, Stygia, Nemedia, Zamora, Koth, Shem, Kush, etc. — safe in player-facing narrative prose and room copy; just **not** as marketing slogans)

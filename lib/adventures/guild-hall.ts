@@ -480,12 +480,12 @@ export function getBruntTier(bankedGold: number): string {
 
 export const GUILD_HALL: AdventureModule = {
   id: "guild_hall",
-  name: "The Guild Hall, Ostavar",
-  description: "The Guild of Free Adventurers in Ostavar, jewel of the Hyborian kingdoms — the hub all roads lead back to.",
+  name: "The Guild Hall, Valus",
+  description: "The Guild of Free Adventurers in Valus, the City of Wonders — capital of Valusia and hub of all roads.",
   entryRoom: "church_of_perpetual_life",
   rooms,
   npcScripts: GUILD_HALL_NPC_SCRIPTS,
-  locationId: "ostavar",
+  locationId: "valus",
   travelZones: [],
   travelDays: 0,
 };

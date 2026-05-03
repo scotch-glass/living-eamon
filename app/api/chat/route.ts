@@ -470,6 +470,8 @@ export async function POST(request: NextRequest) {
               ((savedPlayer as { temp_modifiers?: import("../../../lib/gameState").TempModifier[] }).temp_modifiers) ?? [],
             currentPlane:
               ((savedPlayer as { current_plane?: string }).current_plane) ?? "thurian",
+            currentNodeId:
+              ((savedPlayer as { current_node_id?: string }).current_node_id) ?? "valus",
             previousRoom:
               ((savedPlayer as { previous_room?: string | null }).previous_room) ?? null,
             prisonTurnsRemaining:

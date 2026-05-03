@@ -4,7 +4,7 @@
 // Reads scripts/hero-seed-data.json, builds each hero's Identity Block via
 // lib/identityBlock.ts, generates a master reference image with Grok Imagine
 // Pro, cuts the white backdrop via rembg, and writes transparent PNGs to
-// public/hero-masters/.
+// public/art/heroes/.
 //
 // Usage:
 //   npx tsx scripts/forge-hero-masters.ts            # generate all
@@ -14,7 +14,7 @@
 //
 // Cost: ~$0.07 per hero (grok-imagine-image-pro). 10 heroes ≈ $0.70.
 //
-// After generation, eyeball each PNG in public/hero-masters/. Keep what
+// After generation, eyeball each PNG in public/art/heroes/. Keep what
 // works; delete and re-run to regenerate. When the library looks right,
 // Sprint 2 uploads these to Supabase and populates the hero_masters table.
 // ========================================================================
@@ -54,7 +54,7 @@ const grok = new OpenAI({
 });
 
 const seedPath = path.join(root, "scripts", "hero-seed-data.json");
-const outDir = path.join(root, "public", "hero-masters");
+const outDir = path.join(root, "public", "art", "heroes");
 
 interface SeedHero extends HeroCustomization {
   slug: string;
@@ -105,13 +105,21 @@ const requestedSlugs = args.filter((a) => !a.startsWith("--"));
 // ── Core generation ────────────────────────────────────────────────
 
 async function callGrokImaginePro(prompt: string): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Wardrobe V2 (2026-04-24): bumped to resolution "2k" so masters
+  // match the canonical 1776×2528 canvas that lib/wardrobe/generate.ts
+  // uses for body composites. 2k is priced identically to 1k on
+  // grok-imagine-image-pro — free upgrade. aspect_ratio + resolution
+  // are xAI-specific fields the OpenAI SDK's typings don't expose.
   const resp = await grok.images.generate({
     model: "grok-imagine-image-pro",
     prompt,
     response_format: "b64_json",
     aspect_ratio: "3:4",
-  } as any);
+    resolution: "2k",
+  } as Parameters<typeof grok.images.generate>[0] & {
+    aspect_ratio: string;
+    resolution: string;
+  });
   const b64 = (resp as { data?: { b64_json?: string }[] }).data?.[0]?.b64_json;
   if (!b64) throw new Error("Grok Imagine returned no image data");
   return b64;

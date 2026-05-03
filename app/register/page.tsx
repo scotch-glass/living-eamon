@@ -93,7 +93,7 @@ function RegisterContent() {
           alignItems: "center",
           justifyContent: "center",
           padding: "60px 32px",
-          backgroundImage: "url(/register-bg.jpg)",
+          backgroundImage: "url(/art/scenes/register-bg.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",

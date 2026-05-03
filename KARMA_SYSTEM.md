@@ -224,7 +224,7 @@ Each stock has three Stage-I sub-tasks (max math · use/replenish math · depend
 Each level imposes combat penalties (TBD specifics — we'll match the body-zone table once we read `script_2.rpy`).
 
 **Per-adventure action budget (also body-zone-derived):**
-body-zone uses `time_left = 25` per chapter — a hard cap on rest actions per story arc. We adopt: **`actionBudget = 25` per adventure expedition** (resets when player returns to Ostavar). Rest activities cost 1 `actionBudget` (bathhouse-equivalent costs 2). When `actionBudget = 0`, no more rest is possible until return-to-hub.
+body-zone uses `time_left = 25` per chapter — a hard cap on rest actions per story arc. We adopt: **`actionBudget = 25` per adventure expedition** (resets when player returns to Valus). Rest activities cost 1 `actionBudget` (bathhouse-equivalent costs 2). When `actionBudget = 0`, no more rest is possible until return-to-hub.
 
 - [ ] **I.1 Max math (best-guess; Machinations.io will tune):**
   `maxStamina = 35 + 2 × STR_effective` (STR_effective = STR_base + floor(Passion / 10), see §2.4).
@@ -561,7 +561,7 @@ Flows are the wires between stocks. Each one is independently checkable.
 | 3.38 | Rest activity → −1 (or −2) actionBudget | activity → action budget | [ ] Not wired |
 | 3.39 | Stamina = 0 → block actions / OOC regen stalls | stamina → resource throttle | [ ] Not wired |
 | 3.40 | fatiguePool tier crossing → combat penalties | fatiguePool → combat | [ ] Not wired |
-| 3.41 | Return to Ostavar → actionBudget reset to 25 | hub-return → action budget | [ ] Not wired |
+| 3.41 | Return to Valus → actionBudget reset to 25 | hub-return → action budget | [ ] Not wired |
 | 3.42 | Sorcery cast (Circles 1–3) → narrative warning ONLY (no Illumination delta, per GAME_DESIGN.md §11) | spell → narrator text | [ ] Not wired |
 | 3.43 | Sorcery cast (Circle 4) → small Illumination loss; (Circles 5–8) → progressively larger loss (logarithmic) | spell → Illumination | [ ] Not wired |
 | 3.44 | maxStamina derived from STR_effective (which derives from Passion) — NO direct Passion×stamina multiplier | (chain via 3.21 → STR → maxStamina formula) | [ ] Not wired |
@@ -722,8 +722,8 @@ When all Stage II approvals are in, this is the suggested build order. **DO NOT 
 1. New module `lib/karma/activities.ts` — registry of recovery activities (the Sprint 2.3 table) keyed by id.
 2. Each activity has: `id`, `requiresItem?`, `goldCost`, `actionBudgetCost`, `staminaResult`, `fatiguePoolDelta`, `picssiDelta`, `availableInRoom?`.
 3. New player command tokens: `PRAY`, `DRINK`, `BROTHEL`, `HUNT`, `GAMBLE`, `BATHE`, `SCRY` (etc.) — wire each to `applyActivity()`.
-4. Block activities when `actionBudget = 0` ("Return to Ostavar to recover.").
-5. Reset `actionBudget = 25` on hub-return event (entering Ostavar).
+4. Block activities when `actionBudget = 0` ("Return to Valus to recover.").
+5. Reset `actionBudget = 25` on hub-return event (entering Valus).
 6. Stats-panel UI: stamina bar, fatigue level indicator, actionBudget remaining ("21 / 25 actions").
 
 **Sprint 4 — Encounter loader + trigger matcher + choice resolution**

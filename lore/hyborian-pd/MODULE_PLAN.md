@@ -148,7 +148,7 @@ The README.md inside each module folder must include:
   found as treasure to give the player tangible reward beyond
   story progression and Chronicle entries.
 - **The cold open** — how does the player learn about this ruin
-  and decide to go? Usually a tip from an Ostavar NPC, a posted
+  and decide to go? Usually a tip from an Valus NPC, a posted
   notice on the Guild Hall board, or an inheritance.
 
 ### What is forbidden
@@ -297,7 +297,7 @@ Build in this order; each demonstrates a different module type.
 **Difficulty:** Novice → Moderate
 **Recommended hero level:** Starting hero, no training required
 
-**Pitch:** A traveling scholar in Ostavar tells the player of a
+**Pitch:** A traveling scholar in Valus tells the player of a
 ruined tower in the wilderness — once the home of a Valusian
 wizard named Tuzun Thune, dead twelve thousand years. His mirrors
 are said to still hang there, undusted, undamaged, showing
@@ -334,7 +334,7 @@ about positioning. Good body-zone tutorial.
 benefits from training between Module 1 and Module 2)
 
 **Pitch:** A Hyborian-era noble court (a small town two days
-north of Ostavar) is host to a serpent-cult infiltration. The
+north of Valus) is host to a serpent-cult infiltration. The
 court is being killed off one by one, replaced by Serpent-Men
 wearing the dead's faces. The player must investigate, identify
 the imposters, and stop them. **The PD-canonical exposure

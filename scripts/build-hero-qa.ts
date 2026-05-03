@@ -2,14 +2,14 @@
 // LIVING EAMON — Build Hero QA Page
 //
 // Reads scripts/hero-seed-data.json and generates
-// public/hero-masters/qa.html — a self-contained static HTML page that
+// public/art/heroes/qa.html — a self-contained static HTML page that
 // shows every hero master composited on the church backdrop, with a
 // per-hero "Re-forge this one" checkbox + notes field. A "Generate
 // Report" button emits a markdown block of everything marked which
 // Scotch copy-pastes back into chat.
 //
 // Usage:  npx tsx scripts/build-hero-qa.ts
-// Output: public/hero-masters/qa.html  (open in any browser via file://)
+// Output: public/art/heroes/qa.html  (open in any browser via file://)
 // ========================================================================
 
 import fs from "node:fs";
@@ -20,7 +20,7 @@ import type { HeroCustomization } from "../lib/heroTypes";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const seedPath = path.join(root, "scripts", "hero-seed-data.json");
-const outPath = path.join(root, "public", "hero-masters", "qa.html");
+const outPath = path.join(root, "public", "art", "heroes", "qa.html");
 
 interface SeedHero extends HeroCustomization {
   slug: string;

@@ -1,0 +1,197 @@
+{
+  "gray_robe_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:02:42.995Z"
+  },
+  "loincloth_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:15.534Z"
+  },
+  "gray_robe_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:06.946Z"
+  },
+  "loincloth_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:35.341Z"
+  },
+  "loincloth_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:58.454Z"
+  },
+  "loincloth_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:01:23.599Z"
+  },
+  "leather_armor_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:05:03.636Z"
+  },
+  "leather_armor_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "armor must cover the entire torso. Redo",
+    "updatedAt": "2026-04-24T15:56:49.559Z"
+  },
+  "leather_armor_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:06:16.707Z"
+  },
+  "leather_armor_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:06:20.202Z"
+  },
+  "common_clothes_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:43.228Z"
+  },
+  "common_clothes_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:53.631Z"
+  },
+  "gray_robe_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:58.078Z"
+  },
+  "gray_robe_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:04.952Z"
+  },
+  "gray_robe_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:09.284Z"
+  },
+  "gray_robe_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:14.680Z"
+  },
+  "loincloth_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:17.607Z"
+  },
+  "chain_mail_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "He needs deep brown boots. Redo.",
+    "updatedAt": "2026-04-24T15:58:54.707Z"
+  },
+  "common_clothes_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "The shirt must cover the entire torso. Redo.",
+    "updatedAt": "2026-04-24T15:56:14.246Z"
+  },
+  "common_clothes_polearm_casual": {
+    "state": "rejected",
+    "notes": "Shirt is ripped and open not covering the arms nor the torso. The shirt must cover the torso and arms. Redo. The boots must be deep brown.",
+    "updatedAt": "2026-04-24T15:53:24.263Z"
+  },
+  "common_clothes_back_bow_casual": {
+    "state": "rejected",
+    "notes": "Shirt is ripped and open not covering the arms nor the torso. The shirt must cover the torso and arms. Redo. The boots must be deep brown. Bow has been erased.",
+    "updatedAt": "2026-04-24T15:54:26.729Z"
+  },
+  "common_clothes_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "Shirt is ripped and open not covering the arms nor the torso. The shirt must cover the torso and arms. Redo. The boots must be deep brown.",
+    "updatedAt": "2026-04-24T15:53:17.894Z"
+  },
+  "leather_armor_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:53:39.075Z"
+  },
+  "leather_armor_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "redo. Armor does not cover the whole torso.",
+    "updatedAt": "2026-04-24T15:54:05.189Z"
+  },
+  "common_clothes_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:54:42.045Z"
+  },
+  "common_clothes_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:54:58.375Z"
+  },
+  "gray_robe_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:55:19.023Z"
+  },
+  "gray_robe_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:55:27.241Z"
+  },
+  "loincloth_back_bow_casual": {
+    "state": "rejected",
+    "notes": "bow was erased. redo.",
+    "updatedAt": "2026-04-24T15:55:37.536Z"
+  },
+  "loincloth_hip_haft_axe_casual": {
+    "state": "rejected",
+    "notes": "a portion of the axe was erased. redo.",
+    "updatedAt": "2026-04-24T15:55:48.871Z"
+  },
+  "leather_armor_polearm_casual": {
+    "state": "rejected",
+    "notes": "armor does not cover the entire torso. redo",
+    "updatedAt": "2026-04-24T15:57:00.181Z"
+  },
+  "chain_mail_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:57:08.703Z"
+  },
+  "chain_mail_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "He is missing the dark boots. Redo.",
+    "updatedAt": "2026-04-24T15:57:31.868Z"
+  },
+  "chain_mail_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:57:33.194Z"
+  },
+  "chain_mail_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "His boots are corrupted and his feet are sticking through. Redo.",
+    "updatedAt": "2026-04-24T15:57:57.783Z"
+  },
+  "chain_mail_polearm_casual": {
+    "state": "rejected",
+    "notes": "The armor must cover his torso completely. Redo.",
+    "updatedAt": "2026-04-24T15:58:24.598Z"
+  },
+  "chain_mail_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:58:26.807Z"
+  },
+  "chain_mail_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:58:31.566Z"
+  },
+  "leather_armor_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:59:07.223Z"
+  }
+}

@@ -34,7 +34,7 @@ This text is canon-content for use in:
 
 2. **NPC dialogue:** Aldric (the veteran) might quote it sardonically when drunk. A Pictish ghost-chieftain in a Thurian dungeon might pose it as a barrier riddle (correct answer = passage; wrong answer = combat).
 
-3. **Tavern wall inscription:** The Hokas tavern in Ostavar has it carved into a roof beam. Players who LOOK UP in the bar see it. Reading it does not award PICSSI — it's atmosphere.
+3. **Tavern wall inscription:** The Hokas tavern in Valus has it carved into a roof beam. Players who LOOK UP in the bar see it. Reading it does not award PICSSI — it's atmosphere.
 
 4. **Scrolls/books (Phase 2):** A Pictish "Conqueror's Catechism" scroll, paralleling the Scrolls of Thoth (which are Illumination-aligned). Reading it + a riddle gate would award **+Standing** instead of Illumination.
 

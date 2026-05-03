@@ -57,7 +57,7 @@ COMPOSITION:
 
 The result should look like it was ripped directly from the Ultima Online Classic Client art.mul file.`;
 
-const outDir = path.join(root, "public", "uo-art", "items");
+const outDir = path.join(root, "public", "art", "items");
 const outFile = path.join(outDir, "5143.png");
 
 async function main() {
@@ -103,7 +103,7 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   const buf = Buffer.from(b64, "base64");
   fs.writeFileSync(outFile, buf);
-  console.log("SUCCESS: Saved to public/uo-art/items/5143.png");
+  console.log("SUCCESS: Saved to public/art/items/5143.png");
 }
 
 main().catch((err) => {

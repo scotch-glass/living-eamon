@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Painter Reference Curation — Living Eamon Style LoRA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #15110c;
+    --panel: #1e1810;
+    --panel-hover: #26201a;
+    --border: rgba(180,140,60,0.35);
+    --text: #e7d8b5;
+    --muted: #8f7f5f;
+    --approve: #5a8a3a;
+    --approve-bright: #84c24c;
+    --reject: #a83232;
+    --reject-bright: #e64848;
+    --pending: #3a3228;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+  header {
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+    flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: 0.04em; }
+  .stats { color: var(--muted); font-size: 13px; }
+  .stats b { color: var(--text); }
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .toolbar button, .filter button {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 6px 14px; cursor: pointer; font-family: Georgia, serif;
+    font-size: 13px;
+  }
+  .toolbar button:hover, .filter button:hover { background: var(--panel-hover); }
+  .toolbar button.primary {
+    background: #4a3a18; border-color: var(--approve-bright);
+    color: #fef4d8; font-weight: bold;
+  }
+  .toolbar button.primary:hover { background: #6b5320; }
+  .filter { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .filter button.active { background: var(--panel-hover); border-color: var(--approve-bright); color: var(--approve-bright); }
+  .legal {
+    padding: 12px 24px; background: #2a1816; border-bottom: 1px solid var(--reject-bright);
+    color: #f0c8b8; font-size: 12px; line-height: 1.5;
+  }
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+    padding: 20px;
+  }
+  .cell {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .cell.approved { border-color: var(--approve-bright); background: #1e2415; }
+  .cell.rejected { border-color: var(--reject-bright); background: #2a1816; opacity: 0.6; }
+  .cell .meta { display: flex; flex-direction: column; gap: 2px; }
+  .cell .title { font-size: 14px; color: var(--text); font-weight: bold; }
+  .cell .painter {
+    font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .cell .subject { font-size: 12px; color: var(--muted); font-style: italic; line-height: 1.3; }
+  .cell .img-wrap {
+    aspect-ratio: 3 / 4;
+    background: var(--pending);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .cell .img-wrap img {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  .cell .img-wrap.error::after {
+    content: "image failed to load · click source link";
+    color: var(--muted); font-style: italic; font-size: 11px; padding: 8px; text-align: center;
+  }
+  .cell .img-wrap.error img { display: none; }
+  .cell .source { font-size: 11px; }
+  .cell .source a { color: var(--muted); text-decoration: underline; }
+  .cell .source a:hover { color: var(--text); }
+  .cell .controls { display: flex; gap: 8px; align-items: center; }
+  .cell .controls label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; cursor: pointer; user-select: none;
+    padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border);
+    transition: background 0.15s, border-color 0.15s;
+    flex: 1; justify-content: center;
+  }
+  .cell .controls label:hover { background: var(--panel-hover); }
+  .cell .controls label input { cursor: pointer; }
+  .cell .controls label.approve.checked { color: var(--approve-bright); border-color: var(--approve-bright); font-weight: bold; }
+  .cell .controls label.reject.checked  { color: var(--reject-bright);  border-color: var(--reject-bright);  font-weight: bold; }
+  .cell .saved { font-size: 11px; color: var(--muted); font-style: italic; min-height: 14px; }
+  .submit-msg { color: var(--muted); font-size: 12px; font-style: italic; }
+  .cell .img-wrap { cursor: zoom-in; }
+  /* Lightbox overlay */
+  #lightbox {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.92);
+    display: none; align-items: center; justify-content: center;
+    cursor: zoom-out;
+    padding: 2vh 2vw;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 96vw; max-height: 92vh;
+    object-fit: contain;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    background: #15110c;
+  }
+  #lightbox .lb-meta {
+    position: absolute; top: 12px; left: 16px; right: 16px;
+    color: var(--text); font-family: Georgia, serif;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; font-size: 13px; pointer-events: none;
+  }
+  #lightbox .lb-meta a {
+    color: var(--text); pointer-events: auto;
+    background: rgba(0,0,0,0.55); padding: 6px 10px; border-radius: 4px;
+    text-decoration: none; border: 1px solid var(--border);
+  }
+  #lightbox .lb-meta a:hover { background: rgba(0,0,0,0.8); }
+  #lightbox .lb-hint { color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Painter Reference Curation</h1>
+  <div class="toolbar">
+    <div class="stats" id="stats">loading…</div>
+    <span class="submit-msg" id="submitMsg"></span>
+    <button id="export">Export approved JSON</button>
+  </div>
+</header>
+<div class="filter" id="filter">
+  <strong style="font-size:13px;color:var(--muted);">Filter:</strong>
+  <button data-painter="all" class="active">all</button>
+  <button data-painter="frazetta">Frazetta</button>
+  <button data-painter="vallejo">Vallejo</button>
+  <button data-painter="kelly">Kelly</button>
+  <button data-painter="brunner">Brunner</button>
+  <button data-painter="grok-style">grok-style</button>
+  <span style="margin-left:12px;font-size:13px;color:var(--muted);">Bulk:</span>
+  <button id="approveVisible">approve all visible</button>
+  <button id="rejectVisible">reject all visible</button>
+</div>
+<div class="legal">
+  <strong>Legal posture:</strong> Each candidate is in-copyright. We're using these as LoRA training inputs only — outputs go through Flux 2 + LoRA at low strength (~0.3) so generated art is transformative. The training corpus stays private (never published). Reject anything you're uncomfortable with on either canon-fit or risk grounds.
+</div>
+<main id="grid"></main>
+<div id="lightbox" role="dialog" aria-hidden="true">
+  <div class="lb-meta">
+    <span class="lb-title"></span>
+    <a class="lb-newtab" href="#" target="_blank" rel="noreferrer">open in new tab ↗</a>
+    <span class="lb-hint">click anywhere or press Esc to close</span>
+  </div>
+  <img alt="" />
+</div>
+<script>
+(() => {
+  const grid = document.getElementById("grid");
+  const stats = document.getElementById("stats");
+  const submitMsg = document.getElementById("submitMsg");
+
+  let candidates = [];        // array from _candidates.json
+  let curation = {};          // { id: { state, notes, updatedAt } } from API
+  let activePainter = "all";
+
+  // v3 — explicit JSON-parse + visible diagnostic to catch the 307→splash
+  // silent-swallow case + browser cache invalidation via the v3 marker.
+  let loadDiag = { claude: 0, manual: 0, errors: [] };
+  async function loadCandidates() {
+    const t = Date.now();
+    const [claudeRes, manualRes] = await Promise.all([
+      fetch("/art/painter-curation/_candidates.json?v=3&t=" + t),
+      fetch("/art/painter-curation/_manual_candidates.json?v=3&t=" + t),
+    ]);
+    if (!claudeRes.ok) throw new Error("failed to load _candidates.json (HTTP " + claudeRes.status + ")");
+    const claudeContentType = claudeRes.headers.get("content-type") || "";
+    if (!claudeContentType.includes("json")) {
+      throw new Error("_candidates.json returned non-JSON (content-type: " + claudeContentType + "); auth redirect?");
+    }
+    const claudeList = await claudeRes.json();
+    loadDiag.claude = claudeList.length;
+
+    // Manual manifest: distinguish 404 (no scan yet — fine) from 307 redirect
+    // (auth redirect — actually broken), from 200-with-non-JSON (followed
+    // redirect to /splash HTML — also broken).
+    let manualList = [];
+    if (manualRes.ok) {
+      const manualContentType = manualRes.headers.get("content-type") || "";
+      if (manualContentType.includes("json")) {
+        try {
+          manualList = await manualRes.json();
+        } catch (e) {
+          loadDiag.errors.push("_manual_candidates.json parse failed: " + e.message);
+        }
+      } else {
+        loadDiag.errors.push(
+          "_manual_candidates.json returned non-JSON (content-type: " + manualContentType +
+          "). Likely auth redirect to /splash — browser session may be stale. Try logging out and back in."
+        );
+      }
+    } else if (manualRes.status === 404) {
+      // Genuine 404 = scan script hasn't been run yet. Silent OK.
+    } else {
+      loadDiag.errors.push("_manual_candidates.json HTTP " + manualRes.status);
+    }
+    loadDiag.manual = manualList.length;
+    candidates = [...claudeList, ...manualList];
+    if (loadDiag.errors.length) {
+      console.warn("painter-curation load issues:", loadDiag.errors);
+    }
+    console.log(`painter-curation loaded: ${loadDiag.claude} claude-sourced + ${loadDiag.manual} manual = ${candidates.length} total`);
+  }
+
+  async function loadCuration() {
+    try {
+      const r = await fetch("/api/painter-curation?t=" + Date.now());
+      if (r.ok) curation = await r.json();
+    } catch (e) {
+      console.warn("could not load curation state", e);
+    }
+  }
+
+  async function saveDecision(id, patch) {
+    curation[id] = { ...(curation[id] || {}), ...patch, updatedAt: new Date().toISOString() };
+    try {
+      await fetch("/api/painter-curation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...curation[id] }),
+      });
+    } catch (e) {
+      console.error("save failed", e);
+    }
+    updateStats();
+  }
+
+  function updateStats() {
+    const totals = { approved: 0, rejected: 0, pending: 0, byPainter: {} };
+    for (const c of candidates) {
+      const state = (curation[c.id] || {}).state || null;
+      if (state === "approved") totals.approved++;
+      else if (state === "rejected") totals.rejected++;
+      else totals.pending++;
+      totals.byPainter[c.painter] = totals.byPainter[c.painter] || { approved: 0, total: 0 };
+      totals.byPainter[c.painter].total++;
+      if (state === "approved") totals.byPainter[c.painter].approved++;
+    }
+    const perPainter = Object.entries(totals.byPainter)
+      .map(([p, t]) => `${p}: <b>${t.approved}</b>/${t.total}`)
+      .join(" · ");
+    const errBadge = loadDiag.errors.length
+      ? ` · <span style="color:var(--reject-bright);">⚠ ${loadDiag.errors.length} load error${loadDiag.errors.length === 1 ? "" : "s"} (see console)</span>`
+      : "";
+    stats.innerHTML =
+      `<span style="color:var(--muted);">loaded ${loadDiag.claude} claude + ${loadDiag.manual} manual = ${candidates.length} total</span> · ` +
+      `<b>${totals.approved}</b> approved · <b>${totals.rejected}</b> rejected · <b>${totals.pending}</b> pending  ·  ${perPainter}${errBadge}`;
+  }
+
+  // Wikimedia thumbnails are typically 250px wide. Strip the thumb/.../NNNpx-
+  // wrapper to get the full original. Other sources (ComicArtFans CDN, our
+  // local manual uploads) are returned unchanged.
+  function fullResUrl(url) {
+    if (!url) return url;
+    const wm = url.match(
+      /^(https:\/\/upload\.wikimedia\.org\/wikipedia\/[a-z]+)\/thumb\/([0-9a-f])\/([0-9a-f]{2})\/([^/]+)\/\d+px-[^/]+$/
+    );
+    if (wm) return `${wm[1]}/${wm[2]}/${wm[3]}/${wm[4]}`;
+    return url;
+  }
+
+  // ── Lightbox ─────────────────────────────────────────────────────────
+  const lightbox = document.getElementById("lightbox");
+  const lbImg = lightbox.querySelector("img");
+  const lbTitle = lightbox.querySelector(".lb-title");
+  const lbNewTab = lightbox.querySelector(".lb-newtab");
+  function openLightbox(c) {
+    const full = fullResUrl(c.thumbnail_url);
+    lbImg.src = full;
+    lbImg.alt = c.title;
+    lbTitle.textContent = `${c.painter}${c.year ? " · " + c.year : ""}  —  ${c.title}`;
+    lbNewTab.href = full;
+    lightbox.classList.add("open");
+    lightbox.setAttribute("aria-hidden", "false");
+  }
+  function closeLightbox() {
+    lightbox.classList.remove("open");
+    lightbox.setAttribute("aria-hidden", "true");
+    lbImg.src = "";
+  }
+  lightbox.addEventListener("click", (e) => {
+    // Don't close if user clicked the "open in new tab" link.
+    if (e.target.closest(".lb-newtab")) return;
+    closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
+  });
+
+  function renderCell(c) {
+    const cell = document.createElement("section");
+    cell.className = "cell";
+    cell.dataset.id = c.id;
+    cell.dataset.painter = c.painter;
+    // Manual uploads have source_page === "manual upload" (a literal string,
+    // not a URL); show it as plain text. Real URLs get a clickable hostname.
+    let sourceHtml;
+    if (c.source_page && c.source_page.startsWith("http")) {
+      let hostname = c.source_page;
+      try { hostname = new URL(c.source_page).hostname; } catch (_) { /* fall through */ }
+      sourceHtml = `<a href="${c.source_page}" target="_blank" rel="noreferrer">${hostname}</a>`;
+    } else {
+      sourceHtml = `<span style="color:var(--muted);">${c.source_page || "(no source)"}</span>`;
+    }
+    cell.innerHTML = `
+      <div class="meta">
+        <div class="painter">${c.painter}${c.year ? " · " + c.year : ""}</div>
+        <div class="title">${c.title}</div>
+        <div class="subject">${c.subject_caption || ""}</div>
+      </div>
+      <div class="img-wrap">
+        <img referrerpolicy="no-referrer" loading="lazy" alt="${c.title.replace(/"/g, "&quot;")}" />
+      </div>
+      <div class="source">source: ${sourceHtml}</div>
+      <div class="controls">
+        <label class="approve">
+          <input type="radio" name="r_${c.id}" value="approved" /> ✓ include
+        </label>
+        <label class="reject">
+          <input type="radio" name="r_${c.id}" value="rejected" /> ✗ exclude
+        </label>
+      </div>
+      <div class="saved"></div>
+    `;
+    const img = cell.querySelector("img");
+    const wrap = cell.querySelector(".img-wrap");
+    img.onerror = () => wrap.classList.add("error");
+    img.onload = () => wrap.classList.remove("error");
+    img.src = c.thumbnail_url || c.full_image_url;
+    wrap.addEventListener("click", () => openLightbox(c));
+
+    const approveLabel = cell.querySelector(".approve");
+    const rejectLabel = cell.querySelector(".reject");
+    const approveInput = approveLabel.querySelector("input");
+    const rejectInput = rejectLabel.querySelector("input");
+    const saved = cell.querySelector(".saved");
+
+    const prior = curation[c.id] || {};
+    if (prior.state === "approved") { approveInput.checked = true; cell.classList.add("approved"); approveLabel.classList.add("checked"); }
+    if (prior.state === "rejected") { rejectInput.checked = true; cell.classList.add("rejected"); rejectLabel.classList.add("checked"); }
+
+    function setState(state) {
+      cell.classList.toggle("approved", state === "approved");
+      cell.classList.toggle("rejected", state === "rejected");
+      approveLabel.classList.toggle("checked", state === "approved");
+      rejectLabel.classList.toggle("checked", state === "rejected");
+      saveDecision(c.id, { state });
+      saved.textContent = "saved";
+      setTimeout(() => { saved.textContent = ""; }, 1200);
+    }
+    approveInput.addEventListener("change", () => setState("approved"));
+    rejectInput.addEventListener("change", () => setState("rejected"));
+
+    return cell;
+  }
+
+  function applyFilter() {
+    const cells = grid.querySelectorAll(".cell");
+    cells.forEach((cell) => {
+      cell.style.display =
+        activePainter === "all" || cell.dataset.painter === activePainter ? "" : "none";
+    });
+  }
+
+  document.getElementById("filter").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-painter]");
+    if (!btn) return;
+    activePainter = btn.dataset.painter;
+    document.querySelectorAll("#filter button[data-painter]").forEach((b) => {
+      b.classList.toggle("active", b.dataset.painter === activePainter);
+    });
+    applyFilter();
+  });
+
+  document.getElementById("approveVisible").addEventListener("click", () => {
+    grid.querySelectorAll(".cell").forEach((cell) => {
+      if (cell.style.display === "none") return;
+      const input = cell.querySelector('input[value="approved"]');
+      if (!input.checked) { input.checked = true; input.dispatchEvent(new Event("change")); }
+    });
+  });
+  document.getElementById("rejectVisible").addEventListener("click", () => {
+    grid.querySelectorAll(".cell").forEach((cell) => {
+      if (cell.style.display === "none") return;
+      const input = cell.querySelector('input[value="rejected"]');
+      if (!input.checked) { input.checked = true; input.dispatchEvent(new Event("change")); }
+    });
+  });
+
+  document.getElementById("export").addEventListener("click", () => {
+    const approved = candidates.filter((c) => (curation[c.id] || {}).state === "approved");
+    const blob = new Blob([JSON.stringify(approved, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "painter-refs-approved.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    submitMsg.textContent = `exported ${approved.length} approved`;
+    setTimeout(() => { submitMsg.textContent = ""; }, 3000);
+  });
+
+  (async () => {
+    try {
+      await Promise.all([loadCandidates(), loadCuration()]);
+      // Per-cell try/catch so one malformed entry doesn't kill the whole grid.
+      let renderErrors = 0;
+      candidates.forEach((c) => {
+        try {
+          grid.appendChild(renderCell(c));
+        } catch (e) {
+          renderErrors++;
+          console.warn("renderCell failed for", c.id, e);
+        }
+      });
+      if (renderErrors > 0) {
+        loadDiag.errors.push(`${renderErrors} card${renderErrors === 1 ? "" : "s"} failed to render (see console)`);
+      }
+      updateStats();
+    } catch (e) {
+      stats.textContent = "error: " + (e instanceof Error ? e.message : String(e));
+    }
+  })();
+})();
+</script>
+</body>
+</html>

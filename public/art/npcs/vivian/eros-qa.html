@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vivian eros batch (live)</title>
+<meta http-equiv="refresh" content="20" />
+<style>
+  body {
+    margin: 0;
+    background: #14141a;
+    color: #e8e4d6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 24px;
+  }
+  h1 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    color: #fbbf24;
+    margin: 0 0 6px;
+  }
+  p.lede {
+    margin: 0 0 16px;
+    color: #b8b3a0;
+    max-width: 720px;
+    line-height: 1.5;
+  }
+  .toolbar {
+    margin-bottom: 24px;
+    color: #908a78;
+    font-size: 13px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .toolbar input {
+    background: #1f1f28;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: #e8e4d6;
+    padding: 4px 10px;
+    border-radius: 4px;
+    width: 60px;
+  }
+  .progress {
+    color: #fbbf24;
+    font-family: Georgia, serif;
+    font-size: 16px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 18px;
+    max-width: 2000px;
+  }
+  .card {
+    background: #1f1f28;
+    border: 1px solid rgba(251, 191, 36, 0.18);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card h2 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    color: #fbbf24;
+    margin: 0;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.12);
+    font-size: 14px;
+  }
+  .card .slug {
+    font-size: 11px;
+    color: #908a78;
+    font-family: -apple-system, sans-serif;
+  }
+  .img-wrap {
+    background:
+      repeating-conic-gradient(#2a2a36 0% 25%, #1f1f28 0% 50%) 50% / 18px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+  }
+  .img-wrap img {
+    max-width: 100%;
+    max-height: 540px;
+    display: block;
+  }
+</style>
+</head>
+<body>
+  <h1>Vivian eros batch — live</h1>
+  <p class="lede">
+    Streaming from Vast. Page auto-refreshes every 20 seconds. Newest images first.
+    Total target: 400.
+  </p>
+  <div class="toolbar">
+    <span class="progress" id="progress">…</span>
+    <span>(auto-refresh every 20s)</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <script>
+    async function loadIndex() {
+      try {
+        const r = await fetch("/art/lora/vivian-eros/index.json?t=" + Date.now());
+        if (r.ok) return await r.json();
+      } catch (_e) {}
+      return null;
+    }
+
+    async function probe(filename) {
+      try {
+        const r = await fetch(`/art/lora/vivian-eros/${filename}`, { method: "HEAD" });
+        return r.ok;
+      } catch (_e) {
+        return false;
+      }
+    }
+
+    async function build() {
+      const grid = document.getElementById("grid");
+      const progress = document.getElementById("progress");
+
+      // Try the index.json first (written by the streaming watcher).
+      let files = await loadIndex();
+
+      // Fallback: probe v001..v400.
+      if (!files) {
+        files = [];
+        const checks = [];
+        for (let i = 1; i <= 400; i++) {
+          const num = String(i).padStart(3, "0");
+          // we don't know the slug, so probe a directory listing via 404
+          // not reliable without slug — skip
+        }
+      }
+
+      if (!files || files.length === 0) {
+        progress.textContent = "0 / 400 — waiting for first image";
+        grid.innerHTML = "<p style=\"color:#908a78\">No images yet. Page refreshes every 20s.</p>";
+        return;
+      }
+
+      progress.textContent = `${files.length} / 400 received`;
+      grid.innerHTML = "";
+
+      // Sort newest first by id (extracted from v###)
+      files.sort((a, b) => {
+        const na = parseInt((a.match(/v(\d+)/) || [])[1] || "0");
+        const nb = parseInt((b.match(/v(\d+)/) || [])[1] || "0");
+        return nb - na;
+      });
+
+      const cb = Date.now();
+      for (const f of files) {
+        const m = f.match(/^v(\d+)_(.+)\.png$/);
+        const id = m ? m[1] : "?";
+        const slug = m ? m[2] : f;
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h2>v${id} <span class="slug">${slug}</span></h2>
+          <div class="img-wrap"><img src="/art/lora/vivian-eros/${f}?t=${cb}" alt="${f}" /></div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    build();
+  </script>
+</body>
+</html>

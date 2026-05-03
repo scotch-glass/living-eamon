@@ -1,0 +1,197 @@
+{
+  "gray_robe_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:02:42.995Z"
+  },
+  "loincloth_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:15.534Z"
+  },
+  "gray_robe_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:05:06.946Z"
+  },
+  "loincloth_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:35.341Z"
+  },
+  "loincloth_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T13:06:58.454Z"
+  },
+  "loincloth_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:01:23.599Z"
+  },
+  "leather_armor_back_bow_casual": {
+    "state": "rejected",
+    "notes": "make his boots deep brown. redo",
+    "updatedAt": "2026-04-24T16:59:34.532Z"
+  },
+  "leather_armor_unarmed_casual": {
+    "state": "rejected",
+    "notes": "Make his boots deep brown. Redo.",
+    "updatedAt": "2026-04-24T17:02:43.118Z"
+  },
+  "leather_armor_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Make his boots deep brown. Redo.",
+    "updatedAt": "2026-04-24T17:02:39.978Z"
+  },
+  "common_clothes_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "Replace tan boots with deep brown boots.",
+    "updatedAt": "2026-04-24T17:02:04.564Z"
+  },
+  "common_clothes_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:53.631Z"
+  },
+  "gray_robe_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:07:58.078Z"
+  },
+  "gray_robe_back_two_hander_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:04.952Z"
+  },
+  "gray_robe_hip_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:09.284Z"
+  },
+  "gray_robe_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:14.680Z"
+  },
+  "loincloth_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:08:17.607Z"
+  },
+  "leather_armor_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:53:39.075Z"
+  },
+  "common_clothes_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:54:42.045Z"
+  },
+  "common_clothes_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:54:58.375Z"
+  },
+  "gray_robe_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:55:19.023Z"
+  },
+  "gray_robe_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:55:27.241Z"
+  },
+  "chain_mail_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:57:08.703Z"
+  },
+  "chain_mail_unarmed_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:57:33.194Z"
+  },
+  "chain_mail_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:58:26.807Z"
+  },
+  "chain_mail_hip_haft_axe_casual": {
+    "state": "rejected",
+    "notes": "White is coming through his chainmail where his legs are parted. Redo.",
+    "updatedAt": "2026-04-24T17:04:40.473Z"
+  },
+  "leather_armor_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T15:59:07.223Z"
+  },
+  "chain_mail_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "White is coming through his chainmail where his legs are parted. Redo.",
+    "updatedAt": "2026-04-24T17:03:40.515Z"
+  },
+  "chain_mail_polearm_casual": {
+    "state": "rejected",
+    "notes": "The armor must cover his torso completely. Redo.",
+    "updatedAt": "2026-04-24T17:04:05.723Z"
+  },
+  "chain_mail_hip_blade_casual": {
+    "state": "rejected",
+    "notes": "white is coming through his chainmail at the gap between his legs. redo this one.",
+    "updatedAt": "2026-04-24T16:59:48.844Z"
+  },
+  "chain_mail_hip_long_blade_casual": {
+    "state": "rejected",
+    "notes": "White is coming through his chainmail where the legs are parted.",
+    "updatedAt": "2026-04-24T17:04:31.193Z"
+  },
+  "leather_armor_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "armor must cover the entire torso. Redo. Again the same thing. armor must cover the torso.",
+    "updatedAt": "2026-04-24T16:58:14.466Z"
+  },
+  "leather_armor_polearm_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T16:58:19.948Z"
+  },
+  "leather_armor_hip_long_blade_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T16:58:29.079Z"
+  },
+  "common_clothes_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T17:00:15.332Z"
+  },
+  "common_clothes_back_two_hander_casual": {
+    "state": "rejected",
+    "notes": "White is coming through that wasn't erased for the transparent background. Redo.",
+    "updatedAt": "2026-04-24T17:00:50.922Z"
+  },
+  "common_clothes_polearm_casual": {
+    "state": "rejected",
+    "notes": "Shirt is ripped and open not covering the arms nor the torso. The shirt must cover the torso and arms. Redo.",
+    "updatedAt": "2026-04-24T17:01:09.009Z"
+  },
+  "loincloth_back_bow_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T17:01:30.396Z"
+  },
+  "loincloth_hip_haft_axe_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T17:01:35.330Z"
+  },
+  "loincloth_hip_haft_mace_casual": {
+    "state": "approved",
+    "notes": "",
+    "updatedAt": "2026-04-24T17:01:45.896Z"
+  }
+}

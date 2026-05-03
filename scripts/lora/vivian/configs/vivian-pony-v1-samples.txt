@@ -1,0 +1,4 @@
+score_9, score_8_up, score_7_up, source_realistic, vivian1, 1girl, solo, head and shoulders portrait, soft window light, neutral expression, looking at viewer, simple background --w 832 --h 1216 --d 1 --s 28 --l 7
+score_9, score_8_up, source_realistic, vivian1, 1girl, solo, three quarter view, candlelit chamber, slight smile, looking at viewer --w 832 --h 1216 --d 2 --s 28 --l 7
+score_9, source_realistic, vivian1, 1girl, solo, full body, standing, plain stone wall, soft light, looking at viewer --w 832 --h 1216 --d 3 --s 28 --l 7
+score_9, source_realistic, vivian1, 1girl, solo, leather vest, leather pants, full body, hand on hip, soft lighting, simple background --w 832 --h 1216 --d 4 --s 28 --l 7

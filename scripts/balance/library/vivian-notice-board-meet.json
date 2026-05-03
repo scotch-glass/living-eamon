@@ -4,7 +4,7 @@
   "pdSource": "original-living-eamon",
   "pdSafe": true,
   "patternType": "witness-moment",
-  "tags": ["ostavar", "notice-board", "vivian", "first-meeting", "social", "low-stakes", "exposition"],
+  "tags": ["valus", "notice-board", "vivian", "first-meeting", "social", "low-stakes", "exposition"],
   "triggers": [
     { "type": "enter-room", "target": "notice_board" }
   ],

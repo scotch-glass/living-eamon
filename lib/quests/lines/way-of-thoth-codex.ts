@@ -188,7 +188,7 @@ export function renderTheWayCodex(state: WorldState): string {
     lines.push("   calling-home, the remaking.\"");
     lines.push("");
     lines.push("  — The Perfect Discourse. Found in the Pre-Thurian vault");
-    lines.push("    below Ostavar. Carried upward by Brother Inan.");
+    lines.push("    below Valus. Carried upward by Brother Inan.");
     lines.push("");
   }
 

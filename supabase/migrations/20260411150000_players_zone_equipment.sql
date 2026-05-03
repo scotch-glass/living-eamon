@@ -1,4 +1,4 @@
--- Per-zone equipment slots for HWRR-style combat system.
+-- Per-zone equipment slots for body-zone-style combat system.
 alter table public.players
   add column if not exists helmet text default null,
   add column if not exists gorget text default null,

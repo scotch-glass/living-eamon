@@ -146,7 +146,7 @@ export default function WizardClient({ masters, error }: Props) {
       style={{
         minHeight: "100vh",
         backgroundColor: "#030712",
-        backgroundImage: "url(/register-bg.jpg)",
+        backgroundImage: "url(/art/scenes/register-bg.jpg)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",

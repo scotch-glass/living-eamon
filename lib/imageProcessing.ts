@@ -6,9 +6,16 @@
 
 import { execFile } from "child_process";
 import { writeFile, readFile, unlink } from "fs/promises";
+import { existsSync } from "fs";
 import { tmpdir } from "os";
-import { join } from "path";
+import { join, resolve as pathResolve } from "path";
 import { randomUUID } from "crypto";
+
+/** Project venv python (preferred) → falls back to system python3. */
+function pythonExecutable(): string {
+  const venvPython = pathResolve(process.cwd(), ".venv", "bin", "python3");
+  return existsSync(venvPython) ? venvPython : "python3";
+}
 
 /**
  * Remove background from an image using rembg (Python).
@@ -24,7 +31,7 @@ export async function removeBackground(inputBuffer: Buffer): Promise<Buffer> {
 
     await new Promise<void>((resolve, reject) => {
       execFile(
-        "python3",
+        pythonExecutable(),
         [
           "-c",
           `from rembg import remove; from PIL import Image; img = Image.open("${inputPath}"); result = remove(img); result.save("${outputPath}")`,

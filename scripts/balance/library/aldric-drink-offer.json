@@ -4,7 +4,7 @@
   "pdSource": "the-stag-company",
   "pdSafe": true,
   "patternType": "moral-fork",
-  "tags": ["tavern", "main-hall", "ostavar", "veteran-mercenary", "low-stakes", "social"],
+  "tags": ["tavern", "main-hall", "valus", "veteran-mercenary", "low-stakes", "social"],
   "triggers": [
     { "type": "talk-to-npc", "target": "old_mercenary" }
   ],

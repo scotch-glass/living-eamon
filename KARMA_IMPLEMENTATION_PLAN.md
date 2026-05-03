@@ -243,9 +243,9 @@ const nextMana = regenActive ? Math.min(maxMana, p.currentMana + MANA_REGEN_PER_
 
 ### Adventure return hook — reset actionBudget
 
-**File:** `lib/adventures/registry.ts` (or wherever the player returns to Ostavar):
+**File:** `lib/adventures/registry.ts` (or wherever the player returns to Valus):
 
-When the player enters Ostavar (the hub), set `state.player.actionBudget = ACTION_BUDGET_DEFAULT` (Sprint 3 will replace with tier-aware value).
+When the player enters Valus (the hub), set `state.player.actionBudget = ACTION_BUDGET_DEFAULT` (Sprint 3 will replace with tier-aware value).
 
 ### UI surfacing (minimal — Sprint 6 polishes)
 
@@ -632,7 +632,7 @@ export function applyActivity(state: WorldState, activityId: string): WorldState
   const p = state.player;
 
   // Pre-checks
-  if (p.actionBudget < act.actionCost) return rejectActivity(state, "Out of actions. Return to Ostavar.");
+  if (p.actionBudget < act.actionCost) return rejectActivity(state, "Out of actions. Return to Valus.");
   if (act.goldCost && p.gold < act.goldCost) return rejectActivity(state, "Not enough gold.");
   if (act.requiresItem && !hasItem(p, act.requiresItem)) return rejectActivity(state, `You need a ${act.requiresItem}.`);
 

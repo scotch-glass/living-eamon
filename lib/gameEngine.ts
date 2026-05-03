@@ -95,6 +95,7 @@ import { handleInvoke, composeInvokeResponse } from "./sorcery/invoke";
 import { getTimeOfDayLine } from "./world/timeOfDayDescriptions";
 import { getWeatherLine } from "./world/weatherDescriptions";
 import { renderActiveQuests, renderQuestLog } from "./quests/log";
+import { resolveCodexCommand } from "./quests/codex";
 import "./quests/load"; // side-effect: registers all quest line modules
 import {
   SITUATION_BLOCK_LINE,
@@ -3125,6 +3126,20 @@ Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherw
     return {
       responseType: "static",
       staticResponse: buildInventoryDescription(p),
+      dynamicContext: null,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  // ── Quest codex commands (THE WAY, WAY, TEACHINGS, …) ──────────────────
+  // Checked before QUESTS so multi-word commands like "THE WAY" resolve.
+  const fullUpper = trimmed.toUpperCase().replace(/\s+/g, " ");
+  const codexBody = resolveCodexCommand(newState, fullUpper);
+  if (codexBody !== null) {
+    return {
+      responseType: "static",
+      staticResponse: codexBody,
       dynamicContext: null,
       newState,
       stateChanged: false,

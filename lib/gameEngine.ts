@@ -3042,7 +3042,7 @@ This is a severe virtue moment — Honor is at stake.`,
       };
     }
 
-    const spellName = rest.toUpperCase();
+    const spellName = rest.trim().toLowerCase();
     const known = p.knownSpells?.length ? p.knownSpells.join(", ") : "none";
 
     // No argument or no spells known — same response

@@ -53,7 +53,15 @@ export type StatusEffectType =
   | "blessed"           // Poison + bleed resistance; temp Illumination/CHA buff active
   // ── Sprint 7b.cunning — Cunning / Feeblemind ──
   | "cunning"           // Caster's spells +33% strength and +33% success chance
-  | "feeblemind";       // Target's spells -33% strength and -33% success chance
+  | "feeblemind"        // Target's spells -33% strength and -33% success chance
+  // ── Sprint 7b.buffs ──
+  | "protection_aura"   // Defender takes 25% less damage per severity
+  | "reactive_armor"    // Defender reflects 20% of incoming damage per severity
+  | "night_sight"       // Player can see in dark rooms; no combat effect
+  | "weakened"          // Attacker deals 20% less damage per severity
+  | "clumsied"          // Attacker is easier to evade (+15 evasion on defender per severity)
+  | "cursed"            // Attacker accuracy reduced (-10 evasion chance vs defender per severity)
+  | "paralyzed";        // Combatant skips all actions while active
 
 export interface ActiveStatusEffect {
   type: StatusEffectType;
@@ -170,6 +178,7 @@ export interface StrikeResolution {
   armorDamaged: number;          // Durability lost on armor
   armorBroken: boolean;          // Armor piece destroyed
   damageDealt: number;           // Final HP damage
+  reflectedDamage: number;       // HP reflected back to attacker (reactive_armor); 0 if none
   injuryInflicted: StatusEffectType | null;
   injurySeverity: number;        // 0 if no injury, 1-3
   isCritical: boolean;

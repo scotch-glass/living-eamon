@@ -43,6 +43,14 @@ export const EFFECT_COLORS: Record<StatusEffectType, string> = {
   blessed: "#facc15",
   cunning: "#34d399",
   feeblemind: "#6b7280",
+  // Sprint 7b.buffs
+  protection_aura: "#60a5fa",
+  reactive_armor:  "#94a3b8",
+  night_sight:     "#a5f3fc",
+  weakened:        "#f97316",
+  clumsied:        "#facc15",
+  cursed:          "#dc2626",
+  paralyzed:       "#a855f7",
 };
 
 // ── SVG paths (hand-crafted for 20×20 viewBox) ──
@@ -217,5 +225,55 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     animation: "none",
     label: "Feeblemind",
     description: "Thought thickens. Spells weaken and falter.",
+  },
+  // Sprint 7b.buffs
+  protection_aura: {
+    svgPath: "M10 2L16 6L16 14L10 18L4 14L4 6Z",
+    color: "#60a5fa",
+    animation: "glow",
+    label: "Protected",
+    description: "A ward deflects incoming blows. Takes 25% less damage.",
+  },
+  reactive_armor: {
+    svgPath: "M10 2L14 10L10 18L6 10Z M7 7L13 13 M13 7L7 13",
+    color: "#94a3b8",
+    animation: "shimmer",
+    label: "Reactive Armor",
+    description: "Iron-hard skin returns 20% of incoming damage to the attacker.",
+  },
+  night_sight: {
+    svgPath: "M3 10C3 10 7 4 10 4S17 10 17 10C17 10 13 16 10 16S3 10 3 10Z M10 8A2 2 0 1 1 10 12A2 2 0 1 1 10 8",
+    color: "#a5f3fc",
+    animation: null,
+    label: "Night Sight",
+    description: "Eyes adjusted to darkness. The room is clear.",
+  },
+  weakened: {
+    svgPath: "M5 4L5 16 M15 4L15 16 M5 10L15 10 M8 7L12 13 M12 7L8 13",
+    color: "#f97316",
+    animation: null,
+    label: "Weakened",
+    description: "Strength stolen. Blows land 20% lighter.",
+  },
+  clumsied: {
+    svgPath: "M5 4L10 10L15 4 M10 10L10 16 M7 14L13 14",
+    color: "#facc15",
+    animation: "wobble",
+    label: "Clumsied",
+    description: "Limbs betray. Easier to dodge and harder to hit.",
+  },
+  cursed: {
+    svgPath: "M10 2L12 8L18 8L13 12L15 18L10 14L5 18L7 12L2 8L8 8Z",
+    color: "#dc2626",
+    animation: "pulse",
+    label: "Cursed",
+    description: "Three quiet wrongs settle into the body. Accuracy fails.",
+  },
+  paralyzed: {
+    svgPath: "M10 3L10 17 M6 5L14 5 M6 9L14 9 M6 13L14 13 M6 17L14 17",
+    color: "#a855f7",
+    animation: null,
+    label: "Paralyzed",
+    description: "The body refuses to act. Cannot strike or move.",
   },
 };

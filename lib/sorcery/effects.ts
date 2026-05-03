@@ -79,8 +79,13 @@ export function applyEffect(
       break;
 
     case "buff":
-      if (spell.id === "bless")   { result = applyBless(state, spell); break; }
-      if (spell.id === "cunning") { result = applyCunning(state); break; }
+      if (spell.id === "bless")          { result = applyBless(state, spell); break; }
+      if (spell.id === "cunning")        { result = applyCunning(state); break; }
+      if (spell.id === "strength")       { result = applyStrengthBuff(state); break; }
+      if (spell.id === "agility")        { result = applyAgilityBuff(state); break; }
+      if (spell.id === "protection")     { result = applyProtection(state); break; }
+      if (spell.id === "reactive-armor") { result = applyReactiveArmor(state); break; }
+      if (spell.id === "night-sight")    { result = applyNightSight(state); break; }
       result = {
         kind: "applied",
         state,
@@ -104,6 +109,10 @@ export function applyEffect(
     case "debuff":
       if (spell.id === "feeblemind") { result = applyFeeblemind(state); break; }
       if (spell.id === "poison")     { result = applyPoison(state); break; }
+      if (spell.id === "weaken")     { result = applyWeaken(state); break; }
+      if (spell.id === "clumsy")     { result = applyClumsy(state); break; }
+      if (spell.id === "curse")      { result = applyCurse(state); break; }
+      if (spell.id === "paralyze")   { result = applyParalyze(state); break; }
       result = {
         kind: "applied",
         state,
@@ -906,6 +915,303 @@ function findRuneInInventory(
     }
   }
   return null;
+}
+
+// ── Sprint 7b.buffs — Strength / Agility ─────────────────────
+// Self-buffs. Add TempModifier for recompute pipeline; also sync
+// directly into playerCombatant if a combat session is active so
+// the delta takes effect on the CURRENT fight (not just the next).
+
+const STRENGTH_AGILITY_DURATION = 10;
+const STRENGTH_AGILITY_DELTA    = 5;
+
+function applyStrengthBuff(state: WorldState): EffectDispatchResult {
+  const duration = STRENGTH_AGILITY_DURATION;
+  const delta    = STRENGTH_AGILITY_DELTA;
+
+  const filteredMods = (state.player.tempModifiers ?? []).filter(m => m.source !== "strength");
+  const newMod: TempModifier = { stat: "strength", delta, turnsRemaining: duration, source: "strength" };
+
+  let next: WorldState = {
+    ...state,
+    player: { ...state.player, tempModifiers: [...filteredMods, newMod] },
+  };
+
+  if (next.player.activeCombat) {
+    const session = next.player.activeCombat;
+    next = {
+      ...next,
+      player: {
+        ...next.player,
+        activeCombat: {
+          ...session,
+          playerCombatant: {
+            ...session.playerCombatant,
+            strength: session.playerCombatant.strength + delta,
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "strength-applied", turnsGranted: duration, delta },
+  };
+}
+
+function applyAgilityBuff(state: WorldState): EffectDispatchResult {
+  const duration = STRENGTH_AGILITY_DURATION;
+  const delta    = STRENGTH_AGILITY_DELTA;
+
+  const filteredMods = (state.player.tempModifiers ?? []).filter(m => m.source !== "agility");
+  const newMod: TempModifier = { stat: "dexterity", delta, turnsRemaining: duration, source: "agility" };
+
+  let next: WorldState = {
+    ...state,
+    player: { ...state.player, tempModifiers: [...filteredMods, newMod] },
+  };
+
+  if (next.player.activeCombat) {
+    const session = next.player.activeCombat;
+    next = {
+      ...next,
+      player: {
+        ...next.player,
+        activeCombat: {
+          ...session,
+          playerCombatant: {
+            ...session.playerCombatant,
+            agility: session.playerCombatant.agility + delta,
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "agility-applied", turnsGranted: duration, delta },
+  };
+}
+
+// ── Sprint 7b.buffs — Protection / Reactive Armor / Night Sight ──
+// Self-buffs applied as status effects. Combat engine reads
+// protection_aura and reactive_armor from playerCombatant.activeEffects.
+
+const PROTECTION_DURATION     = 10;
+const REACTIVE_ARMOR_DURATION =  8;
+const NIGHT_SIGHT_DURATION    = 15;
+
+function applyProtection(state: WorldState): EffectDispatchResult {
+  const duration = PROTECTION_DURATION;
+  const effect: ActiveStatusEffect = {
+    type: "protection_aura",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: duration,
+  };
+
+  const filteredEffects = state.player.activeEffects.filter(e => e.type !== "protection_aura");
+  let next: WorldState = {
+    ...state,
+    player: { ...state.player, activeEffects: [...filteredEffects, effect] },
+  };
+
+  if (next.player.activeCombat) {
+    const session = next.player.activeCombat;
+    const combatEffects = session.playerCombatant.activeEffects.filter(e => e.type !== "protection_aura");
+    next = {
+      ...next,
+      player: {
+        ...next.player,
+        activeCombat: {
+          ...session,
+          playerCombatant: { ...session.playerCombatant, activeEffects: [...combatEffects, effect] },
+        },
+      },
+    };
+  }
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "protection-applied", turnsGranted: duration },
+  };
+}
+
+function applyReactiveArmor(state: WorldState): EffectDispatchResult {
+  const duration = REACTIVE_ARMOR_DURATION;
+  const effect: ActiveStatusEffect = {
+    type: "reactive_armor",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: duration,
+  };
+
+  const filteredEffects = state.player.activeEffects.filter(e => e.type !== "reactive_armor");
+  let next: WorldState = {
+    ...state,
+    player: { ...state.player, activeEffects: [...filteredEffects, effect] },
+  };
+
+  if (next.player.activeCombat) {
+    const session = next.player.activeCombat;
+    const combatEffects = session.playerCombatant.activeEffects.filter(e => e.type !== "reactive_armor");
+    next = {
+      ...next,
+      player: {
+        ...next.player,
+        activeCombat: {
+          ...session,
+          playerCombatant: { ...session.playerCombatant, activeEffects: [...combatEffects, effect] },
+        },
+      },
+    };
+  }
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "reactive-armor-applied", turnsGranted: duration },
+  };
+}
+
+function applyNightSight(state: WorldState): EffectDispatchResult {
+  const duration = NIGHT_SIGHT_DURATION;
+  const effect: ActiveStatusEffect = {
+    type: "night_sight",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: duration,
+  };
+
+  const filteredEffects = state.player.activeEffects.filter(e => e.type !== "night_sight");
+  const next: WorldState = {
+    ...state,
+    player: { ...state.player, activeEffects: [...filteredEffects, effect] },
+  };
+
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "night-sight-applied", turnsGranted: duration },
+  };
+}
+
+// ── Sprint 7b.buffs — Weaken / Clumsy / Curse / Paralyze ─────
+// Debuffs applied to the active enemy. All require combat; return
+// no-target out of combat.
+
+const WEAKEN_DURATION   =  8;
+const CLUMSY_DURATION   =  8;
+const CURSE_DURATION    = 10;
+const PARALYZE_DURATION =  3;
+
+function applyWeaken(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+  if (!session) return { kind: "no-target" };
+
+  const effect: ActiveStatusEffect = {
+    type: "weakened",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: WEAKEN_DURATION,
+  };
+  const enemyEffects = session.enemyCombatant.activeEffects.filter(e => e.type !== "weakened");
+  const updatedEnemy: CombatantState = {
+    ...session.enemyCombatant,
+    activeEffects: [...enemyEffects, effect],
+  };
+  const next: WorldState = {
+    ...state,
+    player: { ...state.player, activeCombat: { ...session, enemyCombatant: updatedEnemy } },
+  };
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "weaken-applied", targetName: session.enemyCombatant.name, turnsGranted: WEAKEN_DURATION },
+  };
+}
+
+function applyClumsy(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+  if (!session) return { kind: "no-target" };
+
+  const effect: ActiveStatusEffect = {
+    type: "clumsied",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: CLUMSY_DURATION,
+  };
+  const enemyEffects = session.enemyCombatant.activeEffects.filter(e => e.type !== "clumsied");
+  const updatedEnemy: CombatantState = {
+    ...session.enemyCombatant,
+    activeEffects: [...enemyEffects, effect],
+  };
+  const next: WorldState = {
+    ...state,
+    player: { ...state.player, activeCombat: { ...session, enemyCombatant: updatedEnemy } },
+  };
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "clumsy-applied", targetName: session.enemyCombatant.name, turnsGranted: CLUMSY_DURATION },
+  };
+}
+
+function applyCurse(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+  if (!session) return { kind: "no-target" };
+
+  const effect: ActiveStatusEffect = {
+    type: "cursed",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: CURSE_DURATION,
+  };
+  const enemyEffects = session.enemyCombatant.activeEffects.filter(e => e.type !== "cursed");
+  const updatedEnemy: CombatantState = {
+    ...session.enemyCombatant,
+    activeEffects: [...enemyEffects, effect],
+  };
+  const next: WorldState = {
+    ...state,
+    player: { ...state.player, activeCombat: { ...session, enemyCombatant: updatedEnemy } },
+  };
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "curse-applied", targetName: session.enemyCombatant.name, turnsGranted: CURSE_DURATION },
+  };
+}
+
+function applyParalyze(state: WorldState): EffectDispatchResult {
+  const session = state.player.activeCombat;
+  if (!session) return { kind: "no-target" };
+
+  const effect: ActiveStatusEffect = {
+    type: "paralyzed",
+    zone: "torso",
+    severity: 1,
+    turnsRemaining: PARALYZE_DURATION,
+  };
+  const enemyEffects = session.enemyCombatant.activeEffects.filter(e => e.type !== "paralyzed");
+  const updatedEnemy: CombatantState = {
+    ...session.enemyCombatant,
+    activeEffects: [...enemyEffects, effect],
+  };
+  const next: WorldState = {
+    ...state,
+    player: { ...state.player, activeCombat: { ...session, enemyCombatant: updatedEnemy } },
+  };
+  return {
+    kind: "applied",
+    state: next,
+    effect: { kind: "paralyze-applied", targetName: session.enemyCombatant.name, turnsGranted: PARALYZE_DURATION },
+  };
 }
 
 // ── Helpers ──────────────────────────────────────────────────

@@ -179,6 +179,16 @@ export type EffectResult =
   | { kind: "wall-erected"; boundary: 0 | 1 | 2 | 3; durationTurns: number }
   // Sprint 7b.poison
   | { kind: "poison-applied"; targetName: string; severity: number; damagePerTurn: number }
+  // Sprint 7b.buffs
+  | { kind: "strength-applied"; turnsGranted: number; delta: number }
+  | { kind: "agility-applied"; turnsGranted: number; delta: number }
+  | { kind: "protection-applied"; turnsGranted: number }
+  | { kind: "reactive-armor-applied"; turnsGranted: number }
+  | { kind: "night-sight-applied"; turnsGranted: number }
+  | { kind: "weaken-applied"; targetName: string; turnsGranted: number }
+  | { kind: "clumsy-applied"; targetName: string; turnsGranted: number }
+  | { kind: "curse-applied"; targetName: string; turnsGranted: number }
+  | { kind: "paralyze-applied"; targetName: string; turnsGranted: number }
   | { kind: "dev-not-implemented"; reason: string };
 
 /**

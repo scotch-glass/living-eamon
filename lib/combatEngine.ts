@@ -978,10 +978,24 @@ export function buildRoundNarrative(result: CombatRoundResult): string {
 // ════════════════════════════════════════════════════════════
 
 const SPELL_MANA_COST: Record<string, number> = {
+  // Original guild quartet
   HEAL: 4,
   BLAST: 6,
   SPEED: 3,
   POWER: 5,
+  // Zim's advanced curriculum
+  "GREATER-HEAL":  8,
+  FIREBOLT:        6,
+  HASTE:           4,
+  WARD:            5,
+  STEELSKIN:       5,
+  SILENCE:         4,
+  RESIST:          4,
+  MIRROR:          6,
+  BANISH:          7,
+  "INVOKE-LIGHT":  5,
+  DAYLIGHT:        3,
+  CLEANSE:         4,
 };
 
 const SUPPORTED_COMBAT_SPELLS = new Set(Object.keys(SPELL_MANA_COST));
@@ -1339,6 +1353,158 @@ export function resolveCombatSpell(
       const outcome = rollPowerOutcome();
       outcomeLabel = `Power · ${outcome.name}`;
       outcome.apply(ctx);
+      break;
+    }
+
+    // ── Zim's advanced guild spells ──
+
+    case "GREATER-HEAL": {
+      const baseHeal = randInt(30, 55);
+      const spiritMult = 1 + 0.005 * ctx.state.player.picssi.spirituality;
+      const heal = Math.round(baseHeal * spiritMult);
+      const before = ctx.caster.hp;
+      ctx.caster = { ...ctx.caster, hp: Math.min(ctx.caster.maxHp, ctx.caster.hp + heal) };
+      const gained = ctx.caster.hp - before;
+      const wasVd = ctx.state.player.vdActive;
+      const wasPoison = ctx.caster.activeEffects.some(e => e.type === "poison");
+      if (wasVd) ctx.state = { ...ctx.state, player: { ...ctx.state.player, vdActive: false } };
+      if (wasPoison) ctx.caster = { ...ctx.caster, activeEffects: ctx.caster.activeEffects.filter(e => e.type !== "poison") };
+      outcomeLabel = "Greater Heal";
+      ctx.log.push(
+        `Light pours through you like water through a crack. The worst of it closes. (+${gained} HP)` +
+        (wasVd || wasPoison ? "\nThe corruption burns away with the light." : "")
+      );
+      break;
+    }
+
+    case "FIREBOLT": {
+      const dmg = randInt(10, 24);
+      ctx.enemy = { ...ctx.enemy, hp: Math.max(0, ctx.enemy.hp - dmg) };
+      outcomeLabel = "Firebolt";
+      ctx.log.push(`A bolt of orange fire leaps from your outstretched hand and strikes ${ctx.enemy.name}. (${dmg} fire damage)`);
+      break;
+    }
+
+    case "HASTE": {
+      ctx.caster = addStatusEffect(ctx.caster, {
+        type: "haste", zone: "torso", severity: 1, turnsRemaining: 4,
+      });
+      outcomeLabel = "Haste";
+      ctx.log.push("The world slows around you. Your hands move before your mind commands them. (+10 agility for 4 rounds)");
+      break;
+    }
+
+    case "WARD": {
+      ctx.caster = addStatusEffect(ctx.caster, {
+        type: "shield_aura", zone: "torso", severity: 1, turnsRemaining: 3,
+      });
+      outcomeLabel = "Ward";
+      ctx.log.push("A faint shimmer settles over you — blows that should land seem to find air instead. (+20 cover for 3 rounds)");
+      break;
+    }
+
+    case "STEELSKIN": {
+      ctx.caster = addStatusEffect(ctx.caster, {
+        type: "protection_aura", zone: "torso", severity: 1, turnsRemaining: 3,
+      });
+      outcomeLabel = "Steelskin";
+      ctx.log.push("Your skin hardens. You can feel it — a density that was not there before. (−25% damage taken for 3 rounds)");
+      break;
+    }
+
+    case "SILENCE": {
+      ctx.enemy = addStatusEffect(ctx.enemy, {
+        type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
+      });
+      outcomeLabel = "Silence";
+      ctx.log.push(`${ctx.enemy.name} seizes up, unable to act. The silence is total. (enemy loses next action)`);
+      break;
+    }
+
+    case "RESIST": {
+      ctx.caster = addStatusEffect(ctx.caster, {
+        type: "protection_aura", zone: "torso", severity: 2, turnsRemaining: 2,
+      });
+      outcomeLabel = "Resist";
+      ctx.log.push("You feel the world's edge, blunted. For now, it cannot cut as deep. (−50% damage taken for 2 rounds)");
+      break;
+    }
+
+    case "MIRROR": {
+      ctx.caster = addStatusEffect(ctx.caster, {
+        type: "reactive_armor", zone: "torso", severity: 2, turnsRemaining: 2,
+      });
+      outcomeLabel = "Mirror";
+      ctx.log.push("A reflective haze clings to you. Whatever strikes you sends a fragment of itself back. (reflects 40% damage for 2 rounds)");
+      break;
+    }
+
+    case "BANISH": {
+      const enemyNpc = NPCS[ctx.session.enemyNpcId];
+      const isDark = enemyNpc?.tags?.some(t => t === "undead" || t === "daemon") ?? false;
+      const dmg = isDark ? randInt(25, 45) : randInt(8, 16);
+      const before = ctx.enemy.hp;
+      ctx.enemy = { ...ctx.enemy, hp: Math.max(0, ctx.enemy.hp - dmg) };
+      const dealt = before - ctx.enemy.hp;
+      outcomeLabel = "Banish";
+      ctx.log.push(
+        isDark
+          ? `The Name of Light strikes ${ctx.enemy.name} like a brand. The darkness in it recoils. (${dealt} holy damage)`
+          : `The Word strikes ${ctx.enemy.name}, but this creature knows no exile. (${dealt} damage)`
+      );
+      break;
+    }
+
+    case "INVOKE-LIGHT": {
+      const enemyNpc2 = NPCS[ctx.session.enemyNpcId];
+      const isDark2 = enemyNpc2?.tags?.some(t => t === "undead" || t === "daemon") ?? false;
+      const dmg2 = isDark2 ? randInt(15, 28) : randInt(5, 12);
+      ctx.enemy = { ...ctx.enemy, hp: Math.max(0, ctx.enemy.hp - dmg2) };
+      if (isDark2) {
+        ctx.enemy = addStatusEffect(ctx.enemy, {
+          type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
+        });
+      }
+      outcomeLabel = "Invoke Light";
+      ctx.log.push(
+        isDark2
+          ? `A blazing column of white light falls on ${ctx.enemy.name}. It staggers back, unable to act. (${dmg2} light damage + loses action)`
+          : `A burst of radiance flares through the room. ${ctx.enemy.name} flinches. (${dmg2} light damage)`
+      );
+      break;
+    }
+
+    case "DAYLIGHT": {
+      const enemyNpc3 = NPCS[ctx.session.enemyNpcId];
+      const isDark3 = enemyNpc3?.tags?.some(t => t === "undead" || t === "daemon") ?? false;
+      if (isDark3) {
+        ctx.enemy = addStatusEffect(ctx.enemy, {
+          type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
+        });
+        ctx.log.push(`Sudden noon-light floods the room. ${ctx.enemy.name} recoils into the far wall, unable to act. (enemy loses action)`);
+      } else {
+        ctx.log.push("Daylight floods the room. Your enemy does not seem to care. (No combat effect against this foe — the spell is wasted in battle.)");
+      }
+      outcomeLabel = "Daylight";
+      break;
+    }
+
+    case "CLEANSE": {
+      const hadPoison = ctx.caster.activeEffects.some(e => e.type === "poison");
+      const hadBleed = ctx.caster.activeEffects.some(e => e.type === "bleed");
+      ctx.caster = {
+        ...ctx.caster,
+        activeEffects: ctx.caster.activeEffects.filter(e => e.type !== "poison" && e.type !== "bleed"),
+      };
+      outcomeLabel = "Cleanse";
+      if (hadPoison || hadBleed) {
+        ctx.log.push(
+          "The taint leaves your blood" +
+          (hadPoison && hadBleed ? " — the poison and the bleed both wash clear." : hadPoison ? " — the poison washes clear." : " — the bleeding staunches.")
+        );
+      } else {
+        ctx.log.push("You are already clean. The spell finds nothing to cure.");
+      }
       break;
     }
   }

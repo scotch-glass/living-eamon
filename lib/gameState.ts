@@ -9,6 +9,7 @@
 import { RoomState } from "./gameData";
 import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 import type { PicssiState } from "./karma/types";
+import type { RoomTimeOfDay } from "./roomTypes";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -182,6 +183,8 @@ export interface Corpse {
   moonExposed: boolean;
   creatureKind: CreatureKind;
   isHeroCorpse: boolean;
+  /** Sprint G2 — room's time-of-day at death. Indoor corpses never accumulate exposure. */
+  timeOfDay?: RoomTimeOfDay;
 }
 
 /** Simple day/night check. One cycle = 48 turns; first 24 = day. */
@@ -1225,7 +1228,8 @@ export function removeRevealedItem(
 
 export function applyPlayerDeath(
   state: WorldState,
-  enemyName: string
+  enemyName: string,
+  roomTimeOfDay?: RoomTimeOfDay
 ): { newState: WorldState; lostGold: number } {
   const lostGold = state.player.gold;
 
@@ -1311,18 +1315,20 @@ export function applyPlayerDeath(
   // (+Spirituality + Standing). Cannot be Resurrected (soul already
   // went to the church). See Sprint 7b.R + 7b.RF.
   const heroCorpseId = `corpse-hero-${state.worldTurn}`;
+  const tod = roomTimeOfDay ?? "indoor";
   const heroCorpse: Corpse = {
     id: heroCorpseId,
     originalNpcId: "hero",
     name: `the body of ${state.player.name}`,
     roomId: state.player.currentRoom,
-    planeId: state.player.currentPlane,
+    planeId: state.player.currentPlane ?? "thurian",
     timeOfDeath: state.worldTurn,
     context: "surface",
-    sunExposed: isDay(state.worldTurn),
-    moonExposed: !isDay(state.worldTurn),
+    sunExposed: tod === "day" || tod === "dawn",
+    moonExposed: tod === "night" || tod === "dusk",
     creatureKind: "human",
     isHeroCorpse: true,
+    timeOfDay: tod,
   };
   newState = {
     ...newState,
@@ -1420,16 +1426,19 @@ export function tickWorldState(state: WorldState): WorldState {
     }
   }
 
-  // Tick corpse sun/moon exposure (Sprint 7b.R)
-  // Surface corpses accumulate sun or moon each tick depending on time
-  // of day. Once both flags are true, Resurrection is impossible.
+  // Tick corpse sun/moon exposure (Sprint 7b.R, updated G2)
+  // Surface corpses accumulate sun or moon based on the room's timeOfDay
+  // field (Sprint G2). Indoor rooms shelter corpses — no exposure.
+  // Once both flags are true, Resurrection is impossible.
   if (newState.corpses && Object.keys(newState.corpses).length > 0) {
-    const day = isDay(newState.worldTurn);
     let updatedCorpses: Record<string, Corpse> | null = null;
     for (const [id, corpse] of Object.entries(newState.corpses)) {
       if (corpse.context !== "surface") continue;
-      const newSun  = corpse.sunExposed  || day;
-      const newMoon = corpse.moonExposed || !day;
+      const tod = corpse.timeOfDay ?? "indoor";
+      // Indoor corpses are never exposed to sun or moon.
+      if (tod === "indoor") continue;
+      const newSun  = corpse.sunExposed  || tod === "day"   || tod === "dawn";
+      const newMoon = corpse.moonExposed || tod === "night" || tod === "dusk";
       if (newSun !== corpse.sunExposed || newMoon !== corpse.moonExposed) {
         if (!updatedCorpses) updatedCorpses = { ...newState.corpses };
         updatedCorpses[id] = { ...corpse, sunExposed: newSun, moonExposed: newMoon };

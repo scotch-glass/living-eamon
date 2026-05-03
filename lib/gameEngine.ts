@@ -90,6 +90,7 @@ import type { KarmaDelta } from "./karma/types";
 import { emitQuestEvent } from "./quests/engine";
 import { resolveQuestDialogue } from "./quests/dialogue";
 import { handleInvoke, composeInvokeResponse } from "./sorcery/invoke";
+import { getTimeOfDayLine } from "./world/timeOfDayDescriptions";
 import { renderActiveQuests, renderQuestLog } from "./quests/log";
 import "./quests/load"; // side-effect: registers all quest line modules
 import {
@@ -1496,6 +1497,16 @@ function buildRoomDescription(
   // Exits — always shown
   const exitList = Object.keys(room.exits).join(", ");
   description += `\n\nExits: ${exitList}.`;
+
+  // Sprint G2 — time-of-day atmospheric line (semiverbose + verbose only)
+  if (verbosity !== "nonverbose" && room.timeOfDay && room.timeOfDay !== "indoor") {
+    const todLine = getTimeOfDayLine(
+      room.timeOfDay,
+      room.sceneTone ?? "civilized",
+      state.worldTurn
+    );
+    if (todLine) description += "\n\n" + todLine;
+  }
 
   // Robe humiliation — only on semiverbose and verbose (skip nonverbose)
   if (verbosity !== "nonverbose") {
@@ -4503,9 +4514,11 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
           enemyTag: NPCS[session.enemyNpcId]?.bodyType,
         });
         // Player death — apply death penalty, respawn
+        const deathRoom = getRoom(finalState.player.currentRoom);
         const { newState: afterDeath, lostGold } = applyPlayerDeath(
           finalState,
-          session.enemyName
+          session.enemyName,
+          deathRoom?.timeOfDay
         );
         finalState = afterDeath;
         const deathSuffix = `\n\n${fillTemplate(

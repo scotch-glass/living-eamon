@@ -7,6 +7,14 @@
 export type RoomState = "normal" | "burnt" | "flooded" | "dark" | "ransacked";
 export type SceneTone = "pastoral" | "civilized" | "aquilonian" | "grimdark";
 
+/**
+ * Sprint G2 — per-room time-of-day.
+ * Decoupled from real wall-clock time; set by adventure authors.
+ * "indoor" means the room is sheltered — no sky, no weather, no day/night.
+ * Corpse sun/moon exposure uses this instead of the isDay(worldTurn) heuristic.
+ */
+export type RoomTimeOfDay = "day" | "night" | "dawn" | "dusk" | "indoor";
+
 export interface RoomStateModifier {
   description: string;
   npcMoodShift?: string;
@@ -58,6 +66,12 @@ export interface Room {
   // Sprint 7b.T — world/plane id. Default "thurian" when absent.
   // Gate Travel reads this at cast time and stores it in MarkedRune.
   planeId?: string;
+
+  // Sprint G2 — time-of-day and outdoor flag.
+  // timeOfDay defaults to "indoor" when absent (no sky, no weather).
+  // outdoor: true enables weather overlay from G3 Eivissa weather.
+  timeOfDay?: RoomTimeOfDay;
+  outdoor?: boolean;
 
   // Sprint 7b.B — temple / shrine tags. Bless reads these for
   // duration extension + reagent waiver; future Force-I spells may too.

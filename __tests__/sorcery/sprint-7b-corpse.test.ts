@@ -138,38 +138,39 @@ console.log("\n[sprint-7b-corpse] Day/night corpse tick");
 
 caseName("surface corpse in day gets sunExposed=true on tick", () => {
   const s = baseState();
-  // Force a daytime worldTurn (0-23 in cycle of 48)
+  // Sprint G2: corpse exposure now driven by corpse.timeOfDay, not isDay(worldTurn)
   const dayState: WorldState = {
     ...s,
-    worldTurn: 5, // isDay(5) = true
+    worldTurn: 5,
     corpses: {
       c1: {
         id: "c1", originalNpcId: "npc1", name: "body", roomId: "main_hall",
         planeId: "thurian", timeOfDeath: 0, context: "surface",
         sunExposed: false, moonExposed: false, creatureKind: "human", isHeroCorpse: false,
+        timeOfDay: "day",
       },
     },
   };
   const ticked = tickWorldState(dayState);
-  truthy(isDay(5), "sanity: worldTurn 5 is day");
   truthy(ticked.corpses["c1"]?.sunExposed, "sunExposed after day tick");
 });
 
 caseName("surface corpse at night gets moonExposed=true on tick", () => {
   const s = baseState();
+  // Sprint G2: corpse exposure now driven by corpse.timeOfDay, not isDay(worldTurn)
   const nightState: WorldState = {
     ...s,
-    worldTurn: 30, // isDay(30) = false (30 >= 24)
+    worldTurn: 30,
     corpses: {
       c1: {
         id: "c1", originalNpcId: "npc1", name: "body", roomId: "main_hall",
         planeId: "thurian", timeOfDeath: 0, context: "surface",
         sunExposed: false, moonExposed: false, creatureKind: "human", isHeroCorpse: false,
+        timeOfDay: "night",
       },
     },
   };
   const ticked = tickWorldState(nightState);
-  falsy(isDay(30), "sanity: worldTurn 30 is night");
   truthy(ticked.corpses["c1"]?.moonExposed, "moonExposed after night tick");
 });
 

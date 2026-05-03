@@ -44,6 +44,7 @@ const rooms: Record<string, Room> = {
       "A vast chamber of white marble so pale it appears to emit light rather than reflect it — no torch, no window, no flame, yet every surface is equally, coldly illuminated. Floor, walls, vaulted ceiling, altar: all the same unblemished white. The surfaces are neither rough nor smooth. The corners are neither sharp nor truly rounded — as though the room was formed rather than built. Robed figures stand motionless at intervals along the walls, white robes, white hands folded, faces the color of porcelain with flat gray eyes. The silence. Silence is the absence of sound. Yet, here it is more like a presence.",
     sceneTone: "grimdark",
     sceneAtmosphereOverride: CHURCH_ATMOSPHERE_OVERRIDE,
+    timeOfDay: "indoor",
 
     // ── Cold Open ─────────────────────────────────────────────
     coldOpen: {
@@ -152,6 +153,8 @@ const rooms: Record<string, Room> = {
     visualDescription:
       "A broad sunlit marble-flagged courtyard enclosed by colonnaded walls of pale stone. Weathered wooden training dummies stand in a row along one wall. A stone fountain in the centre. A guild banner hangs from an arched iron gate. To the north, a narrow shopfront doorway with a small wooden sign above it showing ONLY a painted image of a sword crossed over a shield — no words, no text, no letters. To the south, a modest stone doorway with a small wooden sign above it showing ONLY a painted image of a red potion bottle — no words, no text, no letters, just the red bottle image. Warm afternoon sun, blue sky. No people visible. No text anywhere on any sign. Aquilonian grandeur.",
     sceneTone: "aquilonian",
+    timeOfDay: "day",
+    outdoor: true,
   },
 
   // ── Sam's Sharps ───────────────────────────────────────────
@@ -174,6 +177,7 @@ const rooms: Record<string, Room> = {
     visualDescription:
       "INTERIOR scene — inside a small stone room, NOT outdoors. Low vaulted stone ceiling, pale stone walls, no windows. Three swords — a short sword, a long sword, and a great two-handed sword — hang from iron hooks on the back wall. A sturdy wooden workbench in the centre with oilcloths, a whetstone, and tools. A wooden counter near the arched doorway. A single bronze lamp casts warm amber light. Empty room — no people. Only stone walls, swords, the workbench, and warm lamplight.",
     sceneTone: "aquilonian",
+    timeOfDay: "indoor",
   },
 
   // ── Main Hall ───────────────────────────────────────────────
@@ -219,6 +223,7 @@ const rooms: Record<string, Room> = {
     visualDescription:
       "A vast warm hall of pale Aquilonian marble with high vaulted ceilings supported by fluted columns. Long oak tables with tankards, plates, and candles — a place of food and drink, not combat. A long wooden bar along one wall with barrels and bottles behind it. A notice board covered in pinned parchment in one corner. A massive stone fireplace with a bright, friendly crackling fire casting warm orange light across the room. Iron-and-bronze chandeliers overhead. Empty room — no people, no figures, no statues, no carvings of humans. Only architecture, furniture, firelight, and warmth.",
     sceneTone: "aquilonian",
+    timeOfDay: "indoor",
   },
 
   // ── Notice Board ────────────────────────────────────────────
@@ -264,6 +269,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     visualDescription:
       "A marble alcove off the Main Hall, its walls covered floor-to-ceiling in layered parchment notices pinned to cork boards framed in dark wood — bounty postings, hand-drawn maps, wanted portraits, contract seals stamped in red wax. Three large official guild notices on heavy vellum stand out in the centre. Bronze lamp brackets cast warm light that makes the older papers curl at the edges.",
     sceneTone: "aquilonian",
+    timeOfDay: "indoor",
   },
 
   // ── Guild Armory ────────────────────────────────────────────
@@ -285,6 +291,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     visualDescription:
       "A long vaulted chamber of pale stone with iron armor stands and racks lining both walls — battered leather cuirasses, dented open-faced iron helms, stiff leather neckguards, and round iron-rimmed wooden shields, all of every condition from heavily-used to nearly retired. A grindstone sits in one corner beside a bucket of water gone rust-brown. Bronze lamp brackets throw warm amber light along the rows of leather and steel. The floor is flagstone, worn smooth by generations of armored boots.",
     sceneTone: "aquilonian",
+    timeOfDay: "indoor",
   },
 
   // ── Guild Bank ──────────────────────────────────────────────
@@ -305,6 +312,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     visualDescription:
       "A low vaulted cellar of heavy Aquilonian stonework, the walls thick and windowless. A single iron-banded door guards the entrance. A scarred oak counter sits before rows of iron strongboxes lining the far wall, each padlocked and marked with a brass numeral. Ledgers tower in unstable columns behind the counter. A single bronze oil lamp provides the only light. The smell is dust, old coin, and cold stone.",
     sceneTone: "aquilonian",
+    timeOfDay: "indoor",
   },
 
   // ── Pots & Bobbles (Mage School) ─────────────────────────────
@@ -330,6 +338,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     visualDescription:
       "An impossibly large chamber of dark polished stone and warm wood, far deeper than the exterior suggests. Floor-to-ceiling shelves crammed with glass bottles, leather-bound scrolls, and mysterious objects — some faintly glowing. A long glass-topped counter with neat rows of colourful potions. Bronze astrolabes and crystal spheres on high shelves. Warm amber light from no visible source. Dust motes suspended in air that hums with unseen energy. Ancient Aquilonian architecture crossed with an alchemist's workshop. No people visible.",
     sceneTone: "aquilonian",
+    timeOfDay: "indoor",
   },
 
   // ── Shrine of Ma'at ─────────────────────────────────────────
@@ -356,6 +365,7 @@ Return to the Main Hall (GO WEST) to prepare before entering any adventure.`,
     sceneTone: "civilized",
     consecrated: true,
     deity: "maat",
+    timeOfDay: "indoor",
   },
 
 };

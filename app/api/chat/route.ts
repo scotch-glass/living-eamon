@@ -840,15 +840,15 @@ export async function POST(request: NextRequest) {
     // Run through engine
     let engineResult = processInput(playerInput, state);
 
-    // STATIC — no API call unless narrative contains __CRITICAL__ (Jane rewrites crit line)
+    // STATIC — engine's response goes directly to the client.
     if (engineResult.responseType === "static" && engineResult.staticResponse !== null) {
 
       // ══════════════════════════════════════════════════════════════════════
       // COMBAT FAST-PATH: when the player is in active combat, the engine's
       // static response IS the combat narration (STRIKE result, CAST result,
       // FLEE result, engage line, etc.). It must reach the client UNTOUCHED.
-      // No courtyard weather, no on_enter NPC scripts, no __CRITICAL__ Jane
-      // rewrite, no room descriptions — combat is its own isolated context.
+      // No courtyard weather, no on_enter NPC scripts, no room descriptions —
+      // combat is its own isolated context.
       // ══════════════════════════════════════════════════════════════════════
       if (engineResult.newState.player.activeCombat || engineResult.staticResponse.includes("__COMBAT_END__")) {
         return sendResponse(engineResult.staticResponse, engineResult.newState);
@@ -922,24 +922,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (staticText.includes("__CRITICAL__")) {
-        const critContext =
-          "CRITICAL HIT. The player has landed a devastating blow.\n" +
-          "The following combat narrative contains a __CRITICAL__ marker.\n" +
-          "Rewrite the marked hit line as a single vivid, visceral sentence — " +
-          "no longer than 20 words. Replace __CRITICAL__ and the line that " +
-          "follows it with your rewrite. Keep all other lines exactly as-is.\n\n" +
-          "NARRATIVE:\n" +
-          staticText;
-
-        return await streamJane(
-          critContext,
-          engineResult.newState,
-          messages,
-          null,
-          engineResult.newState.player.currentRoom === "main_hall"
-        );
-      }
+      // Sprint B (2026-05-03): the dormant `__CRITICAL__` Jane rewrite was
+      // removed here — the marker was never injected by the engine, so the
+      // branch could not fire. Crit narration is fully prescripted via
+      // CRITICAL_PREFIXES + CRIT_ATTACKER_GORE in lib/combatZoneNarration.ts.
 
       // Prepend NPC token so client can prefetch sprite while text streams
       const npcPrefix = engineResult.conversationNpcId

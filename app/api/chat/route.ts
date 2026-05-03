@@ -49,6 +49,7 @@ import {
 } from "../../../lib/supabase";
 import { createServerSupabase } from "../../../lib/supabaseAuthServer";
 import { worldStateToPlayerRecord } from "../../../lib/persistence/playerRecord";
+import { getOrRefreshWeather } from "../../../lib/world/weatherCache";
 
 const grok = new OpenAI({
   apiKey: process.env.XAI_API_KEY || process.env.GROK_API_KEY,
@@ -503,6 +504,9 @@ export async function POST(request: NextRequest) {
             typeof (savedPlayer as { last_tick_at?: number }).last_tick_at === "number"
               ? (savedPlayer as { last_tick_at: number }).last_tick_at
               : initial.lastTickAt,
+          // Sprint G3 — weather snapshot
+          currentWeather:
+            (savedPlayer as { current_weather?: WorldState["currentWeather"] }).current_weather ?? undefined,
         };
 
         // Client holds the live session; DB load can lag behind async savePlayer.
@@ -527,6 +531,7 @@ export async function POST(request: NextRequest) {
             worldTurn: typeof ws.worldTurn === "number" ? ws.worldTurn : state.worldTurn,
             realTimeMs: typeof ws.realTimeMs === "number" ? ws.realTimeMs : state.realTimeMs,
             lastTickAt: typeof ws.lastTickAt === "number" ? ws.lastTickAt : state.lastTickAt,
+            currentWeather: ws.currentWeather ?? state.currentWeather,
             player: {
               ...state.player,
               ...ws.player,
@@ -567,6 +572,11 @@ export async function POST(request: NextRequest) {
     // however many ms elapsed since the last server tick. G4/G5 will
     // wire environmental decay (scorch, blood, rubble) inside tickRealTime.
     state = tickRealTime(state, Date.now() - (state.lastTickAt || Date.now()));
+
+    // Sprint G3 — refresh weather if stale (>30 min) or absent.
+    // getOrRefreshWeather is cheap when the cache is warm (single DB read).
+    const weather = await getOrRefreshWeather();
+    state = { ...state, currentWeather: weather };
 
     const appendSituation = (body: string, newState: WorldState) => {
       const cleaned = stripTrailingSituationBlocks(body);

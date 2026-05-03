@@ -97,5 +97,7 @@ export function worldStateToPlayerRecord(
     // Sprint G1 — real-time clock
     realTimeMs: state.realTimeMs ?? Date.now(),
     lastTickAt: state.lastTickAt ?? Date.now(),
+    // Sprint G3 — current weather snapshot
+    currentWeather: state.currentWeather ?? null,
   };
 }

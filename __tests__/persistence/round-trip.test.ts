@@ -155,6 +155,23 @@ caseName("defaults: empty world serializes without nulls in new fields", () => {
   eq(rec.activeEvents, [], "activeEvents default empty");
 });
 
+// Sprint G1 — real-time clock round-trip
+caseName("real_time_ms round-trips", () => {
+  const ws = fixtureWorldState();
+  const TIME_VAL = 1_700_000_000_000;
+  const wsWithTime = { ...ws, realTimeMs: TIME_VAL };
+  const rec = worldStateToPlayerRecord(wsWithTime);
+  eq(rec.realTimeMs as number, TIME_VAL, "realTimeMs");
+});
+
+caseName("last_tick_at round-trips", () => {
+  const ws = fixtureWorldState();
+  const TICK_VAL = 1_700_000_001_000;
+  const wsWithTick = { ...ws, lastTickAt: TICK_VAL };
+  const rec = worldStateToPlayerRecord(wsWithTick);
+  eq(rec.lastTickAt as number, TICK_VAL, "lastTickAt");
+});
+
 caseName("legacy fields still present", () => {
   const rec = worldStateToPlayerRecord(fixtureWorldState());
   truthy("hp" in rec, "hp present");

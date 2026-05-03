@@ -575,6 +575,16 @@ export interface WorldState {
    * are true the soul has gone on and Resurrection is impossible.
    */
   corpses: Record<string, Corpse>;
+
+  /**
+   * Sprint G1 — real-time clock (1 real second = 1 in-game second).
+   * realTimeMs tracks elapsed in-game time in milliseconds since world
+   * creation. lastTickAt is the wall-clock unix ms of the last server
+   * tick; the next tick computes deltaMs = Date.now() - lastTickAt.
+   * G4/G5 will wire environmental decay against these values.
+   */
+  realTimeMs: number;
+  lastTickAt: number;
 }
 
 // ============================================================
@@ -882,6 +892,8 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
 
     vendorTempStock: {},
     corpses: {},
+    realTimeMs: Date.now(),
+    lastTickAt: Date.now(),
   };
 }
 
@@ -1470,6 +1482,22 @@ export function tickWorldState(state: WorldState): WorldState {
   newState = { ...newState, vendorTempStock: updatedVendorStock };
 
   return newState;
+}
+
+// ============================================================
+// SPRINT G1 — REAL-TIME CLOCK
+// Advances the world's real-time clock by deltaMs milliseconds.
+// Wire-in: call at the top of processInput + on session-load.
+// G4/G5 will add environmental decay inside this function.
+// ============================================================
+
+export function tickRealTime(state: WorldState, deltaMs: number): WorldState {
+  if (deltaMs <= 0) return state;
+  return {
+    ...state,
+    realTimeMs: state.realTimeMs + deltaMs,
+    lastTickAt: Date.now(),
+  };
 }
 
 // ============================================================

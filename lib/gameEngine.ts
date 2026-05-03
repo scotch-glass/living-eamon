@@ -36,6 +36,7 @@ import {
   PlayerInventoryItem,
   NPCStateEntry,
   tickWorldState,
+  tickRealTime,
   movePlayer,
   updatePlayerGold,
   updatePlayerHP,
@@ -5063,6 +5064,10 @@ export function processInput(
   input: string,
   state: WorldState
 ): EngineResult {
+  // Sprint G1 — advance real-time clock by ms elapsed since last tick.
+  // G4/G5 will wire environmental decay inside tickRealTime.
+  state = tickRealTime(state, Date.now() - (state.lastTickAt || Date.now()));
+
   const trimmedInput = input.trim();
   const firstVerb = trimmedInput.toUpperCase().split(/\s+/)[0] ?? "";
 

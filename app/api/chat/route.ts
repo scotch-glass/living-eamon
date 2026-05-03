@@ -18,6 +18,7 @@ import {
   createInitialWorldState,
   WorldState,
   normalizeWeaponSkills,
+  tickRealTime,
 } from "../../../lib/gameState";
 import { recomputeDerivedStats } from "../../../lib/karma/recompute";
 import { NPCS, ITEMS } from "../../../lib/gameData";
@@ -493,6 +494,15 @@ export async function POST(request: NextRequest) {
             ((savedPlayer as { vendor_temp_stock?: WorldState["vendorTempStock"] }).vendor_temp_stock) ?? initial.vendorTempStock,
           activeEvents:
             ((savedPlayer as { active_events?: import("../../../lib/gameState").ActiveEvent[] }).active_events) ?? initial.activeEvents,
+          // Sprint G1 — real-time clock
+          realTimeMs:
+            typeof (savedPlayer as { real_time_ms?: number }).real_time_ms === "number"
+              ? (savedPlayer as { real_time_ms: number }).real_time_ms
+              : initial.realTimeMs,
+          lastTickAt:
+            typeof (savedPlayer as { last_tick_at?: number }).last_tick_at === "number"
+              ? (savedPlayer as { last_tick_at: number }).last_tick_at
+              : initial.lastTickAt,
         };
 
         // Client holds the live session; DB load can lag behind async savePlayer.
@@ -515,6 +525,8 @@ export async function POST(request: NextRequest) {
             chronicleLog: ws.chronicleLog ?? state.chronicleLog,
             vendorTempStock: ws.vendorTempStock ?? state.vendorTempStock,
             worldTurn: typeof ws.worldTurn === "number" ? ws.worldTurn : state.worldTurn,
+            realTimeMs: typeof ws.realTimeMs === "number" ? ws.realTimeMs : state.realTimeMs,
+            lastTickAt: typeof ws.lastTickAt === "number" ? ws.lastTickAt : state.lastTickAt,
             player: {
               ...state.player,
               ...ws.player,
@@ -550,6 +562,11 @@ export async function POST(request: NextRequest) {
     // every load, then clamp current stamina to the new cap. Sprint 2
     // will extend this with PICSSI-driven STR/DEX/maxHP/maxMana.
     state = { ...state, player: recomputeDerivedStats(state.player) };
+
+    // Sprint G1 — on-demand real-time catch-up: advance world clock by
+    // however many ms elapsed since the last server tick. G4/G5 will
+    // wire environmental decay (scorch, blood, rubble) inside tickRealTime.
+    state = tickRealTime(state, Date.now() - (state.lastTickAt || Date.now()));
 
     const appendSituation = (body: string, newState: WorldState) => {
       const cleaned = stripTrailingSituationBlocks(body);

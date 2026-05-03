@@ -4,7 +4,7 @@
 
 1. **Switch model to Sonnet** with `/model sonnet`. Save Opus for hard reasoning or design calls.
 2. Confirm working dir: `/Users/joshuamcclure/Desktop/living-eamon`
-3. Confirm branch: `dev`. Latest committed on dev: **`6dff551`** (Sprint S4c: WorldMap component + currentNodeId persistence).
+3. Confirm branch: `dev`. Latest committed on dev: **`c72bf9c`** (Sprint S4c: correct map file + hand-placed pin coordinates).
 4. No uncommitted work. Working tree is clean on dev.
 5. Paste the prompt below as your first message.
 
@@ -21,7 +21,7 @@ You are being rehydrated into Living Eamon. Read this stack in order:
 5. **`~/.claude/plans/fluffy-bouncing-hanrahan.md`** — Sprint 7b Phase 2 roadmap.
 6. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index.
 
-After reading, confirm hydration with one paragraph naming: (a) what was done in the most recent session (S4c WorldMap component — map tab in sidebar, node pins, edge lines, confirm modal, currentNodeId persistence), (b) what the next sprint options are, (c) what known follow-ups remain unticketed.
+After reading, confirm hydration with one paragraph naming: (a) what was done in the most recent session (S4c WorldMap fully finalized — correct map file, all 17 nodes hand-placed via drag tool, drag coordinate system calibrated, currentNodeId persistence), (b) what the next sprint options are, (c) what known follow-ups remain unticketed.
 
 ---
 
@@ -52,9 +52,12 @@ After reading, confirm hydration with one paragraph naming: (a) what was done in
 - `lib/roomTypes.ts:AdventureModule` — extended with `locationId?`, `travelZones?`, `travelDays?`
 - `lib/adventures/guild-hall.ts` — `GUILD_HALL` anchored to `valus` node
 
-**Sprint S4c — WorldMap component**
-- `PlayerState.currentNodeId: string` — default `"valus"`, persists across rebirth; DB column `current_node_id text default 'valus'` applied
-- `components/WorldMap.tsx` — map painting + SVG dashed edge lines color-coded by danger + node pins (gold=current, danger-colored=reachable, gray=unreachable) + tooltips (travel mode/days/danger) + click-to-travel confirm modal
+**Sprint S4c — WorldMap component (FULLY FINALIZED)**
+- `PlayerState.currentNodeId: string` — default `"valus"`, persists across rebirth; DB column `current_node_id text default 'valus'` applied (`supabase/migrations/20260507000000_s4c_current_node_id.sql`)
+- `components/WorldMap.tsx` — map painting + SVG dashed edge lines color-coded by danger + node pins (gold=current, danger-colored=reachable, gray=unreachable) + hover-only tooltips + click-to-travel confirm modal + **PLACE PINS drag tool** (developer mode: drag pins, coordinate readout panel, source-pixel coords written to `travelNodes.ts`)
+- `public/art/living-eamon-map.png` — correct 2092×1382 file (replaced wrong 2560×1693 version)
+- `lib/world/travelNodes.ts` — all 17 nodes hand-placed via drag tool; raw source-pixel coords (`x/y` = source px at scale 0.5); `geo_worlds_end` estimated (not dragged)
+- Fixed-pixel canvas: `DISPLAY_W=1046 DISPLAY_H=691 SCALE=0.5`; map in `overflow:auto` scroll container — pins never drift on window resize
 - `app/page.tsx` — "map" tab added to sidebar; WorldMap renders as `position:absolute` overlay in main area when tab active; close returns to stats
 
 **Sprint S2 — PICSSI ↔ location-type taxonomy**
@@ -154,7 +157,7 @@ Chapel of the Lamp, Salt Marsh, Necropolis, Yssa's Cottage, Library Annex, Watch
 - **8f Wave 2+ rooms** — Sister Hela / Maelis / Cassian etc. have no home rooms yet (Chapel of the Lamp, Salt Marsh, Necropolis, Yssa's Cottage, etc.)
 - **Three SH fragments** (SH 1.1 / 18.3 / 19.7) await remote-NPC assignment (Aldric, Vivian, Hokas)
 - **Way codex §7 Black Vellum** is a stub — Khepratha / Lady Vela / The Anonym flags not yet wired
-- **Valus map pin** not yet placed on `living-eamon-map.png` — needed before S4 travel UI (node id `valus` at pixel 600, 530)
+- **`geo_worlds_end` pin not hand-placed** — estimated at x:1970, y:700; drag to correct position via PLACE PINS mode before S4d ships
 - **23 travel scene backgrounds** not yet generated — spec + prompts in `TRAVEL_MATRIX.md`
 - **Rune-blade item IDs** not yet in `lib/gameData.ts`
 - **NPC undead/daemon tags** not yet applied — `banish`, `invoke-light`, `daylight` bonus paths are wired but dormant until any NPC gets `tags: ["undead"]` or `tags: ["daemon"]` in `lib/gameData.ts`
@@ -263,11 +266,16 @@ git checkout dev
 - `lib/combatEngine.ts` — `SPELL_MANA_COST` + 12 new switch cases
 - `__tests__/spells/zim-cast.test.ts` — 27 cases
 
-### S4c — WorldMap component
-- `components/WorldMap.tsx` — map painting + SVG edges + node pins + confirm modal
-- `lib/world/travelNodes.ts` + `travelMatrix.ts` — data backing the component
+### S4c — WorldMap component (finalized)
+- `components/WorldMap.tsx` — map painting + SVG edges + node pins + hover tooltips + confirm modal + PLACE PINS drag tool
+- `lib/world/travelNodes.ts` — 17 nodes with hand-placed source-pixel (x,y) coords; `geo_worlds_end` is estimated
+- `lib/world/travelMatrix.ts` — route data backing the edge lines
 - `lib/gameState.ts` — `PlayerState.currentNodeId: string`
-- `app/page.tsx:1560` — WorldMap overlay conditional + map tab
+- `lib/persistence/playerRecord.ts` — `currentNodeId` serializer
+- `lib/supabase.ts` — `current_node_id` column mapping in `savePlayer()`
+- `app/api/chat/route.ts` — `currentNodeId` deserializer in load path
+- `supabase/migrations/20260507000000_s4c_current_node_id.sql` — applied
+- `app/page.tsx` — WorldMap overlay conditional + map tab
 
 ### S2 — PICSSI-location taxonomy
 - `lib/roomTypes.ts` — `picssiContacts?: PicssiVirtue[]` on `Room`

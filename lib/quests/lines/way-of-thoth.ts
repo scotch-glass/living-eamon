@@ -19,6 +19,7 @@
 
 import { registerQuest } from "../engine";
 import { registerQuestDialogue } from "../dialogue";
+import { renderTheWayCodex } from "./way-of-thoth-codex";
 import type { Quest, QuestStep } from "../types";
 
 // Odd-numbered scrolls unlock a Circle of Sorcery (on step reward, not
@@ -109,6 +110,9 @@ const WAY_OF_THOTH: Quest = {
   completionChronicle:
     "You have read all fifteen Scrolls of Thoth. The Word lives in you. The choice — " +
     "to bind, to keep, or to burn — waits at the threshold.",
+
+  codexRenderer: renderTheWayCodex,
+  codexCommands: ["THE WAY", "WAY", "TEACHINGS"],
 };
 
 registerQuest(WAY_OF_THOTH);

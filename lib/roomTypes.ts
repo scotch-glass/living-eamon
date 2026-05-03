@@ -140,4 +140,11 @@ export interface AdventureModule {
   rooms: Record<string, Room>;
   /** Scripted NPC interactions for this adventure. */
   npcScripts?: NPCScript[];
+  // ── World-map anchoring (S4 travel system) ────────────────
+  /** Node id from lib/world/travelNodes.ts this adventure is anchored to. */
+  locationId?: string;
+  /** Geographic zones crossed en route from Ostavar. Drives encounter tables. */
+  travelZones?: string[];
+  /** Approximate overland days from Ostavar (foot). Affects encounter roll count. */
+  travelDays?: number;
 }

@@ -130,13 +130,17 @@ caseName("tickRealTime keeps non-expired residue", () => {
   eq(residues.length, 1, "unexpired residue kept");
 });
 
-caseName("tickRealTime never removes repairRequired residue", () => {
+caseName("tickRealTime time-decay never removes repairRequired residue when no NPC assigned", () => {
   let state = createInitialWorldState("Tester");
   state = pushResidue(state, "main_hall", wallTemplate, "wall-of-stone", 3);
-  // Advance by 1000 hours — should NOT clear
+  // Strip repairNpcId to isolate G5 time-decay behavior (G6 NPC repair is tested separately)
+  const room = state.rooms["main_hall"];
+  const stripped = { ...room, activeResidue: [{ ...room.activeResidue![0], repairNpcId: undefined }] };
+  state = { ...state, rooms: { ...state.rooms, main_hall: stripped } };
+  // Advance by 1000 hours — time-decay should NOT clear repairRequired entries
   state = tickRealTime(state, 1000 * 3600 * 1000);
   const residues = state.rooms["main_hall"]?.activeResidue ?? [];
-  eq(residues.length, 1, "repairRequired residue survives 1000h tick");
+  eq(residues.length, 1, "repairRequired residue without NPC survives 1000h tick");
 });
 
 caseName("tickRealTime: only expired entries removed, others kept", () => {

@@ -72,6 +72,8 @@ export interface NPC {
     inventory: string[];     // Item ids for sale
     haggleModifier: number;  // -1 easy to haggle, +1 hard
   };
+  /** Sprint G6 — trade skill that enables NPC-driven residue repair. */
+  repairSkills?: ("mason" | "carpenter" | "smith" | "cleaner")[];
 }
 
 export interface Item {
@@ -317,6 +319,295 @@ export const NPCS: Record<string, NPC> = {
       ],
       haggleModifier: -1,
     },
+  },
+
+  // ── Sprint G6 — Repair NPCs ──────────────────────────────────
+  // 20 tradespeople who appear in rooms with repairRequired residue
+  // and work until repair is complete. Non-combatants; have portrait
+  // prompts for EXAMINE. Skill determines which residue type they fix.
+
+  // Masons — rubble / structural repair
+  repair_mason_gorvald: {
+    id: "repair_mason_gorvald",
+    name: "Gorvald",
+    description: "A broad-shouldered man in his fifties, skin the color of old tallow from decades of outdoor work. His hands are enormous — scarred across the knuckles, permanently grey with stone dust. He works without speaking, the set of his jaw that of someone who has repaired worse than this and expects to repair worse still.",
+    glance: "A stonemason, trowel in hand, steadily clearing rubble.",
+    greeting: `He glances up, then back to his work. "Give me room."`,
+    personality: "Gorvald is a veteran stonemason of few words. He fixes what is broken. He does not want conversation. He will answer direct questions about the damage and the estimated repair time but nothing else.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 25, armor: 0, damage: "1d4" },
+    repairSkills: ["mason"],
+    portraitPrompt: "Portrait of a weathered broad-shouldered Aquilonian stonemason in his fifties. Pale-to-tallow skin, enormous scarred hands, permanent grey stone dust in the lines of his face. Dark iron-streaked hair cut short, jaw set. Wearing a heavy linen work apron over a rough wool tunic. Warm interior stone light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_mason_mira: {
+    id: "repair_mason_mira",
+    name: "Mira",
+    description: "A young woman, perhaps twenty, with pale skin reddened by outdoor labour and a dark braid dusted white at the ends with mortar. She carries a mason's trowel in one hand and a notebook of measurements in the other, and she works with the focused intensity of someone still proving she belongs here.",
+    glance: "A mason's apprentice, notebook and trowel, taking careful measurements.",
+    greeting: `She looks up, nods once, then goes back to her measurements.`,
+    personality: "Mira is a young mason's apprentice, diligent and quietly proud. She will discuss the structural damage in precise technical terms if asked. She does not like being interrupted while measuring.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 18, armor: 0, damage: "1d3" },
+    repairSkills: ["mason"],
+    portraitPrompt: "Portrait of a young Aquilonian stonemason's apprentice, woman in her early twenties. Pale skin reddened by outdoor work, dark hair in a dusty braid. Alert focused expression, smudged with mortar. Holding a trowel. Practical work clothes. Stone-wall interior background. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_mason_dunric: {
+    id: "repair_mason_dunric",
+    name: "Dunric",
+    description: "An old man with a grey beard trimmed close and eyes the colour of pale slate. He moves slowly but without waste, each action carrying the economy of someone who has been doing this for forty years and knows the shortest path between two points. His tools are old and well-kept.",
+    glance: "An old master mason, slow and deliberate, inspecting the damage.",
+    greeting: `"Don't touch anything. I'm still assessing."`,
+    personality: "Dunric is a master mason of the old school — taciturn, expert, impatient with fools. He has an opinion on every piece of structural work he has ever seen, all of it critical. He will explain what went wrong and how he is fixing it if asked directly.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 20, armor: 0, damage: "1d4" },
+    repairSkills: ["mason"],
+    portraitPrompt: "Portrait of an elderly Aquilonian master stonemason with a close-trimmed grey beard and pale slate-grey eyes. Weathered face, unhurried expression, old work-worn hands. Heavy wool tunic, leather tool belt. Stone interior, soft warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_mason_syla: {
+    id: "repair_mason_syla",
+    name: "Syla",
+    description: "A lean woman in her thirties, olive-skinned and angular, with short dark hair tucked behind her ears and a smear of fresh mortar on her left cheek she hasn't noticed. She sets stones with a methodical rhythm, her movements efficient and entirely unselfconscious.",
+    glance: "A stonewright, olive-skinned, setting new courses of stone.",
+    greeting: `"Careful where you step. Fresh mortar."`,
+    personality: "Syla is a stonewright — journeyman grade, nearly a master. She is businesslike and direct. She takes pride in neat seams and level courses. She will answer questions but she is not here to chat.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 22, armor: 0, damage: "1d4" },
+    repairSkills: ["mason"],
+    portraitPrompt: "Portrait of an Aquilonian stonewright woman in her thirties. Lean angular build, olive skin, short dark hair tucked behind ears, smear of mortar on her cheek, unselfconscious expression. Work tunic, leather apron, trowel in hand. Stone interior warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_mason_breck: {
+    id: "repair_mason_breck",
+    name: "Breck",
+    description: "A broad man with a red beard and the kind of build that comes from a lifetime of lifting stone. His forearms are the diameter of most men's thighs. He heaves rubble aside with the casual ease of someone shifting pillows, and places new blocks with the gentleness of someone who knows that force is not precision.",
+    glance: "A burly mason, red-bearded, shifting rubble with casual ease.",
+    greeting: `He grunts, lifting a slab of broken stone and setting it aside without pausing. "You need something?"`,
+    personality: "Breck is cheerful and physical — a strong man who enjoys strong work. He's friendly enough but extremely literal. Ask him how long repairs will take and he'll give you a number; ask him how he feels about it and he'll look confused.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 30, armor: 0, damage: "1d6" },
+    repairSkills: ["mason"],
+    portraitPrompt: "Portrait of a burly Aquilonian mason in his forties with a thick red beard and massive forearms. Broad cheerful face, pale freckled skin. Heavy work clothes, stone-dusted. Warm interior light, stone background. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  // Carpenters — frost / wood repair
+  repair_carpenter_aldwyn: {
+    id: "repair_carpenter_aldwyn",
+    name: "Aldwyn",
+    description: "A journeyman carpenter, lean and thirtyish, with fair skin and the faint smell of pine resin that follows him everywhere. He works quietly and precisely, checking angles with a battered square, fitting new planking where the old has failed.",
+    glance: "A carpenter, checking angles with a square, fitting replacement planks.",
+    greeting: `"Mind the sawdust. It gets everywhere."`,
+    personality: "Aldwyn is a competent, unremarkable craftsman who takes genuine satisfaction in a well-fitted joint. He'll talk about woodworking techniques at some length if prompted, but keeps business brief.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 20, armor: 0, damage: "1d4" },
+    repairSkills: ["carpenter"],
+    portraitPrompt: "Portrait of a lean Aquilonian journeyman carpenter in his early thirties. Fair skin, sandy hair, calm focused expression, faint resin smell implied by posture. Work tunic, leather apron, carrying a carpenter's square. Warm indoor light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_carpenter_tess: {
+    id: "repair_carpenter_tess",
+    name: "Tess",
+    description: "A practical woman of forty with brown hair cropped close and sawdust permanently embedded in her eyebrows. She has the steady, unhurried manner of someone who has seen enough damaged buildings to know that panic doesn't fix them.",
+    glance: "A carpenter, sawdust in her eyebrows, replacing frost-warped boards.",
+    greeting: `"Half a day to do this properly. Less if you stop asking questions."`,
+    personality: "Tess is brisk and professional. She has seen worse. She fixes it and moves on. She dislikes unnecessary conversation while she's working but will give honest estimates and explain what she's doing if asked.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 22, armor: 0, damage: "1d4" },
+    repairSkills: ["carpenter"],
+    portraitPrompt: "Portrait of a practical Aquilonian female carpenter in her forties. Pale skin, brown hair cropped close, sawdust in her brows, steady calm expression. Canvas work apron, chisel at her belt. Interior warm light, timber background. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_carpenter_orm: {
+    id: "repair_carpenter_orm",
+    name: "Orm",
+    description: "A stocky man in his fifties, dark-eyed and silent, who works entirely by feel — running a hand along a frost-split beam, gauging its depth with a thumbnail, shaking his head once before reaching for the saw. He has explained nothing to anyone in at least ten years.",
+    glance: "A taciturn woodwright, sizing up frost-damaged timbers by hand.",
+    greeting: `He runs a hand along the damaged beam and shakes his head. He does not address you directly.`,
+    personality: "Orm does not speak unless absolutely necessary. He fixes things by instinct and long experience. If pressed with a direct question he will give a one-word answer, accurate to within a tolerance of one hour.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 24, armor: 0, damage: "1d4" },
+    repairSkills: ["carpenter"],
+    portraitPrompt: "Portrait of a stocky taciturn Aquilonian woodwright in his fifties. Olive-bronze skin, dark close-set eyes, neutral unrevealing expression. Heavy canvas apron, worn tools. Workshop warm light, timber interior. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_carpenter_nessa: {
+    id: "repair_carpenter_nessa",
+    name: "Nessa",
+    description: "A young woman, barely past twenty, with auburn hair pinned back and an expression of fierce concentration. She is a joinwright's apprentice, and she works with the precision of someone who hasn't yet learned that perfection isn't always possible — which means she still achieves it.",
+    glance: "A young joinwright's apprentice, auburn-haired, fitting joints with fierce precision.",
+    greeting: `She glances up, taps the joint she's fitting to indicate she can't stop, and mouths: "One moment."`,
+    personality: "Nessa is young, driven, and extremely good at detailed joinery work. She speaks quickly, uses technical language unselfconsciously, and is quietly thrilled by good work regardless of who did it.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 16, armor: 0, damage: "1d3" },
+    repairSkills: ["carpenter"],
+    portraitPrompt: "Portrait of a young Aquilonian joinwright's apprentice, woman barely twenty. Pale skin with a flush of exertion, auburn hair pinned back, fierce concentrated expression. Fine-tool apron, small mallet at her belt. Warm interior light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_carpenter_folke: {
+    id: "repair_carpenter_folke",
+    name: "Folke",
+    description: "An old man with sawdust always in his white hair, moving slowly through a space with the authority of someone who knows timber the way a shepherd knows sheep. He taps beams with one knuckle and listens to what they tell him.",
+    glance: "An old carpenter, white-haired, listening to the damaged timbers.",
+    greeting: `"Heard worse." He taps the beam again. "Not much worse, mind."`,
+    personality: "Folke is old, experienced, and entirely unhurried. He has seen structures far more damaged than this recover. He will talk freely about wood, joints, the nature of cold damage, and the shortcomings of whoever built the place originally.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 18, armor: 0, damage: "1d4" },
+    repairSkills: ["carpenter"],
+    portraitPrompt: "Portrait of an elderly Aquilonian master carpenter with white hair perpetually flecked with sawdust. Weathered pale skin, knowing eyes, slight smile. Old canvas apron, hands like roots. Warm workshop light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  // Smiths — scorch / fire-damage repair
+  repair_smith_urdax: {
+    id: "repair_smith_urdax",
+    name: "Urdax",
+    description: "A young man in his early twenties, bronze-skinned and broad-shouldered, with the beginnings of burn scars on his forearms from working near forge-heat. He is an apprentice, but a capable one — he attacks scorch marks and melted fixtures with equal energy.",
+    glance: "A smith's apprentice, bronze-armed, scrubbing scorch marks from the stone.",
+    greeting: `"Scorch goes all the way to the second course." He pries at a blackened stone. "Need to replace it."`,
+    personality: "Urdax is energetic, slightly cocky, and good at his trade for his age. He'll assess fire damage accurately and explain what needs replacing versus what can be salvaged. He is proud of his thoroughness.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 22, armor: 0, damage: "1d4" },
+    repairSkills: ["smith"],
+    portraitPrompt: "Portrait of a young Aquilonian smith's apprentice in his early twenties. Bronze skin, broad shoulders, forearms bearing faint burn scars. Dark hair, alert expression, slightly cocky. Work tunic, heavy leather apron. Interior forge-warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_smith_kaela: {
+    id: "repair_smith_kaela",
+    name: "Kaela",
+    description: "A woman in her thirties, tawny-skinned and slim, who works on scorched fixtures and melted ironwork with a tinsmith's precision — cutting away what is ruined, cleaning what is salvageable, replacing what is lost. She hums under her breath while she works.",
+    glance: "A tinsmith, tawny-skinned, humming softly while she repairs melted ironwork.",
+    greeting: `She pauses her humming. "Ironwork's the worst part. Stone doesn't mind heat the way iron does."`,
+    personality: "Kaela is calm, methodical, and unexpectedly philosophical about fire damage. She sees it as a revealing force — it shows what was weak. She'll explain her work and is happy to talk while she does it.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 20, armor: 0, damage: "1d4" },
+    repairSkills: ["smith"],
+    portraitPrompt: "Portrait of a slim Aquilonian tinsmith woman in her thirties. Tawny skin, dark hair pulled back, calm and thoughtful expression, faint soot on her brow. Fine-work apron, small tools. Warm interior light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_smith_rhun: {
+    id: "repair_smith_rhun",
+    name: "Rhun",
+    description: "A stocky man with a weathered tan and a jaw like a ship's prow, who replaces fire-damaged iron fixtures with the unhurried certainty of someone who has done this specific job a great many times. His tools are heavy and well-used.",
+    glance: "A stocky ironwright, replacing fire-damaged fittings with deliberate efficiency.",
+    greeting: `"Whoever threw that fire — they knew what they were doing." He sets a new bracket. "Damage is very even."`,
+    personality: "Rhun is steady and observant. He notices things about fire damage that others miss — direction of spread, seat of ignition, what burned first. He'll share these observations freely; he thinks they're useful.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 26, armor: 1, damage: "1d4" },
+    repairSkills: ["smith"],
+    portraitPrompt: "Portrait of a stocky weathered Aquilonian ironwright in his forties. Tan skin, strong jaw, observant eyes. Heavy leather work apron, iron tools at his belt. Stone interior, warm torch-light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_smith_eira: {
+    id: "repair_smith_eira",
+    name: "Eira",
+    description: "A young woman with pale skin and copper-coloured hair — an irony she's heard noted before — who repairs scorched metalwork with a delicacy that belies her size. She is a coppersmith's apprentice who has been drafted into general fire-damage repair because she is very good.",
+    glance: "A copper-haired coppersmith's apprentice, pale and precise, repairing charred fixtures.",
+    greeting: `She holds a charred bracket up to the light. "This is actually repairable. Surprising. Most of this isn't."`,
+    personality: "Eira is quiet and technically minded. She talks about materials — what survived, what didn't, what the fire's temperature was based on what melted. She finds the forensics interesting.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 17, armor: 0, damage: "1d3" },
+    repairSkills: ["smith"],
+    portraitPrompt: "Portrait of a young Aquilonian coppersmith's apprentice, woman in her early twenties. Pale skin, copper-red hair, quiet precise expression. Light apron, delicate tools. Warm interior light, scorched stone background suggesting recent fire. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_smith_tor: {
+    id: "repair_smith_tor",
+    name: "Tor",
+    description: "A master smith in his fifties, with white hair and a face that has been near too many forges for too long — weathered and ruddy, the eyes a clear and steady grey. He is here because the damage is bad enough to need someone who knows what they're doing.",
+    glance: "A veteran master smith, white-haired, assessing what the fire destroyed.",
+    greeting: `He doesn't look up from the damaged wall. "When did this happen?" He needs the answer; it affects his estimate.`,
+    personality: "Tor is a master of his trade and he knows it without arrogance. He is professional, precise, and will give an accurate assessment of what can be repaired and what must be rebuilt. He does not make small talk.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 28, armor: 1, damage: "1d6" },
+    repairSkills: ["smith"],
+    portraitPrompt: "Portrait of a veteran Aquilonian master smith in his fifties. Weathered ruddy face, white hair, clear steady grey eyes. Heavy professional apron, master's tools. Warm interior forge-light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  // Cleaners — stain / chemical residue cleanup
+  repair_cleaner_marta: {
+    id: "repair_cleaner_marta",
+    name: "Marta",
+    description: "A stout woman with iron-grey hair and red, capable hands, who cleans with the systematic thoroughness of a military campaign. She brings her own bucket and her own cloths and she does not like to be told how to do her job.",
+    glance: "A stout cleaning-woman with grey hair, scrubbing the floor on hands and knees.",
+    greeting: `"I've seen worse." She wrings out her cloth. "Not often, mind."`,
+    personality: "Marta is blunt, competent, and mildly contemptuous of people who made the mess. She cleans without complaint but reserves the right to say what she thinks, once.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 20, armor: 0, damage: "1d4" },
+    repairSkills: ["cleaner"],
+    portraitPrompt: "Portrait of a stout Aquilonian cleaning-woman in her fifties with iron-grey hair, red capable hands, and a direct unsentimental expression. Plain working dress, apron. Warm interior light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_cleaner_bren: {
+    id: "repair_cleaner_bren",
+    name: "Bren",
+    description: "A young man, perhaps seventeen, who was conscripted into this job from somewhere else and is making the best of it. He has a bucket, a brush, and the resigned philosophical air of someone who has decided that if this is the work then the work will be done properly.",
+    glance: "A young man with a brush and bucket, cleaning methodically from one corner.",
+    greeting: `"I was told to start from the worst end and work outward." He shrugs. "That seemed right."`,
+    personality: "Bren is young and good-natured, working methodically and without complaint. He is slightly out of his depth but he won't admit it. He'll answer questions honestly.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 15, armor: 0, damage: "1d3" },
+    repairSkills: ["cleaner"],
+    portraitPrompt: "Portrait of a young Aquilonian man, seventeen or eighteen, with a bucket and brush, slightly out of his depth but determined. Fair skin, ordinary face, resigned good-natured expression. Plain work clothes. Interior warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_cleaner_lisel: {
+    id: "repair_cleaner_lisel",
+    name: "Lisel",
+    description: "A diligent woman in her late twenties, fair-haired and slight, who moves through a room methodically — cleaning what she can, marking what she can't, tracking her progress with a list she keeps folded in her apron pocket. She cleans the way some people fight: with total focus.",
+    glance: "A fair-haired housemaid, moving through the room with her cleaning list.",
+    greeting: `She checks something on her list. "We can get this to a serviceable standard. Pristine will take longer."`,
+    personality: "Lisel is organised and matter-of-fact. She has a list, she works the list. She'll tell you exactly what she expects to finish and when. She takes pride in the work being done right.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 18, armor: 0, damage: "1d3" },
+    repairSkills: ["cleaner"],
+    portraitPrompt: "Portrait of a slight Aquilonian housemaid in her late twenties. Fair skin, fair hair pinned up, focused methodical expression. Clean apron, cleaning cloths over her arm. Warm interior light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_cleaner_dorna: {
+    id: "repair_cleaner_dorna",
+    name: "Dorna",
+    description: "A no-nonsense woman of forty with a dark braid wound around her head and forearms that say she has moved heavy furniture many times. She attacks filth with a personal grievance. Whatever made this mess, she takes it somewhat personally.",
+    glance: "A no-nonsense cleaning-woman with a dark braid, attacking the stain with personal conviction.",
+    greeting: `"What did this?" She examines the stain with the expression of a detective at a crime scene.`,
+    personality: "Dorna is efficient and slightly indignant about the mess. She will identify exactly what caused the staining, if she can, because she finds it useful to know and because she likes being right about things. She is not unkind but she doesn't waste words.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 22, armor: 0, damage: "1d4" },
+    repairSkills: ["cleaner"],
+    portraitPrompt: "Portrait of a sturdy Aquilonian cleaning-woman in her forties. Olive-tan skin, dark braid wound around her head, purposeful slightly-indignant expression, strong capable arms. Plain dress and apron. Interior warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  repair_cleaner_fil: {
+    id: "repair_cleaner_fil",
+    name: "Fil",
+    description: "A quiet man in his thirties, slight and dark-eyed, who cleans with the invisible efficiency of someone who has learned that the best cleaning is the kind no one notices. He is there, he works, and when he leaves the room looks as though the damage never happened.",
+    glance: "A quiet, slight cleaner, working as though he isn't there.",
+    greeting: `He nods once, without pausing his work.`,
+    personality: "Fil barely speaks. He is not unfriendly — he simply has nothing to say while working. He will nod to indicate progress and shake his head to indicate a problem. If directly questioned he'll give short accurate answers.",
+    isHostile: false,
+    tags: ["friendly"],
+    stats: { hp: 18, armor: 0, damage: "1d3" },
+    repairSkills: ["cleaner"],
+    portraitPrompt: "Portrait of a slight quiet Aquilonian cleaning man in his thirties. Olive skin, dark eyes, neutral composed expression, entirely unassuming. Plain work clothes. Interior warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
   },
 
   training_dummy: {

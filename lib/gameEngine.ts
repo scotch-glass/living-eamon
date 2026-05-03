@@ -1521,12 +1521,18 @@ function buildRoomDescription(
     if (weatherLine) description += "\n\n" + weatherLine;
   }
 
-  // Sprint G5 — active room residue descriptions (semiverbose + verbose only)
+  // Sprint G5/G6 — active room residue descriptions + repair NPC presence
   if (verbosity !== "nonverbose") {
     const residues = state.rooms[roomId]?.activeResidue;
     if (residues?.length) {
       for (const r of residues) {
         description += "\n\n" + r.description;
+      }
+      // Sprint G6 — show repair NPCs working (deduplicated by id)
+      const repairNpcIds = [...new Set(residues.flatMap(r => r.repairNpcId ? [r.repairNpcId] : []))];
+      for (const npcId of repairNpcIds) {
+        const npc = NPCS[npcId];
+        if (npc?.glance) description += "\n\n" + npc.glance;
       }
     }
   }

@@ -485,4 +485,7 @@ export const GUILD_HALL: AdventureModule = {
   entryRoom: "church_of_perpetual_life",
   rooms,
   npcScripts: GUILD_HALL_NPC_SCRIPTS,
+  locationId: "ostavar",
+  travelZones: [],
+  travelDays: 0,
 };

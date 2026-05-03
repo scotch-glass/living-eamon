@@ -122,6 +122,20 @@ export async function savePlayer(player: Record<string, unknown>) {
     known_spells: player.knownSpells ?? [],
     known_deities: player.knownDeities ?? [],
     gore_splatters: player.goreSplatters ?? [],
+    // Sprint A — persistence gap-fill (2026-05-03)
+    known_circles: player.knownCircles ?? [],
+    temp_modifiers: player.tempModifiers ?? [],
+    current_plane:
+      typeof player.currentPlane === "string" ? player.currentPlane : "thurian",
+    previous_room: player.previousRoom ?? null,
+    prison_turns_remaining:
+      typeof player.prisonTurnsRemaining === "number" ? player.prisonTurnsRemaining : 0,
+    last_action: player.lastAction ?? null,
+    world_turn: typeof player.worldTurn === "number" ? player.worldTurn : 0,
+    corpses: (player.corpses as Record<string, unknown> | undefined) ?? {},
+    vendor_temp_stock:
+      (player.vendorTempStock as Record<string, unknown> | undefined) ?? {},
+    active_events: (player.activeEvents as unknown[] | undefined) ?? [],
     last_seen: new Date().toISOString(),
   };
 

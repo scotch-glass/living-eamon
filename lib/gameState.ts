@@ -11,6 +11,7 @@ import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 import type { PicssiState } from "./karma/types";
 import type { RoomTimeOfDay } from "./roomTypes";
 import type { WeatherKind } from "./world/weatherDescriptions";
+import type { SpellResidue, ResidueType } from "./world/spellResidue";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -91,6 +92,32 @@ export type ReputationLevel =
 // Tracks the current state of a room and how it got there
 // ============================================================
 
+/**
+ * Sprint G5 — a single environmental residue left on a room.
+ * Created when a spell (or combat event) resolves; cleared by tickRealTime
+ * when decayAt passes (or by NPC repair for repairRequired entries in G6).
+ */
+export interface ResidueEntry {
+  /** Unique id — generated at push time. */
+  id: string;
+  /** Physical type of the residue. */
+  type: ResidueType;
+  /** Spell id or combat event kind that created this residue. null = unknown. */
+  fromSpellId: string | null;
+  /** Spell circle at cast time; 0 for combat events. Used for repairCircleMult. */
+  spellCircle: number;
+  /** `WorldState.realTimeMs` at the moment of creation. */
+  createdAt: number;
+  /** `WorldState.realTimeMs` when auto-decay fires. `Number.MAX_SAFE_INTEGER` if repairRequired. */
+  decayAt: number;
+  /** If true: never auto-decays; requires NPC repair tick (G6). */
+  repairRequired: boolean;
+  /** G6: 0..1 fraction of repair complete. 0 = untouched. */
+  repairProgress: number;
+  /** Howard-canon sentence appended to room description while active. */
+  description: string;
+}
+
 export interface RoomStateEntry {
   roomId: string;
   currentState: RoomState;
@@ -113,6 +140,11 @@ export interface RoomStateEntry {
    * Removed when the player takes the item.
    */
   revealedItems: { itemId: string; containerId: string }[];
+  /**
+   * Sprint G5 — active environmental residues (scorch, blood, rubble, etc.).
+   * Populated by pushResidue(); decayed by tickRealTime().
+   */
+  activeResidue?: ResidueEntry[];
 }
 
 // ============================================================
@@ -1502,18 +1534,89 @@ export function tickWorldState(state: WorldState): WorldState {
 }
 
 // ============================================================
+// SPRINT G5 — RESIDUE PUSH
+// Creates a ResidueEntry from a SpellResidue template and appends
+// it to the given room's activeResidue array.
+// Called from applyEffect (spells) and the combat crit hook.
+// ============================================================
+
+const BLANK_ROOM_STATE: Omit<RoomStateEntry, "roomId"> = {
+  currentState: "normal",
+  previousState: "normal",
+  causedBy: null,
+  causeDescription: null,
+  turnsInState: 0,
+  recovery: null,
+  revealedItems: [],
+};
+
+export function pushResidue(
+  state: WorldState,
+  roomId: string,
+  template: SpellResidue,
+  spellId: string | null,
+  spellCircle: number
+): WorldState {
+  const existing = state.rooms[roomId] ?? { roomId, ...BLANK_ROOM_STATE };
+  const circleMult = (template.repairCircleMult && spellCircle > 0) ? spellCircle : 1;
+  const decayMs = template.decayHours * circleMult * 3600 * 1000;
+  const entry: ResidueEntry = {
+    id: `${spellId ?? "combat"}-${state.realTimeMs}-${Math.random().toString(36).slice(2, 7)}`,
+    type: template.residueType,
+    fromSpellId: spellId,
+    spellCircle,
+    createdAt: state.realTimeMs,
+    decayAt: template.repairRequired ? Number.MAX_SAFE_INTEGER : state.realTimeMs + decayMs,
+    repairRequired: template.repairRequired,
+    repairProgress: 0,
+    description: template.description,
+  };
+  return {
+    ...state,
+    rooms: {
+      ...state.rooms,
+      [roomId]: {
+        ...existing,
+        activeResidue: [...(existing.activeResidue ?? []), entry],
+      },
+    },
+  };
+}
+
+// ============================================================
 // SPRINT G1 — REAL-TIME CLOCK
 // Advances the world's real-time clock by deltaMs milliseconds.
 // Wire-in: call at the top of processInput + on session-load.
-// G4/G5 will add environmental decay inside this function.
+// G5 decay pass runs inside this function.
 // ============================================================
 
 export function tickRealTime(state: WorldState, deltaMs: number): WorldState {
   if (deltaMs <= 0) return state;
+  const newRealTimeMs = state.realTimeMs + deltaMs;
+
+  // ── Sprint G5 — decay expired residues ──────────────────────
+  const updatedRooms: WorldState["rooms"] = {};
+  let roomsChanged = false;
+  for (const [roomId, roomState] of Object.entries(state.rooms)) {
+    const residues = roomState.activeResidue;
+    if (!residues?.length) {
+      updatedRooms[roomId] = roomState;
+      continue;
+    }
+    const kept = residues.filter(r => r.repairRequired || r.decayAt > newRealTimeMs);
+    if (kept.length === residues.length) {
+      updatedRooms[roomId] = roomState;
+    } else {
+      roomsChanged = true;
+      updatedRooms[roomId] = { ...roomState, activeResidue: kept };
+    }
+  }
+
   return {
     ...state,
-    realTimeMs: state.realTimeMs + deltaMs,
+    realTimeMs: newRealTimeMs,
     lastTickAt: Date.now(),
+    rooms: roomsChanged ? updatedRooms : state.rooms,
   };
 }
 

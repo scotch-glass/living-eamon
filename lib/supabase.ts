@@ -141,6 +141,8 @@ export async function savePlayer(player: Record<string, unknown>) {
     last_tick_at: typeof player.lastTickAt === "number" ? player.lastTickAt : Date.now(),
     // Sprint G3 — weather snapshot
     current_weather: player.currentWeather ?? null,
+    // Sprint G5 — room residues
+    room_residue: player.roomResidue ?? null,
     last_seen: new Date().toISOString(),
   };
 

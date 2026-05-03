@@ -34,7 +34,8 @@
 // ============================================================
 
 import type { WorldState, TempModifier, PlayerInventoryItem, Corpse } from "../gameState";
-import { addToChronicle, movePlayer } from "../gameState";
+import { addToChronicle, movePlayer, pushResidue } from "../gameState";
+import { SPELL_RESIDUE } from "../world/spellResidue";
 import type {
   ActiveStatusEffect,
   Barrier,
@@ -66,55 +67,64 @@ export function applyEffect(
   spell: Spell,
   arg?: string
 ): EffectDispatchResult {
+  let result: EffectDispatchResult;
+
   switch (spell.effectKind) {
     case "damage":
-      return applyDamage(state, spell);
+      result = applyDamage(state, spell);
+      break;
 
     case "heal":
-      return applyHealOrCure(state, spell, arg);
+      result = applyHealOrCure(state, spell, arg);
+      break;
 
     case "buff":
-      if (spell.id === "bless")   return applyBless(state, spell);
-      if (spell.id === "cunning") return applyCunning(state);
-      return {
+      if (spell.id === "bless")   { result = applyBless(state, spell); break; }
+      if (spell.id === "cunning") { result = applyCunning(state); break; }
+      result = {
         kind: "applied",
         state,
         effect: { kind: "dev-not-implemented", reason: `${spell.id} buff dispatcher` },
       };
+      break;
 
     case "movement":
-      return applyMovement(state, spell, arg ?? null);
+      result = applyMovement(state, spell, arg ?? null);
+      break;
 
     case "utility":
-      if (spell.id === "mark") return applyMark(state, arg ?? null);
-      return {
+      if (spell.id === "mark") { result = applyMark(state, arg ?? null); break; }
+      result = {
         kind: "applied",
         state,
         effect: { kind: "dev-not-implemented", reason: `${spell.id} utility dispatcher` },
       };
+      break;
 
     case "debuff":
-      if (spell.id === "feeblemind") return applyFeeblemind(state);
-      if (spell.id === "poison")     return applyPoison(state);
-      return {
+      if (spell.id === "feeblemind") { result = applyFeeblemind(state); break; }
+      if (spell.id === "poison")     { result = applyPoison(state); break; }
+      result = {
         kind: "applied",
         state,
         effect: { kind: "dev-not-implemented", reason: `${spell.id} debuff dispatcher` },
       };
+      break;
 
     case "field":
-      if (spell.id === "wall-of-stone") return applyWallOfStone(state);
-      return {
+      if (spell.id === "wall-of-stone") { result = applyWallOfStone(state); break; }
+      result = {
         kind: "applied",
         state,
         effect: { kind: "dev-not-implemented", reason: `${spell.id} field dispatcher` },
       };
+      break;
 
     case "summon":
     case "reveal":
     case "conceal":
     case "transform":
-      return {
+      result = {
         kind: "applied",
         state,
         effect: {
@@ -122,7 +132,27 @@ export function applyEffect(
           reason: `${spell.effectKind} dispatcher`,
         },
       };
+      break;
   }
+
+  // Sprint G5 — push room residue if this spell leaves one
+  if (result.kind === "applied") {
+    const template = SPELL_RESIDUE[spell.id];
+    if (template) {
+      result = {
+        ...result,
+        state: pushResidue(
+          result.state,
+          result.state.player.currentRoom,
+          template,
+          spell.id,
+          spell.circle
+        ),
+      };
+    }
+  }
+
+  return result;
 }
 
 // ── Spell-strength multiplier ─────────────────────────────────

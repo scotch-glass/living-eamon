@@ -6,7 +6,7 @@
 // The engine in gameEngine.ts reads and writes this state.
 // ============================================================
 
-import { RoomState } from "./gameData";
+import { RoomState, NPCS } from "./gameData";
 import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
 import type { PicssiState } from "./karma/types";
 import type { RoomTimeOfDay } from "./roomTypes";
@@ -114,6 +114,10 @@ export interface ResidueEntry {
   repairRequired: boolean;
   /** G6: 0..1 fraction of repair complete. 0 = untouched. */
   repairProgress: number;
+  /** G6: NPC id assigned to repair this entry. Only set when repairRequired. */
+  repairNpcId?: string;
+  /** G6: Total NPC-hours needed for full repair (decayHours × circleMult). */
+  repairTargetHours?: number;
   /** Howard-canon sentence appended to room description while active. */
   description: string;
 }
@@ -1540,6 +1544,24 @@ export function tickWorldState(state: WorldState): WorldState {
 // Called from applyEffect (spells) and the combat crit hook.
 // ============================================================
 
+// Maps residue type → repair skill needed to fix it.
+const RESIDUE_TO_SKILL: Record<ResidueType, "mason" | "carpenter" | "smith" | "cleaner"> = {
+  rubble:     "mason",
+  structural: "mason",
+  scorch:     "smith",
+  frost:      "carpenter",
+  stain:      "cleaner",
+  blood:      "cleaner",
+};
+
+// Pick a random repair NPC from the pool that has the required skill.
+function pickRepairNpc(residueType: ResidueType): string | undefined {
+  const needed = RESIDUE_TO_SKILL[residueType];
+  const pool = Object.values(NPCS).filter(n => n.repairSkills?.includes(needed));
+  if (!pool.length) return undefined;
+  return pool[Math.floor(Math.random() * pool.length)].id;
+}
+
 const BLANK_ROOM_STATE: Omit<RoomStateEntry, "roomId"> = {
   currentState: "normal",
   previousState: "normal",
@@ -1569,6 +1591,8 @@ export function pushResidue(
     decayAt: template.repairRequired ? Number.MAX_SAFE_INTEGER : state.realTimeMs + decayMs,
     repairRequired: template.repairRequired,
     repairProgress: 0,
+    repairNpcId: template.repairRequired ? pickRepairNpc(template.residueType) : undefined,
+    repairTargetHours: template.repairRequired ? template.decayHours * circleMult : undefined,
     description: template.description,
   };
   return {
@@ -1610,6 +1634,23 @@ export function tickRealTime(state: WorldState, deltaMs: number): WorldState {
       roomsChanged = true;
       updatedRooms[roomId] = { ...roomState, activeResidue: kept };
     }
+  }
+
+  // ── Sprint G6 — advance NPC repair progress ─────────────────
+  const deltaHours = deltaMs / 3_600_000;
+  for (const [roomId, roomState] of Object.entries(updatedRooms)) {
+    const residues = roomState.activeResidue;
+    if (!residues?.length) continue;
+    const hasRepairable = residues.some(r => r.repairRequired && r.repairNpcId && r.repairTargetHours);
+    if (!hasRepairable) continue;
+    const advanced = residues
+      .map(r => {
+        if (!r.repairRequired || !r.repairNpcId || !r.repairTargetHours) return r;
+        return { ...r, repairProgress: r.repairProgress + deltaHours / r.repairTargetHours };
+      })
+      .filter(r => !(r.repairRequired && r.repairProgress >= 1.0));
+    roomsChanged = true;
+    updatedRooms[roomId] = { ...roomState, activeResidue: advanced };
   }
 
   return {

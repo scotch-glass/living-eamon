@@ -1593,7 +1593,7 @@ export function pushResidue(
     repairProgress: 0,
     repairNpcId: template.repairRequired ? pickRepairNpc(template.residueType) : undefined,
     repairTargetHours: template.repairRequired ? template.decayHours * circleMult : undefined,
-    description: template.description,
+    description: template.descriptions[Math.floor(Math.random() * template.descriptions.length)],
   };
   return {
     ...state,

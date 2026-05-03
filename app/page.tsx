@@ -19,6 +19,7 @@ import ItemDetailPopup from "../components/ItemDetailPopup";
 import EquipmentGrid from "../components/EquipmentGrid";
 import BackpackPanel from "../components/BackpackPanel";
 import OathPanel from "../components/OathPanel";
+import WorldMap from "../components/WorldMap";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
 import ComparePopup from "../components/ComparePopup";
 import BulkSellPopup from "../components/BulkSellPopup";
@@ -166,7 +167,7 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
-  const [sidebarTab, setSidebarTab] = useState<"stats" | "gear" | "pack" | "oaths">("stats");
+  const [sidebarTab, setSidebarTab] = useState<"stats" | "gear" | "pack" | "oaths" | "map">("stats");
   const [actionMenu, setActionMenu] = useState<{
     item: import("../lib/gameData").Item;
     context: ItemContext;
@@ -1252,7 +1253,7 @@ export default function Home() {
 
               {/* Tab strip — STATS / GEAR / PACK */}
               <div style={{ display: "flex", gap: 2, marginBottom: 12, borderBottom: "1px solid #2a1d0e" }}>
-                {(["stats", "gear", "pack", "oaths"] as const).map(tab => {
+                {(["stats", "gear", "pack", "oaths", "map"] as const).map(tab => {
                   const active = sidebarTab === tab;
                   return (
                     <button
@@ -1554,6 +1555,13 @@ export default function Home() {
       )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", backgroundColor: "transparent" }}>
+      {/* World map overlay — shown when map tab is active */}
+      {sidebarTab === "map" && player && (
+        <WorldMap
+          currentNodeId={player.currentNodeId ?? "valus"}
+          onClose={() => setSidebarTab("stats")}
+        />
+      )}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
         <ScenePanel
           roomId={worldState?.player?.currentRoom ?? "church_of_perpetual_life"}

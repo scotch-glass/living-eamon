@@ -129,6 +129,8 @@ export async function savePlayer(player: Record<string, unknown>) {
     temp_modifiers: player.tempModifiers ?? [],
     current_plane:
       typeof player.currentPlane === "string" ? player.currentPlane : "thurian",
+    current_node_id:
+      typeof player.currentNodeId === "string" ? player.currentNodeId : "valus",
     previous_room: player.previousRoom ?? null,
     prison_turns_remaining:
       typeof player.prisonTurnsRemaining === "number" ? player.prisonTurnsRemaining : 0,

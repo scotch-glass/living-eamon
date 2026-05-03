@@ -89,6 +89,8 @@ export function worldStateToPlayerRecord(
     knownCircles: state.player.knownCircles ?? [],
     tempModifiers: state.player.tempModifiers ?? [],
     currentPlane: state.player.currentPlane ?? "thurian",
+    // Sprint S4c — world-map node; persists across rebirth
+    currentNodeId: state.player.currentNodeId ?? "valus",
     previousRoom: state.player.previousRoom ?? null,
     prisonTurnsRemaining: state.player.prisonTurnsRemaining ?? 0,
     lastAction: state.player.lastAction ?? null,

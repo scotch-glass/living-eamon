@@ -463,6 +463,13 @@ export interface PlayerState {
    */
   currentPlane: string;
 
+  /**
+   * Sprint S4c — current world-map node. Default "valus".
+   * Updated by travel execution (S4d). Persists across rebirth —
+   * the hero wakes in whatever city he died in.
+   */
+  currentNodeId: string;
+
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
 
@@ -924,6 +931,7 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
       activeEffects: [],
       tempModifiers: [],
       currentPlane: "thurian",
+      currentNodeId: "valus",
       mounted: false,
       remembersOwnName: false,
       metZim: false,

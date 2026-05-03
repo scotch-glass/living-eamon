@@ -14,7 +14,8 @@
 import type { WorldState } from "../gameState";
 import type { Choice, Encounter, Virtue } from "./atom-types";
 import type { KarmaDelta, PicssiVirtue } from "./types";
-import { applyKarma, logKarmaDelta } from "./recompute";
+import { applyKarma, logKarmaDelta, scaleDeltaForRoom } from "./recompute";
+import { getRoom } from "../adventures/registry";
 
 /** Present an atom: set `pendingAtom`, return the player-facing prompt + numbered choices. */
 export function presentAtom(
@@ -64,13 +65,16 @@ export function applyChoice(
 
   let next: WorldState = clearPendingAtom(state);
 
-  // 1. PICSSI deltas — translate CapitalCase atom virtues → lowercase
+  // 1. PICSSI deltas — translate CapitalCase atom virtues → lowercase,
+  //    then scale by room picssiContacts (S2 multiplier).
   const picssiDelta = atomKarmaToPicssi(choice.karma);
   if (Object.keys(picssiDelta).length > 0) {
-    next = { ...next, player: applyKarma(next.player, picssiDelta) };
+    const contacts = getRoom(next.player.currentRoom)?.picssiContacts;
+    const scaledDelta = scaleDeltaForRoom(picssiDelta, contacts);
+    next = { ...next, player: applyKarma(next.player, scaledDelta) };
     next = {
       ...next,
-      player: logKarmaDelta(next.player, picssiDelta, `atom: ${atom.id} → ${choice.id}`),
+      player: logKarmaDelta(next.player, scaledDelta, `atom: ${atom.id} → ${choice.id}`),
     };
   }
 

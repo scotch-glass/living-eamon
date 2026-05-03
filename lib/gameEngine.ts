@@ -82,7 +82,7 @@ import { answerPendingRiddle, findScroll, readScroll } from "./karma/scrolls";
 import { matchTriggers, type KarmaEvent } from "./karma/triggers";
 import { findAtom } from "./karma/loader";
 import { applyChoice, presentAtom } from "./karma/resolve";
-import { applyKarma, logKarmaDelta } from "./karma/recompute";
+import { applyKarma, logKarmaDelta, scaleDeltaForRoom } from "./karma/recompute";
 import {
   computeCombatDeltas,
   sumDeltas,
@@ -190,9 +190,10 @@ function applyCombatDeltas(
 ): WorldState {
   const deltas = computeCombatDeltas(ctx);
   if (deltas.length === 0) return state;
+  const contacts = getRoom(state.player.currentRoom)?.picssiContacts;
   let next = state;
   for (const d of deltas) {
-    next = { ...next, player: applyKarma(next.player, d) };
+    next = { ...next, player: applyKarma(next.player, scaleDeltaForRoom(d, contacts)) };
   }
   // Sprint 6: log the net summed delta as a single karma-history entry.
   const summary = sumDeltas(deltas);
@@ -5034,18 +5035,21 @@ The player starts in: ${adv.rooms[0]?.name} — ${adv.rooms[0]?.description}`,
       },
     };
 
-    // PICSSI: +Spirituality for funeral rite; +Standing if hero's own corpse
+    // PICSSI: +Spirituality for funeral rite; +Standing if hero's own corpse.
+    // S2: scale by room picssiContacts.
     const funeralDelta: import("./karma/types").KarmaDelta = { spirituality: 3 };
     if (corpse.isHeroCorpse) funeralDelta.standing = 2;
+    const funeralContacts = getRoom(newState.player.currentRoom)?.picssiContacts;
+    const scaledFuneral = scaleDeltaForRoom(funeralDelta, funeralContacts);
     newState = {
       ...newState,
-      player: applyKarma(newState.player, funeralDelta),
+      player: applyKarma(newState.player, scaledFuneral),
     };
     newState = {
       ...newState,
       player: logKarmaDelta(
         newState.player,
-        funeralDelta,
+        scaledFuneral,
         `funeral rite: ${newContext} ${corpse.name}`
       ),
     };

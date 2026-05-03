@@ -12,7 +12,8 @@
 import type { WorldState, PlayerState } from "../gameState";
 import { addToChronicle } from "../gameState";
 import type { KarmaDelta } from "./types";
-import { applyKarma, logKarmaDelta, recomputeDerivedStats } from "./recompute";
+import { applyKarma, logKarmaDelta, recomputeDerivedStats, scaleDeltaForRoom } from "./recompute";
+import { getRoom } from "../adventures/registry";
 import {
   maybeContractVD,
   maybeFertilityCureVD,
@@ -250,9 +251,12 @@ export function applyActivity(
   if (act.staminaResult === "full") next.stamina = next.maxStamina;
   next.fatiguePool = Math.min(0, next.fatiguePool + act.fatiguePoolDelta(next));
 
-  // PICSSI gains + losses, summed for a single karma-history entry
-  next = applyKarma(next, act.picssiGain);
-  const netDelta: KarmaDelta = { ...act.picssiGain };
+  // PICSSI gains + losses, summed for a single karma-history entry.
+  // S2: scale by room picssiContacts where applicable.
+  const contacts = getRoom(state.player.currentRoom)?.picssiContacts;
+  const scaledGain = scaleDeltaForRoom(act.picssiGain, contacts);
+  next = applyKarma(next, scaledGain);
+  const netDelta: KarmaDelta = { ...scaledGain };
   if (act.picssiLoss) {
     const lossDelta: KarmaDelta = {};
     for (const [k, v] of Object.entries(act.picssiLoss)) {
@@ -260,7 +264,8 @@ export function applyActivity(
       lossDelta[key] = -(v as number);
       netDelta[key] = (netDelta[key] ?? 0) - (v as number);
     }
-    next = applyKarma(next, lossDelta);
+    const scaledLoss = scaleDeltaForRoom(lossDelta, contacts);
+    next = applyKarma(next, scaledLoss);
   }
   next = logKarmaDelta(next, netDelta, `activity: ${act.id}`);
 

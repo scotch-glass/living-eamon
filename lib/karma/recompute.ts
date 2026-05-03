@@ -32,6 +32,36 @@ export function clampPicssi(virtue: PicssiVirtue, value: number): number {
 }
 
 /**
+ * S2 — PICSSI-location taxonomy multiplier.
+ * When a karma delta fires in a room whose picssiContacts tag includes the
+ * virtue being adjusted, that virtue's delta is boosted by this factor.
+ * Applied symmetrically to gains AND losses.
+ */
+export const PICSSI_LOCATION_MULTIPLIER = 1.5;
+
+/**
+ * Scale a karma delta by the current room's picssiContacts.
+ * Any virtue listed in `contacts` is multiplied by PICSSI_LOCATION_MULTIPLIER.
+ * Returns the original delta object unchanged if nothing matches.
+ */
+export function scaleDeltaForRoom(
+  delta: KarmaDelta,
+  contacts: PicssiVirtue[] | undefined
+): KarmaDelta {
+  if (!contacts?.length) return delta;
+  let changed = false;
+  const scaled: KarmaDelta = { ...delta };
+  for (const virtue of contacts) {
+    const v = scaled[virtue];
+    if (v !== undefined && v !== 0) {
+      scaled[virtue] = Math.round(v * PICSSI_LOCATION_MULTIPLIER);
+      changed = true;
+    }
+  }
+  return changed ? scaled : delta;
+}
+
+/**
  * Apply a karma delta to a PlayerState. Clamps each virtue to its
  * legal range and re-runs recomputeDerivedStats so HP / mana / stamina
  * caps catch up immediately. Pure: returns a new PlayerState.

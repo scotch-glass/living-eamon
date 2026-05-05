@@ -470,6 +470,9 @@ export interface PlayerState {
    */
   currentNodeId: string;
 
+  /** S4d — true while the hero is in transit between nodes. Sidebar shows "Location: Traveling". */
+  isTraveling?: boolean;
+
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
 

@@ -18,8 +18,8 @@ import NPCSprite from "../components/NPCSprite";
 import ItemDetailPopup from "../components/ItemDetailPopup";
 import EquipmentGrid from "../components/EquipmentGrid";
 import BackpackPanel from "../components/BackpackPanel";
-import OathPanel from "../components/OathPanel";
 import WorldMap from "../components/WorldMap";
+import { TRAVEL_NODES } from "../lib/world/travelNodes";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
 import ComparePopup from "../components/ComparePopup";
 import BulkSellPopup from "../components/BulkSellPopup";
@@ -167,7 +167,7 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
-  const [sidebarTab, setSidebarTab] = useState<"stats" | "gear" | "pack" | "oaths" | "map">("stats");
+  const [sidebarTab, setSidebarTab] = useState<"stats" | "gear" | "pack" | "map">("stats");
   const [actionMenu, setActionMenu] = useState<{
     item: import("../lib/gameData").Item;
     context: ItemContext;
@@ -1253,7 +1253,7 @@ export default function Home() {
 
               {/* Tab strip — STATS / GEAR / PACK */}
               <div style={{ display: "flex", gap: 2, marginBottom: 12, borderBottom: "1px solid #2a1d0e" }}>
-                {(["stats", "gear", "pack", "oaths", "map"] as const).map(tab => {
+                {(["stats", "gear", "pack", "map"] as const).map(tab => {
                   const active = sidebarTab === tab;
                   return (
                     <button
@@ -1505,9 +1505,50 @@ export default function Home() {
                 />
               )}
 
-              {sidebarTab === "oaths" && (
-                <OathPanel picssi={player.picssi} givenWords={player.givenWords ?? []} />
-              )}
+              {sidebarTab === "map" && (() => {
+                const words = player.givenWords ?? [];
+                const locationLabel = player.isTraveling
+                  ? "Traveling"
+                  : (TRAVEL_NODES[player.currentNodeId ?? "valus"]?.name ?? player.currentNodeId ?? "Unknown");
+                return (
+                  <div style={{ fontFamily: "Georgia, serif" }}>
+                    <div style={{ fontSize: 10, letterSpacing: "0.1em", marginBottom: 12 }}>
+                      <span style={{ color: "#aaaaaa" }}>Location: </span>
+                      <span style={{ color: "#e8d4a0", fontWeight: 600 }}>{locationLabel}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, color: "#4a2e15" }}>
+                      <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, #4a2e15, transparent)" }} />
+                      <span style={{ fontSize: 10, color: "#fbbf24", letterSpacing: "0.15em" }}>QUESTS</span>
+                      <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, #4a2e15, transparent)" }} />
+                    </div>
+                    {words.length === 0 ? (
+                      <div style={{ color: "#aaaaaa", fontSize: 10, padding: "8px 0" }}>
+                        Every quest accepted is a promise made.<br />- No Quests
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {[...words.filter(w => w.status === "active"), ...words.filter(w => w.status !== "active")].map(w => {
+                          const palette: Record<string, { bg: string; fg: string; label: string }> = {
+                            active:    { bg: "#1e3a5f", fg: "#7eb6ff", label: w.mithraic ? "ACTIVE · MITHRAIC" : "ACTIVE" },
+                            fulfilled: { bg: "#1e3a1e", fg: "#7ed47e", label: "FULFILLED" },
+                            broken:    { bg: "#3a1e1e", fg: "#ff7e7e", label: "BROKEN" },
+                          };
+                          const p = palette[w.status];
+                          return (
+                            <div key={w.id} style={{ backgroundColor: "#0d0a06", padding: "6px 8px", borderRadius: 3, border: "1px solid #2a1d0e", fontSize: 11, lineHeight: 1.45, opacity: w.status === "active" ? 1 : 0.7 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: 6, alignItems: "flex-start" }}>
+                                <span style={{ color: "#cdb78a", flex: 1 }}>{w.questTitle}</span>
+                                <span style={{ backgroundColor: p.bg, color: p.fg, padding: "1px 5px", borderRadius: 2, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em", flexShrink: 0 }}>{p.label}</span>
+                              </div>
+                              <div style={{ color: "#7a6f5a", fontSize: 9, marginTop: 2 }}>Sworn turn {w.swornAtTurn} · stake ×{w.breakPenaltyMultiplier}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Footer — Sign out only */}
               <div

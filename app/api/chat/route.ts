@@ -472,6 +472,10 @@ export async function POST(request: NextRequest) {
               ((savedPlayer as { current_plane?: string }).current_plane) ?? "thurian",
             currentNodeId:
               ((savedPlayer as { current_node_id?: string }).current_node_id) ?? "valus",
+            isTraveling:
+              ((savedPlayer as { is_traveling?: boolean }).is_traveling) ?? false,
+            travelRoute:
+              ((savedPlayer as { travel_route?: import("../../../lib/gameState").TravelRoute | null }).travel_route) ?? undefined,
             previousRoom:
               ((savedPlayer as { previous_room?: string | null }).previous_room) ?? null,
             prisonTurnsRemaining:

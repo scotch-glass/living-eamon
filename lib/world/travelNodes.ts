@@ -27,6 +27,8 @@ export interface TravelNode {
   availableModes?: TravelMode[];
   /** One-line lore note for UI tooltip. */
   lore?: string;
+  /** Room id the hero lands in on arrival. Stub rooms cover nodes without full modules. */
+  hubRoomId?: string;
 }
 
 export const TRAVEL_NODES: Record<string, TravelNode> = {
@@ -38,6 +40,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 800,
     availableModes: ["walk", "horse", "ship", "gate"],
     lore: "The Guild of Free Adventurers — capital of Valusia, hub of all roads.",
+    hubRoomId: "guild_courtyard",
   },
   city_vanara: {
     id: "city_vanara",
@@ -47,6 +50,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 522,
     availableModes: ["walk", "horse"],
     lore: "Western Valusian city; gateway to the northern road.",
+    hubRoomId: "arrive_city_vanara",
   },
   city_kamula: {
     id: "city_kamula",
@@ -56,6 +60,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 592,
     availableModes: ["walk", "horse"],
     lore: "Central Valusian trade city, near the Mirrors.",
+    hubRoomId: "arrive_city_kamula",
   },
   city_talunia: {
     id: "city_talunia",
@@ -65,6 +70,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 787,
     availableModes: ["walk", "horse", "ship"],
     lore: "Eastern trade hub where Grondarite iron meets western gold.",
+    hubRoomId: "arrive_city_talunia",
   },
   city_blaal: {
     id: "city_blaal",
@@ -74,6 +80,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 996,
     availableModes: ["walk", "horse"],
     lore: "Thuranian river city; last safe stop before the Lost Lands.",
+    hubRoomId: "arrive_city_blaal",
   },
   city_stagus: {
     id: "city_stagus",
@@ -83,6 +90,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 794,
     availableModes: ["walk", "horse", "ship"],
     lore: "River frontier city at the mouth of the Stagus. The road ends here.",
+    hubRoomId: "arrive_city_stagus",
   },
   poi_skull_of_silence: {
     id: "poi_skull_of_silence",
@@ -92,6 +100,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 358,
     availableModes: ["walk", "horse"],
     lore: "Black-stone castle in the Zalgara heights. The Silence is imprisoned within.",
+    hubRoomId: "arrive_poi_skull_of_silence",
   },
   poi_lake_of_visions: {
     id: "poi_lake_of_visions",
@@ -101,6 +110,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 772,
     availableModes: ["walk", "horse"],
     lore: "Mystical lake in central Valusia. Oracle and Outer Dark whispers.",
+    hubRoomId: "arrive_poi_lake_of_visions",
   },
   poi_accursed_gardens: {
     id: "poi_accursed_gardens",
@@ -110,6 +120,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 816,
     availableModes: ["walk", "horse"],
     lore: "Ruined noble estate two miles east of Valus. Cursed flora.",
+    hubRoomId: "arrive_poi_accursed_gardens",
   },
   poi_forbidden_lake: {
     id: "poi_forbidden_lake",
@@ -119,6 +130,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 868,
     availableModes: ["walk", "horse"],
     lore: "On the Valusia/Farsun border. Farsunians will not speak of it.",
+    hubRoomId: "arrive_poi_forbidden_lake",
   },
   poi_tiger_valley: {
     id: "poi_tiger_valley",
@@ -128,6 +140,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 327,
     availableModes: ["walk", "horse"],
     lore: "Deep in Atlantis. Predator wilderness; hunting and survival.",
+    hubRoomId: "arrive_poi_tiger_valley",
   },
   nation_thule: {
     id: "nation_thule",
@@ -137,6 +150,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 236,
     availableModes: ["walk", "horse", "ship"],
     lore: "Cold northern kingdom of tall, gray-eyed warriors. Ancient sea traders.",
+    hubRoomId: "arrive_nation_thule",
   },
   nation_commoria: {
     id: "nation_commoria",
@@ -146,6 +160,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 281,
     availableModes: ["walk", "horse"],
     lore: "Fortress-citadels carved into mountainsides. Court of assassins and whisper-brokers.",
+    hubRoomId: "arrive_nation_commoria",
   },
   nation_lemuria: {
     id: "nation_lemuria",
@@ -155,6 +170,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 236,
     availableModes: ["ship"],
     lore: "Eastern sea-coast nation of golden-eyed scholars and fierce warriors.",
+    hubRoomId: "arrive_nation_lemuria",
   },
   nation_atlantis: {
     id: "nation_atlantis",
@@ -164,6 +180,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 273,
     availableModes: ["ship"],
     lore: "Island nation of wonders. Blue-eyed Celtic raiders and ancient science.",
+    hubRoomId: "arrive_nation_atlantis",
   },
   geo_lost_lands: {
     id: "geo_lost_lands",
@@ -173,6 +190,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 1119,
     availableModes: ["walk", "horse"],
     lore: "Unmapped southern reaches. Eldar, Dwarves, and older things.",
+    hubRoomId: "arrive_geo_lost_lands",
   },
   geo_worlds_end: {
     id: "geo_worlds_end",
@@ -182,6 +200,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 854,
     availableModes: ["walk", "horse"],
     lore: "Past Stagus, the road simply stops. Nothing is mapped beyond.",
+    hubRoomId: "arrive_geo_worlds_end",
   },
   nation_farsun: {
     id: "nation_farsun",
@@ -191,6 +210,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 1013,
     availableModes: ["walk", "horse"],
     lore: "Southwestern plains nation. Caravan crossroads; every road passes through Farsun.",
+    hubRoomId: "arrive_nation_farsun",
   },
   // --- nodes below are estimated; drag to correct via PLACE PINS mode ---
   geo_red_isles: {
@@ -201,6 +221,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 664,
     availableModes: ["ship"],
     lore: "Far western islands — blood-red stone cliffs, rumored mineral wealth.",
+    hubRoomId: "arrive_geo_red_isles",
   },
   geo_tathel_isle: {
     id: "geo_tathel_isle",
@@ -210,6 +231,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 360,
     availableModes: ["ship"],
     lore: "Remote western island. Sea crossing required. Isolation and strange rites.",
+    hubRoomId: "arrive_geo_tathel_isle",
   },
   nation_kamelia: {
     id: "nation_kamelia",
@@ -219,6 +241,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 394,
     availableModes: ["walk", "horse"],
     lore: "Kingdom between Thule and Valusia. Home of the Mirrors of Tuzun Thune.",
+    hubRoomId: "arrive_nation_kamelia",
   },
   geo_mu: {
     id: "geo_mu",
@@ -228,6 +251,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 353,
     availableModes: ["ship"],
     lore: "Legendary sunken continent of the far southwest. Ruins beneath the waves.",
+    hubRoomId: "arrive_geo_mu",
   },
   nation_thurania: {
     id: "nation_thurania",
@@ -237,6 +261,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 1034,
     availableModes: ["walk", "horse"],
     lore: "Southern transit kingdom. Stone circles, shamanic rites, and the road to the Lost Lands.",
+    hubRoomId: "arrive_nation_thurania",
   },
   geo_camoonian_desert: {
     id: "geo_camoonian_desert",
@@ -246,6 +271,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 710,
     availableModes: ["walk", "horse"],
     lore: "Arid waste between Zarfhaana and the Zalgara Mountains. Sandstorms and buried ruins.",
+    hubRoomId: "arrive_geo_camoonian_desert",
   },
   geo_zalgara_mts: {
     id: "geo_zalgara_mts",
@@ -255,6 +281,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 499,
     availableModes: ["walk", "horse"],
     lore: "The great central spine. Mountain passes, avalanche, and the Skull of Silence in its heights.",
+    hubRoomId: "arrive_geo_zalgara_mts",
   },
   geo_jungles: {
     id: "geo_jungles",
@@ -264,6 +291,7 @@ export const TRAVEL_NODES: Record<string, TravelNode> = {
     y: 1170,
     availableModes: ["walk"],
     lore: "Serpent-Man temple complexes hidden in vine-choked ancient ruins.",
+    hubRoomId: "arrive_geo_jungles",
   },
 };
 

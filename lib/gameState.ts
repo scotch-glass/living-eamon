@@ -12,6 +12,11 @@ import type { PicssiState } from "./karma/types";
 import type { RoomTimeOfDay } from "./roomTypes";
 import type { WeatherKind } from "./world/weatherDescriptions";
 import type { SpellResidue, ResidueType } from "./world/spellResidue";
+import type { ZoneType, DangerRating } from "./world/travelMatrix";
+import { getLeg } from "./world/travelMatrix";
+import type { TravelMode } from "./world/travelNodes";
+import { TRAVEL_NODES } from "./world/travelNodes";
+import { getFlavorText } from "./world/travelFlavor";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -250,6 +255,17 @@ export interface TempModifier {
 }
 
 
+/** Sprint S4d — active journey state while hero is between nodes. */
+export interface TravelRoute {
+  originNodeId: string;
+  destinationNodeId: string;
+  totalDays: number;
+  daysElapsed: number;
+  mode: TravelMode;
+  zones: ZoneType[];
+  dangerRating: DangerRating;
+}
+
 export interface WeaponSkills {
   swordsmanship: number;
   armor_expertise: number;
@@ -472,6 +488,9 @@ export interface PlayerState {
 
   /** S4d — true while the hero is in transit between nodes. Sidebar shows "Location: Traveling". */
   isTraveling?: boolean;
+
+  /** S4d — active journey. Set by startTravel; cleared on arrival. isTraveling mirrors route !== undefined. */
+  travelRoute?: TravelRoute;
 
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
@@ -1093,6 +1112,112 @@ export function movePlayer(
       turnCount: state.player.turnCount + 1,
     },
     worldTurn: state.worldTurn + 1,
+  };
+}
+
+// ── S4d Travel execution ──────────────────────────────────────
+
+const DANGER_ENCOUNTER_CHANCE: Record<DangerRating, number> = {
+  safe: 0.05,
+  moderate: 0.15,
+  dangerous: 0.25,
+  extreme: 0.40,
+  deadly: 0.60,
+};
+
+export function startTravel(
+  state: WorldState,
+  destinationNodeId: string,
+  mode: TravelMode
+): WorldState {
+  const leg = getLeg(state.player.currentNodeId, destinationNodeId);
+  if (!leg) return state;
+
+  let totalDays: number;
+  if (mode === "walk") totalDays = leg.daysFoot ?? 1;
+  else if (mode === "horse") totalDays = leg.daysHorse ?? 1;
+  else totalDays = (leg.daysHorse ?? 0) + (leg.daysShip ?? 0);
+
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      isTraveling: true,
+      travelRoute: {
+        originNodeId: state.player.currentNodeId,
+        destinationNodeId,
+        totalDays: Math.max(1, totalDays),
+        daysElapsed: 0,
+        mode,
+        zones: leg.zones,
+        dangerRating: leg.dangerRating,
+      },
+    },
+  };
+}
+
+export interface AdvanceTravelResult {
+  state: WorldState;
+  narrative: string;
+  arrived: boolean;
+  encounter: boolean;
+}
+
+export function advanceTravel(state: WorldState): AdvanceTravelResult {
+  const route = state.player.travelRoute;
+  if (!route) return { state, narrative: "You are not traveling.", arrived: false, encounter: false };
+
+  const newElapsed = route.daysElapsed + 1;
+  const arrived = newElapsed >= route.totalDays;
+
+  const encounter = !arrived && Math.random() < DANGER_ENCOUNTER_CHANCE[route.dangerRating];
+
+  const zoneIndex = Math.min(
+    Math.floor((newElapsed / route.totalDays) * route.zones.length),
+    route.zones.length - 1
+  );
+  const zone = route.zones[zoneIndex];
+  const flavor = getFlavorText(zone);
+
+  const destNode = TRAVEL_NODES[route.destinationNodeId];
+  const destName = destNode?.name ?? route.destinationNodeId;
+
+  let narrative: string;
+  if (arrived) {
+    const modeWord = route.mode === "ship" ? "voyage" : "road";
+    narrative = `After ${newElapsed} day${newElapsed !== 1 ? "s" : ""} on the ${modeWord}, you arrive at ${destName}.`;
+  } else if (encounter) {
+    narrative = `Day ${newElapsed} of ${route.totalDays}. ${flavor}\n\n*A threat materializes ahead — your hand goes to your weapon.*`;
+  } else {
+    narrative = `Day ${newElapsed} of ${route.totalDays}. ${flavor}`;
+  }
+
+  const hubRoomId = destNode?.hubRoomId ?? `arrive_${route.destinationNodeId}`;
+
+  const newPlayer = arrived
+    ? {
+        ...state.player,
+        isTraveling: false,
+        travelRoute: undefined,
+        currentNodeId: route.destinationNodeId,
+        currentRoom: hubRoomId,
+        previousRoom: state.player.currentRoom,
+        visitedRooms: state.player.visitedRooms.includes(hubRoomId)
+          ? state.player.visitedRooms
+          : [...state.player.visitedRooms, hubRoomId],
+        turnCount: state.player.turnCount + 1,
+      }
+    : {
+        ...state.player,
+        travelRoute: { ...route, daysElapsed: newElapsed },
+        turnCount: state.player.turnCount + 1,
+      };
+
+  return {
+    state: { ...state, player: newPlayer, worldTurn: state.worldTurn + 1 },
+    narrative,
+    arrived,
+    encounter,
   };
 }
 

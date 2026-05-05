@@ -19,6 +19,7 @@ import ItemDetailPopup from "../components/ItemDetailPopup";
 import EquipmentGrid from "../components/EquipmentGrid";
 import BackpackPanel from "../components/BackpackPanel";
 import WorldMap from "../components/WorldMap";
+import TravelScreen from "../components/TravelScreen";
 import { TRAVEL_NODES } from "../lib/world/travelNodes";
 import ItemActionMenu, { getItemActions, type ItemAction, type ItemContext } from "../components/ItemActionMenu";
 import ComparePopup from "../components/ComparePopup";
@@ -1601,6 +1602,20 @@ export default function Home() {
         <WorldMap
           currentNodeId={player.currentNodeId ?? "valus"}
           onClose={() => setSidebarTab("stats")}
+          onTravelConfirm={(destId) => {
+            setSidebarTab("stats");
+            void sendMessage(`TRAVEL TO ${destId}`);
+          }}
+        />
+      )}
+
+      {/* Travel screen — full-screen overlay while isTraveling */}
+      {player?.isTraveling && player.travelRoute && (
+        <TravelScreen
+          route={player.travelRoute}
+          latestNarrative={messages[messages.length - 1]?.role === "assistant" ? messages[messages.length - 1].content : ""}
+          onContinue={() => { void sendMessage("CONTINUE"); }}
+          loading={loading || isTyping}
         />
       )}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>

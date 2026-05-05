@@ -56,9 +56,12 @@ import {
   removeRevealedItem,
   isDay,
   pushResidue,
+  startTravel,
+  advanceTravel,
   type Corpse,
   type WeaponSkills,
 } from "./gameState";
+import { TRAVEL_NODES } from "./world/travelNodes";
 import { COMBAT_RESIDUE } from "./world/spellResidue";
 
 import type { TimeOfDay } from "./weatherService";
@@ -5245,6 +5248,62 @@ export function processInput(
       staticResponse: choiceResult.narrative,
       dynamicContext: null,
       newState: afterAtomQuestState,
+      stateChanged: true,
+    };
+  }
+
+  // ── 1b. Travel intercept ─────────────────────────────────
+  // TRAVEL TO <nodeId> — start a journey from current node.
+  if (firstVerb === "TRAVEL" && trimmedInput.toUpperCase().startsWith("TRAVEL TO ")) {
+    const destId = trimmedInput.slice("TRAVEL TO ".length).trim().toLowerCase().replace(/\s+/g, "_");
+    const destNode = TRAVEL_NODES[destId];
+    if (!destNode) {
+      return {
+        responseType: "static",
+        staticResponse: `No road leads to "${destId}" from here. Check the MAP.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const newState = startTravel(state, destId, "horse");
+    const route = newState.player.travelRoute;
+    if (!route) {
+      return {
+        responseType: "static",
+        staticResponse: "No route found to that destination from your current location.",
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const modeName = route.mode === "ship" ? "sea" : route.mode;
+    return {
+      responseType: "static",
+      staticResponse: `You set out for ${destNode.name}. The journey will take ${route.totalDays} day${route.totalDays !== 1 ? "s" : ""} by ${modeName}.\n\nType __CMD:CONTINUE__ to press on.`,
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
+    };
+  }
+
+  // When traveling: CONTINUE (or any non-bypass verb) advances the journey one day.
+  const TRAVEL_BYPASS_VERBS = new Set(["HEALTH", "STATS", "INVENTORY", "MAP", "QUESTS", "THE", "WAY", "TEACHINGS", "HELP"]);
+  if (state.player.isTraveling && !TRAVEL_BYPASS_VERBS.has(firstVerb)) {
+    const result = advanceTravel(state);
+    let response = result.narrative;
+    if (result.arrived) {
+      const destNode = TRAVEL_NODES[result.state.player.currentNodeId];
+      response += `\n\n*You have arrived. Type __CMD:LOOK__ to take in your surroundings.*`;
+      void destNode;
+    } else {
+      response += `\n\nType __CMD:CONTINUE__ to press on.`;
+    }
+    return {
+      responseType: "static",
+      staticResponse: response,
+      dynamicContext: null,
+      newState: result.state,
       stateChanged: true,
     };
   }

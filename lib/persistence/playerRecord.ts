@@ -91,6 +91,9 @@ export function worldStateToPlayerRecord(
     currentPlane: state.player.currentPlane ?? "thurian",
     // Sprint S4c — world-map node; persists across rebirth
     currentNodeId: state.player.currentNodeId ?? "valus",
+    // Sprint S4d — active travel route
+    isTraveling: state.player.isTraveling ?? false,
+    travelRoute: state.player.travelRoute ?? null,
     previousRoom: state.player.previousRoom ?? null,
     prisonTurnsRemaining: state.player.prisonTurnsRemaining ?? 0,
     lastAction: state.player.lastAction ?? null,

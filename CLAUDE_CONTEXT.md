@@ -1080,7 +1080,33 @@ Jane daily call limit: unlimited in development via NODE_ENV check
 
 ---
 
-## ⚡ Most recent session (2026-05-02) — Pre-work B/C/F + S1 + Sprint 7b.B Bless shipped
+## ⚡ Most recent session (2026-05-08) — Sprite Normalization + Z-Layer Foundation shipped
+
+**Headline:** 10-stage sprite normalization sprint shipped (commit `8fd73d9`) — the foundation that unblocks Combat Arena v2 Stages 2–7. New systems landed:
+
+- **5-class size registry** (`lib/art/sizeClasses.ts`): A=Small Animals, B=Small Humanoid, C=Normal Humanoid (baseline 460px), D=Large Humanoid, E=Extra Large. Smaller class = higher Z; gore Z = sprite Z + 1.
+- **Sprite metadata registry** at `public/art/_sprite-metadata.json` keyed by sprite path. Stores `sizeClass`, `eyeYPx`, `flip`, `approval`, `originalPrompt`, `goreZones`, `isCorpse`. APIs at `app/api/sprite-metadata`, `app/api/sprite-list`, `app/api/sprite-regen`, `app/api/prompt-rules`.
+- **Standing prompt rules** at `prompt-rules/standing.json` — 8 seeded locked rules (grok-imagine-image-pro-only, white-bg+rembg pipeline, dark blade tone, chainmail+gambeson, armor layering, Howard skin palette, facing direction, corpse pose).
+- **Sprite Review Tool** (permanent Creator UI) at `/dev/sprite-review` — three modes (eye-Y pin / erase BG / gore placement), four approval states with distinct icons, edit standing rules inline, absorbed the old `/dev/sprite-touchup`.
+- **`figureScaleByEye()`** in `lib/combat/useFigureHeight.ts` — eye-anchored scaling that ignores raised weapons (fixes Gaius greatsword shrink). Throws if eyeYPx undefined (production quality gate).
+- **Per-Z-layer lane layout** at `lib/combat/laneLayout.ts` — three fixed spaces per side at locked offsets `[0.1975, 0.5, 0.8025]` (memory `feedback_lane_spacing.md`). Front rank (position 1) closest to centerline.
+- **`CombatArena.tsx`** Stages G+H — single shared stacking context (`isolation: isolate`), per-class zIndex, three-space layout, **`maxWidth: "none"` override on sprites** to defeat Tailwind v4 preflight's silent vertical-stretch bug.
+- **`BloodOverlay.tsx`** — class-aware `goreZ` + `goreZones` snap-to-anchor rendering.
+- **22/22 unit tests** across `__tests__/art/{size-classes, figure-scale-by-eye, lane-layout}.test.ts`.
+- **16 corpse PNGs** forged (~$1.12) but **CORPSES SKIPPED from arena pipeline** — Grok cannot forge them correctly to spec. Death is reworked in next sprint as fade+shrink + survivor promotion.
+
+**Bandit aesthetic locked:** `UGLY_MEAN_OVERLAY` in `scripts/forge-bandit-trio.ts` (broken nose, snaggle-teeth, scowl, scars). Memory `feedback_bandits_uglier_meaner.md`.
+
+**Memories saved this session:**
+- `project_no_live_game.md` — pre-launch; players are aspirational; no live game; schema migrations safe.
+- `feedback_lane_spacing.md` — `SPACE_OFFSETS = [0.1975, 0.5, 0.8025]` is locked.
+- `feedback_bandits_uglier_meaner.md` — UGLY_MEAN_OVERLAY for hostile NPCs.
+
+**Next sprint:** `~/.claude/plans/i-don-t-think-that-immutable-pancake.md` — Combat Arena v2 finish (Stages 2–7 + crit-gore, corpses out). 8 phases, ~3.5 days. Phase 1 = death fade+shrink animation + survivor-promotion engine helper + slide animation.
+
+---
+
+## ⚡ Earlier session (2026-05-02) — Pre-work B/C/F + S1 + Sprint 7b.B Bless shipped
 
 **The day's headline:** Five sprints landed in one session. (1) **Pre-work B** — combat 3-vs-3 position model + barrier infrastructure. (2) **Pre-work C** — Incognito dropped; Invisibility semi-transparency render is the entire deliverable. (3) **Pre-work F** — `lore/pantheon/PANTHEON.md` + `lore/maatic-library/oaths-of-maat.md` (42 Oaths) + 8 math-magic books. (4) **S1** — `OathPanel.tsx` (42 Oaths + PICSSI summary; 4th sidebar tab "oaths"). (5) **Sprint 7b.B Bless** — temp buff layer (`TempModifier` on `PlayerState`), room tags (`consecrated`/`deity` on `Room`), Shrine of Ma'at in guild-hall, Bless mechanics (10/15-turn duration, reagent waiver in consecrated rooms, +Illumination +10 / +Charisma +5), blessed poison/bleed resistance in combat engine, effect icon. 114/114 tests, typecheck clean.
 

@@ -19,8 +19,8 @@
 
 import { createInitialWorldState } from "../../lib/gameState";
 import type { WorldState } from "../../lib/gameState";
-import type { ActiveCombatSession, CombatantState } from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
+import type { ActiveCombatSession, CombatantState } from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
 import { isCrossingBarrier, tickBarriers } from "../../lib/combat/barriers";
 import { handleInvoke, composeInvokeResponse } from "../../lib/sorcery/invoke";
 
@@ -68,7 +68,7 @@ function baseState(): WorldState {
 }
 
 function mockCombatant(side: "ally" | "enemy", id: string, name: string): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id,
     name,
     hp: 100,
@@ -87,21 +87,24 @@ function mockCombatant(side: "ally" | "enemy", id: string, name: string): Combat
     agility: 10,
     side,
     position: 1,
-  };
+  });
 }
 
 function stateInCombat(): WorldState {
   const s = baseState();
+  const player = { ...mockCombatant("ally", "player", "Tester"), hp: s.player.hp, maxHp: s.player.maxHp };
+  const enemy = mockCombatant("enemy", "test_enemy", "Test Enemy");
   const session: ActiveCombatSession = {
     enemyNpcId: "test_enemy",
     enemyName: "Test Enemy",
     roundNumber: 1,
-    playerCombatant: { ...mockCombatant("ally", "player", "Tester"), hp: s.player.hp, maxHp: s.player.maxHp },
-    enemyCombatant: mockCombatant("enemy", "test_enemy", "Test Enemy"),
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers: [],
+    ...makeMultiCombatantFields(player, enemy),
   };
   return {
     ...s,

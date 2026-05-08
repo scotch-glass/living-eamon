@@ -387,10 +387,19 @@ const POSES: PoseSpec[] = [
     promptExpression: "Quiet absorbed concentration, lips slightly parted.",
     captionPose: "kneeling, on one knee",
     captionExpression: "looking down, parted lips" },
+  // Sprint C7 — combat-stance pose for the multi-combatant fight UI.
+  // Vivian's canonical weapon is the short sword (per LOCKED_COSTUME).
+  // Stance: middle guard, lunge-or-parry ready. Feet planted, weight low,
+  // weapon committed to a guard — never casual, never on-shoulder.
+  { id: 51, slug: "combat-stance-shortsword-middle-guard",
+    promptPose: "She is in active COMBAT STANCE — feet planted shoulder-width apart with both knees soft and bent, weight low and centered, body bladed at a 45-degree angle to the viewer with her right shoulder leading. Her short sword is DRAWN and held forward in a two-handed middle guard at chest height, the blade angled forward toward an unseen opponent ahead of her, the leather-wrapped grip held firmly with her right hand at the hilt and her left hand bracing the pommel. Her eyes are locked on the threat ahead, ready to lunge or parry. This is NOT casual, NOT a portrait, NOT a sword resting on her shoulder, NOT a sword pointed at the ground — she is mid-fight, weapon committed to a guard, ready to strike or defend on the next breath. The short-sword blade is BURNISHED DARK STEEL — a deep oiled grey-blue tone, with a streak of fresh red blood along one edge and small smears of dried blood on the flat. The blade is VISIBLY DARKER than the white studio backdrop so it survives the alpha cut — never mirror-bright, never silver-white, never chromed.",
+    promptExpression: "Hard focused intensity, jaw set, brows lowered, eyes narrow and locked on the threat ahead, mouth a firm line.",
+    captionPose: "standing, combat stance, holding sword, weapon in hands",
+    captionExpression: "serious, looking to the side, closed mouth" },
 ];
 
-if (POSES.length !== 50) {
-  console.error(`ERROR: pose list has ${POSES.length} entries, expected 50`);
+if (POSES.length !== 51) {
+  console.error(`ERROR: pose list has ${POSES.length} entries, expected 51`);
   process.exit(1);
 }
 

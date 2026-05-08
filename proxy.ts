@@ -28,6 +28,17 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/register") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
+    // Dev-only routes (combat test harness, etc.). Gated on NODE_ENV so
+    // they can't leak past staging into production builds.
+    (pathname.startsWith("/dev/") && process.env.NODE_ENV !== "production") ||
+    // Sprite Review Tool APIs — paired with /dev/sprite-review. Same
+    // NODE_ENV gate so they can't leak past staging.
+    ((pathname === "/api/sprite-list" ||
+      pathname === "/api/sprite-metadata" ||
+      pathname === "/api/sprite-regen" ||
+      pathname === "/api/sprite-touchup" ||
+      pathname === "/api/prompt-rules") &&
+      process.env.NODE_ENV !== "production") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/chat") ||
     pathname.startsWith("/api/player") ||

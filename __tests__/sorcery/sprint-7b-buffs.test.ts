@@ -30,9 +30,9 @@
 
 import { createInitialWorldState } from "../../lib/gameState";
 import type { WorldState } from "../../lib/gameState";
-import type { ActiveCombatSession, CombatantState } from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
-import { resolveStrike } from "../../lib/combatEngine";
+import type { ActiveCombatSession, CombatantState } from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
+import { resolveStrike } from "../../lib/combat/engine";
 import { handleInvoke } from "../../lib/sorcery/invoke";
 import { recomputeDerivedStats } from "../../lib/karma/recompute";
 
@@ -93,7 +93,7 @@ function baseState(): WorldState {
 }
 
 function mockCombatant(side: "ally" | "enemy", id: string, name: string, str = 10, agi = 10): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id,
     name,
     hp: 100,
@@ -112,21 +112,24 @@ function mockCombatant(side: "ally" | "enemy", id: string, name: string, str = 1
     agility: agi,
     side,
     position: 1,
-  };
+  });
 }
 
 function stateInCombat(): WorldState {
   const s = baseState();
+  const player = { ...mockCombatant("ally", "player", "Tester"), hp: s.player.hp, maxHp: s.player.maxHp };
+  const enemy = mockCombatant("enemy", "test_enemy", "Test Enemy");
   const session: ActiveCombatSession = {
     enemyNpcId: "test_enemy",
     enemyName: "Test Enemy",
     roundNumber: 1,
-    playerCombatant: { ...mockCombatant("ally", "player", "Tester"), hp: s.player.hp, maxHp: s.player.maxHp },
-    enemyCombatant: mockCombatant("enemy", "test_enemy", "Test Enemy"),
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers: [],
+    ...makeMultiCombatantFields(player, enemy),
   };
   return { ...s, player: { ...s.player, activeCombat: session } };
 }

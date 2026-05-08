@@ -41,7 +41,7 @@ import type {
   Barrier,
   CombatantState,
   ActiveCombatSession,
-} from "../combatTypes";
+} from "../combat/types";
 import { getRoom } from "../adventures/registry";
 import type { EffectResult, NumericRange, Spell } from "./types";
 

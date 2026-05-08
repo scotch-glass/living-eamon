@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/art/npcs/bandit_brute/master/v8.png",
+    "note": "helmet is transparent",
+    "queuedAt": "2026-05-08T13:09:07.414Z",
+    "status": "completed",
+    "regenOutputPath": "/art/npcs/bandit_brute/master/v13.png",
+    "completedAt": "2026-05-08T13:25:00.000Z"
+  },
+  {
+    "path": "/art/npcs/bandit_blade/master/v2.png",
+    "note": "He should be facing toward his opponent not towards the player.",
+    "queuedAt": "2026-05-08T13:10:59.579Z",
+    "status": "completed",
+    "regenOutputPath": "/art/npcs/bandit_blade/master/v4.png",
+    "completedAt": "2026-05-08T13:25:00.000Z"
+  }
+]

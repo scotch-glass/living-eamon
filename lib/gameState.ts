@@ -7,7 +7,7 @@
 // ============================================================
 
 import { RoomState, NPCS } from "./gameData";
-import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
+import type { ActiveCombatSession, ActiveStatusEffect } from "./combat/types";
 import type { PicssiState } from "./karma/types";
 import type { RoomTimeOfDay } from "./roomTypes";
 import type { WeatherKind } from "./world/weatherDescriptions";
@@ -304,6 +304,13 @@ export function normalizeWeaponSkills(
 export interface PlayerState {
   id: string;
   name: string;
+  /**
+   * Gender — drives narrative pronouns ("he/his/himself" vs "she/her/herself").
+   * Howard-canon corpus is binary; every named character is male or female.
+   * All canonical hero identity blocks in `_identity-blocks.txt` are male,
+   * so this defaults to "male" everywhere it isn't set explicitly.
+   */
+  gender: "male" | "female";
   currentRoom: string;
   previousRoom: string | null;
   /** Rooms the player has physically entered — controls fog-of-war on exit labels. */
@@ -440,6 +447,13 @@ export interface PlayerState {
 
   /** Official guild magic — autocomplete for CAST */
   knownSpells: string[];
+  /**
+   * Sprint C2 — combat quick-access spell hotbar (max 6). Subset of
+   * `knownSpells`. Used by the CombatScreen to render the spell strip
+   * and by the AI / hotbar editor (deferred). When unset, the engine
+   * defaults to the first 6 known spells. Persists across rebirth.
+   */
+  combatHotbar?: string[];
   /**
    * Occult Circles the player has unlocked (1..8). Empty by default.
    * Set by quest rewards via `applyReward` when `unlockCircle` is
@@ -869,6 +883,9 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
     player: {
       id: "player_1",
       name: playerName,
+      // All canonical heroes in the library are male (Howard-canon palette).
+      // Override at character-creation if female heroes ever ship.
+      gender: "male",
       currentRoom: "church_of_perpetual_life",
       previousRoom: null,
       visitedRooms: ["church_of_perpetual_life"],

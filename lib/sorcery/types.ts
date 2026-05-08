@@ -201,6 +201,12 @@ export type InvokeOutcome =
   | { kind: "insufficient-mana"; spell: Spell; need: number; have: number }
   | { kind: "missing-reagents"; spell: Spell; missing: ReagentId[] }
   | { kind: "fizzle-no-reagents"; words: string[] } // attempted unknown invocation without any reagents
+  // The player's combat combatant just took a cast-interrupting hit
+  // (critical, severed_artery, crushed_windpipe, silenced) and the
+  // Words can't form. Mana + reagents are NOT consumed. `reason` is
+  // the same discriminated union the engine uses for CAST fizzles, so
+  // both magic systems share one rendering pipeline downstream.
+  | { kind: "interrupt-fizzle"; spell: Spell; reason: import("../combat/types").InterruptReason }
   | { kind: "no-target"; spell: Spell }           // Sprint 7b — damage spell cast with no active combat
   // Sprint 7b.T — rune travel gates
   | { kind: "no-rune-target"; spell: Spell; runeLabel: string | null }   // Teleport/Recall/Gate: rune not found

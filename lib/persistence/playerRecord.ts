@@ -7,6 +7,7 @@
 // ============================================================
 
 import type { WorldState } from "../gameState";
+import { syncCombatantArray } from "../combat/types";
 
 export function worldStateToPlayerRecord(
   state: WorldState
@@ -70,7 +71,13 @@ export function worldStateToPlayerRecord(
     cuffLeft: state.player.cuffLeft ?? null,
     cuffRight: state.player.cuffRight ?? null,
     necklace: state.player.necklace ?? null,
-    activeCombat: state.player.activeCombat ?? null,
+    // Sprint C1: ensure `combatants` array stays mirrored against the
+    // legacy `playerCombatant` / `enemyCombatant` references on every write.
+    // Mid-fight code paths only update the legacy fields; the persistence
+    // boundary is where we re-canonicalize.
+    activeCombat: state.player.activeCombat
+      ? syncCombatantArray(state.player.activeCombat)
+      : null,
     activeEffects: state.player.activeEffects ?? [],
     weaponPoisonCharges: state.player.weaponPoisonCharges ?? 0,
     weaponPoisonSeverity: state.player.weaponPoisonSeverity ?? 0,

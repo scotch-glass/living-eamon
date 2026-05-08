@@ -3,9 +3,32 @@
 > **Status:** Stage I draft (Plan, not yet approved). All math is **PROPOSAL** until Scotch greenlights it.
 > **Scope:** Umbrella diagram of how PICSSI virtues, attributes (STR/DEX/CHA), consumables (HP/mana/stamina), NPC affection, and encounter atoms interconnect.
 > **Workflow:** Each component goes through three stages — **I. Plan** → **II. Approval** → **III. Implement**. Checkboxes track which stage each component has reached. Nothing checks "Implement" without "Approval" first.
-> **Last updated:** 2026-04-29
+> **Last updated:** 2026-05-06
 
 ---
+
+/important Note/ Wed May 6, 2026 - I am adding something important. 
+
+Passion vs Spirituality in Combat (either / or)
+Physical combat increases Passion and reduces Spirituality. Casting spells or invoking sorcery increase Spirituality and reduces Passion. So, a real warrior will be passionate and tough. A real wizard will be dispassionate and full of mana. 
+
+Do NOT extrapolate this to other Passion and Spirituality affecting activities. It applies only to choice of action in combat. Examples: A true warrior who only uses the sword in combat, can also go to the temple to pray to enhance his Spirituality without reducing his Passion. This is the PICSSI version of a Paladin. Likewise a true wizard who only uses spells in combat, can go to taverns and brothels to play to enhance his Passion without reducing his Spirituality. This is the PICSSI version of a Wild Mage.
+
+Courage is Thin and Unbalanced
+Two changes I'd make Courage robust:
+
+(1) Encounter design rule for the writer's pack: every adventure module must contain at least one "great odds" encounter that explicitly triggers the Courage path — outnumbered, boss-tier, or atom-narrated as fear-inducing. Bake it into the module template as a required atom type. This is the structural equivalent of what quest cadence does for Integrity.
+
+(2) Slightly expand Courage's secondary paths. You already have gambling and brothel-risk as minor sources. A few more genre-coherent ones would thicken it without breaking the "real risk only" rule: volunteering for a duel against a stronger fighter (trial-by-combat atom), entering a feared zone solo at night (exploration atom with mortal risk), refusing to flee from a supernatural manifestation (atom choice). Same design philosophy, a few more Courage spigots.
+
+Integrity has the Least Spigots
+We need to lock in a quest-reward tier table in this doc to make sure Integrity gets a real bump related to difficulty of missions accomplished.. Something like:
+
+- Short quest (single delivery, single bounty, single rescue): Notable +3
+- Medium quest (multi-stop, branching, named NPC): Major +5
+- Campaign-defining quest (sworn vengeance, multi-adventure arc, self-sacrifice): Defining +10
+
+/end of note/
 
 ## 0. Vision (one paragraph)
 

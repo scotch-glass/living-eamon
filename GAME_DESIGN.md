@@ -20,7 +20,12 @@ domain — using it will expose Thot Technologies to a takedown or suit.
 3. The Safe Harbor / Radioactive tables below in this document —
    **name-by-name authoritative lookup.** Supersedes any other doc on
    individual term status.
-4. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
+4. [**MODULE_SYSTEM.md**](./MODULE_SYSTEM.md) — Stage I draft for the
+   Ink + GPE module-authoring system (awaiting approval). Defines the
+   Ink author API, EXTERNAL function contract, GPE balance scorecard,
+   and combat–PICSSI feedback hook points. References KARMA_SYSTEM.md
+   as source of truth.
+5. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
    methodology for converting PD stories into adventure modules.
 
 **Current PD corpus (verified April 2026, expanded April 30, 2026):**
@@ -771,6 +776,15 @@ The full PD entry calendar is maintained in **`Public_Domain_Rules.md`
 ## 11. PICSSI — The Six-Virtue Character Scoring System
 
 *Pronounced "Pixy." Ratified 2026-04-26.*
+
+> **2026-05-06 update.** See [`KARMA_SYSTEM.md`](./KARMA_SYSTEM.md) (top of
+> file) for three locked rules added 2026-05-06: (1) Passion-vs-Spirituality
+> trade-off in combat (physical combat `+P / -Sp`, casting `+Sp / -P`,
+> applies to choice of action in combat only — does NOT extrapolate to
+> non-combat spigots); (2) Courage robust paths — "great odds" encounter
+> required for a *balanced* module, plus expanded secondary spigots;
+> (3) Integrity quest-reward tier table (short `+3` / medium `+5` /
+> campaign-defining `+10`).
 
 PICSSI is Living Eamon's multi-dimensional scoring framework for the player's character. It does not replace traditional combat stats (Strength, Dexterity, Constitution, etc.) — those still drive damage rolls, encumbrance, and saves. PICSSI sits *above* those mechanics and shapes how the world reacts: which NPCs flirt with the hero, which gods listen to his prayers, which quests will accept him, which dark patrons answer his INVOKE spells. It is the social and metaphysical state of the character. It is the core scoring system of the game and attracts followers of similar tendencies, the more extreme the score, the more extreme the followers scores. The goal is to attract an end game Band of Heros or Band of Villans over which to become a Lord with a title and land, ie a dark lord might be called "Lord Vard the Destroyer" or "...the Feared" and a highly illuminated Lord might be called "Lord Cedric the Lightbringer" and the opposite would be "Lord Elric the Dark Lord." We will need to prescript multi-dimensional titles for each of the extreme scores.
 

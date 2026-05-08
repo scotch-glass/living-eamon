@@ -14,7 +14,7 @@
 import { ITEMS, NPCS, ADVENTURES, type Room, type NPC } from "./gameData";
 import type { WorldState, NPCStateEntry } from "./gameState";
 import { ALL_ROOMS as MAIN_HALL_ROOMS } from "./adventures/registry";
-import { BODY_ZONES } from "./combatTypes";
+import { BODY_ZONES } from "./combat/types";
 
 export const SITUATION_BLOCK_LINE = "─────────────────────────────────";
 

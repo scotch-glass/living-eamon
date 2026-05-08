@@ -26,9 +26,9 @@ import type {
   Barrier,
   CombatantState,
   ActiveStatusEffect,
-} from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
-import { resolveCombatRound } from "../../lib/combatEngine";
+} from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
+import { resolveCombatRound } from "../../lib/combat/engine";
 
 let failures = 0;
 
@@ -63,7 +63,7 @@ function makeCombatant(
   hp: number = 50,
   effects: ActiveStatusEffect[] = []
 ): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id: name.toLowerCase(),
     name,
     hp,
@@ -82,20 +82,23 @@ function makeCombatant(
     agility: 50,
     side,
     position,
-  };
+  });
 }
 
 function makeSession(barriers: Barrier[]): ActiveCombatSession {
+  const player = makeCombatant("Tester", "ally", 1);
+  const enemy = makeCombatant("test orc", "enemy", 1);
   return {
     enemyNpcId: "test_orc",
     enemyName: "test orc",
     roundNumber: 1,
-    playerCombatant: makeCombatant("Tester", "ally", 1),
-    enemyCombatant: makeCombatant("test orc", "enemy", 1),
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers,
+    ...makeMultiCombatantFields(player, enemy),
   };
 }
 

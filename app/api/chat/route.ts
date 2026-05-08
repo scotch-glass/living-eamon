@@ -23,6 +23,7 @@ import {
 import { recomputeDerivedStats } from "../../../lib/karma/recompute";
 import { NPCS, ITEMS } from "../../../lib/gameData";
 import { WEAPON_DATA } from "../../../lib/uoData";
+import { migrateActiveCombatSession } from "../../../lib/combat/types";
 
 // Sanitize equipment slots loaded from the DB. Items removed from the
 // registry (e.g. legacy weapons after the 2026-04-28 simplification)
@@ -399,11 +400,14 @@ export async function POST(request: NextRequest) {
               // Discard finished combat sessions that were persisted — they
               // should have been cleared when the loot screen was dismissed.
               if (ac?.finished) return null;
-              return (ac as unknown as import("../../../lib/combatTypes").ActiveCombatSession | null) ?? null;
+              // Sprint C1: migrate pre-C1 session blobs (no combatants array,
+              // no team/controlledBy fields on each combatant) on read so
+              // the engine sees a fully-typed session.
+              return migrateActiveCombatSession(ac);
             })(),
             activeEffects:
               (savedPlayer as { active_effects?: unknown }).active_effects as
-                import("../../../lib/combatTypes").ActiveStatusEffect[] ?? [],
+                import("../../../lib/combat/types").ActiveStatusEffect[] ?? [],
             weaponPoisonCharges:
               (savedPlayer as { weapon_poison_charges?: number }).weapon_poison_charges ?? 0,
             weaponPoisonSeverity:

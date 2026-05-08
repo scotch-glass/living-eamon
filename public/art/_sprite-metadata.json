@@ -1,0 +1,1259 @@
+{
+  "/art/heroes/gaius/combat/great_sword/v1.png": {
+    "path": "/art/heroes/gaius/combat/great_sword/v1.png",
+    "approval": "approved",
+    "eyeYPx": 604,
+    "flip": false,
+    "reviewedAt": "2026-05-08T13:45:13.851Z",
+    "goreZones": [
+      {
+        "id": "gz_mowx644v",
+        "normalizedX": 0.597972972972973,
+        "normalizedY": 0.34968354430379744,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx64wr",
+        "normalizedX": 0.5067567567567568,
+        "normalizedY": 0.3935917721518987,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx662s",
+        "normalizedX": 0.6126126126126126,
+        "normalizedY": 0.634493670886076,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx670p",
+        "normalizedX": 0.36824324324324326,
+        "normalizedY": 0.6388449367088608,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx69ca",
+        "normalizedX": 0.5304054054054054,
+        "normalizedY": 0.2231012658227848,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx6akx",
+        "normalizedX": 0.3716216216216216,
+        "normalizedY": 0.35205696202531644,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxz3oh",
+        "normalizedX": 0.5078828828828829,
+        "normalizedY": 0.46914556962025317,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/heroes/gaius/combat/great_sword/v2.png": {
+    "path": "/art/heroes/gaius/combat/great_sword/v2.png",
+    "approval": "approved",
+    "eyeYPx": 495,
+    "goreZones": [
+      {
+        "id": "gz_mowx4wnp",
+        "normalizedX": 0.5405405405405406,
+        "normalizedY": 0.34177215189873417,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx551t",
+        "normalizedX": 0.5292792792792793,
+        "normalizedY": 0.16416139240506328,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx579n",
+        "normalizedX": 0.3614864864864865,
+        "normalizedY": 0.6265822784810127,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx5858",
+        "normalizedX": 0.6272522522522522,
+        "normalizedY": 0.6218354430379747,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx58wk",
+        "normalizedX": 0.5163288288288288,
+        "normalizedY": 0.46162974683544306,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx5fxy",
+        "normalizedX": 0.606418918918919,
+        "normalizedY": 0.3034018987341772,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx5goc",
+        "normalizedX": 0.44707207207207206,
+        "normalizedY": 0.3599683544303797,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "goreApproved": true,
+    "reviewedAt": "2026-05-08T13:45:18.910Z",
+    "sizeClass": "C"
+  },
+  "/art/heroes/gaius/combat/great_sword/v3.png": {
+    "path": "/art/heroes/gaius/combat/great_sword/v3.png",
+    "approval": "approved",
+    "sizeClass": "C",
+    "eyeYPx": 531,
+    "flip": false,
+    "note": "smoke test",
+    "goreZones": [
+      {
+        "id": "gz_mowx8g3b",
+        "normalizedX": 0.5311231393775372,
+        "normalizedY": 0.20535714285714285,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx8hjz",
+        "normalizedX": 0.5953991880920162,
+        "normalizedY": 0.32711038961038963,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx8ich",
+        "normalizedX": 0.4648173207036536,
+        "normalizedY": 0.3555194805194805,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx8jvs",
+        "normalizedX": 0.5175913396481732,
+        "normalizedY": 0.4265422077922078,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx8kw4",
+        "normalizedX": 0.6596752368064953,
+        "normalizedY": 0.6477272727272727,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx8m2g",
+        "normalizedX": 0.39039242219215153,
+        "normalizedY": 0.6343344155844156,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "goreApproved": true,
+    "reviewedAt": "2026-05-08T12:59:03.469Z"
+  },
+  "/art/heroes/gaius/combat/long_sword/v5.png": {
+    "path": "/art/heroes/gaius/combat/long_sword/v5.png",
+    "approval": "approved",
+    "eyeYPx": 393,
+    "goreZones": [
+      {
+        "id": "gz_mowx9fxp",
+        "normalizedX": 0.48986486486486486,
+        "normalizedY": 0.38093354430379744,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx9gtj",
+        "normalizedX": 0.5095720720720721,
+        "normalizedY": 0.1337025316455696,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx9hln",
+        "normalizedX": 0.5602477477477478,
+        "normalizedY": 0.2701740506329114,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx9iag",
+        "normalizedX": 0.3811936936936937,
+        "normalizedY": 0.29193037974683544,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx9jj4",
+        "normalizedX": 0.6176801801801802,
+        "normalizedY": 0.6103639240506329,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowx9krf",
+        "normalizedX": 0.3502252252252252,
+        "normalizedY": 0.5897943037974683,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "goreApproved": true,
+    "reviewedAt": "2026-05-08T12:59:44.517Z",
+    "sizeClass": "C"
+  },
+  "/art/heroes/gaius/combat/long_sword/v6.png": {
+    "path": "/art/heroes/gaius/combat/long_sword/v6.png",
+    "approval": "approved",
+    "eyeYPx": 458,
+    "goreZones": [
+      {
+        "id": "gz_mowxa3ea",
+        "normalizedX": 0.5433558558558559,
+        "normalizedY": 0.17128164556962025,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxa48t",
+        "normalizedX": 0.4560810810810811,
+        "normalizedY": 0.27531645569620256,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxa52x",
+        "normalizedX": 0.5855855855855856,
+        "normalizedY": 0.3848892405063291,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxa5q5",
+        "normalizedX": 0.47015765765765766,
+        "normalizedY": 0.44343354430379744,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxa7kv",
+        "normalizedX": 0.5219594594594594,
+        "normalizedY": 0.403876582278481,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxa8oi",
+        "normalizedX": 0.6176801801801802,
+        "normalizedY": 0.5858386075949367,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxa9lq",
+        "normalizedX": 0.34346846846846846,
+        "normalizedY": 0.6095727848101266,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:00:19.580Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/heroes/gaius/combat/long_sword/v7.png": {
+    "path": "/art/heroes/gaius/combat/long_sword/v7.png",
+    "approval": "approved",
+    "eyeYPx": 416,
+    "goreZones": [
+      {
+        "id": "gz_mowxaw5k",
+        "normalizedX": 0.5247747747747747,
+        "normalizedY": 0.14556962025316456,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxawy3",
+        "normalizedX": 0.5641891891891891,
+        "normalizedY": 0.3829113924050633,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxaxef",
+        "normalizedX": 0.46734234234234234,
+        "normalizedY": 0.43829113924050633,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxaxzo",
+        "normalizedX": 0.4346846846846847,
+        "normalizedY": 0.3235759493670886,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxaytj",
+        "normalizedX": 0.6148648648648649,
+        "normalizedY": 0.5739715189873418,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxazfy",
+        "normalizedX": 0.38400900900900903,
+        "normalizedY": 0.5886075949367089,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:00:47.610Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/heroes/gaius/corpse/v1.png": {
+    "path": "/art/heroes/gaius/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped chestnut-brown hair. Several days of chestnut stubble across the jaw. Dark brown eyes, unreadable. This is the single persistent hero named Gaius.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/gaius.png"
+  },
+  "/art/heroes/gaius/corpse/v2.png": {
+    "path": "/art/heroes/gaius/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped chestnut-brown hair. Several days of chestnut stubble across the jaw. Dark brown eyes, unreadable. This is the single persistent hero named Gaius.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/gaius.png"
+  },
+  "/art/heroes/halvar/corpse/v1.png": {
+    "path": "/art/heroes/halvar/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped snow-white hair. Several days of white stubble across the jaw. Cold steel-grey eyes. This is the single persistent hero named Halvar.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/halvar.png"
+  },
+  "/art/heroes/halvar/corpse/v2.png": {
+    "path": "/art/heroes/halvar/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped snow-white hair. Several days of white stubble across the jaw. Cold steel-grey eyes. This is the single persistent hero named Halvar.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/halvar.png"
+  },
+  "/art/heroes/hollan/corpse/v1.png": {
+    "path": "/art/heroes/hollan/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped chestnut-brown hair. Clean-shaven, jawline hard and exposed. Cold steel-grey eyes. This is the single persistent hero named Hollan.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/hollan.png"
+  },
+  "/art/heroes/hollan/corpse/v2.png": {
+    "path": "/art/heroes/hollan/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped chestnut-brown hair. Clean-shaven, jawline hard and exposed. Cold steel-grey eyes. This is the single persistent hero named Hollan.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/hollan.png"
+  },
+  "/art/heroes/lev/corpse/v1.png": {
+    "path": "/art/heroes/lev/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his mid-thirties, strong-jawed and at the apex of his physical power, face unlined. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. Several days of black stubble across the jaw. Pale green eyes with a wolfish steadiness. This is the single persistent hero named Lev.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/lev.png"
+  },
+  "/art/heroes/lev/corpse/v2.png": {
+    "path": "/art/heroes/lev/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his mid-thirties, strong-jawed and at the apex of his physical power, face unlined. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. Several days of black stubble across the jaw. Pale green eyes with a wolfish steadiness. This is the single persistent hero named Lev.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/lev.png"
+  },
+  "/art/heroes/marik/corpse/v1.png": {
+    "path": "/art/heroes/marik/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. A short, well-trimmed black beard. Dark brown eyes, unreadable. This is the single persistent hero named Marik.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/marik.png"
+  },
+  "/art/heroes/marik/corpse/v2.png": {
+    "path": "/art/heroes/marik/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. A short, well-trimmed black beard. Dark brown eyes, unreadable. This is the single persistent hero named Marik.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/marik.png"
+  },
+  "/art/heroes/rurik/corpse/v1.png": {
+    "path": "/art/heroes/rurik/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped sun-bleached blond hair. Clean-shaven, jawline hard and exposed. Amber-gold eyes, almost feline. This is the single persistent hero named Rurik.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/rurik.png"
+  },
+  "/art/heroes/rurik/corpse/v2.png": {
+    "path": "/art/heroes/rurik/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped sun-bleached blond hair. Clean-shaven, jawline hard and exposed. Amber-gold eyes, almost feline. This is the single persistent hero named Rurik.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/rurik.png"
+  },
+  "/art/heroes/selek/corpse/v1.png": {
+    "path": "/art/heroes/selek/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. Clean-shaven, jawline hard and exposed. Dark brown eyes, unreadable. This is the single persistent hero named Selek.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/selek.png"
+  },
+  "/art/heroes/selek/corpse/v2.png": {
+    "path": "/art/heroes/selek/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. In his late twenties, lean-featured and sharp-eyed. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. Clean-shaven, jawline hard and exposed. Dark brown eyes, unreadable. This is the single persistent hero named Selek.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/selek.png"
+  },
+  "/art/heroes/seward/corpse/v1.png": {
+    "path": "/art/heroes/seward/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped deep auburn-red hair. Several days of auburn stubble across the jaw. Pale green eyes with a wolfish steadiness. This is the single persistent hero named Seward.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/seward.png"
+  },
+  "/art/heroes/seward/corpse/v2.png": {
+    "path": "/art/heroes/seward/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Close-cropped deep auburn-red hair. Several days of auburn stubble across the jaw. Pale green eyes with a wolfish steadiness. This is the single persistent hero named Seward.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/seward.png"
+  },
+  "/art/heroes/talon/corpse/v1.png": {
+    "path": "/art/heroes/talon/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. Clean-shaven, jawline hard and exposed. Amber-gold eyes, almost feline. This is the single persistent hero named Talon.\n\n[POSE] Character lying flat on back on stone or earth, eyes closed, mouth slightly slack, arms loose at sides or one across the chest. NO weapon visible (no fallen sword, no shield, no scabbard). NO blood unless explicitly tagged death-by-blade. Same Identity Block as the living sprite (do not regenerate face). Frank Frazetta painterly style. White studio backdrop. Full-body, top-down 3/4 angle so the head, chest, and feet are all readable.\n\nComposition: 3:4 portrait aspect ratio, pure white studio backdrop, cleanly isolated from any environment, no background elements. TOP-DOWN 3/4 ANGLE — the camera looks down at the body from above and slightly off-axis so the head, chest, and feet are all readable in the same frame. The body lies flat on stone or earth. The figure occupies approximately 80% of the horizontal frame width with the head near the top edge and the feet near the bottom. Even, soft studio lighting with no harsh shadows.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/talon.png"
+  },
+  "/art/heroes/talon/corpse/v2.png": {
+    "path": "/art/heroes/talon/corpse/v2.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Photorealistic painted-realism male warrior from Living Eamon, in the spirit of Frank Frazetta and Gerald Brom. Heavily-muscled Conan-proportioned build: broad shoulders, thick chest and trapezius, powerful arms with defined brachialis and deltoids, chiseled abdominals, muscular thighs and calves. Approximately 6'2\" tall, athletic warrior silhouette. Clothed only in a dark leather loincloth, bare-chested and fully barefoot (no shoes, no sandals, no footwear of any kind), with torso and limbs exposed. Past forty, grey-threaded and strong-featured, face carrying the authority of long experience. Olive-toned Mediterranean skin, warm and sun-touched. Shaved bald, scalp bare and sun-darkened. Clean-shaven, jawline hard and exposed. Amber-gold eyes, almost feline. This is the single persistent hero named Talon.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/heroes/talon.png"
+  },
+  "/art/npcs/bandit_blade/corpse/v1.png": {
+    "path": "/art/npcs/bandit_blade/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "A cutthroat with hard eyes and a thin scar along the jaw, leather and chain over a black quilted gambeson. He looks like he's done this enough times to enjoy it.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/bandit_blade/master/v1.png"
+  },
+  "/art/npcs/bandit_blade/master/v1.png": {
+    "path": "/art/npcs/bandit_blade/master/v1.png",
+    "approval": "approved",
+    "eyeYPx": 467,
+    "flip": true,
+    "goreZones": [
+      {
+        "id": "gz_mowy1lw1",
+        "normalizedX": 0.4732977303070761,
+        "normalizedY": 0.1698037645174209,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy1mv5",
+        "normalizedX": 0.43991989319092123,
+        "normalizedY": 0.24509411293552263,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy1o5b",
+        "normalizedX": 0.11548731642189586,
+        "normalizedY": 0.32198638366039245,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy1p5f",
+        "normalizedX": 0.8044058744993324,
+        "normalizedY": 0.3452142571085302,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy1qsk",
+        "normalizedX": 0.4546061415220294,
+        "normalizedY": 0.44533440128153784,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy1rs7",
+        "normalizedX": 0.6855807743658211,
+        "normalizedY": 0.6904285142170604,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy1spv",
+        "normalizedX": 0.21829105473965288,
+        "normalizedY": 0.6952342811373649,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:21:49.658Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_blade/master/v2.png": {
+    "path": "/art/npcs/bandit_blade/master/v2.png",
+    "approval": "rejected",
+    "note": "He should be facing toward his opponent not towards the player.",
+    "reviewedAt": "2026-05-08T13:10:59.579Z"
+  },
+  "/art/npcs/bandit_blade/master/v3.png": {
+    "path": "/art/npcs/bandit_blade/master/v3.png",
+    "approval": "approved",
+    "flip": true,
+    "eyeYPx": 455,
+    "goreZones": [
+      {
+        "id": "gz_mowy2q7b",
+        "normalizedX": 0.49268018018018017,
+        "normalizedY": 0.16139240506329114,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy2r84",
+        "normalizedX": 0.47353603603603606,
+        "normalizedY": 0.24208860759493672,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy2u9e",
+        "normalizedX": 0.46677927927927926,
+        "normalizedY": 0.40664556962025317,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy2w3i",
+        "normalizedX": 0.6649774774774775,
+        "normalizedY": 0.6511075949367089,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy2wwp",
+        "normalizedX": 0.32038288288288286,
+        "normalizedY": 0.6542721518987342,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:22:33.865Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_blade/master/v4.png": {
+    "path": "/art/npcs/bandit_blade/master/v4.png",
+    "approval": "rejected",
+    "originalPrompt": "Full-body OIL PAINTING in the classic 1970s-1980s sword-and-sorcery cover style of Frank Frazetta and Gerald Brom — visible painterly brushwork, warm romantic lighting, soft modeling of form, painted edges (NOT crisp lines). The medium is OIL PAINT ON CANVAS — visible brush texture. NOT a photograph, NOT photoreal, NOT a 3D render, NOT CGI, NOT cartoon, NOT cel-shaded, NOT anime, NOT manga, NOT comic-book line-art, NOT vector art.\n\nA LEAN CUTTHROAT MAN in his late twenties, wiry and dangerous —\napproximately 5'10\", lean-muscled but not bulky, the body of a\nknife-fighter who has lived hard. Pale European skin with a faint\ncold-weathered cast (NOT tan, NOT olive, NOT dark — pale and\nweathered). Close-cropped sandy-brown hair, several days of stubble\nacross his jaw. Sharp pale-blue eyes, a thin scar running across\nhis left cheekbone. A snarl curling his lip — bared teeth, the look\nof a man who hurts people for coin. NOT a hero physique, NOT noble —\nthis is a hard-living roadside cutthroat.\n\nHe wears WORN BUFF LEATHER over CHAINMAIL OVER A BLACK QUILTED\nGAMBESON — a sleeveless leather jerkin laced over short-sleeved\nchainmail, the chainmail itself worn over a thick black quilted\ngambeson padding (the black gambeson visible at the cuffs, neckline,\nand skirt edges so no white background bleeds through the metal\nrings). Dark leather breeches, scuffed leather boots to mid-calf.\nA wide leather belt at his waist with a longsword scabbard hanging\nat his left hip, scabbard empty (the sword is drawn — see stance).\n\nHe is in active COMBAT STANCE: his LONGSWORD is DRAWN and held\nFORWARD in MIDDLE GUARD, gripped with his right hand at the hilt,\noff-hand raised palm-out for balance, body bladed at a 45-degree\nangle to the viewer with his left shoulder leading (he faces screen-\nLEFT). Weight on the back foot, knees soft, ready to lunge or parry.\nBlade angled forward toward an unseen opponent ahead. NOT casual,\nNOT a portrait, NOT the sword resting on his shoulder, NOT pointed\nat the ground — he is mid-fight.\n\nThe longsword blade is BURNISHED DARK STEEL — a deep oiled grey-\nblue tone, with a streak of fresh red blood along one edge and small\nsmears of dried blood on the flat. VISIBLY DARKER than the white\nstudio backdrop; never mirror-bright, never silver-white, never\nchromed. The contrast between blade and backdrop must read as a\ndistinct dark shape.\n\nUGLY-AND-MEAN OVERLAY (applies to this bandit on top of all other description above): the face reads as visibly UNPLEASANT and VISIBLY HOSTILE to the viewer. Add at least three of: a broken or previously-broken NOSE crooked off-center; YELLOWED, CHIPPED, or SNAGGLE-TEETH visible when the lip curls; a permanent SCOWL or SNEER; deep facial SCARS or pockmarks; UNWASHED, GREASY hair and skin; a torn or notched EAR; sun-cracked LIPS; deep CROW'S-FEET set in a hard frown. The expression is pure threat — no charm, no nobility, no softness. The eyes read as a man who enjoys hurting people. NOT handsome, NOT heroic, NOT tragic-and-sympathetic, NOT a fallen noble — these are roadside cutthroats whose faces tell their work.\n\n3:4 vertical portrait. Pure clean opaque white (#FFFFFF) studio backdrop filling the entire frame. Full body visible from head to feet, the figure filling 80-87% of the frame vertically with feet at the bottom edge and modest empty white space above the head. Body angled three- quarters toward screen-LEFT (ENEMY orientation, opposing the hero's right-facing ally orientation). Even soft warm studio lighting from the upper-left, no harsh shadows. NO scenery, NO floor, NO ground line, NO shadow under the feet, NO border, NO text, NO other figures.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "note": "facing the player instead of the foe",
+    "reviewedAt": "2026-05-08T13:22:56.669Z"
+  },
+  "/art/npcs/bandit_brute/corpse/v1.png": {
+    "path": "/art/npcs/bandit_brute/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "A heavyset warrior in dirty mail and a half-helm, cheek scarred from old steel. He smells of leather and wet iron.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/bandit_brute/master/v1.png"
+  },
+  "/art/npcs/bandit_brute/master/v11.png": {
+    "path": "/art/npcs/bandit_brute/master/v11.png",
+    "approval": "approved",
+    "eyeYPx": 515,
+    "goreZones": [
+      {
+        "id": "gz_mowy3xen",
+        "normalizedX": 0.615990990990991,
+        "normalizedY": 0.22072784810126583,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy3ycc",
+        "normalizedX": 0.6486486486486487,
+        "normalizedY": 0.27056962025316456,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy40q0",
+        "normalizedX": 0.8524774774774775,
+        "normalizedY": 0.4177215189873418,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy41vs",
+        "normalizedX": 0.8198198198198198,
+        "normalizedY": 0.7064873417721519,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4306",
+        "normalizedX": 0.4774774774774775,
+        "normalizedY": 0.6772151898734177,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy45kv",
+        "normalizedX": 0.6632882882882883,
+        "normalizedY": 0.40901898734177217,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:23:31.032Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_brute/master/v12.png": {
+    "path": "/art/npcs/bandit_brute/master/v12.png",
+    "approval": "approved",
+    "eyeYPx": 909,
+    "goreZones": [
+      {
+        "id": "gz_mowy4owg",
+        "normalizedX": 0.6028490028490029,
+        "normalizedY": 0.3234188034188034,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4pyo",
+        "normalizedX": 0.6324786324786325,
+        "normalizedY": 0.37264957264957266,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4qud",
+        "normalizedX": 0.6609686609686609,
+        "normalizedY": 0.4765811965811966,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4rop",
+        "normalizedX": 0.8353276353276353,
+        "normalizedY": 0.49982905982905984,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4sji",
+        "normalizedX": 0.5333333333333333,
+        "normalizedY": 0.5196581196581197,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4ud3",
+        "normalizedX": 0.4888888888888889,
+        "normalizedY": 0.7254700854700855,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy4va3",
+        "normalizedX": 0.8170940170940171,
+        "normalizedY": 0.7336752136752137,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:24:05.374Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_brute/master/v13.png": {
+    "path": "/art/npcs/bandit_brute/master/v13.png",
+    "approval": "approved",
+    "originalPrompt": "Full-body OIL PAINTING in the classic 1970s-1980s sword-and-sorcery cover style of Frank Frazetta and Gerald Brom — visible painterly brushwork, warm romantic lighting, soft modeling of form, painted edges (NOT crisp lines). The medium is OIL PAINT ON CANVAS — visible brush texture. NOT a photograph, NOT photoreal, NOT a 3D render, NOT CGI, NOT cartoon, NOT cel-shaded, NOT anime, NOT manga, NOT comic-book line-art, NOT vector art.\n\nA HEAVYSET SCARRED WARRIOR MAN in his mid-thirties — broad as an\nox, approximately 6'1\", thick chest, thick shoulders, powerful arms\nand legs. Olive-toned Mediterranean skin (NOT tan in the sunburned\nsense — naturally olive, weathered by years of campaigning). Shaved\nscalp, sun-darkened skin showing on the bare skull. A short black\nbeard streaked with grey. Hard dark-brown eyes, a deep scar running\nfrom his right brow across his nose down to his left cheek. A\nmissing upper-right canine tooth visible when his lip lifts.\n\nHe wears a SHORT-SLEEVED CHAINMAIL HAUBERK OVER A BLACK QUILTED\nGAMBESON — the mail dirty and travel-stained, the black gambeson\npadding visible at the cuffs, neckline, and skirt edges so no white\nbackground bleeds through the rings. He wears a BLACKENED IRON\nHALF-HELM (open-faced, covering the top and back of his skull but\nleaving the face fully visible) — the iron is DARK OXIDIZED\nGREY-BLACK, never polished, never silver-bright, never chrome. A\nDARK BROWN WOOL ARMING CAP is visible underneath the helmet rim at\nhis temples and the back of his neck — the helmet sits on dark\npadding so no white backdrop bleeds through the metal. Heavy leather\nbreeches, scuffed iron-shod boots to mid-calf. A wide leather belt\nat his waist. NO cloak, NO surcoat.\n\nHe is in active COMBAT STANCE: a CONAN-LIKE TWO-HANDED SWORD is\nGRIPPED in BOTH HANDS in a TWO-HANDED MIDDLE GUARD, the BLADE HELD\nOUT IN FRONT of his body parallel to the ground at chest height,\nthe POINT of the blade aimed STRAIGHT TO THE LEFT side of the frame\ntoward an unseen opponent at screen-left. The weapon is a\nHISTORICALLY-PROPORTIONED European two-handed sword in the style of\nthe Robert E. Howard / Frank Frazetta Conan paintings — a long\nstraight DOUBLE-EDGED steel blade roughly four to five feet long but\nonly 2 to 2.5 inches (5–6 cm) WIDE at the base, tapering smoothly\nto a sharp point, with a central fuller running most of its length,\na leather-wrapped two-handed grip, a heavy steel pommel, and a long\nstraight crossguard at the base of the blade. The blade is\nREALISTICALLY SLENDER and gracefully tapered — NOT oversized, NOT a\nslab, NOT anime-thick, NOT comically wide, NOT a giant fantasy\nbuster sword, NOT a manga-style cleaver. The blade and crossguard\nare CLEARLY VISIBLE, SOLID, OPAQUE STEEL — NOT transparent, NOT\ntranslucent, NOT glowing, NOT magical.\n\nBODY ORIENTATION (critical): his entire body is ORIENTED toward the\nLEFT side of the frame. His hips, shoulders, and chest face the left\nedge. His EYES look STRAIGHT TO THE LEFT, locked on the unseen\nopponent at screen-left. His LEAD FOOT (the foot closer to the\nopponent) is his LEFT FOOT, planted forward toward the LEFT edge of\nthe frame; his RIGHT FOOT is the rear foot, planted further to the\nRIGHT, weight loaded low and back. His RIGHT HAND grips the pommel\nof the sword near his right hip; his LEFT HAND grips the blade-end\nof the hilt near the crossguard, extended out toward screen-left.\nThe point of the sword is at the LEFT EDGE of the frame. He is NOT\nfacing the viewer, NOT facing right, NOT in three-quarter portrait —\nhe is in PROFILE-LEANING-LEFT, body bladed toward screen-left,\nweight committed forward toward the unseen left-side opponent.\n\nNOT casual, NOT a portrait, NOT the sword resting on the ground or\nhanging at his side, NOT the sword over his shoulder. NOT a maul,\nNOT a hammer, NOT a club, NOT a polearm, NOT an axe — specifically\na CONAN-LIKE TWO-HANDED STEEL SWORD held forward in middle guard,\npoint aimed at an opponent at screen-left.\n\nFRAMING OVERRIDE for this character: the figure fills only 70-78%\nof the frame vertically (smaller than the other characters because\nhis stance is wider and lower). His ENTIRE BODY from the crown of\nthe helmet at the top to the SOLES of his iron-shod boots at the\nbottom must be FULLY VISIBLE inside the frame, with at least a\nthree-finger-width margin of pure white BELOW his boots and a\ntwo-finger-width margin of pure white above his helmet. Both feet\nand both boots are visible, planted on the white backdrop. NOTHING\nis cropped off the bottom edge — never the boots, never the feet,\nnever the toes. The horizontal blade extending toward screen-left\nmust also fit fully inside the frame; if positioning the blade\nwould push the body outward, render the figure smaller. NEVER crop\nthe blade tip, NEVER crop the pommel, NEVER crop the boots.\n\nThe blade is BURNISHED DARK STEEL — a deep oiled grey-blue tone,\nblacked against rust the way a mercenary keeps a weapon in the\nfield, with a streak of fresh red blood running along one edge and\nsmall smears of dried blood on the flat. The blade is VISIBLY\nDARKER than the white studio backdrop — never mirror-bright, never\nsilver-white, never polished to chromed gleam. The contrast between\nblade and backdrop must be high enough that the eye can read the\nblade as a distinct dark shape against the white.\n\nUGLY-AND-MEAN OVERLAY (applies to this bandit on top of all other description above): the face reads as visibly UNPLEASANT and VISIBLY HOSTILE to the viewer. Add at least three of: a broken or previously-broken NOSE crooked off-center; YELLOWED, CHIPPED, or SNAGGLE-TEETH visible when the lip curls; a permanent SCOWL or SNEER; deep facial SCARS or pockmarks; UNWASHED, GREASY hair and skin; a torn or notched EAR; sun-cracked LIPS; deep CROW'S-FEET set in a hard frown. The expression is pure threat — no charm, no nobility, no softness. The eyes read as a man who enjoys hurting people. NOT handsome, NOT heroic, NOT tragic-and-sympathetic, NOT a fallen noble — these are roadside cutthroats whose faces tell their work.\n\n3:4 vertical portrait. Pure clean opaque white (#FFFFFF) studio backdrop filling the entire frame. Full body visible from head to feet, the figure filling 80-87% of the frame vertically with feet at the bottom edge and modest empty white space above the head. Body angled three- quarters toward screen-LEFT (ENEMY orientation, opposing the hero's right-facing ally orientation). Even soft warm studio lighting from the upper-left, no harsh shadows. NO scenery, NO floor, NO ground line, NO shadow under the feet, NO border, NO text, NO other figures.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "eyeYPx": 465,
+    "goreZones": [
+      {
+        "id": "gz_mowy5h3d",
+        "normalizedX": 0.6013513513513513,
+        "normalizedY": 0.19936708860759494,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy5hzs",
+        "normalizedX": 0.6407657657657657,
+        "normalizedY": 0.26186708860759494,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy5iut",
+        "normalizedX": 0.5045045045045045,
+        "normalizedY": 0.41930379746835444,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy5jr4",
+        "normalizedX": 0.8074324324324325,
+        "normalizedY": 0.3852848101265823,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy5lgw",
+        "normalizedX": 0.45157657657657657,
+        "normalizedY": 0.6875,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy5m4b",
+        "normalizedX": 0.8231981981981982,
+        "normalizedY": 0.7159810126582279,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy5mwx",
+        "normalizedX": 0.6430180180180181,
+        "normalizedY": 0.43829113924050633,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:24:39.873Z",
+    "goreApproved": true
+  },
+  "/art/npcs/bandit_brute/master/v8.png": {
+    "path": "/art/npcs/bandit_brute/master/v8.png",
+    "approval": "rejected",
+    "note": "helmet is transparent",
+    "reviewedAt": "2026-05-08T13:09:07.414Z"
+  },
+  "/art/npcs/bandit_brute/master/v9.png": {
+    "path": "/art/npcs/bandit_brute/master/v9.png",
+    "approval": "approved",
+    "eyeYPx": 449,
+    "goreZones": [
+      {
+        "id": "gz_mowy5zl1",
+        "normalizedX": 0.6058558558558559,
+        "normalizedY": 0.20490506329113925,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy60gy",
+        "normalizedX": 0.6621621621621622,
+        "normalizedY": 0.33860759493670883,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy61tk",
+        "normalizedX": 0.8581081081081081,
+        "normalizedY": 0.4026898734177215,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy6377",
+        "normalizedX": 0.5213963963963963,
+        "normalizedY": 0.6075949367088608,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy63ui",
+        "normalizedX": 0.8096846846846847,
+        "normalizedY": 0.6455696202531646,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:25:00.365Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_witch/corpse/v1.png": {
+    "path": "/art/npcs/bandit_witch/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "A robed sorceress, hair bound back tight, a pendant of bone and silver at her throat. The fingers of her free hand trace the start of a sigil along the haft. Her eyes are calm. Her mouth is not.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/bandit_witch/master/v1.png"
+  },
+  "/art/npcs/bandit_witch/master/v1.png": {
+    "path": "/art/npcs/bandit_witch/master/v1.png",
+    "approval": "approved",
+    "eyeYPx": 399,
+    "goreZones": [
+      {
+        "id": "gz_mowy77jf",
+        "normalizedX": 0.4565826330532213,
+        "normalizedY": 0.14453781512605043,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy78fq",
+        "normalizedX": 0.5084033613445378,
+        "normalizedY": 0.22773109243697479,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy7b3f",
+        "normalizedX": 0.5154061624649859,
+        "normalizedY": 0.31848739495798317,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy7bt5",
+        "normalizedX": 0.5070028011204482,
+        "normalizedY": 0.4184873949579832,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy7dd9",
+        "normalizedX": 0.3599439775910364,
+        "normalizedY": 0.6016806722689075,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy7eg6",
+        "normalizedX": 0.6834733893557423,
+        "normalizedY": 0.6243697478991597,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:26:01.554Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_witch/master/v2.png": {
+    "path": "/art/npcs/bandit_witch/master/v2.png",
+    "approval": "approved",
+    "goreZones": [
+      {
+        "id": "gz_mowy95by",
+        "normalizedX": 0.47184684684684686,
+        "normalizedY": 0.17405063291139242,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy968g",
+        "normalizedX": 0.5213963963963963,
+        "normalizedY": 0.2412974683544304,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy971i",
+        "normalizedX": 0.5281531531531531,
+        "normalizedY": 0.34098101265822783,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy983l",
+        "normalizedX": 0.48986486486486486,
+        "normalizedY": 0.4825949367088608,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy99x5",
+        "normalizedX": 0.634009009009009,
+        "normalizedY": 0.6036392405063291,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowy9an6",
+        "normalizedX": 0.38626126126126126,
+        "normalizedY": 0.620253164556962,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:27:30.658Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/bandit_witch/master/v3.png": {
+    "path": "/art/npcs/bandit_witch/master/v3.png",
+    "approval": "rejected",
+    "regenRequested": false,
+    "note": "staff emerges through the palm of her hand. hallucination",
+    "reviewedAt": "2026-05-08T13:32:14.775Z"
+  },
+  "/art/npcs/henchman_brand/corpse/v1.png": {
+    "path": "/art/npcs/henchman_brand/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "There's a calmness to him that reads as either piety or boredom.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/henchman_brand/master/v1.png"
+  },
+  "/art/npcs/henchman_brand/master/v1.png": {
+    "path": "/art/npcs/henchman_brand/master/v1.png",
+    "approval": "approved",
+    "eyeYPx": 349,
+    "goreZones": [
+      {
+        "id": "gz_mowyep7o",
+        "normalizedX": 0.47691247415575466,
+        "normalizedY": 0.11083540115798181,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyeq3f",
+        "normalizedX": 0.48931771192281187,
+        "normalizedY": 0.18196856906534326,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyeqwj",
+        "normalizedX": 0.4603721571330117,
+        "normalizedY": 0.22746071133167908,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyes2w",
+        "normalizedX": 0.44521019986216404,
+        "normalizedY": 0.34987593052109184,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyeu2c",
+        "normalizedX": 0.44245348035837356,
+        "normalizedY": 0.42597187758478083,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyeuuh",
+        "normalizedX": 0.30323914541695385,
+        "normalizedY": 0.608767576509512,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyevik",
+        "normalizedX": 0.6175051688490696,
+        "normalizedY": 0.6352357320099256,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:31:47.462Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/henchman_brand/master/v2.png": {
+    "path": "/art/npcs/henchman_brand/master/v2.png",
+    "approval": "approved",
+    "eyeYPx": 361,
+    "goreZones": [
+      {
+        "id": "gz_mowygjt5",
+        "normalizedX": 0.5281531531531531,
+        "normalizedY": 0.12025316455696203,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowygkw5",
+        "normalizedX": 0.4988738738738739,
+        "normalizedY": 0.20569620253164558,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowygmd8",
+        "normalizedX": 0.4954954954954955,
+        "normalizedY": 0.34968354430379744,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowygo7l",
+        "normalizedX": 0.356981981981982,
+        "normalizedY": 0.5949367088607594,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowygou9",
+        "normalizedX": 0.6362612612612613,
+        "normalizedY": 0.617879746835443,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "goreApproved": true,
+    "reviewedAt": "2026-05-08T13:33:18.742Z",
+    "sizeClass": "C"
+  },
+  "/art/npcs/henchman_brand/master/v3.png": {
+    "path": "/art/npcs/henchman_brand/master/v3.png",
+    "approval": "rejected",
+    "regenRequested": false,
+    "note": "sword is erased",
+    "reviewedAt": "2026-05-08T13:33:37.480Z"
+  },
+  "/art/npcs/henchman_brand/master/v4.png": {
+    "path": "/art/npcs/henchman_brand/master/v4.png",
+    "approval": "approved",
+    "eyeYPx": 427,
+    "goreZones": [
+      {
+        "id": "gz_mowyjkt8",
+        "normalizedX": 0.5033783783783784,
+        "normalizedY": 0.13291139240506328,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyjmc5",
+        "normalizedX": 0.48986486486486486,
+        "normalizedY": 0.23417721518987342,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyjoap",
+        "normalizedX": 0.34684684684684686,
+        "normalizedY": 0.620253164556962,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyjp1x",
+        "normalizedX": 0.6486486486486487,
+        "normalizedY": 0.6123417721518988,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowyjpqg",
+        "normalizedX": 0.48536036036036034,
+        "normalizedY": 0.3947784810126582,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:35:38.792Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/hokas_tokas/corpse/v1.png": {
+    "path": "/art/npcs/hokas_tokas/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Full-body character illustration of a rotund, cheerful medieval innkeeper. Braided beard threaded with tiny silver bells. Warm eyes, ruddy cheeks, thick arms. Wearing a stained leather apron over a linen shirt, sleeves rolled up. Holding a polished tankard. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/hokas_tokas/master/v1.png"
+  },
+  "/art/npcs/vivian/combat/short_sword/v1.png": {
+    "path": "/art/npcs/vivian/combat/short_sword/v1.png",
+    "approval": "approved",
+    "eyeYPx": 263,
+    "goreZones": [
+      {
+        "id": "gz_mowxdr0e",
+        "normalizedX": 0.45095168374816985,
+        "normalizedY": 0.09578207381370826,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxdrr6",
+        "normalizedX": 0.43191800878477304,
+        "normalizedY": 0.14411247803163443,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxdswi",
+        "normalizedX": 0.4612005856515373,
+        "normalizedY": 0.218804920913884,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxdtpf",
+        "normalizedX": 0.3923865300146413,
+        "normalizedY": 0.2508787346221441,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxdx5r",
+        "normalizedX": 0.6734992679355783,
+        "normalizedY": 0.9130052724077329,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxdyjh",
+        "normalizedX": 0.3001464128843338,
+        "normalizedY": 0.22319859402460457,
+        "radius": 0.05,
+        "severity": "splatter"
+      },
+      {
+        "id": "gz_mowxe1be",
+        "normalizedX": 0.4216691068814056,
+        "normalizedY": 0.3976274165202109,
+        "radius": 0.05,
+        "severity": "splatter"
+      }
+    ],
+    "reviewedAt": "2026-05-08T13:04:59.809Z",
+    "goreApproved": true,
+    "sizeClass": "C"
+  },
+  "/art/npcs/vivian/corpse/v1.png": {
+    "path": "/art/npcs/vivian/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "A petite young woman, twenty, all dancer-acrobat lean — bare-armed in a sleeveless black-leather vest cut deep, tight black-leather pants to the ankles, soft black-leather moccasins. Chestnut-auburn hair pulled back in a tight high ponytail. Bright green eyes, slightly upturned at the corners. A fine silver locket at her throat. Quick fingers, quicker eyes. She watches a room the way a thief reads a lock.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/vivian/master/v1.png"
+  },
+  "/art/npcs/vivian/master/v2.png": {
+    "path": "/art/npcs/vivian/master/v2.png",
+    "approval": "approved",
+    "regenRequested": false,
+    "note": "casual stance",
+    "reviewedAt": "2026-05-08T13:41:21.678Z",
+    "eyeYPx": 327,
+    "sizeClass": "C"
+  },
+  "/art/npcs/vivian/master/v5.png": {
+    "path": "/art/npcs/vivian/master/v5.png",
+    "approval": "approved",
+    "regenRequested": false,
+    "note": "casual stance",
+    "reviewedAt": "2026-05-08T13:40:37.832Z",
+    "eyeYPx": 317,
+    "sizeClass": "C"
+  },
+  "/art/npcs/vivian/master/v6.png": {
+    "path": "/art/npcs/vivian/master/v6.png",
+    "approval": "approved",
+    "regenRequested": false,
+    "note": "casual stance",
+    "reviewedAt": "2026-05-08T13:38:59.191Z",
+    "eyeYPx": 325,
+    "sizeClass": "C"
+  },
+  "/art/npcs/zim_the_wizard/corpse/v1.png": {
+    "path": "/art/npcs/zim_the_wizard/corpse/v1.png",
+    "approval": "unreviewed",
+    "originalPrompt": "Full-body character illustration of a young male wizard, tall and slim but healthy-looking. Wearing a dark blue wizard's robe that falls to his ankles, with many small pockets visible. A wide brown leather utility belt at the waist with pouches and small tools. Slightly crooked spectacles. Bright intelligent eyes, friendly helpful expression, slight smile. Holding an open book in one hand. Clean-shaven, short brown hair. Painted in the style of Frank Frazetta. Full body from head to feet, entire figure must be visible including legs and shoes, feet at the bottom edge of the frame. Solid opaque white (#FFFFFF) background filling the entire image. Do not use transparency or checkerboard patterns. No scenery. No floor. No ground. No shadow.\n\n[POSE] DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.\n\n3:4 portrait, white backdrop. Viewer is a standing combatant at the body from 30 feet away so that only the side profile is visible, eye height ~5-6 ft, angled from the side of the body. Body in PROFILE from the side, long axis horizontal. Curled body anchored to the lower 20% of the frame, with empty white above. ONE figure only.",
+    "promptRulesSnapshotId": "2026-05-08-001",
+    "sizeClass": "C",
+    "isCorpse": true,
+    "livingSpriteRef": "/art/npcs/zim_the_wizard/master/v1.png"
+  }
+}

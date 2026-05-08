@@ -24,6 +24,7 @@ import { applyEffect } from "./effects";
 import { getRoom } from "../adventures/registry";
 import type { InvokeOutcome, ReagentId, Spell } from "./types";
 import { CIRCLE_NARRATIVE_WARNING } from "./types";
+import { formatInterruptFizzle } from "../combat/zoneNarration";
 
 export interface InvokeResult {
   outcome: InvokeOutcome;
@@ -63,6 +64,19 @@ export function handleInvoke(state: WorldState, args: string): InvokeResult {
   const known = state.player.knownCircles ?? [];
   if (!known.includes(spell.circle)) {
     return { outcome: { kind: "circle-locked", spell }, state };
+  }
+
+  // 1a. Cast-interrupt gate — same rule as CAST. If the player's
+  //     combat-combatant just took a critical / severed_artery /
+  //     crushed_windpipe / silenced hit, the Words can't form. Mana
+  //     + reagents stay untouched (this is the "voice cracks due to X"
+  //     fizzle, not a normal failed invocation). Out-of-combat INVOKE
+  //     skips this gate entirely — there's no interrupt state outside
+  //     a fight.
+  const playerCombatant = state.player.activeCombat?.playerCombatant;
+  const interruptReason = playerCombatant?.interruptedSinceLastTurn ?? null;
+  if (interruptReason) {
+    return { outcome: { kind: "interrupt-fizzle", spell, reason: interruptReason }, state };
   }
 
   // 2. Mana gate
@@ -230,6 +244,20 @@ export function composeInvokeResponse(outcome: InvokeOutcome): string {
       const { spell, missing } = outcome;
       const labels = missing.map(reagentLabel).join(", ");
       return `The Words shape themselves on the air, but the Art will have more than syllables. ${spell.name} hungers for ${labels}, and your hand finds no such things to feed it. Sulfur clings briefly to the room; the gathered intent dissipates, unblooded.`;
+    }
+
+    case "interrupt-fizzle": {
+      // CAST + INVOKE share `formatInterruptFizzle` — see
+      // `lib/combat/zoneNarration.ts`. INVOKE always speaks in second-
+      // person ("Your voice cracks..."), since it's player-only today.
+      // casterGender is unused on the second-person branch.
+      return formatInterruptFizzle({
+        casterName: "you",
+        spellLabel: outcome.spell.name,
+        reason: outcome.reason,
+        perspective: "second",
+        mode: "fizzle",
+      });
     }
 
     case "no-target": {

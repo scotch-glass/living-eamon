@@ -9,7 +9,7 @@
 import type { NPCBodyType } from "./npcBodyType";
 import type { CreatureKind } from "./gameState";
 import type { Room } from "./roomTypes";
-import type { BodyZone, NPCCombatProfile } from "./combatTypes";
+import type { BodyZone, NPCCombatProfile } from "./combat/types";
 
 export type { NPCBodyType };
 
@@ -56,6 +56,9 @@ export interface NPC {
    *  Defaults to "medium" (human-sized) when omitted. Use "small"
    *  for dwarves/gnomes/halflings and "large" for trolls/giants/ogres. */
   spriteSize?: import("./spriteFraming").SpriteSize;
+  /** Canonical 5-class sprite size (A–E). Preferred over `spriteSize`
+   *  when both are present. See `lib/art/sizeClasses.ts`. */
+  sizeClass?: import("./art/sizeClasses").SizeClass;
   /**
    * Sprint 7b.R — mortal/immortal classification for the corpse system.
    * Default when absent = "human" (mortal). Immortals cannot be Resurrected.
@@ -74,6 +77,52 @@ export interface NPC {
   };
   /** Sprint G6 — trade skill that enables NPC-driven residue repair. */
   repairSkills?: ("mason" | "carpenter" | "smith" | "cleaner")[];
+
+  // ── Sprint C2: combat kit (read by lib/combat/engine.ts) ──────────
+  /**
+   * Weapon id this NPC wields in combat. Resolved against
+   * `WEAPON_DATA` for initiative speed + skill family. Defaults to
+   * "unarmed" — most non-hostile NPCs leave this unset and the engine
+   * falls back to the abstract `stats.damage` dice.
+   */
+  weaponId?: string;
+  /** Current mana available at combat start. NPCs without spells leave
+   *  this 0 (or unset). */
+  mana?: number;
+  /** Maximum mana — what HEAL / regen targets clamp to. */
+  maxMana?: number;
+  /** Uppercase canonical spell names this NPC has learned. */
+  knownSpells?: string[];
+  /** Up to 6 spell ids the AI / UI considers during combat. Subset of
+   *  `knownSpells`. AI never reaches outside this list. */
+  combatHotbar?: string[];
+  /** Consumables the NPC can use mid-fight (potions, bandages). The
+   *  engine decrements `quantity` as USE actions resolve. */
+  inventory?: { itemId: string; quantity: number }[];
+  /** PICSSI subset combat reads. `courage` is reserved for future
+   *  flee/morale checks (deferred); `spirituality` scales HEAL output
+   *  per KARMA_SYSTEM.md §2.1. */
+  picssi?: { courage?: number; spirituality?: number };
+  /** AI behavior policy (heal thresholds, target preference, etc.).
+   *  See `lib/npcAi.ts:NpcAiPolicy`. Type imported lazily to avoid
+   *  forcing the whole AI module into the gameData import graph. */
+  aiPolicy?: import("./npcAi").NpcAiPolicy;
+  // ── Sprint C2: hire system seed ────────────────────────────────────
+  /** When true, the NPC can be recruited as a combat ally. Recruit-UI
+   *  is deferred; today only the dev test harness spawns parties from
+   *  hireable entries. */
+  hireable?: boolean;
+  /** Gold cost to recruit. Unused until the hire UI ships; carried so
+   *  hireable NPCs aren't rebuilt later. */
+  hireCost?: number;
+  /** Coarse role tag used by the future hire UI to label slots. */
+  combatRole?: "fighter" | "caster" | "support";
+  /**
+   * Gender — drives pronoun selection in narrative templates. Howard-canon
+   * corpus is binary: every named character is "male" or "female". Omitting
+   * defaults the runtime to "male" at the combatant builder layer.
+   */
+  gender?: "male" | "female";
 }
 
 export interface Item {
@@ -608,6 +657,187 @@ export const NPCS: Record<string, NPC> = {
     stats: { hp: 18, armor: 0, damage: "1d3" },
     repairSkills: ["cleaner"],
     portraitPrompt: "Portrait of a slight quiet Aquilonian cleaning man in his thirties. Olive skin, dark eyes, neutral composed expression, entirely unassuming. Plain work clothes. Interior warm light. Painted in the style of Frank Frazetta. 3:4 portrait.",
+  },
+
+  // ════════════════════════════════════════════════════════════════════
+  // SPRINT C2 — Combat-test party + bandit foes
+  // ════════════════════════════════════════════════════════════════════
+  // Vivian + the henchman caster Brand replace the hardcoded Aldric/Zim
+  // ally fakes that lived in CombatScreen.tsx. Both are dual-class
+  // (longsword + HEAL/BLAST) so every action type can be exercised from
+  // every ally position during testing.
+  //
+  // The three bandits exist as the canonical 3v3 enemy roster: a sword
+  // bandit, a sorceress, and a greatsword-wielding brute. Each carries
+  // healing potions + bandages so the AI's heal-self / bandage-on-bleed
+  // priorities can be observed.
+  //
+  // Sprint C7 forges combat-stance art for every entry below; until then
+  // the existing /api/npc-image route falls back to a placeholder.
+  // ════════════════════════════════════════════════════════════════════
+
+  vivian: {
+    id: "vivian",
+    name: "Vivian",
+    description:
+      "A petite young woman, twenty, all dancer-acrobat lean — bare-armed in a sleeveless black-leather vest cut deep, tight black-leather pants to the ankles, soft black-leather moccasins. Chestnut-auburn hair pulled back in a tight high ponytail. Bright green eyes, slightly upturned at the corners. A fine silver locket at her throat. Short sword in a plain dark scabbard at her left hip; a paired belt rig of dark-brown leather strung with small pouches. Quick fingers, quicker eyes. She watches a room the way a thief reads a lock.",
+    glance: "Vivian — quick-blade thief, dual-class.",
+    greeting: "She looks you over once, top to bottom. \"You hiring? I work for coin and I keep my Word.\"",
+    personality:
+      "Vivian is a hireable companion: thief-mage who fights with a short sword and casts minor magic (HEAL, BLAST). Petite, athletic, dancer-acrobat fast. Calm, professional, slightly cynical. Loyal once paid. Speaks plainly, never courtly. Will not abandon a fight she's been paid to finish unless explicitly released. Canonical identity locked at `public/art/npcs/vivian/master/_prompt.txt` — never re-roll.",
+    isHostile: false,
+    bodyType: "humanoid",
+    stats: { hp: 35, armor: 2, damage: "1d6+1" },
+    weaponId: "short_sword",
+    mana: 18,
+    maxMana: 18,
+    knownSpells: ["HEAL", "BLAST", "SPEED", "HASTE", "CLEANSE", "DAYLIGHT"],
+    combatHotbar: ["HEAL", "BLAST", "SPEED", "HASTE", "CLEANSE", "DAYLIGHT"],
+    // Full assortment of consumables so every potion + bandage type
+    // can be tested in combat from her slot in the test arena.
+    inventory: [
+      { itemId: "healing_potion",          quantity: 2 },
+      { itemId: "greater_healing_potion",  quantity: 1 },
+      { itemId: "mana_potion",             quantity: 2 },
+      { itemId: "stamina_brew",            quantity: 1 },
+      { itemId: "fatigue_brew",            quantity: 1 },
+      { itemId: "antidote",                quantity: 1 },
+      { itemId: "strong_antidote",         quantity: 1 },
+      { itemId: "bandage",                 quantity: 3 },
+      { itemId: "tourniquet",              quantity: 1 },
+    ],
+    picssi: { courage: 50, spirituality: 30 },
+    aiPolicy: undefined, // controlled by player; AI policy unused
+    hireable: true,
+    hireCost: 100,
+    combatRole: "fighter",
+    creatureKind: "human",
+    gender: "female",
+  },
+
+  henchman_brand: {
+    id: "henchman_brand",
+    name: "Brand",
+    description:
+      "A wiry man in a dark patched robe over leather, belt-pouches stuffed with mandrake and sulfurous ash, a longsword belted at his hip. There's a calmness to him that reads as either piety or boredom. The fingers of his offhand are stained from reagent work; the calluses on his sword hand match the ones on his book hand.",
+    glance: "Brand — sword-and-spell hireable.",
+    greeting: "\"Brand,\" he says, watching the room more than you. \"Steel and Words both. Gold first, blood after.\"",
+    personality:
+      "Brand is a hireable companion: dual-class fighter-mage (HEAL, BLAST). Quiet, unpretentious, surprisingly steady under fire. Speaks in clipped sentences. Will heal allies before himself, in keeping with mercenary discipline.",
+    isHostile: false,
+    bodyType: "humanoid",
+    stats: { hp: 35, armor: 3, damage: "1d8+1" },
+    weaponId: "long_sword",
+    mana: 24,
+    maxMana: 24,
+    knownSpells: ["HEAL", "GREATER-HEAL", "BLAST", "FIREBOLT", "WARD", "STEELSKIN", "RESIST", "CLEANSE"],
+    combatHotbar: ["HEAL", "GREATER-HEAL", "FIREBOLT", "WARD", "STEELSKIN", "CLEANSE"],
+    // Full assortment of consumables so every potion + bandage type
+    // can be tested in combat from his slot in the test arena.
+    inventory: [
+      { itemId: "healing_potion",          quantity: 2 },
+      { itemId: "greater_healing_potion",  quantity: 1 },
+      { itemId: "mana_potion",             quantity: 2 },
+      { itemId: "stamina_brew",            quantity: 1 },
+      { itemId: "fatigue_brew",            quantity: 1 },
+      { itemId: "antidote",                quantity: 1 },
+      { itemId: "strong_antidote",         quantity: 1 },
+      { itemId: "bandage",                 quantity: 3 },
+      { itemId: "tourniquet",              quantity: 1 },
+    ],
+    picssi: { courage: 45, spirituality: 25 },
+    aiPolicy: undefined,
+    hireable: true,
+    hireCost: 80,
+    combatRole: "caster",
+    creatureKind: "human",
+    gender: "male",
+  },
+
+  bandit_blade: {
+    id: "bandit_blade",
+    name: "Rurik the Blade",
+    description:
+      "A cutthroat with hard eyes and a thin scar along the jaw, leather and chain over a black quilted gambeson. He holds his longsword forward in a middle guard, off-hand raised palm-out for balance. He looks like he's done this enough times to enjoy it.",
+    glance: "A scarred bandit with a longsword.",
+    greeting: "\"Coin, blade, or both,\" he says, lips twitching. \"Same to me.\"",
+    personality:
+      "Rurik is a hostile bandit. Confident, opportunistic, mocking when winning. Will fight to the death in v1 (no flee).",
+    isHostile: true,
+    bodyType: "humanoid",
+    tags: [],
+    stats: { hp: 40, armor: 3, damage: "1d8+2" },
+    weaponId: "long_sword",
+    mana: 6,
+    maxMana: 6,
+    knownSpells: ["HEAL"], // a single utility spell for testing self-heal AI
+    combatHotbar: ["HEAL"],
+    inventory: [
+      { itemId: "healing_potion", quantity: 1 },
+      { itemId: "mana_potion",    quantity: 1 },
+      { itemId: "bandage",        quantity: 2 },
+    ],
+    picssi: { courage: 35, spirituality: 0 },
+    aiPolicy: { healSelfThreshold: 0.4, healAllyThreshold: 0.3, spellPreference: "balanced", aggression: 4 },
+    creatureKind: "human",
+    gender: "male",
+  },
+
+  bandit_witch: {
+    id: "bandit_witch",
+    name: "Sela the Witch",
+    description:
+      "A robed sorceress, hair bound back tight, a pendant of bone and silver at her throat. She holds a stout iron-shod staff diagonally across her body in a two-handed guard. The fingers of her free hand trace the start of a sigil along the haft. Her eyes are calm. Her mouth is not.",
+    glance: "A robed bandit-sorceress with a staff.",
+    greeting: "\"You will regret this,\" she says — not a threat, a forecast.",
+    personality:
+      "Sela is a hostile bandit-sorceress. Cold, formal, contemptuous of soldiers. Will lead with BLAST while mana lasts and self-heal when bloodied.",
+    isHostile: true,
+    bodyType: "humanoid",
+    tags: ["sorceror"],
+    stats: { hp: 28, armor: 1, damage: "1d6" }, // staff thwack as melee fallback
+    weaponId: "short_sword", // mechanically a 1d6 melee — sprite shows a staff
+    mana: 18,
+    maxMana: 18,
+    knownSpells: ["BLAST", "HEAL"],
+    combatHotbar: ["BLAST", "HEAL"],
+    inventory: [
+      { itemId: "healing_potion", quantity: 1 },
+      { itemId: "mana_potion",    quantity: 2 },
+      { itemId: "bandage",        quantity: 2 },
+    ],
+    picssi: { courage: 30, spirituality: 0 },
+    aiPolicy: { healSelfThreshold: 0.45, healAllyThreshold: 0.35, spellPreference: "offense", aggression: 2 },
+    creatureKind: "human",
+    gender: "female",
+  },
+
+  bandit_brute: {
+    id: "bandit_brute",
+    name: "Korm the Brute",
+    description:
+      "A heavyset warrior in dirty mail and a half-helm, cheek scarred from old steel. He grips a two-handed greatsword across his body in a high diagonal ready-position, the long blade over his shoulder, weight loaded for a downward swing. He smells of leather and wet iron.",
+    glance: "A scarred brute with a two-handed greatsword.",
+    greeting: "He grunts. The greatsword shifts. That is the conversation.",
+    personality:
+      "Korm is a hostile bandit. Slow, patient, terrifying once committed. No spells. Will bandage himself when bleeding rather than retreat.",
+    isHostile: true,
+    bodyType: "humanoid",
+    tags: [],
+    stats: { hp: 55, armor: 5, damage: "2d8+2" },
+    weaponId: "great_sword", // matches sprite — two-handed greatsword
+    mana: 0,
+    maxMana: 0,
+    knownSpells: [],
+    combatHotbar: [],
+    inventory: [
+      { itemId: "healing_potion", quantity: 2 },
+      { itemId: "bandage",        quantity: 3 },
+    ],
+    picssi: { courage: 60, spirituality: 0 },
+    aiPolicy: { healSelfThreshold: 0.35, healAllyThreshold: 0.25, spellPreference: "balanced", aggression: 6 },
+    creatureKind: "human",
+    gender: "male",
   },
 
   training_dummy: {
@@ -1791,7 +2021,7 @@ export {
   getEnemyHitPlayerPool,
   getEnemyMissPlayerPool,
   getPlayerHitEnemyPool,
-} from "./combatNarrationPools";
+} from "./combat/narrationPools";
 
 // ============================================================
 // ADVENTURES

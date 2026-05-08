@@ -28,9 +28,9 @@ import { processInput } from "../../lib/gameEngine";
 import {
   isCombatSpell,
   resolveCombatSpell,
-} from "../../lib/combatEngine";
-import type { ActiveCombatSession, CombatantState } from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
+} from "../../lib/combat/engine";
+import type { ActiveCombatSession, CombatantState } from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
 import type { WorldState } from "../../lib/gameState";
 
 let failures = 0;
@@ -69,7 +69,7 @@ function makeCombatant(
   side: "ally" | "enemy",
   hp: number = 60,
 ): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id: name.toLowerCase().replace(/\s+/g, "_"),
     name,
     hp,
@@ -88,20 +88,23 @@ function makeCombatant(
     agility: 50,
     side,
     position: 1,
-  };
+  });
 }
 
 function makeSession(enemyNpcId: string = "test_bandit"): ActiveCombatSession {
+  const player = makeCombatant("Hero", "ally");
+  const enemy = makeCombatant("bandit", "enemy");
   return {
     enemyNpcId,
     enemyName: "bandit",
     roundNumber: 1,
-    playerCombatant: makeCombatant("Hero", "ally"),
-    enemyCombatant: makeCombatant("bandit", "enemy"),
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers: [],
+    ...makeMultiCombatantFields(player, enemy),
   };
 }
 

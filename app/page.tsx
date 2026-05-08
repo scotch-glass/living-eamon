@@ -1141,12 +1141,6 @@ export default function Home() {
           onIconClick={(item, context, rect) => {
             setActionMenu({ item, context, rect });
           }}
-          // Render 2 extra Dufus-styled sprites next to the main enemy so we
-          // can visualize the 3-enemy layout. Only applies when fighting the
-          // training dummy — real fights stay 1v1 for now.
-          enemyLayoutPreviewCount={
-            player.activeCombat.enemyNpcId === "training_dummy" ? 2 : 0
-          }
           heroGoreSplatters={fromSplatterStates(player.goreSplatters ?? [])}
           onHeroGoreChange={(splatters: BloodSplatter[]) => {
             setWorldState(prev => prev ? {

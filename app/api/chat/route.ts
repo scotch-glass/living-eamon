@@ -290,12 +290,13 @@ export async function POST(request: NextRequest) {
             hp: savedPlayer.hp,
             maxHp: savedPlayer.max_hp,
             strength: savedPlayer.strength,
+            // 2026-05-09: legacy `agility` fallback removed when the
+            // agility → dexterity refactor cleaned up legacy terminology.
+            // Per `project_no_live_game.md`, no production saves exist.
             dexterity:
               typeof (savedPlayer as { dexterity?: number }).dexterity === "number"
                 ? (savedPlayer as { dexterity: number }).dexterity
-                : typeof (savedPlayer as { agility?: number }).agility === "number"
-                  ? (savedPlayer as { agility: number }).agility
-                  : 10,
+                : 10,
             charisma: savedPlayer.charisma,
             maxMana:
               typeof (savedPlayer as { max_mana?: number }).max_mana === "number"

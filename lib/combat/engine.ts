@@ -7,6 +7,7 @@
 import type {
   BodyZone,
   CombatantState,
+  CombatantPosition,
   StrikeResolution,
   CombatRoundResult,
   ActiveStatusEffect,
@@ -48,9 +49,25 @@ function clamp(val: number, min: number, max: number): number {
 }
 
 // ── Evasion (Roll 1) ────────────────────────────────────────
-// Defender agility increases evasion (0.8x).
-// Attacker agility reduces evasion (0.4x) — dexterous fighters hit more often.
+// Defender dexterity increases evasion (0.8x).
+// Attacker dexterity reduces evasion (0.4x) — dexterous fighters hit more often.
 // Both are already reduced by armor dex penalties via buildCombatantFrom*.
+
+// Effective dexterity = base DEX + dynamic buffs that should boost
+// the DEX-derived feel without permanently mutating the stat. Today
+// only HASTE's `haste_extra_action` lifts it (+3 per severity, locked
+// 2026-05-09). Add other DEX-flavored buffs here as they ship.
+//
+// 2026-05-09: agility was merged into dexterity. The encumbrance
+// penalty that used to live on `c.agility` is now baked into
+// `c.dexterity` at combatant build time.
+function effectiveCombatantDex(c: CombatantState): number {
+  let dex = c.dexterity;
+  for (const e of c.activeEffects) {
+    if (e.type === "haste_extra_action") dex += 3 * e.severity;
+  }
+  return dex;
+}
 
 function calculateEvasionChance(
   defender: CombatantState,
@@ -62,11 +79,12 @@ function calculateEvasionChance(
     return 95;
   }
 
-  // Defender's effective agility drives evasion
-  let base = defender.agility * 0.8;
+  // Defender's effective dexterity drives evasion (haste_extra_action
+  // adds +3 per severity).
+  let base = effectiveCombatantDex(defender) * 0.8;
 
-  // Attacker's agility makes them harder to evade
-  base -= attacker.agility * 0.4;
+  // Attacker's effective dexterity makes them harder to evade.
+  base -= effectiveCombatantDex(attacker) * 0.4;
 
   // Sprint C3h (locked 2026-05-06): party-rank position evasion bonus.
   // STRIKE actions only (this function is only called from the strike
@@ -350,9 +368,7 @@ export function resolveStrike(
   const baseDmg = rollWeaponDamage(attacker.weaponId);
   const strengthMod = calculateStrengthMod(attacker.strength);
   const zoneMult = ZONE_DAMAGE_MULTIPLIER[targetZone];
-  // TEMP: force every hit to be a crit for blood/gore testing
-  const isCrit = true;
-  // const isCrit = Math.random() < getCritChance(attacker.weaponSkillValue);
+  const isCrit = Math.random() < getCritChance(attacker.weaponSkillValue);
   let finalDmg = Math.max(1, Math.floor(baseDmg * strengthMod * zoneMult * (isCrit ? 2 : 1)));
 
   // Sprint 7b.buffs — attacker/defender spell-effect modifiers on damage
@@ -360,6 +376,24 @@ export function resolveStrike(
   if (weakenedSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * (1 - 0.2 * weakenedSev)));
   const protAuraSev = defender.activeEffects.reduce((s, e) => e.type === "protection_aura" ? s + e.severity : s, 0);
   if (protAuraSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * (1 - 0.25 * protAuraSev)));
+  // Torso-injury attacker penalties (2026-05-09): pierced_lung is a
+  // major chest wound — −25% outgoing damage per severity. Cracked_ribs
+  // is the milder torso pain — −10% per severity. Stack multiplicatively
+  // with weakened. Both read on the ATTACKER, not the defender.
+  const piercedLungSev = attacker.activeEffects.reduce((s, e) => e.type === "pierced_lung" ? s + e.severity : s, 0);
+  if (piercedLungSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * (1 - 0.25 * piercedLungSev)));
+  const crackedRibsSev = attacker.activeEffects.reduce((s, e) => e.type === "cracked_ribs" ? s + e.severity : s, 0);
+  if (crackedRibsSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * (1 - 0.10 * crackedRibsSev)));
+  // STEELSKIN — passive 4-turn buff that halves all incoming physical
+  // damage. Severity stacks are not multiplicative (a halve is a halve);
+  // any positive severity triggers the 50% cut.
+  const steelskinSev = defender.activeEffects.reduce((s, e) => e.type === "steelskin" ? s + e.severity : s, 0);
+  if (steelskinSev > 0) finalDmg = Math.max(1, Math.floor(finalDmg * 0.5));
+  // WARD — flat 8-damage absorbed per severity (matches the spell's
+  // narrative claim of "+8 armor"). Subtracted AFTER multipliers so it
+  // reads as physical absorption, not a percentage modifier.
+  const wardSev = defender.activeEffects.reduce((s, e) => e.type === "ward" ? s + e.severity : s, 0);
+  if (wardSev > 0) finalDmg = Math.max(1, finalDmg - 8 * wardSev);
   const reactArmSev = defender.activeEffects.reduce((s, e) => e.type === "reactive_armor" ? s + e.severity : s, 0);
   const reflectedDamage = reactArmSev > 0 && finalDmg > 0
     ? Math.max(1, Math.floor(finalDmg * 0.2 * reactArmSev))
@@ -682,9 +716,11 @@ export function buildCombatantFromPlayer(state: WorldState): CombatantState {
     shieldMaxDurability: shieldItem?.stats?.shieldDurability ?? 0,
     weaponId: p.weapon,
     weaponSkillValue: p.weaponSkills[skillKey] ?? 0,
-    dexterity: p.dexterity,
+    // 2026-05-09: agility merged into dexterity. CombatantState.dexterity
+    // is the effective (post-encumbrance) value; PlayerState.dexterity
+    // remains the raw stat. Initiative + evasion both read c.dexterity.
+    dexterity: effectiveAgility, // p.dexterity − cumulative armor / shield penalties
     strength: p.strength,
-    agility: effectiveAgility, // Dexterity minus cumulative armor penalties
     fatigueTier: fatigueLevel(p),
     side: "ally",
     position: 1,
@@ -786,9 +822,10 @@ export function buildCombatantFromNPC(
     weaponId: npcData.weaponId ?? "unarmed", // back-compat: most NPCs abstract weapon via damage dice
     droppedWeaponId: null,
     weaponSkillValue: profile?.weaponSkill ?? 30,
-    dexterity: 10,
+    // 2026-05-09: agility merged into dexterity. NPCCombatProfile now
+    // declares a single `dexterity` stat that maps directly here.
+    dexterity: profile?.dexterity ?? 20,
     strength: 12,
-    agility: profile?.agility ?? 20,
     side: team, // CombatantSide and team are unified for now
     position,
     // ── Sprint C1 multi-combatant fields ────────────────────────────
@@ -850,10 +887,15 @@ export function effectiveCombatSpeed(c: CombatantState): number {
  * deterministic when seeded.
  */
 export function rollInitiativeOrder(combatants: CombatantState[]): string[] {
-  const rolls = combatants.map(c => ({
-    id: c.id,
-    total: randInt(1, 10) + effectiveCombatSpeed(c) - getDexReactionBonus(c.dexterity),
-  }));
+  const rolls = combatants.map(c => {
+    // HASTE's +3 DEX boost lowers the initiative roll (faster), via the
+    // same effectiveCombatantDex helper used by evasion. The helper
+    // reads c.activeEffects so the buff is dynamic.
+    return {
+      id: c.id,
+      total: randInt(1, 10) + effectiveCombatSpeed(c) - getDexReactionBonus(effectiveCombatantDex(c)),
+    };
+  });
   rolls.sort((a, b) => {
     if (a.total !== b.total) return a.total - b.total;
     return a.id < b.id ? -1 : 1;
@@ -894,6 +936,30 @@ export interface ActionResult {
    *  mana, mid-channel, etc). Caller surfaces to the user; session is
    *  returned unchanged in that case. */
   invalid?: string;
+  /**
+   * Set when a CAST or channel-step actually fired the spell's
+   * mechanical effect (i.e., `applyCombatSpellEffect` ran). UI uses
+   * this to gate spell-FX overlays so an interrupt-fizzle or a
+   * multi-turn channel START doesn't trigger the streak/explosion.
+   * Undefined for non-cast actions (strike, use, flee).
+   */
+  firedSpell?: { sourceId: string; targetId: string; spellName: string };
+  /**
+   * Set when a strike action resolves (always populated for kind:"strike",
+   * even on miss). Surfaces the StrikeResolution flags as a single
+   * structured outcome so the UI can drive lunge / dodge / hit-flash /
+   * gore FX without parsing the narrative string. Priority order on
+   * `outcome`: criticalFail > evaded > blocked > armorStopped > crit > hit.
+   * `damage` is the final damage applied to the target (0 on miss/block/
+   * armor-stop), used to drive the floating damage popup.
+   */
+  firedStrike?: {
+    sourceId: string;
+    targetId: string;
+    zone: BodyZone;
+    outcome: "hit" | "crit" | "evaded" | "blocked" | "armorStopped" | "criticalFail";
+    damage: number;
+  };
 }
 
 function findCombatant(session: ActiveCombatSession, id: string): CombatantState | undefined {
@@ -966,6 +1032,64 @@ function deathLines(prev: ActiveCombatSession, next: ActiveCombatSession): strin
   return lines.join("\n");
 }
 
+/**
+ * Phase-1 of Combat Arena v2: when one or more combatants died between
+ * `prev` and `next`, stamp them with the `-1` sentinel position (so the
+ * renderer can fade+shrink them out of the lane) and re-pack the
+ * surviving teammates' positions into a contiguous 1..N. The promotion
+ * is real combat state — `calculateEvasionChance` reads `position`, so
+ * the new front-rank inherits the front-rank evasion penalty automatically.
+ *
+ * Pure; idempotent given a stable input pair. Cross-team isolation: a
+ * death on one team never re-packs the other.
+ */
+export function promoteSurvivorsAfterDeath(
+  prev: ActiveCombatSession,
+  next: ActiveCombatSession,
+): ActiveCombatSession {
+  const newlyDeadIds = new Set<string>();
+  const teamsWithDeaths = new Set<"ally" | "enemy">();
+  for (const after of next.combatants) {
+    const before = prev.combatants.find(p => p.id === after.id);
+    if (!before) continue;
+    // Position guard skips combatants already stamped with the sentinel
+    // by an earlier call (idempotence).
+    if (before.hp > 0 && after.hp <= 0 && after.position >= 1) {
+      newlyDeadIds.add(after.id);
+      teamsWithDeaths.add(after.team);
+    }
+  }
+  if (newlyDeadIds.size === 0) return next;
+
+  // Stamp the dead with the sentinel.
+  let combatants = next.combatants.map(c =>
+    newlyDeadIds.has(c.id) ? { ...c, position: -1 as CombatantPosition } : c,
+  );
+
+  // Re-pack survivors per team that lost a combatant. Ascending position
+  // is preserved so the survivor closest to the front stays front; the
+  // back-rank contracts forward to fill any gap.
+  for (const team of teamsWithDeaths) {
+    const survivors = combatants
+      .filter(c => c.team === team && c.position >= 1)
+      .sort((a, b) => a.position - b.position);
+    const repacked = new Map<string, CombatantPosition>();
+    survivors.forEach((c, i) => repacked.set(c.id, (i + 1) as CombatantPosition));
+    combatants = combatants.map(c =>
+      repacked.has(c.id) ? { ...c, position: repacked.get(c.id)! } : c,
+    );
+  }
+
+  return {
+    ...next,
+    combatants,
+    playerCombatant:
+      combatants.find(c => c.id === next.playerCombatant.id) ?? next.playerCombatant,
+    enemyCombatant:
+      combatants.find(c => c.id === next.enemyCombatant.id) ?? next.enemyCombatant,
+  };
+}
+
 /** True while at least one ally and one enemy are still alive. */
 function combatStillLive(session: ActiveCombatSession): boolean {
   const allies = session.combatants.filter(c => c.team === "ally" && c.hp > 0);
@@ -979,6 +1103,13 @@ function combatStillLive(session: ActiveCombatSession): boolean {
  *  (the locked C3 verification scenarios); the full Circle 2/3 effect
  *  catalogue lives in the legacy `resolveCombatSpell` until a follow-up
  *  sprint ports it. */
+// ⚠️  LORE SYNC REMINDER  ⚠️
+// When you add, remove, or change a spell's mechanic in this switch,
+// you MUST also update its description + effect string in BOTH:
+//   - components/combat/sharedWidgets.tsx (COMBAT_SPELLS list)
+//   - components/CombatScreen.tsx (parallel COMBAT_SPELLS list, v1 UI)
+// The Spellbook UI reads these for player-facing lore. Drift produces
+// "spell description claims X, mechanic does Y" complaints.
 function applyCombatSpellEffect(
   source: CombatantState,
   target: CombatantState,
@@ -1004,7 +1135,11 @@ function applyCombatSpellEffect(
       };
     }
     case "BLAST": {
-      const dmg = randInt(2, 16) + 4; // 6..20 — matches legacy resolveCombatSpell
+      let dmg = randInt(2, 16) + 4; // 6..20 — matches legacy resolveCombatSpell
+      // RESIST — halves incoming elemental damage. BLAST's stormlight
+      // counts as elemental for resistance purposes.
+      const resistSev = target.activeEffects.reduce((s, e) => e.type === "resist_elemental" ? s + e.severity : s, 0);
+      if (resistSev > 0) dmg = Math.max(1, Math.floor(dmg * 0.5));
       const before = target.hp;
       const newTarget = { ...target, hp: Math.max(0, target.hp - dmg) };
       const dealt = before - newTarget.hp;
@@ -1017,46 +1152,20 @@ function applyCombatSpellEffect(
 
     // ── Sprint C6.1 Stage B — Circle 1 ─────────────────────────────
 
-    case "POWER": {
-      // Augury boon — d20 split: hi/lo/middle.
-      const sp = pronounsFor(source.gender);
-      const roll = randInt(1, 20);
-      if (roll >= 15) {
-        const newSource = addStatusEffect(source, {
-          type: "power_boon", zone: "torso", severity: 1, turnsRemaining: 2,
-        });
-        return {
-          source: newSource,
-          target: source.id === target.id ? newSource : target,
-          narrative: `${source.name} prays to the Old Powers, and a strange vigour fills ${sp.possessive} limbs. (+power)`,
-        };
-      }
-      if (roll <= 5) {
-        const newSource = addStatusEffect(source, {
-          type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
-        });
-        return {
-          source: newSource,
-          target: source.id === target.id ? newSource : target,
-          narrative: `${source.name} reaches into the silence between Words; the silence reaches back. (+confusion)`,
-        };
-      }
-      return {
-        source,
-        target,
-        narrative: `${source.name} prays to the Old Powers, but the heavens make no answer.`,
-      };
-    }
-
     case "SPEED": {
-      const sp = pronounsFor(source.gender);
-      const newSource = addStatusEffect(source, {
+      // Buff lands on the TARGET, not the caster — supports both
+      // self-cast (target === source) and ally-cast (Vivian → Gaius).
+      const tp = pronounsFor(target.gender);
+      const newTarget = addStatusEffect(target, {
         type: "haste", zone: "torso", severity: 1, turnsRemaining: 3,
       });
+      const isSelf = source.id === target.id;
       return {
-        source: newSource,
-        target: source.id === target.id ? newSource : target,
-        narrative: `${source.name} weaves the Word of Speed; ${sp.possessive} body remembers wings. (+10 DEX, 3 rounds)`,
+        source: isSelf ? newTarget : source,
+        target: newTarget,
+        narrative: isSelf
+          ? `${source.name} weaves the Word of Speed; ${tp.possessive} body remembers wings. (+10 DEX, 3 rounds)`
+          : `${source.name} weaves the Word of Speed over ${target.name}; ${tp.possessive} body remembers wings. (+10 DEX, 3 rounds)`,
       };
     }
 
@@ -1081,7 +1190,11 @@ function applyCombatSpellEffect(
     }
 
     case "FIREBOLT": {
-      const dmg = randInt(3, 18) + 4; // 3d6+4 ≈ 7..22
+      let dmg = randInt(3, 18) + 4; // 3d6+4 ≈ 7..22
+      // RESIST — halves incoming elemental damage. Fire is the textbook
+      // case for elemental resistance.
+      const resistSev = target.activeEffects.reduce((s, e) => e.type === "resist_elemental" ? s + e.severity : s, 0);
+      if (resistSev > 0) dmg = Math.max(1, Math.floor(dmg * 0.5));
       const before = target.hp;
       const newTarget = { ...target, hp: Math.max(0, target.hp - dmg) };
       const dealt = before - newTarget.hp;
@@ -1093,35 +1206,64 @@ function applyCombatSpellEffect(
     }
 
     case "HASTE": {
-      const newSource = addStatusEffect(source, {
-        type: "haste_extra_action", zone: "torso", severity: 1, turnsRemaining: 1,
+      // Per Scotch 2026-05-09: HASTE grants +1 extra action per round
+      // for the next 2 rounds AND +3 DEX for the duration. Both effects
+      // are bundled into a single `haste_extra_action` status:
+      //   - turn-flow expansion in advanceTurn's round-wrap (extra slot)
+      //   - +3 effective DEX read in calculateEvasionChance and
+      //     getDexReactionBonus (via effectiveCombatantAgility helper)
+      //
+      // The legacy `haste` effect (+10 evasion, "Feet like wings") is
+      // SPEED's payload + the haste-brew flavor; HASTE deliberately does
+      // NOT also stack `haste` so the popup stays clean — one spell,
+      // one effect entry.
+      //
+      // turnsRemaining=3 covers 2 round-wraps post-cast: end-of-round-1
+      // tick → 2 (round 2 gets extra slot), end-of-round-2 tick → 1
+      // (round 3 gets extra slot), end-of-round-3 tick → 0 → removed.
+      const newTarget = addStatusEffect(target, {
+        type: "haste_extra_action", zone: "torso", severity: 1, turnsRemaining: 3,
       });
+      const isSelf = source.id === target.id;
       return {
-        source: newSource,
-        target: source.id === target.id ? newSource : target,
-        narrative: `${source.name} accelerates between heartbeats.`,
+        source: isSelf ? newTarget : source,
+        target: newTarget,
+        narrative: isSelf
+          ? `${source.name} accelerates between heartbeats. (+1 action/round, +3 DEX, 2 rounds)`
+          : `${source.name} weaves the Word of Haste over ${target.name}, who accelerates between heartbeats. (+1 action/round, +3 DEX, 2 rounds)`,
       };
     }
 
     case "WARD": {
-      const newSource = addStatusEffect(source, {
+      // Buff lands on the TARGET. Supports ally-cast.
+      const newTarget = addStatusEffect(target, {
         type: "ward", zone: "torso", severity: 1, turnsRemaining: 3,
       });
+      const isSelf = source.id === target.id;
       return {
-        source: newSource,
-        target: source.id === target.id ? newSource : target,
-        narrative: `A barrier of woven Words rises around ${source.name}. (+8 armor, 3 rounds)`,
+        source: isSelf ? newTarget : source,
+        target: newTarget,
+        narrative: isSelf
+          ? `A barrier of woven Words rises around ${source.name}. (+8 armor, 3 rounds)`
+          : `${source.name} weaves a barrier around ${target.name}. (+8 armor, 3 rounds)`,
       };
     }
 
     case "STEELSKIN": {
-      const newSource = addStatusEffect(source, {
-        type: "steelskin", zone: "torso", severity: 1, turnsRemaining: 5,
+      // Buff lands on the TARGET. Supports ally-cast. Per Scotch
+      // 2026-05-09: 4-turn duration, halves all incoming physical damage
+      // while active (passive — not consumed on first hit). Read in
+      // resolveStrike() at the post-armor damage step.
+      const newTarget = addStatusEffect(target, {
+        type: "steelskin", zone: "torso", severity: 1, turnsRemaining: 4,
       });
+      const isSelf = source.id === target.id;
       return {
-        source: newSource,
-        target: source.id === target.id ? newSource : target,
-        narrative: `${source.name}'s skin remembers iron.`,
+        source: isSelf ? newTarget : source,
+        target: newTarget,
+        narrative: isSelf
+          ? `${source.name}'s skin remembers iron. (physical damage halved, 4 rounds)`
+          : `${target.name}'s skin remembers iron at ${source.name}'s Word. (physical damage halved, 4 rounds)`,
       };
     }
 
@@ -1143,22 +1285,17 @@ function applyCombatSpellEffect(
     }
 
     case "RESIST": {
-      const newSource = addStatusEffect(source, {
+      // Buff lands on the TARGET. Supports ally-cast.
+      const newTarget = addStatusEffect(target, {
         type: "resist_elemental", zone: "torso", severity: 1, turnsRemaining: 3,
       });
+      const isSelf = source.id === target.id;
       return {
-        source: newSource,
-        target: source.id === target.id ? newSource : target,
-        narrative: `${source.name} braces against fire and ice.`,
-      };
-    }
-
-    case "DAYLIGHT": {
-      // No HP changes; flavour only until dark-tagged enemy logic ships.
-      return {
-        source,
-        target,
-        narrative: `${source.name} calls down a stab of midday sun. The light is briefly blinding to all who watch.`,
+        source: isSelf ? newTarget : source,
+        target: newTarget,
+        narrative: isSelf
+          ? `${source.name} braces against fire and ice.`
+          : `${source.name} braces ${target.name} against fire and ice.`,
       };
     }
 
@@ -1348,6 +1485,7 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
         let next: ActiveCombatSession = isSelf
           ? replaceCombatant(session, fx.target)
           : replaceCombatant(replaceCombatant(session, fx.source), fx.target);
+        next = promoteSurvivorsAfterDeath(session, next);
         const deaths = deathLines(session, next);
         let combatOver = !combatStillLive(next);
         if (combatOver) {
@@ -1359,7 +1497,12 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
         }
         next = advanceTurn(next).session;
         const narrative = [fx.narrative, deaths].filter(Boolean).join("\n");
-        return { session: next, narrative, combatOver };
+        return {
+          session: next,
+          narrative,
+          combatOver,
+          firedSpell: { sourceId: source.id, targetId: target.id, spellName: upper },
+        };
       }
 
       // Multi-turn channel — set channelingState; spell fires on the
@@ -1434,6 +1577,7 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
       );
       let next = replaceCombatant(session, updatedSource);
       next = replaceCombatant(next, updatedTarget);
+      next = promoteSurvivorsAfterDeath(session, next);
       const deaths = deathLines(session, next);
       let combatOver = !combatStillLive(next);
       if (combatOver) {
@@ -1445,7 +1589,27 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
       }
       next = advanceTurn(next).session;
       const fullNarrative = [narrative, deaths].filter(Boolean).join("\n");
-      return { session: next, narrative: fullNarrative, combatOver };
+      // Outcome priority: criticalFail > evaded > blocked > armorStopped > crit > hit.
+      // criticalFail can co-occur with evaded (set on fumbled misses); it wins.
+      const strikeOutcome: NonNullable<ActionResult["firedStrike"]>["outcome"] =
+        strike.isCriticalFail ? "criticalFail"
+        : strike.evaded ? "evaded"
+        : strike.blocked ? "blocked"
+        : strike.armorStopped ? "armorStopped"
+        : strike.isCritical ? "crit"
+        : "hit";
+      return {
+        session: next,
+        narrative: fullNarrative,
+        combatOver,
+        firedStrike: {
+          sourceId: source.id,
+          targetId: target.id,
+          zone: action.zone,
+          outcome: strikeOutcome,
+          damage: strike.damageDealt,
+        },
+      };
     }
 
     case "use": {
@@ -1467,6 +1631,16 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
       const selfTarget = source.id === target.id;
       let useNarrative = "";
 
+      // ⚠️  LORE SYNC REMINDER  ⚠️
+      // When you add, remove, or change a consumable's mechanic below,
+      // you MUST also update its lore in lib/items.ts (or wherever the
+      // ITEM registry stores its `description` / `flavor` text). The
+      // item-icon hover, the inventory tooltip, and the apothecary's
+      // shop blurbs all read those descriptions. Mechanic-vs-lore drift
+      // here produces "the bottle promised X, the brew did Y" bug
+      // reports — exactly the class of issue this comment exists to
+      // prevent. Confirm the description matches the heal range,
+      // duration, severity, and effect-strip before merging.
       switch (action.itemId) {
         case "healing_potion": {
           const heal = randInt(15, 25);
@@ -1476,6 +1650,30 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
           useNarrative = selfTarget
             ? `${source.name} drinks a healing potion. (+${gained} HP)`
             : `${source.name} pours a healing potion down ${target.name}'s throat. (+${gained} HP)`;
+          if (selfTarget) {
+            updatedSource = { ...updatedSource, hp: healed.hp };
+            updatedTarget = updatedSource;
+          } else {
+            updatedTarget = healed;
+          }
+          break;
+        }
+        case "greater_healing_potion": {
+          // Mathematically equivalent to the GREATER-HEAL spell's base
+          // heal range — randInt(35, 55) — minus the spell's
+          // spirituality multiplier, since potions are alchemical, not
+          // divinely amplified.
+          const heal = randInt(35, 55);
+          const before = updatedTarget.hp;
+          const healed: CombatantState = {
+            ...updatedTarget,
+            hp: Math.min(updatedTarget.maxHp, updatedTarget.hp + heal),
+          };
+          const gained = healed.hp - before;
+          const tp = pronounsFor(target.gender);
+          useNarrative = selfTarget
+            ? `${source.name} drains the silver-bright brew. The pain ebbs out of ${tp.possessive} bones. (+${gained} HP)`
+            : `${source.name} tilts the silver-bright brew between ${target.name}'s lips. The pain ebbs out of ${tp.possessive} bones. (+${gained} HP)`;
           if (selfTarget) {
             updatedSource = { ...updatedSource, hp: healed.hp };
             updatedTarget = updatedSource;
@@ -1501,20 +1699,141 @@ export function resolveAction(session: ActiveCombatSession, action: CombatAction
           break;
         }
         case "bandage": {
-          // Strip bleed/severed_artery effects on the target.
-          const cleared = updatedTarget.activeEffects.filter(
-            e => e.type !== "bleed" && e.type !== "severed_artery",
-          );
+          // Strips light bleeding only — severed-artery wounds need a
+          // tourniquet. (Refactor 2026-05-08: was previously stripping
+          // both, which left tourniquet pointless. Now bandage =
+          // lighter tool, tourniquet = stronger tool, choice is
+          // meaningful per the item descriptions in lib/gameData.ts.)
+          const hadBleed = updatedTarget.activeEffects.some(e => e.type === "bleed");
+          const cleared = updatedTarget.activeEffects.filter(e => e.type !== "bleed");
           const bandaged: CombatantState = { ...updatedTarget, activeEffects: cleared };
           const sp = pronounsFor(source.gender);
           useNarrative = selfTarget
-            ? `${source.name} binds ${sp.possessive} own wounds.`
-            : `${source.name} binds ${target.name}'s wounds.`;
+            ? hadBleed
+              ? `${source.name} binds ${sp.possessive} wound with clean linen. The blood remembers to stay within.`
+              : `${source.name} winds the linen around ${sp.possessive} arm — a steadying gesture, no wound to close.`
+            : hadBleed
+              ? `${source.name} binds ${target.name}'s wound with clean linen. The blood remembers to stay within.`
+              : `${source.name} winds the linen around ${target.name}'s arm — steadying, no fresh wound to close.`;
           if (selfTarget) {
             updatedSource = { ...updatedSource, activeEffects: cleared };
             updatedTarget = updatedSource;
           } else {
             updatedTarget = bandaged;
+          }
+          break;
+        }
+        case "tourniquet": {
+          // Stops severe bleeding (severed_artery). Strips light bleed
+          // too, since a cinched tourniquet above the wound stops both
+          // — the description in lib/gameData.ts notes the windlass
+          // tightens "until the blood remembers to stay within."
+          const hadSevere = updatedTarget.activeEffects.some(e => e.type === "severed_artery");
+          const hadBleed = updatedTarget.activeEffects.some(e => e.type === "bleed");
+          const cleared = updatedTarget.activeEffects.filter(
+            e => e.type !== "severed_artery" && e.type !== "bleed",
+          );
+          const tied: CombatantState = { ...updatedTarget, activeEffects: cleared };
+          const sp = pronounsFor(source.gender);
+          const tp = pronounsFor(target.gender);
+          useNarrative = selfTarget
+            ? hadSevere || hadBleed
+              ? `${source.name} cinches the leather strap above ${sp.possessive} bleeding wound and turns the windlass. The blood remembers to stay within.`
+              : `${source.name} lifts the leather strap, but ${sp.possessive} bleeding has already settled.`
+            : hadSevere || hadBleed
+              ? `${source.name} cinches the leather strap above ${target.name}'s bleeding wound and turns the windlass. The blood remembers to stay within ${tp.possessive} body.`
+              : `${source.name} lifts the leather strap, but ${target.name}'s bleeding has already settled.`;
+          if (selfTarget) {
+            updatedSource = { ...updatedSource, activeEffects: cleared };
+            updatedTarget = updatedSource;
+          } else {
+            updatedTarget = tied;
+          }
+          break;
+        }
+        case "stamina_brew": {
+          // "Nimble Toes" — alchemical analog of the SPEED Word. Adds
+          // the same `haste` effect (severity 1, 3 rounds) so it
+          // boosts evasion the same way.
+          const sp = pronounsFor(source.gender);
+          const tp = pronounsFor(target.gender);
+          const buffed = addStatusEffect(updatedTarget, {
+            type: "haste", zone: "torso", severity: 1, turnsRemaining: 3,
+          });
+          useNarrative = selfTarget
+            ? `${source.name} drinks down the bitter brown brew. The weariness slides off ${sp.possessive} shoulders like a wet cloak.`
+            : `${source.name} presses the bitter brown cup to ${target.name}'s lips. The weariness slides off ${tp.possessive} shoulders like a wet cloak.`;
+          if (selfTarget) {
+            updatedSource = { ...updatedSource, activeEffects: buffed.activeEffects };
+            updatedTarget = updatedSource;
+          } else {
+            updatedTarget = buffed;
+          }
+          break;
+        }
+        case "fatigue_brew": {
+          // "Silent Shadow" — stronger draught, severity 2, 4 rounds.
+          // The body forgets it is tired, twice over.
+          const sp = pronounsFor(source.gender);
+          const tp = pronounsFor(target.gender);
+          const buffed = addStatusEffect(updatedTarget, {
+            type: "haste", zone: "torso", severity: 2, turnsRemaining: 4,
+          });
+          useNarrative = selfTarget
+            ? `${source.name} drains the thick green draught. ${sp.subject} moves now between heartbeats — feet soundless, hand unerring.`
+            : `${source.name} hands ${target.name} the thick green draught. ${tp.subject} moves now between heartbeats — feet soundless, hand unerring.`;
+          if (selfTarget) {
+            updatedSource = { ...updatedSource, activeEffects: buffed.activeEffects };
+            updatedTarget = updatedSource;
+          } else {
+            updatedTarget = buffed;
+          }
+          break;
+        }
+        case "antidote": {
+          // Cures mild poisoning (severity 1). Stronger venoms shrug
+          // off the white-spider remedy and need the saffron brew.
+          const idx2 = updatedTarget.activeEffects.findIndex(
+            e => e.type === "poison" && e.severity <= 1,
+          );
+          const cleared = idx2 < 0
+            ? updatedTarget.activeEffects
+            : [...updatedTarget.activeEffects.slice(0, idx2), ...updatedTarget.activeEffects.slice(idx2 + 1)];
+          const cured: CombatantState = { ...updatedTarget, activeEffects: cleared };
+          const tp = pronounsFor(target.gender);
+          useNarrative = selfTarget
+            ? idx2 >= 0
+              ? `${source.name} swallows the chalky white suspension. The poison is reasoned with, then escorted out of ${tp.possessive} blood.`
+              : `${source.name} would drink the chalky white suspension, but no venom rides ${tp.possessive} blood.`
+            : idx2 >= 0
+              ? `${source.name} pours the chalky white suspension between ${target.name}'s lips. The poison is reasoned with, then escorted out.`
+              : `${source.name} lifts the chalky white vial, but ${target.name} bears no venom in ${tp.possessive} blood.`;
+          if (selfTarget) {
+            updatedSource = { ...updatedSource, activeEffects: cleared };
+            updatedTarget = updatedSource;
+          } else {
+            updatedTarget = cured;
+          }
+          break;
+        }
+        case "strong_antidote": {
+          // Cures any severity of poisoning. Strips ALL poison entries.
+          const hadPoison = updatedTarget.activeEffects.some(e => e.type === "poison");
+          const cleared = updatedTarget.activeEffects.filter(e => e.type !== "poison");
+          const cured: CombatantState = { ...updatedTarget, activeEffects: cleared };
+          const tp = pronounsFor(target.gender);
+          useNarrative = selfTarget
+            ? hadPoison
+              ? `${source.name} downs the vivid yellow potion. It burns. The deeper venom remembers it does not belong here.`
+              : `${source.name} corks the yellow vial again — no venom in ${tp.possessive} blood to answer for.`
+            : hadPoison
+              ? `${source.name} forces the vivid yellow potion past ${target.name}'s teeth. It burns. The deeper venom remembers it does not belong here.`
+              : `${source.name} hesitates over ${target.name} — no venom in ${tp.possessive} blood to answer for.`;
+          if (selfTarget) {
+            updatedSource = { ...updatedSource, activeEffects: cleared };
+            updatedTarget = updatedSource;
+          } else {
+            updatedTarget = cured;
           }
           break;
         }
@@ -1611,6 +1930,7 @@ export function resolveChannelStep(session: ActiveCombatSession): ActionResult {
   let next: ActiveCombatSession = isSelf
     ? replaceCombatant(session, fx.target)
     : replaceCombatant(replaceCombatant(session, fx.source), fx.target);
+  next = promoteSurvivorsAfterDeath(session, next);
   const deaths = deathLines(session, next);
   let combatOver = !combatStillLive(next);
   if (combatOver) {
@@ -1622,7 +1942,12 @@ export function resolveChannelStep(session: ActiveCombatSession): ActionResult {
   }
   next = advanceTurn(next).session;
   const fullNarrative = [fx.narrative, deaths].filter(Boolean).join("\n");
-  return { session: next, narrative: fullNarrative, combatOver };
+  return {
+    session: next,
+    narrative: fullNarrative,
+    combatOver,
+    firedSpell: { sourceId: source.id, targetId: target.id, spellName: ch.spellName },
+  };
 }
 
 /**
@@ -1680,19 +2005,39 @@ export function advanceTurn(session: ActiveCombatSession): { session: ActiveComb
         if (t.narrative) tickParts.push(t.narrative);
         return t.updatedCombatant;
       });
+      // Build the round's turn order, then expand it: any combatant
+      // with `haste_extra_action` still active (turnsRemaining > 0
+      // post-tick) gets a SECOND slot inserted right after their first.
+      // That's the +1 action/round HASTE grants. With turnsRemaining=3
+      // at cast, this fires for the next 2 round-wraps before tickStatus
+      // expires the effect.
+      const baseOrder = rollInitiativeOrder(ticked.filter(c => c.hp > 0));
+      const expandedOrder: string[] = [];
+      for (const id of baseOrder) {
+        expandedOrder.push(id);
+        const combatant = ticked.find(c => c.id === id);
+        if (
+          combatant?.activeEffects.some(
+            e => e.type === "haste_extra_action" && e.turnsRemaining > 0,
+          )
+        ) {
+          expandedOrder.push(id);
+        }
+      }
       next = {
         ...next,
         combatants: ticked,
         playerCombatant: ticked.find(c => c.id === next.playerCombatant.id) ?? next.playerCombatant,
         enemyCombatant: ticked.find(c => c.id === next.enemyCombatant.id) ?? next.enemyCombatant,
         roundNumber: next.roundNumber + 1,
-        turnOrder: rollInitiativeOrder(ticked.filter(c => c.hp > 0)),
+        turnOrder: expandedOrder,
         currentTurnIdx: 0,
       };
       next = tickBarriers(next);
-      // Bleed/poison ticks can drop a combatant on round-wrap. Emit
-      // death lines BEFORE the round banner so the log reads:
-      //   tick narration → "X falls" → ──ROUND N+1── → initiative.
+      // Bleed/poison ticks can drop a combatant on round-wrap. Promote
+      // survivors BEFORE the death narration so any "front-rank"
+      // narrative built later reads from the post-promotion lane.
+      next = promoteSurvivorsAfterDeath(preTick, next);
       const tickDeaths = deathLines(preTick, next);
       if (tickDeaths) tickParts.push(tickDeaths);
       // Emit the round banner block so the UI can render a separator +
@@ -2184,189 +2529,8 @@ interface SpellContext {
   log: string[];
 }
 
-// ── POWER outcome table ──
-// Weights sum to 100 (read as %). 80% positive, 4% neutral, 16% bad.
-// Each `apply` mutates ctx in place and pushes narration lines.
-
-interface PowerOutcome {
-  weight: number;
-  name: string;
-  tier: "good" | "neutral" | "bad";
-  apply: (ctx: SpellContext) => void;
-}
-
-const POWER_OUTCOMES: PowerOutcome[] = [
-  // ── Good (80%) ──
-  {
-    weight: 16, name: "Bonus Strike", tier: "good",
-    apply: ctx => {
-      const cat = getWeaponCategory(ctx.caster.weaponId);
-      const strike = tryStrikeWithBarriers(ctx.caster, ctx.enemy, "torso", cat, ctx.session.barriers);
-      ctx.enemy = applyStrike(ctx.enemy, strike);
-      ctx.log.push("An unseen hand guides your blade — you strike again before the spell even fades.");
-      ctx.log.push(strike.narrative);
-    },
-  },
-  {
-    weight: 16, name: "Mana Surge", tier: "good",
-    apply: ctx => {
-      const refund = 10;
-      const newMana = Math.min(ctx.state.player.maxMana, ctx.state.player.currentMana + refund);
-      const gained = newMana - ctx.state.player.currentMana;
-      ctx.state = { ...ctx.state, player: { ...ctx.state.player, currentMana: newMana } };
-      ctx.log.push(`The current returns to you, doubled. (+${gained} mana)`);
-    },
-  },
-  {
-    weight: 16, name: "Lesser Healing", tier: "good",
-    apply: ctx => {
-      const heal = randInt(6, 10);
-      ctx.caster = { ...ctx.caster, hp: Math.min(ctx.caster.maxHp, ctx.caster.hp + heal) };
-      ctx.log.push(`A small warmth, gratefully received. (+${heal} HP)`);
-    },
-  },
-  {
-    weight: 10, name: "Quickening", tier: "good",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "haste", zone: "torso", severity: 1, turnsRemaining: 2,
-      });
-      ctx.log.push("Your feet remember wings. (+10 agility for 2 rounds)");
-    },
-  },
-  {
-    weight: 10, name: "Silver Aura", tier: "good",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "shield_aura", zone: "torso", severity: 1, turnsRemaining: 2,
-      });
-      ctx.log.push("A faint silver glow settles on your skin. (+20 cover for 2 rounds)");
-    },
-  },
-  {
-    weight: 6, name: "Untouchable", tier: "good",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "invisible", zone: "torso", severity: 1, turnsRemaining: 1,
-      });
-      ctx.log.push("You are not where they look. The next blow will find no one.");
-    },
-  },
-  {
-    weight: 6, name: "Dread", tier: "good",
-    apply: ctx => {
-      ctx.enemy = addStatusEffect(ctx.enemy, {
-        type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
-      });
-      ctx.log.push(`Something behind ${ctx.enemy.name} screams. They will not strike this round.`);
-    },
-  },
-
-  // ── Bad (16%) — imaginative ──
-  {
-    weight: 3, name: "An Unwanted Vision", tier: "bad",
-    apply: ctx => {
-      // Shows the enemy as a child. −1 Standing — empathy in the killing
-      // moment is socially read as weakness in this culture. (Was Honor
-      // pre-2026-04-29; deprecated to PICSSI Standing per the Honor →
-      // Standing rewire. Sprint 5 may retune to Spirituality / Illumination
-      // if the empathy framing fits those better.)
-      ctx.state = bumpStandingLite(ctx.state, -1);
-      ctx.log.push(
-        "You see your foe as they were as a child — small, frightened of nothing in particular. " +
-        "Your hands shake. (−1 Standing)"
-      );
-    },
-  },
-  {
-    weight: 3, name: "Hiccups", tier: "bad",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "hiccups", zone: "torso", severity: 1, turnsRemaining: 2,
-      });
-      ctx.log.push(
-        "*hic* Something in the spell catches in your throat. *hic* You cannot stop. " +
-        "(−3 agility for 2 rounds. *hic*)"
-      );
-    },
-  },
-  {
-    weight: 2, name: "Glimpse the Void", tier: "bad",
-    apply: ctx => {
-      const dmg = 5;
-      ctx.caster = { ...ctx.caster, hp: Math.max(0, ctx.caster.hp - dmg) };
-      ctx.log.push(
-        `For a heartbeat you see what is on the other side of everything, and it sees you back. ` +
-        `(${dmg} psychic damage)`
-      );
-    },
-  },
-  {
-    weight: 2, name: "Tongue-Tied", tier: "bad",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "tongue_tied", zone: "torso", severity: 1, turnsRemaining: 2,
-      });
-      ctx.log.push(
-        "The Words of Power scramble on your tongue. (No CAST will work for 2 rounds.)"
-      );
-    },
-  },
-  {
-    weight: 2, name: "Numb Hand", tier: "bad",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "numb_hand", zone: "limbs", severity: 1, turnsRemaining: 1,
-      });
-      ctx.log.push(
-        "Your weapon hand goes numb to the elbow. (Next strike will miss.)"
-      );
-    },
-  },
-  {
-    weight: 2, name: "Smelled by Set", tier: "bad",
-    apply: ctx => {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "marked_by_set", zone: "torso", severity: 1, turnsRemaining: 1,
-      });
-      ctx.log.push(
-        "A coiled serpent in your peripheral vision. Something tasted you on the air. " +
-        `(${ctx.enemy.name} sees you clearly — next blow at +15 to hit.)`
-      );
-    },
-  },
-  {
-    weight: 2, name: "Phantom Pain", tier: "bad",
-    apply: ctx => {
-      const dmg = randInt(1, 6);
-      ctx.caster = { ...ctx.caster, hp: Math.max(0, ctx.caster.hp - dmg) };
-      ctx.log.push(
-        `An old wound you do not remember reopens, then closes. (${dmg} HP, no source you can name.)`
-      );
-    },
-  },
-
-  // ── Neutral (4%) ──
-  {
-    weight: 4, name: "Nothing", tier: "neutral",
-    apply: ctx => {
-      ctx.log.push(
-        "Nothing answers. The mana drains from you and goes nowhere. The gamble lost."
-      );
-    },
-  },
-];
-
-const POWER_TOTAL_WEIGHT = POWER_OUTCOMES.reduce((acc, o) => acc + o.weight, 0);
-
-function rollPowerOutcome(): PowerOutcome {
-  let roll = Math.random() * POWER_TOTAL_WEIGHT;
-  for (const o of POWER_OUTCOMES) {
-    roll -= o.weight;
-    if (roll <= 0) return o;
-  }
-  return POWER_OUTCOMES[POWER_OUTCOMES.length - 1]!;
-}
+// POWER spell + outcome table removed 2026-05-09. Replace below if a
+// boon system is reintroduced; until then, the spell is unregistered.
 
 // ── Helpers shared by spell paths ──
 
@@ -2505,16 +2669,9 @@ export function resolveCombatSpell(
         type: "haste", zone: "torso", severity: 1, turnsRemaining: 3,
       });
       outcomeLabel = "Speed";
-      ctx.log.push("The body remembers wings it never had. (+10 agility for 3 rounds.)");
+      ctx.log.push("The body remembers wings it never had. (+10 dexterity for 3 rounds.)");
       break;
     }
-    case "POWER": {
-      const outcome = rollPowerOutcome();
-      outcomeLabel = `Power · ${outcome.name}`;
-      outcome.apply(ctx);
-      break;
-    }
-
     // ── Zim's advanced guild spells ──
 
     case "GREATER-HEAL": {
@@ -2549,7 +2706,7 @@ export function resolveCombatSpell(
         type: "haste", zone: "torso", severity: 1, turnsRemaining: 4,
       });
       outcomeLabel = "Haste";
-      ctx.log.push("The world slows around you. Your hands move before your mind commands them. (+10 agility for 4 rounds)");
+      ctx.log.push("The world slows around you. Your hands move before your mind commands them. (+10 dexterity for 4 rounds)");
       break;
     }
 
@@ -2589,64 +2746,6 @@ export function resolveCombatSpell(
       break;
     }
 
-    case "MIRROR": {
-      ctx.caster = addStatusEffect(ctx.caster, {
-        type: "reactive_armor", zone: "torso", severity: 2, turnsRemaining: 2,
-      });
-      outcomeLabel = "Mirror";
-      ctx.log.push("A reflective haze clings to you. Whatever strikes you sends a fragment of itself back. (reflects 40% damage for 2 rounds)");
-      break;
-    }
-
-    case "BANISH": {
-      const enemyNpc = NPCS[ctx.session.enemyNpcId];
-      const isDark = enemyNpc?.tags?.some(t => t === "undead" || t === "daemon") ?? false;
-      const dmg = isDark ? randInt(25, 45) : randInt(8, 16);
-      const before = ctx.enemy.hp;
-      ctx.enemy = { ...ctx.enemy, hp: Math.max(0, ctx.enemy.hp - dmg) };
-      const dealt = before - ctx.enemy.hp;
-      outcomeLabel = "Banish";
-      ctx.log.push(
-        isDark
-          ? `The Name of Light strikes ${ctx.enemy.name} like a brand. The darkness in it recoils. (${dealt} holy damage)`
-          : `The Word strikes ${ctx.enemy.name}, but this creature knows no exile. (${dealt} damage)`
-      );
-      break;
-    }
-
-    case "INVOKE-LIGHT": {
-      const enemyNpc2 = NPCS[ctx.session.enemyNpcId];
-      const isDark2 = enemyNpc2?.tags?.some(t => t === "undead" || t === "daemon") ?? false;
-      const dmg2 = isDark2 ? randInt(15, 28) : randInt(5, 12);
-      ctx.enemy = { ...ctx.enemy, hp: Math.max(0, ctx.enemy.hp - dmg2) };
-      if (isDark2) {
-        ctx.enemy = addStatusEffect(ctx.enemy, {
-          type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
-        });
-      }
-      outcomeLabel = "Invoke Light";
-      ctx.log.push(
-        isDark2
-          ? `A blazing column of white light falls on ${ctx.enemy.name}. It staggers back, unable to act. (${dmg2} light damage + loses action)`
-          : `A burst of radiance flares through the room. ${ctx.enemy.name} flinches. (${dmg2} light damage)`
-      );
-      break;
-    }
-
-    case "DAYLIGHT": {
-      const enemyNpc3 = NPCS[ctx.session.enemyNpcId];
-      const isDark3 = enemyNpc3?.tags?.some(t => t === "undead" || t === "daemon") ?? false;
-      if (isDark3) {
-        ctx.enemy = addStatusEffect(ctx.enemy, {
-          type: "feared_skip", zone: "torso", severity: 1, turnsRemaining: 1,
-        });
-        ctx.log.push(`Sudden noon-light floods the room. ${ctx.enemy.name} recoils into the far wall, unable to act. (enemy loses action)`);
-      } else {
-        ctx.log.push("Daylight floods the room. Your enemy does not seem to care. (No combat effect against this foe — the spell is wasted in battle.)");
-      }
-      outcomeLabel = "Daylight";
-      break;
-    }
 
     case "CLEANSE": {
       const hadPoison = ctx.caster.activeEffects.some(e => e.type === "poison");

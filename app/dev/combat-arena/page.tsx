@@ -11,12 +11,14 @@
 // scratch so we can iterate on combat features repeatedly.
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CombatArena from "../../../components/CombatArena";
 import {
+  advanceTurn,
+  currentActorId,
   initMultiCombatSession,
   resolveAction,
-  runAiTurns,
+  resolveChannelStep,
   type CombatAction,
 } from "../../../lib/combat/engine";
 import type { ActiveCombatSession, BodyZone } from "../../../lib/combat/types";
@@ -26,6 +28,13 @@ import {
   CANONICAL_PARTY_SPEC,
   ANCIENT_RUIN_BACKGROUND,
 } from "../../../lib/combat/sprites";
+import { DEFAULT_BANDIT_POLICY, pickAction } from "../../../lib/npcAi";
+import { NPCS } from "../../../lib/gameData";
+
+// Cadence between AI actions. Per Scotch 2026-05-08: roughly the speed
+// a human player would take, so the player can read each line of
+// narrative before the next one fires.
+const AI_TURN_DELAY_MS = 5000;
 
 function buildHeroState(): WorldState {
   const base = createInitialWorldState("Gaius");
@@ -38,9 +47,9 @@ function buildHeroState(): WorldState {
       currentMana: 40,
       maxMana: 40,
       knownSpells: [
-        "HEAL", "BLAST", "POWER", "SPEED",
+        "HEAL", "BLAST", "SPEED",
         "GREATER-HEAL", "FIREBOLT", "HASTE", "WARD", "STEELSKIN",
-        "SILENCE", "RESIST", "DAYLIGHT", "CLEANSE",
+        "SILENCE", "RESIST", "CLEANSE",
       ],
       // Stage 5 caps the active hotbar at 4. Until then the engine
       // limit (6) is fine; the UI just exposes a subset.
@@ -128,7 +137,103 @@ export default function CombatArenaPage(): React.JSX.Element {
   // different turn orders and React reports a hydration mismatch.
   const [session, setSession] = useState<ActiveCombatSession | null>(null);
   const [combatLog, setCombatLog] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Most recently resolved offensive-projectile cast — drives the
+  // streak FX in <CombatArena>. Each spell has its own state slot so
+  // the animations don't fight over a shared key. The `key` field is
+  // monotonic per slot so consecutive casts (even same source/target)
+  // re-fire the animation.
+  const [lastBlast, setLastBlast] = useState<{
+    sourceId: string;
+    targetId: string;
+    key: number;
+  } | null>(null);
+  const [lastFirebolt, setLastFirebolt] = useState<{
+    sourceId: string;
+    targetId: string;
+    key: number;
+  } | null>(null);
+  // Strike FX. Outcome ∈ hit/crit/evaded/blocked/armorStopped/criticalFail.
+  // Drives lunge + target reaction + zone-anchored hit-flash + crit gore +
+  // floating damage popup.
+  const [lastStrike, setLastStrike] = useState<{
+    sourceId: string;
+    targetId: string;
+    zone: BodyZone;
+    outcome: "hit" | "crit" | "evaded" | "blocked" | "armorStopped" | "criticalFail";
+    damage: number;
+    key: number;
+  } | null>(null);
+  // One-shot CLEANSE purification flash on the target.
+  const [lastCleanse, setLastCleanse] = useState<{
+    targetId: string;
+    key: number;
+  } | null>(null);
+  const blastKeyRef = useRef(0);
+  const fireboltKeyRef = useRef(0);
+  const strikeKeyRef = useRef(0);
+  const cleanseKeyRef = useRef(0);
+
+  // Trigger the right streak when the engine reports that a spell's
+  // mechanical effect actually fired. Called from both the player
+  // handler and the AI driver — passing `result.firedSpell` from the
+  // engine instead of the raw action means interrupt-fizzles (Gaius
+  // critically hit mid-cast) and multi-turn channel STARTS don't
+  // accidentally trigger the streak.
+  const flagSpellFx = useCallback(
+    (firedSpell: { sourceId: string; targetId: string; spellName: string } | undefined) => {
+      if (!firedSpell) return;
+      const upper = firedSpell.spellName.toUpperCase();
+      if (upper === "BLAST") {
+        blastKeyRef.current += 1;
+        setLastBlast({
+          sourceId: firedSpell.sourceId,
+          targetId: firedSpell.targetId,
+          key: blastKeyRef.current,
+        });
+      } else if (upper === "FIREBOLT") {
+        fireboltKeyRef.current += 1;
+        setLastFirebolt({
+          sourceId: firedSpell.sourceId,
+          targetId: firedSpell.targetId,
+          key: fireboltKeyRef.current,
+        });
+      } else if (upper === "CLEANSE") {
+        cleanseKeyRef.current += 1;
+        setLastCleanse({
+          targetId: firedSpell.targetId,
+          key: cleanseKeyRef.current,
+        });
+      }
+    },
+    [],
+  );
+
+  // Strike FX flag — populated whenever the engine resolves a strike
+  // action, regardless of outcome. CombatArena reads this to drive the
+  // source lunge, target reaction (dodge/knockback/recoil), zone-
+  // anchored hit-flash, and crit gore. Always set when firedStrike is
+  // present (every strike resolution) so misses still trigger the dodge.
+  const flagStrikeFx = useCallback(
+    (firedStrike: {
+      sourceId: string;
+      targetId: string;
+      zone: BodyZone;
+      outcome: "hit" | "crit" | "evaded" | "blocked" | "armorStopped" | "criticalFail";
+      damage: number;
+    } | undefined) => {
+      if (!firedStrike) return;
+      strikeKeyRef.current += 1;
+      setLastStrike({
+        sourceId: firedStrike.sourceId,
+        targetId: firedStrike.targetId,
+        zone: firedStrike.zone,
+        outcome: firedStrike.outcome,
+        damage: firedStrike.damage,
+        key: strikeKeyRef.current,
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     setSession(buildFreshSession(heroState));
@@ -137,7 +242,10 @@ export default function CombatArenaPage(): React.JSX.Element {
   const reset = useCallback(() => {
     setSession(buildFreshSession(heroState));
     setCombatLog([]);
-    setLoading(false);
+    setLastBlast(null);
+    setLastFirebolt(null);
+    setLastStrike(null);
+    setLastCleanse(null);
   }, [heroState]);
 
   const handleCommand = useCallback(
@@ -148,34 +256,103 @@ export default function CombatArenaPage(): React.JSX.Element {
         setCombatLog((log) => [...log, `[unknown command: ${cmd}]`]);
         return;
       }
-      setLoading(true);
-      let next: ActiveCombatSession = session;
-      const newLines: string[] = [];
+      // Player action only — AI turns are driven by the useEffect below
+      // at AI_TURN_DELAY_MS pacing. The legacy "ai_turn" command is kept
+      // as a no-op so any stale callers don't error.
+      if (parsed === "ai_turn") return;
 
-      if (parsed === "ai_turn") {
-        const ai = runAiTurns(next);
-        next = ai.session;
-        if (ai.narrative) newLines.push(...ai.narrative.split("\n").filter(Boolean));
-      } else {
-        const result = resolveAction(next, parsed);
-        if (result.invalid) {
-          newLines.push(`[refused: ${result.invalid}]`);
-        } else {
-          next = result.session;
-          if (result.narrative) newLines.push(...result.narrative.split("\n").filter(Boolean));
-          if (!next.finished) {
-            const ai = runAiTurns(next);
-            next = ai.session;
-            if (ai.narrative) newLines.push(...ai.narrative.split("\n").filter(Boolean));
-          }
-        }
+      const result = resolveAction(session, parsed);
+      if (result.invalid) {
+        setCombatLog((log) => [...log, `[refused: ${result.invalid}]`]);
+        return;
       }
-      setSession(next);
-      setCombatLog((log) => [...log, ...newLines].slice(-50));
-      setLoading(false);
+      setSession(result.session);
+      if (result.narrative) {
+        setCombatLog((log) =>
+          [...log, ...result.narrative.split("\n").filter(Boolean)].slice(-50),
+        );
+      }
+      // Only fire FX when the engine confirms the spell actually
+      // landed (i.e., applyCombatSpellEffect ran). Interrupt-fizzles
+      // and multi-turn channel STARTS leave firedSpell undefined.
+      flagSpellFx(result.firedSpell);
+      flagStrikeFx(result.firedStrike);
     },
-    [session],
+    [session, flagSpellFx, flagStrikeFx],
   );
+
+  // ── AI auto-driver ────────────────────────────────────────────
+  //
+  // Watches `session` and runs ONE AI action per AI_TURN_DELAY_MS
+  // whenever the active actor is AI-controlled or mid-channel. Each
+  // step updates `session`, which re-fires this effect; if the next
+  // actor is also AI, another timer is scheduled. Exits naturally
+  // when control returns to a player-controlled non-channeling actor
+  // OR combat ends.
+  //
+  // Fixes the freeze where an AI rolling lowest initiative at session
+  // start (e.g. Sela tying Vivian at speed 2) had no trigger to act.
+  // Per Scotch 2026-05-08.
+  const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    // Always cancel any pending timer when session changes.
+    if (aiTimerRef.current !== null) {
+      clearTimeout(aiTimerRef.current);
+      aiTimerRef.current = null;
+    }
+    if (!session || session.finished) return;
+
+    const actorId = currentActorId(session);
+    if (!actorId) return;
+    const actor = session.combatants.find((c) => c.id === actorId);
+    if (!actor || actor.hp <= 0) return;
+
+    // Player-controlled non-channeling actor → wait for player input.
+    if (actor.controlledBy === "player" && actor.channelingState === null) return;
+
+    aiTimerRef.current = setTimeout(() => {
+      aiTimerRef.current = null;
+      // Re-validate: state may have changed during the delay (Reset).
+      const stillActive = currentActorId(session);
+      if (stillActive !== actor.id || session.finished) return;
+
+      let r;
+      if (actor.channelingState !== null) {
+        r = resolveChannelStep(session);
+      } else {
+        const policy = (actor.npcId && NPCS[actor.npcId]?.aiPolicy) || DEFAULT_BANDIT_POLICY;
+        r = resolveAction(session, pickAction(actor, session, policy));
+      }
+
+      if (r.invalid) {
+        // Defensive: skip the turn rather than infinite-loop on a bad
+        // pick. Should never fire unless an NPC's hotbar / state is
+        // misconfigured.
+        const advanced = advanceTurn(session).session;
+        setSession(advanced);
+        return;
+      }
+      setSession(r.session);
+      if (r.narrative) {
+        setCombatLog((log) =>
+          [...log, ...r.narrative.split("\n").filter(Boolean)].slice(-50),
+        );
+      }
+      // Engine reports firedSpell only when the spell's mechanical
+      // effect actually ran — interrupt-fizzles and multi-turn channel
+      // starts skip it. Works for both fresh casts and channel-final
+      // resolves (when the original cast happened on a previous turn).
+      flagSpellFx(r.firedSpell);
+      flagStrikeFx(r.firedStrike);
+    }, AI_TURN_DELAY_MS);
+
+    return () => {
+      if (aiTimerRef.current !== null) {
+        clearTimeout(aiTimerRef.current);
+        aiTimerRef.current = null;
+      }
+    };
+  }, [session, flagSpellFx, flagStrikeFx]);
 
   return (
     <div style={{ position: "relative", minHeight: "100vh", background: "#0a0805" }}>
@@ -229,8 +406,12 @@ export default function CombatArenaPage(): React.JSX.Element {
         <CombatArena
           session={session}
           combatLog={combatLog}
-          loading={loading}
+          loading={false}
           onCommand={handleCommand}
+          lastBlast={lastBlast}
+          lastFirebolt={lastFirebolt}
+          lastStrike={lastStrike}
+          lastCleanse={lastCleanse}
         />
       )}
     </div>

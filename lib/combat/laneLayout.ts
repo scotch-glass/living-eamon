@@ -55,9 +55,16 @@ export function layoutLane(
   laneBounds: LaneBounds,
   resolveSizeClass: (c: CombatantState) => SizeClass,
 ): PlacedSlot[] {
+  // Drop the dead-sentinel (position -1, set by `promoteSurvivorsAfterDeath`
+  // in the engine when a combatant's hp transitions to 0). Layout returns
+  // only living combatants in their possibly-promoted positions; the
+  // arena renders dying sprites separately at their cached centerX so
+  // the fade+shrink animation still plays in-place.
+  const living = combatants.filter(c => c.position >= 1);
+
   // Group by size class.
   const byClass = new Map<SizeClass, CombatantState[]>();
-  for (const c of combatants) {
+  for (const c of living) {
     const cls = resolveSizeClass(c);
     const arr = byClass.get(cls) ?? [];
     arr.push(c);
@@ -66,25 +73,34 @@ export function layoutLane(
 
   const out: PlacedSlot[] = [];
   for (const [cls, list] of byClass) {
-    // Each class gets the SAME three fixed spaces. Sort DESCENDING by
-    // `position` so the FRONT rank (position 1, closest to centerline)
-    // lands on the RIGHTMOST space of its lane (space 2). The back rank
-    // (position 3) lands on space 0 (leftmost). For the ally lane this
-    // puts the front rank near the centerline visually; the enemy lane
-    // is mirrored at the call site, so the same logic puts the enemy
-    // front rank near the centerline too. Both parties face each other.
-    const sorted = [...list].sort((a, b) => b.position - a.position);
+    // SPACE INDEX IS DERIVED FROM `position`, NOT from sort order. The
+    // FRONT rank (position 1) always lands on space N-1 (rightmost,
+    // closest to centerline for ally lane). Position 2 → space N-2,
+    // position 3 → space N-3 = 0 (leftmost, back of the lane).
+    //
+    // CRITICAL (2026-05-08, Scotch): "Characters only advance on death.
+    // They never retreat." A naive re-pack from sort-index reassigns
+    // surviving combatants to lower spaceIdx values when someone dies,
+    // which visually pulls them BACKWARD toward the screen edge — the
+    // opposite of what should happen. Anchoring by position keeps every
+    // survivor on their original space; the only visual movement is the
+    // post-death promote that pulls them FORWARD into a vacated slot.
+    //
+    // The enemy lane is mirrored at the call site so the same mapping
+    // puts the enemy front rank closest to the centerline.
 
     // Track how many combatants land on each space; later arrivals get
     // a tiebreak +0.01 zIndex so they sit in front.
-    const spaceOccupants: number[] = [0, 0, 0];
+    const spaceOccupants: number[] = SPACE_OFFSETS.map(() => 0);
 
-    for (let i = 0; i < sorted.length; i++) {
-      const c = sorted[i]!;
-      // Map first three to spaces by descending position; if more than 3
-      // same-class combatants exist (rare), wrap. This is the "deferred"
-      // case.
-      const spaceIdx = i % 3;
+    for (const c of list) {
+      // position 1 → spaceIdx N-1 (front, near centerline)
+      // position N → spaceIdx 0    (back, near screen edge)
+      // Out-of-range positions (extra combatants beyond the supported
+      // 3) wrap to space 0 — the "deferred" case for 4+ same-class
+      // combatants on a side.
+      const rawIdx = SPACE_OFFSETS.length - c.position;
+      const spaceIdx = rawIdx >= 0 && rawIdx < SPACE_OFFSETS.length ? rawIdx : 0;
       const offset = SPACE_OFFSETS[spaceIdx]!;
       const centerXPx = offset * laneBounds.widthPx;
       const tiebreak = spaceOccupants[spaceIdx]! * 0.01;

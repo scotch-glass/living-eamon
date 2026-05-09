@@ -63,7 +63,7 @@ function makeFighter(
     zones: createEmptyBodyArmorMap(),
     weaponId: "long_sword",
     weaponSkillValue: 50,
-    dexterity: 10, strength: 10, agility: 10,
+    dexterity: 10, strength: 10,
     position: 1,
     mana: 12, maxMana: 12,
     ...opts,
@@ -105,7 +105,7 @@ caseName("Single AI actor → loop runs one action, pointer advances to player",
   // Heavily-skilled AI vs unarmored hero ensures the strike does
   // *something* visible (hits or misses, but loop runs). Hero HP set
   // high enough that no single long_sword crit can end the fight.
-  const hero = makeFighter("hero", "ally", "player", { hp: 200, maxHp: 200, agility: 0 });
+  const hero = makeFighter("hero", "ally", "player", { hp: 200, maxHp: 200, dexterity: 0 });
   const enemy = makeFighter("rurik", "enemy", "ai", {
     weaponSkillValue: 200, weaponId: "long_sword",
   });
@@ -121,7 +121,7 @@ caseName("Two AI actors in a row → loop runs both, stops at player", () => {
   // otherwise the loop occasionally ends with combatOver=true and the
   // pointer parked on the killing actor's slot rather than reaching hero.
   const hero = makeFighter("hero", "ally", "player", {
-    hp: 200, maxHp: 200, weaponId: "long_sword", agility: 10,
+    hp: 200, maxHp: 200, weaponId: "long_sword", dexterity: 10,
   });
   const enemyA = makeFighter("rurik", "enemy", "ai", { weaponSkillValue: 200 });
   const enemyB = makeFighter("korm", "enemy", "ai", { weaponSkillValue: 200 });
@@ -152,7 +152,7 @@ caseName("Channeling AI actor at head → loop runs resolveChannelStep, advances
 });
 
 caseName("Combat-over short-circuits the loop", () => {
-  const hero = makeFighter("hero", "ally", "player", { hp: 1, maxHp: 50, agility: 0 });
+  const hero = makeFighter("hero", "ally", "player", { hp: 1, maxHp: 50, dexterity: 0 });
   const brute = makeFighter("korm", "enemy", "ai", {
     weaponId: "great_sword", weaponSkillValue: 200,
   });
@@ -184,7 +184,7 @@ caseName("Player-controlled ally that's also AI-driven → loop treats controlle
   const henchman = makeFighter("brand", "ally", "ai", {
     weaponId: "long_sword", weaponSkillValue: 200,
   });
-  const enemy = makeFighter("rurik", "enemy", "ai", { agility: 0 });
+  const enemy = makeFighter("rurik", "enemy", "ai", { dexterity: 0 });
   const session = makeSession([hero, henchman, enemy], ["brand", "rurik", "hero"], 0);
   const r = runAiTurns(session);
   // After brand + rurik act, control should return to hero.

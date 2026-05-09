@@ -95,7 +95,6 @@ function mockCombatant(side: "ally" | "enemy", id: string, name: string): Combat
     weaponSkillValue: 30,
     dexterity: 10,
     strength: 10,
-    agility: 10,
     side,
     position: 1,
   });

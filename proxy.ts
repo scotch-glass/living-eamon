@@ -37,7 +37,10 @@ export async function middleware(request: NextRequest) {
       pathname === "/api/sprite-metadata" ||
       pathname === "/api/sprite-regen" ||
       pathname === "/api/sprite-touchup" ||
-      pathname === "/api/prompt-rules") &&
+      pathname === "/api/prompt-rules" ||
+      // /dev/combat-arena fetches painted potion / bandage icons via
+      // ItemIcon. Same NODE_ENV gate so this doesn't leak past staging.
+      pathname === "/api/item-icon") &&
       process.env.NODE_ENV !== "production") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/chat") ||

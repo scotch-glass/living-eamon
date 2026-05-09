@@ -368,7 +368,7 @@ function composeEffectLine(effect: import("./types").EffectResult): string | nul
     // Sprint 7b.buffs
     case "strength-applied":
       return `**Your arms fill with a power they did not have before.** (${effect.delta} STR; ${effect.turnsGranted} turns)`;
-    case "agility-applied":
+    case "dexterity-applied":
       return `**Your limbs quicken — the weight of the world shifts.** (${effect.delta} DEX; ${effect.turnsGranted} turns)`;
     case "protection-applied":
       return `**A warding gathers around your body, cool and implacable.** (${effect.turnsGranted} turns; −25% incoming damage)`;

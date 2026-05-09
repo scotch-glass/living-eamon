@@ -181,7 +181,7 @@ export type EffectResult =
   | { kind: "poison-applied"; targetName: string; severity: number; damagePerTurn: number }
   // Sprint 7b.buffs
   | { kind: "strength-applied"; turnsGranted: number; delta: number }
-  | { kind: "agility-applied"; turnsGranted: number; delta: number }
+  | { kind: "dexterity-applied"; turnsGranted: number; delta: number }
   | { kind: "protection-applied"; turnsGranted: number }
   | { kind: "reactive-armor-applied"; turnsGranted: number }
   | { kind: "night-sight-applied"; turnsGranted: number }

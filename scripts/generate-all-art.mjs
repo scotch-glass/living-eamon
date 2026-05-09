@@ -138,7 +138,7 @@ const ITEMS = [
 
   { id: 3851, name: "Heal Potion", description: "A small rounded glass potion bottle filled with bright red liquid. Round flask shape with a short neck and cork stopper. The liquid is vivid blood-red, glowing slightly. Glass highlights on the bottle surface." },
   { id: 3847, name: "Cure Potion", description: "A small rounded glass potion bottle filled with yellow-green liquid. Same bottle shape as heal potion. Vivid yellow-green, slightly murky." },
-  { id: 3849, name: "Agility Potion", description: "A small rounded glass potion bottle filled with bright blue liquid. Same bottle shape. Vivid sky blue." },
+  { id: 3849, name: "Dexterity Potion", description: "A small rounded glass potion bottle filled with bright blue liquid. Same bottle shape. Vivid sky blue." },
   { id: 3853, name: "Strength Potion", description: "A small rounded glass potion bottle filled with orange-red liquid. Same bottle shape. Deep orange with red tints." },
   { id: 3843, name: "Explosion Potion", description: "A small rounded glass potion bottle filled with bright orange liquid with visible bubbles or sparks inside. Orange with yellow glowing highlights suggesting volatile contents." },
   { id: 3845, name: "Poison Potion", description: "A small rounded glass potion bottle filled with dark green murky liquid. Deep forest green, slightly opaque." },

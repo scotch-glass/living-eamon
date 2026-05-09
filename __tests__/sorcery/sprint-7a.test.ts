@@ -319,7 +319,7 @@ caseName("Circle 2 success: warning string fires (no Illumination drain)", () =>
     mana: 50,
     reagents: ALL_REAGENTS,
   });
-  const r = handleInvoke(s0, "Aug Dex"); // Agility (Circle 2)
+  const r = handleInvoke(s0, "Aug Dex"); // Dexterity (Circle 2)
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind === "success") {
     eq(r.outcome.illuminationDrained, 0, "no drain at Circle 2");

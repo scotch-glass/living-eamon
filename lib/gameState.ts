@@ -243,7 +243,7 @@ export type TempModifierStat =
   | "illumination"
   | "charisma"
   | "strength"         // flat bonus added to CombatantState.strength when synced mid-combat
-  | "dexterity"        // flat bonus added to CombatantState.agility when synced mid-combat
+  | "dexterity"        // flat bonus added to CombatantState.dexterity when synced mid-combat
   | "spell_strength"   // % bonus to spell damage/heal magnitude (±33 = Cunning/Feeblemind)
   | "spell_success";   // % bonus to spell-success chance (placeholder; hooked when fizzle lands)
 

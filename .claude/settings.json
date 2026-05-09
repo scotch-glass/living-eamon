@@ -210,7 +210,21 @@
       "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
       "Bash(kill 88769)",
       "Bash(curl -sI \"http://localhost:3000/api/sprite-list\")",
-      "Bash(curl -s \"http://localhost:3000/dev/combat-arena\")"
+      "Bash(curl -s \"http://localhost:3000/dev/combat-arena\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/dev/combat-test)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s \"http://localhost:3000/api/item-icon?id=healing_potion\")",
+      "Bash(curl -s -i \"http://localhost:3000/api/item-icon?id=healing_potion\")",
+      "Bash(curl -s -o /dev/null -w \"arena=%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s -o /dev/null -w \"arena=%{http_code}  combat-test=%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s -o /dev/null -w \"combat-test=%{http_code}\\\\n\" http://localhost:3000/dev/combat-test)",
+      "Bash(curl -s -o /dev/null -w \"arena=%{http_code}  combat-test=%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena http://localhost:3000/dev/combat-test)",
+      "Bash(curl -s -o /dev/null -w \"v1.png=%{http_code}\\\\n\" http://localhost:3000/art/corpse-marker/v1.png)",
+      "Bash(awk 'NR==1,/^\\\\/\\\\/ ── POWER outcome table ──$/{ if \\(/^\\\\/\\\\/ ── POWER outcome table ──$/\\) skip=1; else print } /^\\\\/\\\\/ ── Helpers shared by spell paths ──$/{ skip=0 } !skip && NR>1 { print }' lib/combat/engine.ts)",
+      "Bash(awk 'NR<2475 || NR>2647' lib/combat/engine.ts)",
+      "Bash(awk 'NR<2689 || NR>2746' lib/combat/engine.ts)",
+      "Bash(git -C /Users/joshuamcclure/Desktop/living-eamon log --oneline -1)"
     ],
     "additionalDirectories": [
       "/Users/joshuamcclure/.claude/plans",

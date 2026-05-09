@@ -70,13 +70,13 @@ export const DEFAULT_BANDIT_POLICY: NpcAiPolicy = {
 // Target selection picks the lowest-HP opposing combatant, with `aggression`
 // jitter (0 = always weakest; 10 = uniform random).
 //
-// Spells "offensive" by default: BLAST, FIREBOLT, BANISH. Spells "healing":
-// HEAL, GREATER-HEAL. Buff spells (HASTE, WARD, STEELSKIN, RESIST, MIRROR,
-// CLEANSE, DAYLIGHT, INVOKE-LIGHT, SILENCE, SPEED, POWER) are not chosen
-// by the C4 AI yet — they get cycled in by C5 polish.
+// Spells "offensive" by default: BLAST, FIREBOLT. Spells "healing":
+// HEAL, GREATER-HEAL. Buff spells (HASTE, WARD, STEELSKIN, RESIST,
+// CLEANSE, SILENCE, SPEED) are not chosen by the C4 AI yet — they get
+// cycled in by C5 polish.
 
 const HEAL_SPELLS = new Set(["HEAL", "GREATER-HEAL"]);
-const OFFENSIVE_SPELLS = new Set(["BLAST", "FIREBOLT", "BANISH"]);
+const OFFENSIVE_SPELLS = new Set(["BLAST", "FIREBOLT"]);
 
 function hpRatio(c: CombatantState): number {
   return c.maxHp > 0 ? c.hp / c.maxHp : 0;

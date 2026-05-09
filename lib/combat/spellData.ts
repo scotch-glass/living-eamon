@@ -43,12 +43,11 @@ export interface SpellCombatMetadata {
 // Keys are canonical UPPERCASE spell names matching `combatHotbar`
 // entries on combatants and the existing `resolveCombatSpell` switch.
 export const SPELL_DATA: Record<string, SpellCombatMetadata> = {
-  // ── Combat quartet — Circle 1 utility ──
+  // ── Circle 1 ──
   HEAL:           { manaCost: 4, castSpeed: 2, castTurns: 1, circle: 1 },
   BLAST:          { manaCost: 6, castSpeed: 2, castTurns: 1, circle: 1 },
   SPEED:          { manaCost: 3, castSpeed: 2, castTurns: 1, circle: 1 },
-  POWER:          { manaCost: 5, castSpeed: 2, castTurns: 1, circle: 1 },
-  // ── Zim's expanded curriculum — Circle 2/3 ──
+  // ── Circle 2 ──
   "GREATER-HEAL": { manaCost: 8, castSpeed: 3, castTurns: 1, circle: 2 },
   FIREBOLT:       { manaCost: 6, castSpeed: 3, castTurns: 1, circle: 2 },
   HASTE:          { manaCost: 4, castSpeed: 3, castTurns: 1, circle: 2 },
@@ -56,11 +55,9 @@ export const SPELL_DATA: Record<string, SpellCombatMetadata> = {
   STEELSKIN:      { manaCost: 5, castSpeed: 3, castTurns: 1, circle: 2 },
   SILENCE:        { manaCost: 4, castSpeed: 3, castTurns: 1, circle: 2 },
   RESIST:         { manaCost: 4, castSpeed: 3, castTurns: 1, circle: 2 },
-  DAYLIGHT:       { manaCost: 3, castSpeed: 3, castTurns: 1, circle: 2 },
   CLEANSE:        { manaCost: 4, castSpeed: 3, castTurns: 1, circle: 2 },
-  MIRROR:         { manaCost: 6, castSpeed: 4, castTurns: 1, circle: 3 },
-  BANISH:         { manaCost: 7, castSpeed: 4, castTurns: 1, circle: 3 },
-  "INVOKE-LIGHT": { manaCost: 5, castSpeed: 4, castTurns: 1, circle: 3 },
+  // POWER, DAYLIGHT, MIRROR, BANISH, INVOKE-LIGHT removed 2026-05-09 —
+  // each had a blocker (no functional read of their effect type).
 };
 
 /** Resolve a spell name (any case) to its combat metadata, or null when
@@ -103,6 +100,37 @@ export function isCombatSpell(spellName: string): boolean {
 }
 
 /**
+ * Spells that have a real `case` branch in `applyCombatSpellEffect`
+ * (lib/combat/engine.ts:1041–1226). Casting a spell NOT in this set
+ * burns mana and emits a "(effect deferred)" placeholder narrative
+ * with no mechanical effect — so the Spellbook UI surfaces it as
+ * "not yet" rather than "ready".
+ *
+ * KEEP IN SYNC with the case list in `applyCombatSpellEffect`. The
+ * `combat-ready.test.ts` suite asserts cardinality + that every member
+ * is also in `SUPPORTED_COMBAT_SPELLS` so drift is caught early.
+ */
+export const COMBAT_HANDLER_SPELLS: ReadonlySet<string> = new Set([
+  "HEAL",
+  "BLAST",
+  "SPEED",
+  "GREATER-HEAL",
+  "FIREBOLT",
+  "HASTE",
+  "WARD",
+  "STEELSKIN",
+  "SILENCE",
+  "RESIST",
+  "CLEANSE",
+]);
+
+/** True when the spell has a real engine handler (will land mechanical
+ *  effects on cast). The Spellbook's READY badge keys off this. */
+export function hasCombatHandler(spellName: string): boolean {
+  return COMBAT_HANDLER_SPELLS.has(spellName.toUpperCase());
+}
+
+/**
  * Spells that cause damage or otherwise harm the target. Used by both
  * the engine (to refuse ally→ally hostile actions) and the dev page (to
  * filter the target dropdown to opposing-team only when the chosen
@@ -114,7 +142,6 @@ export function isCombatSpell(spellName: string): boolean {
 export const OFFENSIVE_SPELLS: ReadonlySet<string> = new Set([
   "BLAST",
   "FIREBOLT",
-  "BANISH",
 ]);
 
 /** True when `spellName` is registered AND its target receives damage /

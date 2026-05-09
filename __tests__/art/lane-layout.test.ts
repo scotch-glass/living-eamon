@@ -89,24 +89,48 @@ console.log("[lane-layout] mixed-class independence");
 
 caseName("class A and class C lay out in their own rows (independent spacing)", () => {
   const combatants = [
-    fakeCombatant("wolf", 1),  // class A — only one of this class
-    fakeCombatant("hero", 1),  // class C — front rank
-    fakeCombatant("knight", 2), // class C — back rank (relative to hero)
+    fakeCombatant("wolf", 1),   // class A — front rank
+    fakeCombatant("hero", 1),   // class C — front rank
+    fakeCombatant("knight", 2), // class C — middle rank
   ];
   const cls: Record<string, SizeClass> = { wolf: "A", hero: "C", knight: "C" };
   const placed = layoutLane(combatants, { widthPx: 1000 }, (c) => cls[c.id] ?? "C");
-  // Class A wolf → only one of its class → space 0
+  // Position-anchored mapping: pos 1 → space 2 (front, closest to
+  // centerline), pos 2 → space 1, pos 3 → space 0. Each class gets its
+  // own copy of the 3-space ring; the wolf at position 1 lands on the
+  // class-A space 2 just like the hero lands on the class-C space 2.
   const wolfPlace = placed.find((p) => p.combatant.id === "wolf")!;
-  approx(wolfPlace.centerXPx, 197.5, "wolf on space 0");
+  approx(wolfPlace.centerXPx, 802.5, "wolf (pos 1) on space 2 (front)");
   eq(wolfPlace.zIndex, SIZE_CLASSES.A.spriteZ, "wolf at class-A Z");
-  // Class C: descending sort puts knight (pos 2) at space 0, hero (pos 1)
-  // at space 1 — front rank closer to the centerline (rightmost in lane).
   const knightPlace = placed.find((p) => p.combatant.id === "knight")!;
-  approx(knightPlace.centerXPx, 197.5, "knight (back rank) on space 0");
+  approx(knightPlace.centerXPx, 500, "knight (pos 2) on space 1 (middle)");
   eq(knightPlace.zIndex, SIZE_CLASSES.C.spriteZ, "knight at class-C Z");
   const heroPlace = placed.find((p) => p.combatant.id === "hero")!;
-  approx(heroPlace.centerXPx, 500, "hero (front rank) on space 1");
+  approx(heroPlace.centerXPx, 802.5, "hero (pos 1) on space 2 (front)");
   eq(heroPlace.zIndex, SIZE_CLASSES.C.spriteZ, "hero at class-C Z");
+});
+
+caseName("survivors keep their spaces when a teammate dies (no backward retreat)", () => {
+  // Regression for 2026-05-08: when Brand (pos 3) died, the old layout
+  // re-packed Vivian (pos 2) to space 0, visually pulling her toward
+  // the back of the lane. New behavior: every survivor stays at the
+  // space their position dictates regardless of who else is on the
+  // lane.
+  const fullLane = [fakeCombatant("g", 1), fakeCombatant("v", 2), fakeCombatant("b", 3)];
+  const fullPlaced = layoutLane(fullLane, { widthPx: 1000 }, () => "C");
+  const gFull = fullPlaced.find((p) => p.combatant.id === "g")!;
+  const vFull = fullPlaced.find((p) => p.combatant.id === "v")!;
+
+  // After Brand dies: Vivian and Gaius keep their positions (1 and 2).
+  // The promote-on-death engine logic decides who moves; the layout
+  // just maps position → space.
+  const survivors = [fakeCombatant("g", 1), fakeCombatant("v", 2)];
+  const aliveOnly = layoutLane(survivors, { widthPx: 1000 }, () => "C");
+  const gAlive = aliveOnly.find((p) => p.combatant.id === "g")!;
+  const vAlive = aliveOnly.find((p) => p.combatant.id === "v")!;
+
+  approx(gAlive.centerXPx, gFull.centerXPx, "Gaius (pos 1) stays on space 2");
+  approx(vAlive.centerXPx, vFull.centerXPx, "Vivian (pos 2) stays on space 1");
 });
 
 console.log("[lane-layout] same-class same-space tiebreak");

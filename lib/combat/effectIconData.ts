@@ -119,7 +119,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#f97316",
     animation: "pulse",
     label: "Pierced Lung",
-    description: "Labored breathing. Reduced effectiveness.",
+    description: "Major chest wound. −25% strike damage per severity. Heals slowly without treatment.",
   },
   cracked_ribs: {
     // Cracked bone — two pieces with jagged split
@@ -127,7 +127,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#facc15",
     animation: null,
     label: "Cracked Ribs",
-    description: "Pain on exertion. Each swing costs more.",
+    description: "Torso pain on exertion. −10% strike damage per severity.",
   },
   broken_arm: {
     // Arm bent at wrong angle
@@ -154,7 +154,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#60a5fa",
     animation: "shimmer",
     label: "Haste",
-    description: "+10 agility. Feet like wings.",
+    description: "+10 dexterity. Feet like wings.",
   },
   shield_aura: {
     // Radiant kite shield with emanating lines
@@ -194,7 +194,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#a78bfa",
     animation: "bounce",
     label: "Hiccups",
-    description: "*hic* -3 agility. Cannot be dignified.",
+    description: "*hic* -3 dexterity. Cannot be dignified.",
   },
   tongue_tied: {
     // Knotted tongue glyph
@@ -300,7 +300,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#60a5fa",
     animation: "shimmer",
     label: "Quickened",
-    description: "Time stutters. An extra action beckons.",
+    description: "+1 action per round AND +3 DEX while it holds.",
   },
   ward: {
     // Heater shield with central rune
@@ -308,7 +308,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#a3e635",
     animation: "glow",
     label: "Warded",
-    description: "Woven Words deflect blows. +8 armor while it holds.",
+    description: "Woven Words absorb blows. −8 damage per incoming hit per severity.",
   },
   steelskin: {
     // Diamond plate
@@ -316,7 +316,7 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#9ca3af",
     animation: null,
     label: "Steelskin",
-    description: "Skin remembers iron. The next blow lands half as hard.",
+    description: "Skin remembers iron. ALL physical damage halved while it holds.",
   },
   silenced: {
     // Mouth with a horizontal bar across it
@@ -332,6 +332,6 @@ export const EFFECT_ICON_MAP: Record<StatusEffectType, EffectIconDef> = {
     color: "#84cc16",
     animation: null,
     label: "Elemental Resist",
-    description: "Body refuses fire and ice. Halves elemental damage.",
+    description: "Body refuses fire and stormlight. Halves BLAST and FIREBOLT damage.",
   },
 };

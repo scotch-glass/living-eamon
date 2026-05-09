@@ -62,7 +62,7 @@ function makeFighter(
     zones: createEmptyBodyArmorMap(),
     weaponId: "long_sword",
     weaponSkillValue: 50,
-    dexterity: 10, strength: 10, agility: 10,
+    dexterity: 10, strength: 10,
     position: 1,
     mana: 12, maxMana: 12,
     ...opts,

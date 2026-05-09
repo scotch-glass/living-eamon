@@ -214,21 +214,6 @@ const COMBAT_SPELLS: SpellDef[] = [
     targeting: "enemy",
   },
   {
-    name: "POWER",
-    label: "Power",
-    glyph: "🙏",
-    cost: 5,
-    color: "#a855f7",
-    school: "Augury",
-    effect: "Unpredictable boon",
-    lore:
-      "A bargain prayed upward to a power the caster only half-knows. If the boon arrives — " +
-      "if blessed, it may be an extra strike, mana surge, sudden vigor, momentary invisibility, " +
-      "a divine vision — but extremely unreliable. Costs 5 mana. Veterans have already " +
-      "accepted that the next round may be their last.",
-    targeting: "none",
-  },
-  {
     name: "SPEED",
     label: "Speed",
     glyph: "🪶",
@@ -277,10 +262,11 @@ const COMBAT_SPELLS: SpellDef[] = [
     cost: 4,
     color: "#22d3ee",
     school: "Enchantment",
-    effect: "Extra action next round",
+    effect: "+1 action/round, +3 DEX, 2 rounds",
     lore:
-      "The target moves between heartbeats. Grants an extra action on the caster's next turn. " +
-      "Costs 4 mana.",
+      "The target accelerates between heartbeats. For the next 2 rounds they take an extra " +
+      "action each round AND gain +3 effective dexterity. Net of the cast cost: two free " +
+      "swings, not one. Costs 4 mana. Worth the slot.",
     targeting: "self",
   },
   {
@@ -290,9 +276,11 @@ const COMBAT_SPELLS: SpellDef[] = [
     cost: 5,
     color: "#a3e635",
     school: "Abjuration",
-    effect: "+8 armor for 3 rounds",
+    effect: "−8 damage / hit, 3 rounds",
     lore:
-      "A barrier of woven Words. +8 effective armor for the next 3 rounds. Costs 5 mana.",
+      "A barrier of woven Words. Each incoming physical blow lands 8 damage lighter for the " +
+      "next 3 rounds. A clean strike that would have killed becomes a wound; a glancing blow " +
+      "becomes nothing. Costs 5 mana.",
     targeting: "self",
   },
   {
@@ -302,10 +290,11 @@ const COMBAT_SPELLS: SpellDef[] = [
     cost: 5,
     color: "#9ca3af",
     school: "Abjuration",
-    effect: "Halve next strike",
+    effect: "Halve all physical damage, 4 rounds",
     lore:
-      "The target's skin remembers iron. The next physical strike against the target is halved. " +
-      "Costs 5 mana.",
+      "The target's skin remembers iron. ALL incoming physical damage — every strike, every " +
+      "round — is halved for the next 4 rounds. Costs 5 mana. The Word holds whether you stand " +
+      "or fall; whether you are struck once or twenty times.",
     targeting: "self",
   },
   {
@@ -328,23 +317,12 @@ const COMBAT_SPELLS: SpellDef[] = [
     cost: 4,
     color: "#84cc16",
     school: "Abjuration",
-    effect: "Half elemental damage",
+    effect: "Halve BLAST/FIREBOLT, 3 rounds",
     lore:
-      "The body refuses fire, ice, lightning. Halves elemental damage taken for 3 rounds. " +
-      "Costs 4 mana.",
+      "The body refuses fire and stormlight. Damage from BLAST and FIREBOLT is halved for " +
+      "the next 3 rounds. Costs 4 mana. Good against sorcerous opponents; useless against " +
+      "a man with a sword.",
     targeting: "self",
-  },
-  {
-    name: "DAYLIGHT",
-    label: "Daylight",
-    glyph: "☀",
-    cost: 3,
-    color: "#fde047",
-    school: "Evocation",
-    effect: "Bright light, blinds undead",
-    lore:
-      "A short stab of midday sun. Dark beings flinch; the wounded see better. Costs 3 mana.",
-    targeting: "none",
   },
   {
     name: "CLEANSE",
@@ -833,8 +811,11 @@ function TurnOrderRail({ session }: { session: ActiveCombatSession }) {
         const isAlly = c?.team === "ally";
         const baseColor = isAlly ? "#fbbf24" : "#f87171";
         const isLast = i === session.turnOrder.length - 1;
+        // Key includes slot index — HASTE inserts the buffed combatant's
+        // id twice in turnOrder for their extra action; `key={id}` alone
+        // produced React duplicate-key warnings.
         return (
-          <div key={id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div key={`${id}-${i}`} style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div
               title={c?.name ?? id}
               style={{

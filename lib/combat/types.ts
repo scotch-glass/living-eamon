@@ -41,12 +41,12 @@ export type StatusEffectType =
   | "broken_arm"        // Limbs — weapon skill penalty
   | "broken_leg"        // Limbs — cannot flee
   // ── Spell-driven buffs / debuffs (combat-only) ──
-  | "haste"             // +10 effective agility (SPEED, POWER:Quickening)
+  | "haste"             // +10 effective dexterity (SPEED, POWER:Quickening)
   | "shield_aura"       // +20 cover on every body zone (POWER:Silver Aura)
   | "invisible"         // Defender auto-evades for one round (POWER:Untouchable)
   | "feared_skip"       // Combatant skips next strike (POWER:Dread → on enemy)
   | "numb_hand"         // Attacker auto-misses next strike (POWER:Numb Hand → on self)
-  | "hiccups"           // -3 effective agility, comic (POWER:Hiccups → on self)
+  | "hiccups"           // -3 effective dexterity, comic (POWER:Hiccups → on self)
   | "tongue_tied"       // Next CAST fizzles (POWER:Tongue-Tied → on self)
   | "marked_by_set"     // Next enemy strike +15 accuracy (POWER:Smelled By Set → on self)
   // ── Sprint 7b.B — Bless ──
@@ -128,7 +128,7 @@ export type CombatantSide = "ally" | "enemy";
  * Hero = ally slot 1; current single enemy = enemy slot 1. Slots 2 and 3
  * stay vacant until ally combat / multi-enemy combat is wired.
  */
-export type CombatantPosition = 1 | 2 | 3;
+export type CombatantPosition = 1 | 2 | 3 | -1;
 
 /**
  * Gender — used by the narrative pipeline to pick correct pronouns
@@ -231,9 +231,11 @@ export interface CombatantState {
   droppedWeaponId: string | null;
   weaponSkillValue: number;
   // Stats
+  // 2026-05-09: agility was merged into dexterity. CombatantState.dexterity
+  // carries the effective (post-encumbrance) DEX; both initiative and
+  // evasion read it. PlayerState.dexterity stays raw.
   dexterity: number;
   strength: number;
-  agility: number;              // Evasion stat
   /**
    * body-zone fatigue tier (0–4) per KARMA_SYSTEM.md §2.3 / §4a. Set on the
    * player's combatant by buildCombatantFromPlayer; enemies leave it
@@ -485,7 +487,9 @@ export function syncCombatantArray(session: ActiveCombatSession): ActiveCombatSe
  *  Idempotent: passing in a fully-populated combatant returns it
  *  unchanged. Exported so tests can keep using minimal CombatantState
  *  literals: `fillCombatantDefaults({ id, name, side: "ally", ... })`. */
-export function fillCombatantDefaults(c: Partial<CombatantState> & Pick<CombatantState, "id" | "name" | "side">): CombatantState {
+export function fillCombatantDefaults(
+  c: Partial<CombatantState> & Pick<CombatantState, "id" | "name" | "side">,
+): CombatantState {
   // Treat ally side as player-controlled hero by default; enemy as AI.
   const team: "ally" | "enemy" = c.team ?? c.side ?? "ally";
   const controlledBy: "player" | "ai" = c.controlledBy ?? (team === "ally" ? "player" : "ai");
@@ -505,7 +509,6 @@ export function fillCombatantDefaults(c: Partial<CombatantState> & Pick<Combatan
     weaponSkillValue: c.weaponSkillValue ?? 0,
     dexterity: c.dexterity ?? 10,
     strength: c.strength ?? 10,
-    agility: c.agility ?? 10,
     fatigueTier: c.fatigueTier,
     side: c.side,
     position: c.position ?? 1,
@@ -570,7 +573,9 @@ export function migrateActiveCombatSession(raw: unknown): ActiveCombatSession | 
 // ── NPC Combat Profile (optional on NPC definition) ─────────
 
 export interface NPCCombatProfile {
-  agility: number;               // 0-100, evasion
+  // 2026-05-09: agility merged into dexterity. NPCs declare a single
+  // dexterity stat (0-100, drives evasion and initiative).
+  dexterity: number;
   weaponSkill: number;           // 0-100, AI targeting intelligence
   zones: Record<BodyZone, { cover: number; durability: number }>;
   shieldBlockChance: number;     // 0-100, 0 if no shield

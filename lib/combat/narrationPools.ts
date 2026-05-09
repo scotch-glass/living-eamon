@@ -315,7 +315,7 @@ export const PLAYER_MISS_DESCRIPTIONS: string[] = [
   "Your attack telegraphs and the {enemy} isn't there when it arrives.",
   "A feint from the {enemy} pulls your guard and your swing misses clean.",
   "Your {weapon} glances off the {enemy}'s movement, connecting with nothing.",
-  "The {enemy} twists aside with surprising agility — your blow finds only air.",
+  "The {enemy} twists aside with surprising speed — your blow finds only air.",
   "You lunge but the {enemy} steps inside your reach — too close for the blow to land.",
   "Your footing shifts on uneven ground and your strike goes wide.",
   "The {enemy} reads your swing and rolls away from it.",

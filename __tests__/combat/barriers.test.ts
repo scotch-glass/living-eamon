@@ -79,7 +79,6 @@ function makeCombatant(
     weaponSkillValue: 50,
     dexterity: 50,
     strength: 50,
-    agility: 50,
     side,
     position,
   });

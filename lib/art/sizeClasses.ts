@@ -88,3 +88,28 @@ export function targetFigureHeightPx(cls: SizeClass): number {
 
 /** All defined size classes in registry order. */
 export const ALL_SIZE_CLASSES: SizeClass[] = ["A", "B", "C", "D", "E"];
+
+// ── Stature modifiers (locked 2026-05-08) ────────────────────────
+//
+// Two compounding multipliers applied on TOP of the size-class
+// `heightFactor`:
+//
+//   - female: 0.9× (10% smaller in stature than males of the same race)
+//   - hero:   1.1× (10% larger than a normal humanoid male)
+//
+// Female hero compounds: 0.9 × 1.1 = 0.99×. Source of truth lives in
+// the user's `game_rules.md` memory (`Stature Modifiers`). See
+// CLAUDE.md if the canon source ever changes.
+
+export const FEMALE_STATURE_MULTIPLIER = 0.9;
+export const HERO_STATURE_MULTIPLIER = 1.1;
+
+export function statureMultiplier(opts: {
+  gender: "male" | "female";
+  isHero: boolean;
+}): number {
+  let m = 1;
+  if (opts.gender === "female") m *= FEMALE_STATURE_MULTIPLIER;
+  if (opts.isHero) m *= HERO_STATURE_MULTIPLIER;
+  return m;
+}

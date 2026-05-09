@@ -188,10 +188,16 @@ export const EYE_FROM_TOP_RATIO = 0.13;
  * influence eye-to-feet distance.
  *
  * Math:
- *   targetH = targetFigureHeightPx(cls)               // class-driven body height
+ *   targetH = targetFigureHeightPx(cls) * staturePct  // class * stature
  *   targetEyeToBottom = targetH * (1 - EYE_FROM_TOP)  // screen-space
  *   imageEyeToBottom  = (figureTopPx + figureHeightPx) - eyeYPx
  *   scale = targetEyeToBottom / imageEyeToBottom
+ *
+ * `staturePct` is the per-combatant multiplier from `statureMultiplier()`
+ * in `lib/art/sizeClasses.ts` — applies the female (0.9×) and hero
+ * (1.1×) stature rules on top of the size-class baseline. Defaults to
+ * 1 so non-combatant call sites that haven't been migrated yet keep
+ * rendering at the class baseline.
  *
  * Throws when eyeYPx is undefined or below the figure bottom — every
  * sprite is expected to have a manually-pinned eye-Y from the Sprite
@@ -202,6 +208,7 @@ export function figureScaleByEye(
   m: FigureMetrics,
   eyeYPx: number | undefined,
   cls: SizeClass,
+  staturePct: number = 1,
 ): {
   imgWidthPx: number;
   imgHeightPx: number;
@@ -223,7 +230,7 @@ export function figureScaleByEye(
       `figureScaleByEye: eyeYPx (${eyeYPx}) is at or below the figure bottom (${figureBottomPx}); re-pin eye-Y in the review tool`,
     );
   }
-  const targetH = targetFigureHeightPx(cls);
+  const targetH = targetFigureHeightPx(cls) * staturePct;
   const targetEyeToBottom = targetH * (1 - EYE_FROM_TOP_RATIO);
   const scale = targetEyeToBottom / imageEyeToBottom;
   return {

@@ -150,7 +150,7 @@ export interface Item {
     zoneSlot?: BodyZone;     // Which body zone this armor covers
     zoneCover?: number;      // 0-100, % chance to block
     zoneDurability?: number; // Starting durability
-    dexPenalty?: number;     // Reduces wearer's effective agility on foot (heavier = higher)
+    dexPenalty?: number;     // Reduces wearer's effective dexterity on foot (heavier = higher)
     mountedDexPenalty?: number; // Reduced penalty when mounted (plate becomes viable on horseback)
     customFit?: boolean;     // Cannot be looted or traded — must be commissioned
     // Shield stats
@@ -854,7 +854,7 @@ export const NPCS: Record<string, NPC> = {
     // TEMP: 150 HP for blood/gore testing (was 50)
     stats: { hp: 150, armor: 0, damage: "0" },
     combatProfile: {
-      agility: 0,
+      dexterity: 0,
       weaponSkill: 0,
       zones: {
         head: { cover: 0, durability: 0 },
@@ -993,7 +993,7 @@ export const ALDRIC_TOPIC_RESPONSES: Record<string, string[]> = {
     `"Two ways to get better with a weapon," Aldric says.\n\n"First way: hit things. Every time you land a real hit, your weapon skill ticks up one point. Slow. Cheap. Effective."\n\n"Second way: pay me." He almost smiles. "Say __CMD:TRAIN__ and the skill you want — SWORDSMANSHIP, ARMOR, SHIELD, and so on. I charge by how good you already are:"\n\n"Skill 0–19: twenty-five gold, I put five points in. 20–49: a hundred gold, ten points. 50–99: three hundred, fifteen points. 100–199: seven-fifty, twenty points. Past two hundred? Find a better teacher."\n\n"Total skill across all six tracks caps at seven hundred. Push past it and something else drops a point to make room."\n\n"No gold at all? Go south to the courtyard. __CMD:ATTACK DUFUS__. The training dummy teaches basics for free — up to twenty-five points in whatever you're swinging. After that you need real enemies or real gold."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric skills__ __CMD:TELL Aldric adventures__`,
   ],
   skills: [
-    `"Six tracks," Aldric says, ticking them off. "Swordsmanship, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery."\n\n"Your weapon skill does two things in a fight. First — dexterous fighters are harder to hit, and your dexterity helps you land hits too. Skill doesn't change that. What skill does is increase your chance of a critical hit — a rare, ugly thing — and it's what I train for gold."\n\n"Here's the important part: armor makes you slower. Every piece of steel you strap on costs you agility. Leather costs a little. Chain costs more. Plate?" He shakes his head. "Plate is for men on horses, not men in caves."\n\n"A fast fighter in no armor who knows how to move — that's the hardest thing to kill in a dungeon. A slow fighter in full chain gets hit by everything but shrugs most of it off. Different path, same survival. Pick one."\n\n"__CMD:STATS__ shows your sheet. __CMD:INVENTORY__ shows your gear."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__ __CMD:TELL Aldric adventures__`,
+    `"Six tracks," Aldric says, ticking them off. "Swordsmanship, Armor Expertise, Shield Expertise, Stealth, Lockpicking, Magery."\n\n"Your weapon skill does two things in a fight. First — dexterous fighters are harder to hit, and your dexterity helps you land hits too. Skill doesn't change that. What skill does is increase your chance of a critical hit — a rare, ugly thing — and it's what I train for gold."\n\n"Here's the important part: armor makes you slower. Every piece of steel you strap on costs you dexterity. Leather costs a little. Chain costs more. Plate?" He shakes his head. "Plate is for men on horses, not men in caves."\n\n"A fast fighter in no armor who knows how to move — that's the hardest thing to kill in a dungeon. A slow fighter in full chain gets hit by everything but shrugs most of it off. Different path, same survival. Pick one."\n\n"__CMD:STATS__ shows your sheet. __CMD:INVENTORY__ shows your gear."\n\nMore? __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__ __CMD:TELL Aldric adventures__`,
   ],
   adventures: [
     `"Go east from this hall to the notice-board room," Aldric says. "__CMD:GO EAST__. Three contracts on Guild parchment:"\n\n"The Mirrors of Tuzun Thune — a sealed wizard's tower out west. Light fighting, mostly poking around in the dark. Start there."\n\n"The Serpent in the Court — a noble's house two days north has gone strange. Cleverer work, but you'll bleed in it."\n\n"The Pictish Time-Tomb — if you've said your goodbyes."\n\n"__CMD:READ__ the board in that room for the full postings. When you're ready, the posting tells you the exact command — ENTER THE MIRRORS OF TUZUN THUNE, and so on. Spell it like the posting says."\n\nHe leans in. "Start with the Mirrors unless you enjoy being a cautionary tale."\n\nMore? __CMD:TELL Aldric survival__ __CMD:TELL Aldric combat__ __CMD:TELL Aldric training__`,

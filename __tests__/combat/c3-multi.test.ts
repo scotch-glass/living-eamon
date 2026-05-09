@@ -74,7 +74,6 @@ function makeFighter(id: string, weaponId: string, hotbar: string[] = [], opts: 
     weaponSkillValue: 50,
     dexterity: 10,
     strength: 10,
-    agility: 10,
     position: 1,
     combatHotbar: hotbar,
     ...opts,
@@ -92,9 +91,9 @@ caseName("HEAL is a Circle 1, castSpeed 2, castTurns 1, mana 4", () => {
   eq(isCombatSpell("heal"), true, "case-insensitive");
 });
 
-caseName("MIRROR is a Circle 3, castSpeed 4 (between long and great sword)", () => {
-  eq(getSpellCastSpeed("MIRROR"), 4, "MIRROR castSpeed");
-  eq(getSpellCircle("MIRROR"), 3, "MIRROR circle");
+caseName("FIREBOLT is a Circle 2, castSpeed 3 (matches long sword tempo)", () => {
+  eq(getSpellCastSpeed("FIREBOLT"), 3, "FIREBOLT castSpeed");
+  eq(getSpellCircle("FIREBOLT"), 2, "FIREBOLT circle");
 });
 
 caseName("Unregistered spell returns 0/null defaults", () => {
@@ -121,11 +120,11 @@ caseName("great_sword + no spells → 8 (weapon alone, empty hotbar contributes 
   eq(effectiveCombatSpeed(c), 8, "max(8, 0) = 8");
 });
 
-caseName("short_sword + Circle 4 spell (MIRROR castSpeed 4) → 4 (spell rises to longsword tier)", () => {
-  // MIRROR is castSpeed 4 in the registry; we use it as the heaviest
-  // currently-registered spell to exercise the spell-dominates branch.
-  const c = makeFighter("acrobat", "short_sword", ["HEAL", "MIRROR"]);
-  eq(effectiveCombatSpeed(c), 4, "max(2, max(2, 4)) = 4");
+caseName("short_sword + Circle 2 spell (FIREBOLT castSpeed 3) → 3 (spell rises to mid tier)", () => {
+  // FIREBOLT is castSpeed 3 — the heaviest currently-registered spell
+  // tempo, used here to exercise the spell-dominates branch.
+  const c = makeFighter("acrobat", "short_sword", ["HEAL", "FIREBOLT"]);
+  eq(effectiveCombatSpeed(c), 3, "max(2, max(2, 3)) = 3");
 });
 
 caseName("unarmed + Circle 1 hotbar → 2 (fast, but spell ties unarmed)", () => {

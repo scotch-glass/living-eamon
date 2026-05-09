@@ -83,7 +83,6 @@ function makeFighter(
     weaponSkillValue: 50,
     dexterity: 10,
     strength: 10,
-    agility: 10,
     position: 1,
     combatHotbar: hotbar,
     mana: 20,
@@ -173,28 +172,29 @@ caseName("Mana below cost → action invalid, session unchanged", () => {
 console.log("[c3-actions] resolveAction — cast (multi-turn channel)");
 
 caseName("Multi-turn cast (mocked castTurns=2) → mana spent, channelingState set", () => {
-  // Mock MIRROR's castTurns to 2 for this test.
-  const orig = SPELL_DATA.MIRROR.castTurns;
-  SPELL_DATA.MIRROR.castTurns = 2;
+  // Mock FIREBOLT's castTurns to 2 for this test (FIREBOLT is a Circle-2
+  // one-shot in production; we elevate it to a 2-turn channel here).
+  const orig = SPELL_DATA.FIREBOLT.castTurns;
+  SPELL_DATA.FIREBOLT.castTurns = 2;
   try {
-    const v = makeFighter("brand", "long_sword", ["MIRROR"], {
-      mana: 12, maxMana: 12, knownSpells: ["MIRROR"],
+    const v = makeFighter("brand", "long_sword", ["FIREBOLT"], {
+      mana: 12, maxMana: 12, knownSpells: ["FIREBOLT"],
     });
     const e = makeFighter("rurik", "long_sword", [], {
       side: "enemy", team: "enemy", controlledBy: "ai",
     });
     const session = makeSession([v, e]);
     const result = resolveAction(session, {
-      kind: "cast", sourceId: "brand", targetId: "rurik", spellName: "MIRROR",
+      kind: "cast", sourceId: "brand", targetId: "rurik", spellName: "FIREBOLT",
     });
     truthy(!result.invalid, `expected valid: ${result.invalid}`);
     const updated = result.session.combatants.find(c => c.id === "brand")!;
-    eq(updated.mana, 6, "MIRROR cost 6 mana committed up front");
+    eq(updated.mana, 6, "FIREBOLT cost 6 mana committed up front");
     truthy(updated.channelingState !== null, "channelingState set");
-    eq(updated.channelingState!.spellName, "MIRROR", "channeling MIRROR");
+    eq(updated.channelingState!.spellName, "FIREBOLT", "channeling FIREBOLT");
     eq(updated.channelingState!.turnsRemaining, 1, "one more turn until release");
   } finally {
-    SPELL_DATA.MIRROR.castTurns = orig;
+    SPELL_DATA.FIREBOLT.castTurns = orig;
   }
 });
 
@@ -288,26 +288,26 @@ caseName("Channel break — interruptedSinceLastTurn → spell shatters, mana st
 console.log("[c3-actions] resolveAction — swap_hotbar");
 
 caseName("swap_hotbar swaps slot, consumes a turn, updates effectiveCombatSpeed", () => {
-  // Mock MIRROR castSpeed to 6 so the swap demonstrably raises tempo.
-  const orig = SPELL_DATA.MIRROR.castSpeed;
-  SPELL_DATA.MIRROR.castSpeed = 6;
+  // Mock FIREBOLT castSpeed to 6 so the swap demonstrably raises tempo.
+  const orig = SPELL_DATA.FIREBOLT.castSpeed;
+  SPELL_DATA.FIREBOLT.castSpeed = 6;
   try {
-    const v = makeFighter("vivian", "short_sword", ["HEAL"], { knownSpells: ["HEAL", "MIRROR"] });
+    const v = makeFighter("vivian", "short_sword", ["HEAL"], { knownSpells: ["HEAL", "FIREBOLT"] });
     const e = makeFighter("rurik", "long_sword", [], {
       side: "enemy", team: "enemy", controlledBy: "ai",
     });
     const session = makeSession([v, e]);
     eq(effectiveCombatSpeed(session.combatants[0]), 2, "before swap: short_sword tempo");
     const result = resolveAction(session, {
-      kind: "swap_hotbar", sourceId: "vivian", slotIdx: 1, spellName: "MIRROR",
+      kind: "swap_hotbar", sourceId: "vivian", slotIdx: 1, spellName: "FIREBOLT",
     });
     truthy(!result.invalid, `swap invalid: ${result.invalid}`);
     const after = result.session.combatants.find(c => c.id === "vivian")!;
-    eq(after.combatHotbar, ["HEAL", "MIRROR"], "MIRROR slotted at idx 1");
-    eq(effectiveCombatSpeed(after), 6, "tempo now dictated by MIRROR castSpeed");
+    eq(after.combatHotbar, ["HEAL", "FIREBOLT"], "FIREBOLT slotted at idx 1");
+    eq(effectiveCombatSpeed(after), 6, "tempo now dictated by FIREBOLT castSpeed");
     eq(result.session.currentTurnIdx, 1, "turn consumed");
   } finally {
-    SPELL_DATA.MIRROR.castSpeed = orig;
+    SPELL_DATA.FIREBOLT.castSpeed = orig;
   }
 });
 
@@ -435,7 +435,7 @@ caseName("strike deducts target HP, advances turn", () => {
     weaponSkillValue: 200, // master skill — high crit, no fumbles
   });
   const e = makeFighter("rurik", "unarmed", [], {
-    side: "enemy", team: "enemy", controlledBy: "ai", agility: 0, hp: 40, maxHp: 40,
+    side: "enemy", team: "enemy", controlledBy: "ai", dexterity: 0, hp: 40, maxHp: 40,
   });
   const session = makeSession([v, e]);
   // Loop until at least one strike lands (deterministic-ish over many calls
@@ -572,6 +572,304 @@ caseName("use healing_potion restores HP, decrements inventory", () => {
   const after = result.session.combatants.find(c => c.id === "vivian")!;
   truthy(after.hp > 10, `HP rose (now ${after.hp})`);
   eq(after.inventory[0].quantity, 1, "potion count decremented");
+});
+
+caseName("greater_healing_potion on ally heals 35-55 HP and emits Howard prose", () => {
+  // Regression for 2026-05-08 — greater_healing_potion fell through to
+  // the engine's default `(uses ${itemId})` stub: no HP change, no
+  // narrative beyond the bare item id.
+  const gaius = makeFighter("gaius", "great_sword", [], {
+    hp: 50, maxHp: 50,
+    inventory: [{ itemId: "greater_healing_potion", quantity: 1 }],
+  });
+  const vivian = makeFighter("vivian", "short_sword", [], {
+    hp: 10, maxHp: 50,
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([gaius, vivian, e]);
+  const result = resolveAction(session, {
+    kind: "use", sourceId: "gaius", targetId: "vivian", itemId: "greater_healing_potion",
+  });
+  truthy(!result.invalid, `expected valid: ${result.invalid}`);
+  const after = result.session.combatants.find(c => c.id === "vivian")!;
+  const healed = after.hp - 10;
+  truthy(healed >= 35 && healed <= 55, `heal in 35..55 (got ${healed})`);
+  // Narrative should NOT match the bare-stub form.
+  truthy(
+    !result.narrative.includes("uses greater_healing_potion"),
+    `narrative is not the bare stub (got: ${result.narrative})`,
+  );
+  truthy(
+    /silver-bright brew/.test(result.narrative),
+    `narrative reads as Howard prose (got: ${result.narrative})`,
+  );
+  // Caster's potion stack decrements (and is filtered out at qty 0).
+  const casterAfter = result.session.combatants.find(c => c.id === "gaius")!;
+  eq(casterAfter.inventory.length, 0, "potion entry dropped (was qty 1)");
+});
+
+caseName("greater_healing_potion self-cast respects maxHp cap", () => {
+  const gaius = makeFighter("gaius", "great_sword", [], {
+    hp: 48, maxHp: 50,
+    inventory: [{ itemId: "greater_healing_potion", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([gaius, e]);
+  const result = resolveAction(session, {
+    kind: "use", sourceId: "gaius", targetId: "gaius", itemId: "greater_healing_potion",
+  });
+  truthy(!result.invalid, `expected valid: ${result.invalid}`);
+  const after = result.session.combatants.find(c => c.id === "gaius")!;
+  eq(after.hp, 50, "capped at maxHp (was 48, +35..55 → 50)");
+});
+
+console.log("[c3-actions] resolveAction — buffs / antidotes / wound-stoppers");
+
+caseName("stamina_brew adds haste severity 1 for 3 rounds", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    inventory: [{ itemId: "stamina_brew", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "stamina_brew",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  const haste = after.activeEffects.find(e => e.type === "haste");
+  truthy(haste, "haste effect present");
+  eq(haste!.severity, 1, "severity 1");
+  eq(haste!.turnsRemaining, 3, "3 rounds");
+  truthy(/bitter brown brew/.test(r.narrative), `Howard prose: ${r.narrative}`);
+});
+
+caseName("fatigue_brew adds haste severity 2 for 4 rounds (stronger than stamina)", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    inventory: [{ itemId: "fatigue_brew", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "fatigue_brew",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  const haste = after.activeEffects.find(e => e.type === "haste");
+  truthy(haste, "haste effect present");
+  eq(haste!.severity, 2, "severity 2");
+  eq(haste!.turnsRemaining, 4, "4 rounds");
+  truthy(/thick green draught/.test(r.narrative), `Howard prose: ${r.narrative}`);
+});
+
+caseName("antidote strips poison severity ≤ 1 only", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    activeEffects: [{ type: "poison", zone: "torso", severity: 1, turnsRemaining: 3 }],
+    inventory: [{ itemId: "antidote", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "antidote",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  eq(after.activeEffects.filter(e => e.type === "poison").length, 0, "poison stripped");
+});
+
+caseName("antidote does NOT cure severity-2 poison (need strong_antidote)", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    activeEffects: [{ type: "poison", zone: "torso", severity: 2, turnsRemaining: 5 }],
+    inventory: [{ itemId: "antidote", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "antidote",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  eq(after.activeEffects.filter(e => e.type === "poison").length, 1, "severity-2 poison remains");
+});
+
+caseName("strong_antidote strips poison of any severity", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    activeEffects: [{ type: "poison", zone: "torso", severity: 3, turnsRemaining: 5 }],
+    inventory: [{ itemId: "strong_antidote", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "strong_antidote",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  eq(after.activeEffects.filter(e => e.type === "poison").length, 0, "all poison stripped");
+});
+
+caseName("bandage strips bleed but NOT severed_artery (refactor 2026-05-08)", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    activeEffects: [
+      { type: "bleed", zone: "limbs", severity: 1, turnsRemaining: 3 },
+      { type: "severed_artery", zone: "neck", severity: 1, turnsRemaining: 3 },
+    ],
+    inventory: [{ itemId: "bandage", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "bandage",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  eq(after.activeEffects.filter(e => e.type === "bleed").length, 0, "bleed stripped");
+  eq(after.activeEffects.filter(e => e.type === "severed_artery").length, 1, "severed_artery survives bandage");
+});
+
+caseName("Successful 1-turn cast sets firedSpell on ActionResult", () => {
+  const v = makeFighter("vivian", "short_sword", ["BLAST"], {
+    mana: 10, maxMana: 20, knownSpells: ["BLAST"],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai", hp: 50,
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "cast", sourceId: "vivian", targetId: "rurik", spellName: "BLAST",
+  });
+  truthy(!r.invalid, `expected valid: ${r.invalid}`);
+  truthy(r.firedSpell, "firedSpell present on success");
+  eq(r.firedSpell?.sourceId, "vivian", "firedSpell.sourceId");
+  eq(r.firedSpell?.targetId, "rurik", "firedSpell.targetId");
+  eq(r.firedSpell?.spellName, "BLAST", "firedSpell.spellName");
+});
+
+caseName("Interrupted cast leaves firedSpell undefined (FX must NOT fire)", () => {
+  // Regression for 2026-05-08: Gaius was critically hit mid-firebolt,
+  // engine emitted the interrupt-fizzle narrative + advanced the turn,
+  // but the dev page still triggered the streak FX because it gated on
+  // the ACTION (cast firebolt) rather than on actual resolution.
+  const v = makeFighter("vivian", "short_sword", ["FIREBOLT"], {
+    mana: 10, maxMana: 20, knownSpells: ["FIREBOLT"],
+    interruptedSinceLastTurn: { kind: "critical_hit", zone: "head" },
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "cast", sourceId: "vivian", targetId: "rurik", spellName: "FIREBOLT",
+  });
+  truthy(!r.invalid, `expected valid: ${r.invalid}`);
+  // The engine processes the interrupt and advances the turn — no
+  // mechanical effect, no firedSpell flag. Narrative explains the
+  // fizzle.
+  truthy(!r.firedSpell, `firedSpell should be undefined, got ${JSON.stringify(r.firedSpell)}`);
+  truthy(/voice|crack|silence|critical/i.test(r.narrative), `interrupt narrative: ${r.narrative}`);
+});
+
+caseName("tourniquet strips severed_artery AND bleed", () => {
+  const v = makeFighter("vivian", "short_sword", [], {
+    activeEffects: [
+      { type: "bleed", zone: "limbs", severity: 1, turnsRemaining: 3 },
+      { type: "severed_artery", zone: "neck", severity: 1, turnsRemaining: 3 },
+    ],
+    inventory: [{ itemId: "tourniquet", quantity: 1 }],
+  });
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "use", sourceId: "vivian", targetId: "vivian", itemId: "tourniquet",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  const after = r.session.combatants.find(c => c.id === "vivian")!;
+  eq(after.activeEffects.filter(e => e.type === "bleed").length, 0, "bleed stripped");
+  eq(after.activeEffects.filter(e => e.type === "severed_artery").length, 0, "severed_artery stripped");
+  truthy(/leather strap/.test(r.narrative), `Howard prose: ${r.narrative}`);
+});
+
+// ── firedStrike discriminator (added 2026-05-09 with strike-FX sprint)
+console.log("[c3-actions] firedStrike — structured strike outcome");
+
+const VALID_STRIKE_OUTCOMES = new Set([
+  "hit", "crit", "evaded", "blocked", "armorStopped", "criticalFail",
+]);
+
+caseName("Resolved strike sets firedStrike with sourceId/targetId/zone + valid outcome", () => {
+  const v = makeFighter("vivian", "short_sword");
+  const e = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai", hp: 40, maxHp: 40,
+  });
+  const session = makeSession([v, e]);
+  const r = resolveAction(session, {
+    kind: "strike", sourceId: "vivian", targetId: "rurik", zone: "torso",
+  });
+  truthy(!r.invalid, `valid: ${r.invalid}`);
+  truthy(r.firedStrike, "firedStrike must be populated on a resolved strike");
+  eq(r.firedStrike!.sourceId, "vivian", "firedStrike.sourceId");
+  eq(r.firedStrike!.targetId, "rurik",  "firedStrike.targetId");
+  eq(r.firedStrike!.zone,     "torso",  "firedStrike.zone");
+  truthy(
+    VALID_STRIKE_OUTCOMES.has(r.firedStrike!.outcome),
+    `firedStrike.outcome must be a known discriminator, got "${r.firedStrike!.outcome}"`,
+  );
+});
+
+caseName("Refused strike (same-team) does NOT set firedStrike", () => {
+  const v = makeFighter("vivian", "short_sword");
+  const ally = makeFighter("brand", "long_sword", [], {
+    side: "ally", team: "ally", controlledBy: "player",
+  });
+  const enemy = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([v, ally, enemy], ["vivian", "brand", "rurik"]);
+  const r = resolveAction(session, {
+    kind: "strike", sourceId: "vivian", targetId: "brand", zone: "torso",
+  });
+  truthy(r.invalid, "same-team strike must be refused");
+  truthy(
+    !r.firedStrike,
+    `firedStrike must stay undefined on a refused strike, got ${JSON.stringify(r.firedStrike)}`,
+  );
+});
+
+caseName("Non-strike actions leave firedStrike undefined", () => {
+  const healer = makeFighter("vivian", "short_sword", ["HEAL"], {
+    mana: 12, maxMana: 12,
+  });
+  const ally = makeFighter("brand", "long_sword", [], {
+    side: "ally", team: "ally", controlledBy: "player", hp: 10, maxHp: 50,
+  });
+  const enemy = makeFighter("rurik", "long_sword", [], {
+    side: "enemy", team: "enemy", controlledBy: "ai",
+  });
+  const session = makeSession([healer, ally, enemy], ["vivian", "brand", "rurik"]);
+  const r = resolveAction(session, {
+    kind: "cast", sourceId: "vivian", targetId: "brand", spellName: "HEAL",
+  });
+  truthy(!r.invalid, `HEAL valid: ${r.invalid}`);
+  truthy(
+    !r.firedStrike,
+    `firedStrike must stay undefined on a cast action, got ${JSON.stringify(r.firedStrike)}`,
+  );
 });
 
 if (failures > 0) {

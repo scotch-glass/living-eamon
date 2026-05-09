@@ -64,10 +64,8 @@ export interface DocSection {
 const SECTION_HEADINGS: Record<string, string> = {
   "Root design docs": "design",
   "Dev / process docs": "process",
-  "Lore — design refs": "lore-design",
-  "Lore — in-world artifacts (player-readable; runtime-loaded where noted)":
-    "lore-artifacts",
-  "Generated registries (auto-derived; never hand-edit)": "registries",
+  Lore: "lore",
+  "Generated registries": "registries",
 };
 
 // ── Parse helpers ─────────────────────────────────────────────

@@ -79,7 +79,7 @@ export default function Sidebar({ sections }: SidebarProps) {
               borderBottom: "1px solid rgba(146, 64, 14, 0.3)",
             }}
           >
-            {section.title.replace(/\s*—\s*.*$/, "")}
+            {section.title}
           </div>
           <ul
             style={{

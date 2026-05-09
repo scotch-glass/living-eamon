@@ -208,7 +208,7 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   cross_refs: [CLAUDE.md, CLAUDE_CONTEXT.md]
 ```
 
-## Lore — design refs
+## Lore
 
 ```yaml
 - id: pantheon
@@ -270,11 +270,7 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   status: historical
   last_updated: 2026-04-19
   cross_refs: [Public_Domain_Rules.md]
-```
 
-## Lore — in-world artifacts (player-readable; runtime-loaded where noted)
-
-```yaml
 - id: scrolls_of_thoth_index
   path: lore/scrolls-of-thoth/INDEX.md
   title: Scrolls of Thoth — Registry
@@ -346,7 +342,7 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   cross_refs: [GAME_DESIGN.md, KARMA_SYSTEM.md]
 ```
 
-## Generated registries (auto-derived; never hand-edit)
+## Generated registries
 
 ```yaml
 - id: quest_registry_dump

@@ -76,7 +76,6 @@ export default async function LibraryIndex() {
         }}
       >
         {sections.map((section) => {
-          const sectionLabel = section.title.replace(/\s*—\s*.*$/, "");
           return (
             <section
               key={section.key}
@@ -97,7 +96,7 @@ export default async function LibraryIndex() {
                   letterSpacing: "0.04em",
                 }}
               >
-                {sectionLabel}
+                {section.title}
               </h2>
               <ul
                 style={{

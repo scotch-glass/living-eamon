@@ -145,9 +145,11 @@ Other options queued: production-integrate Combat Arena v2, Stripe payment gate,
   - `launch:status` — regenerates `docs/launch-readiness.md`
   - `hydration:build` — regenerates `docs/hydration.md`
   - `topic-routes:build` — regenerates `docs/topic-routes.md`
-  - `docs:build` — chains all four generators
+  - `work-queue:build` — regenerates `docs/work-queue.{json,md}` (triaged backlog)
+  - `docs:build` — chains all five generators
   - `docs:validate` — fails on drift (Q+A counts, EV refs, missing paths)
   - `docs:watch` — chokidar watcher; cascades all generators + validate on any markdown change (300ms debounce)
+  - `interview` — Haiku-driven interactive daemon that walks open EVs with Scotch and writes answers back into source docs (run in a second terminal)
   - `dev:all` — convenience: `next dev` + `docs:watch` in parallel
 - **Auth bypass for dev APIs:** `proxy.ts` whitelists `/api/sprite-list`, `/api/sprite-metadata`, `/api/sprite-regen`, `/api/sprite-touchup`, `/api/prompt-rules`, `/api/item-icon` under `NODE_ENV !== "production"`.
 - **Roles in DB:** `joshua.mcclure@gmail.com` is `admin`. All other accounts default to `player` until flipped.

@@ -27,6 +27,8 @@ cross_refs: [CLAUDE_CONTEXT.md, AGENTS.md, DOC_MAP.md]
 
 **Discipline:** any doc add / move / role-change updates `DOC_MAP.md` in the same commit. Q+A frontmatter must satisfy `questions_total = questions_answered + questions_open` and `edge_vector_ids.length = questions_open`. Run `npm run docs:validate` before commits — the script fails on drift.
 
+**Parallel coder + interviewer (3-terminal workflow):** when working a backlog of open Edge Vectors, run three terminals — (1) `npm run dev:all` (next dev + docs:watch), (2) `npm run interview` (Haiku daemon that walks the open EVs with Scotch and writes answers back into source docs), (3) Claude Code for the coder picking `ready_to_code` items from `docs/work-queue.json`. The triager (`scripts/build-work-queue.ts`) classifies every outstanding item into `awaits_answer` / `awaits_approval` / `ready_to_code` / `blocked` / `done`.
+
 ## Full-audit hydration (rare — first session, deep refactor)
 
 If you need exhaustive context (e.g., onboarding a new contributor, doing cross-system refactor), the historical ladder still works:

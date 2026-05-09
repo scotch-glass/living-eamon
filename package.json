@@ -9,7 +9,9 @@
     "lint": "eslint",
     "painter:scan": "tsx scripts/scenario/scan-manual-painter-refs.ts",
     "test:quests": "tsx scripts/run-quest-tests.ts",
-    "registry:dump": "tsx scripts/dump-quest-registry.ts"
+    "registry:dump": "tsx scripts/dump-quest-registry.ts",
+    "graph:build": "tsx scripts/build-doc-graph.ts",
+    "launch:status": "tsx scripts/launch-readiness.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

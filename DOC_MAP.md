@@ -132,6 +132,16 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   status: rolling
   last_updated: 2026-05-09
   cross_refs: [DOC_MAP.md]
+
+- id: launch_criteria
+  path: LAUNCH_CRITERIA.md
+  title: Launch Criteria — Three-Tier Checklist
+  role: design-canon
+  canonical_for: [launch-readiness, tier-0-mvp-blockers, tier-1-polish, tier-2-post-launch]
+  visibility: creator
+  status: draft
+  last_updated: 2026-05-09
+  cross_refs: [DOC_MAP.md, ADVENTURE_MODULES_PLAN.md, KARMA_IMPLEMENTATION_PLAN.md, GAME_DESIGN.md]
 ```
 
 ## Dev / process docs
@@ -376,6 +386,30 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   status: active
   last_updated: 2026-04-30
   cross_refs: [lib/quests/types.ts]
+
+- id: doc_graph
+  path: docs/doc-graph.md
+  title: Doc Graph (auto-generated adjacency list)
+  role: reference-generated
+  canonical_for: [graph-topology, edge-list, hydration-context]
+  visibility: creator
+  status: active
+  last_updated: rebuilt-on-demand
+  cross_refs: [DOC_MAP.md, EDGE_VECTORS.md]
+  generated_by: scripts/build-doc-graph.ts
+  npm_script: graph:build
+
+- id: launch_readiness
+  path: docs/launch-readiness.md
+  title: Launch Readiness Report (auto-generated)
+  role: reference-generated
+  canonical_for: [prioritized-blocker-list, what-to-authorize-next]
+  visibility: creator
+  status: active
+  last_updated: rebuilt-on-demand
+  cross_refs: [LAUNCH_CRITERIA.md, docs/doc-graph.md]
+  generated_by: scripts/launch-readiness.ts
+  npm_script: launch:status
 ```
 
 ---

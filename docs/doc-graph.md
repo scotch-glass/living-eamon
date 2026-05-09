@@ -8,19 +8,19 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 8 open Edge Vectors · 107 edges
+- 34 docs · 10 open Edge Vectors · 117 edges
 - 26 creator-visible · 8 internal
 
 ## Most-connected nodes (by in-degree)
 
 - **game_design** (14 incoming) — Game Design Document
-- **karma_system** (12 incoming) — Karma System
-- **module_system** (12 incoming) — Module System (Ink + GPE)
+- **karma_system** (14 incoming) — Karma System
+- **module_system** (14 incoming) — Module System (Ink + GPE)
 - **public_domain_rules** (8 incoming) — Public Domain Rules
+- **karma_implementation_plan** (7 incoming) — Karma Implementation Plan
+- **sorcery** (7 incoming) — Sorcery (Guild CAST + Occult INVOKE)
 - **adventure_modules_plan** (6 incoming) — Adventure Modules Plan
 - **doc_map** (6 incoming) — Documentation Index (this file)
-- **karma_implementation_plan** (6 incoming) — Karma Implementation Plan
-- **sorcery** (6 incoming) — Sorcery (Guild CAST + Occult INVOKE)
 
 ## Adjacency
 
@@ -51,8 +51,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **relates_to** → affect_axes_dump, game_design, karma_system, module_system, public_domain_rules, sorcery
 - **scrolls_of_thoth_index** [active] — Scrolls of Thoth — Registry
   - **cross_ref** → karma_system
-- **sorcery** [active] — Sorcery (Guild CAST + Occult INVOKE)
+- **sorcery** Q:10(open=2) [active] — Sorcery (Guild CAST + Occult INVOKE)
   - **cross_ref** → game_design, pantheon
+  - **has_open_question** → EV-sorcery-001, EV-sorcery-002
+  - **relates_to** → karma_system, logos_teleios, module_system, pantheon
 - **stobaean_fragments_index** [active] — Stobaean Fragments — Registry
   - **cross_ref** → quest_registry_dump
 - **travel_matrix** [active] — Travel Cost Matrix
@@ -118,7 +120,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **karma_implementation_plan** [deferred] — Karma Implementation Plan
   - **cross_ref** → hydrate_next_session, karma_system
 
-## Open Edge Vectors (8)
+## Open Edge Vectors (10)
 
 - **EV-game_design-001** `[AFFECT-VECTOR, open]` ← game_design → affects: karma_system, module_system
   - Q: How do PICSSI virtues correlate with the seven AffectVector axes?
@@ -136,3 +138,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - Q: How will Ink module authors reference deities when writing modules?
 - **EV-pantheon-002** `[AFFECT-VECTOR, open]` ← pantheon → affects: karma_system
   - Q: What neuro-emotional axes does invoking each deity surface?
+- **EV-sorcery-001** `[INK-AUTHORING, open]` ← sorcery → affects: karma_system, module_system
+  - Q: How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom,...
+- **EV-sorcery-002** `[WIRING, medium]` ← sorcery → affects: karma_implementation_plan, sorcery
+  - Q: Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse mo...

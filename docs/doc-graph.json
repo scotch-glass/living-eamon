@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 8,
-    "edge_count": 107,
+    "ev_count": 10,
+    "edge_count": 117,
     "creator_visible": 26,
     "internal": 8
   },
@@ -298,7 +298,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-29"
+      "last_updated": "2026-04-29",
+      "questions_total": 10,
+      "questions_answered": 8,
+      "questions_open": 2
     },
     "doc:standing_creeds": {
       "type": "doc",
@@ -431,6 +434,24 @@
       "confidence": "open",
       "question": "What neuro-emotional axes does invoking each deity surface?",
       "best_guess": "awe (high-tier ritual, Solar Barque ascension); dread (Set, Sekhmet's Helfara face, Outer Dark proximity); wonder (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form); melancholy (Crom-the-silent, Honen-after-the-Cataclysm); reverence (Ma'at's feather-weighing, Anubis's threshold rites). Not validated against the atom corpus."
+    },
+    "ev:EV-sorcery-001": {
+      "type": "edge_vector",
+      "id": "EV-sorcery-001",
+      "source_doc": "sorcery",
+      "category": "INK-AUTHORING",
+      "confidence": "open",
+      "question": "How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom, or an atom granting a custom invocation rune?",
+      "best_guess": "Either (a) two new EXTERNALs — `npc_invoke(npc_id, spell_id, target_id)` routing through the existing Force-0 combat-engine path, plus `add_invocation(spell_id)` for the known-Words registry on PlayerState — or (b) keep NPC sorcery scripted in `lib/encounters/<id>.ts` and only expose `add_invocation` to Ink. Decision deferred until the first module needs an enemy sorcerer beat."
+    },
+    "ev:EV-sorcery-002": {
+      "type": "edge_vector",
+      "id": "EV-sorcery-002",
+      "source_doc": "sorcery",
+      "category": "WIRING",
+      "confidence": "medium",
+      "question": "Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse model still need?",
+      "best_guess": "Production today: Guild CAST Circles 1+2 (13 real spells, Sprint C6.1); INVOKE pipeline not wired to combat; Circles 4–8 deferred. Resurrection corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification, hero-death short-circuit, undead-likelihood roll, necromancy variant — is design-only. The mortal/immortal NPC tag is a no-cost addition that should land **before** any Resurrection wiring sprint to avoid retro-tagging every NPC kind."
     }
   },
   "edges": [
@@ -866,8 +887,38 @@
     },
     {
       "from": "doc:sorcery",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:sorcery",
+      "to": "doc:logos_teleios",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:sorcery",
+      "to": "doc:module_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:sorcery",
       "to": "doc:pantheon",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:sorcery",
+      "to": "doc:pantheon",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:sorcery",
+      "to": "ev:EV-sorcery-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:sorcery",
+      "to": "ev:EV-sorcery-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:standing_creeds",
@@ -967,6 +1018,26 @@
     {
       "from": "ev:EV-pantheon-002",
       "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-sorcery-001",
+      "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-sorcery-001",
+      "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-sorcery-002",
+      "to": "doc:karma_implementation_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-sorcery-002",
+      "to": "doc:sorcery",
       "type": "affects"
     }
   ]

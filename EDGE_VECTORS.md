@@ -107,6 +107,24 @@ Every entry conforms to:
 - **Affects:** [MODULE_SYSTEM.md §4 + §4.5](/library/module_system) (contract + module.json), `lib/karma/loader.ts` (planned shim point), future Steam Workshop / Itch.io ingestion
 - **Resolution path:** document the chosen migration strategy as a new §4.6 in MODULE_SYSTEM.md with worked examples for both rename and removal cases. Promote to `[high]` once a real 2.0 contract lands, an auto-test exercises a 1.0-pinned module under 2.0 runtime, and the deprecation warning surfaces visibly in dev mode.
 
+### [SORCERY.md](/library/sorcery)
+
+#### EV-sorcery-001  `[INK-AUTHORING]`
+- **Source:** [SORCERY.md](/library/sorcery)
+- **Question:** How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom, or an atom granting a custom invocation rune?
+- **Best guess:** Either (a) two new EXTERNALs — `npc_invoke(npc_id, spell_id, target_id)` routing through the existing Force-0 combat-engine path, plus `add_invocation(spell_id)` for the known-Words registry on PlayerState — or (b) keep NPC sorcery scripted in `lib/encounters/<id>.ts` and only expose `add_invocation` to Ink. Decision deferred until the first module needs an enemy sorcerer beat.
+- **Confidence:** open
+- **Affects:** [MODULE_SYSTEM.md §4.2](/library/module_system) (EXTERNAL contract), `lib/encounters/<id>.ts` (planned NPC sorcery records), [KARMA_SYSTEM.md §2.10](/library/karma_system) (Illumination on player-caused vs NPC-caused sorcery)
+- **Resolution path:** when the first PD module with a named sorcerer antagonist enters scoping, design the minimal EXTERNAL surface (probably `add_invocation` first, `npc_invoke` only if scripted encounters prove insufficient). Document the chosen contract in MODULE_SYSTEM.md §4.2 with worked examples. Promote to `[high]` once a module exercises both paths through a real Ink-driven encounter.
+
+#### EV-sorcery-002  `[WIRING]`
+- **Source:** [SORCERY.md](/library/sorcery)
+- **Question:** Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse model still need?
+- **Best guess:** Production today: Guild CAST Circles 1+2 (13 real spells, Sprint C6.1); INVOKE pipeline not wired to combat; Circles 4–8 deferred. Resurrection corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification, hero-death short-circuit, undead-likelihood roll, necromancy variant — is design-only. The mortal/immortal NPC tag is a no-cost addition that should land **before** any Resurrection wiring sprint to avoid retro-tagging every NPC kind.
+- **Confidence:** medium
+- **Affects:** [SORCERY.md §9.3](/library/sorcery) (Resurrection implementation entailments), `project_corpse_loot_burial_deferred.md`, `project_occult_sorcery_deferred.md`, [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan) Sprint 7 (deferred Sorcery sprint)
+- **Resolution path:** add `mortalOrImmortal: 'mortal' | 'immortal'` to every NPC kind during the next NPC-data sweep (cheap, no-state). When the corpse-loot/burial sprint lands per `project_corpse_loot_burial_deferred.md`, extend the corpse model with `sunExposed` + `moonExposed` flags + a `locationContext: 'surface' | 'buried' | 'underground'` enum, and tick the celestial flags in `tickWorldState`. Promote to `[high]` once a Resurrection cast in test exercises a buried corpse vs a sun-and-moon-exposed corpse and produces the documented outcomes.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

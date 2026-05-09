@@ -47,6 +47,13 @@ export interface DocEntry {
   generated_by?: string;
   npm_script?: string;
   note?: string;
+  // Q+A annotation system (added 2026-05-09 -- pilot phase).
+  // questions_total === questions_answered + questions_open.
+  // edge_vector_ids array length === questions_open.
+  questions_total?: number;
+  questions_answered?: number;
+  questions_open?: number;
+  edge_vector_ids?: string[];
 }
 
 // ── Section grouping (visual) ─────────────────────────────────

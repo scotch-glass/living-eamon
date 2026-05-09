@@ -6,7 +6,66 @@ canonical_for: [god-roster, thurian-aliases, valkyrie-host, dual-aspect-mapping,
 visibility: creator
 status: active
 last_updated: 2026-05-09
-cross_refs: [SORCERY.md, GAME_DESIGN.md, Public_Domain_Rules.md]
+cross_refs: [SORCERY.md, GAME_DESIGN.md, Public_Domain_Rules.md, EDGE_VECTORS.md]
+questions_total: 8
+questions_answered: 6
+questions_open: 2
+edge_vector_ids: [EV-pantheon-001, EV-pantheon-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [LORE]
+
+**Q:** Who are the canonical deities and how do they map to historical religions?
+**A:** Eleven deities — eight Egyptian (Ma'at, Ra, Thoth, Shu, Anubis, Isis, Osiris, Sekhmet, Set), plus Mithras (Roman/Persian, PD by antiquity), plus Crom (Howard-PD essay-name). Six Thurian-era aliases (Valka, Hotath, Helfara, Honen, Helgor, The Serpent) added 2026-05-09 to bridge Pre-Cataclysmic culture to the canonical Egyptian set. Plus the Valkyrie as Ma'at-emanations (not deities). `[high]`
+↔ relates to: GAME_DESIGN.md §10 (Thurian Age lore), Public_Domain_Rules.md, SORCERY.md §7.1
+
+### [LORE]
+
+**Q:** What is the cosmological frame — how does Ma'at relate to Outer Dark, and where do "Light" and "Dark" deities fit?
+**A:** Ma'at = BEING (the principle of order/truth/rightness). Outer Dark / Isfet = UN-BEING (the entropic Nothing). Light/Dark is a sub-axis WITHIN Ma'at's domain — both Light gods (Ra, Thoth, Mithras) and Dark gods (Set, Sekhmet) are aligned with Ma'at against the void. Apep is Isfet given form within Ma'at's domain, fought nightly aboard the Mesektet Solar Barque by every deity, even Set. `[high]`
+↔ relates to: SORCERY.md §7.1 (Light/Dark continuum), project_maat_outer_dark_cosmology.md
+
+### [PD-SAFETY]
+
+**Q:** Are all named entities safe to use commercially?
+**A:** Yes. Egyptian deities predate copyright by ~5000 years. Mithras is Roman/Persian, equally PD by antiquity. Crom-the-name is essay-PD per Public_Domain_Rules.md. Crom's people are described as "northern hill-clans" / "highland warriors of the cold reaches" — deliberately NOT "Cimmerians" (trademark-radioactive, permanent avoid). Thurian aliases (Valka, Hotath, Helfara, Honen, Helgor, The Serpent) are from REH Kull stories (1929–1936, PD). The "Ka nama kaa lajerama" anti-shibboleth is from Howard's PD Kull canon. `[high]`
+↔ relates to: Public_Domain_Rules.md, GAME_DESIGN.md (Safe Harbor table), feedback_no_hyborian_in_marketing.md
+
+### [ARCHITECTURE]
+
+**Q:** What systems consume this document?
+**A:** (a) the `deity` room tag on consecrated rooms (per SORCERY.md §9.2); (b) per-spell sprint dispatchers branching on patron deity (Sprint 7b.B Bless, Sprint 7b.R Resurrection — both deferred); (c) NPC dialogue + quest gating; (d) Jane narrator lore-lookups; (e) the future PRAY combat handler (god registry, divine favor map, quest dispatch). The Thurian-alias dispatcher pseudo-code at the bottom of the doc is the contract for resolving `valka` → `maat`, `hotath` → `sekhmet` (aspect: hotath), etc. `[high]`
+↔ relates to: SORCERY.md, lib/gods/registry.ts (planned), the-skull-and-pack-luminous-muffin.md plan
+
+### [WIRING]
+
+**Q:** Which code reads this document at runtime today?
+**A:** None. v1 has no runtime parser. The PRAY + Divinity v1 plan (approved 2026-05-09) will build `lib/gods/registry.ts` as a hand-coded TypeScript form of this document's content — derived but not auto-synced. Hyperlinks within answers + the Thurian-alias dispatcher pseudo-code are author-facing reference, not machine-parsed. `[high]`
+↔ relates to: lib/gods/registry.ts (planned), lib/karma/scrolls.ts (precedent for runtime-loaded markdown), the-skull-and-pack-luminous-muffin.md
+
+### [INK-AUTHORING]
+
+**Q:** How will Ink module authors reference deities when writing modules?
+**A:** Open. Best guess: an EXTERNAL function `pray_to(deity_id)` that mutates `divineFavor` + maybe `picssi_spirituality` per the deity's `acceptsActs` / `rejectsActs` table (defined in the future god registry). Module authors would also author atom choices with deity-keyed flags (e.g., `flag_set("witnessed_anubis_rite")`). The exact contract is unspec'd until `MODULE_SYSTEM.md` ships its Ink runtime adapter and `lib/gods/` exists. `[open]` → see [EV-pantheon-001](EDGE_VECTORS.md#ev-pantheon-001)
+↔ relates to: MODULE_SYSTEM.md §3 (Ink EXTERNAL contract), lib/gods/registry.ts (planned)
+
+### [PLAYER-SURFACE]
+
+**Q:** When does the player see a deity name during play?
+**A:** Multiple surfaces: (a) Jane narration when describing consecrated rooms ("the altar to Ra glows at dawn"); (b) PRAY verb output (god-response prose); (c) NPC dialogue + oaths ("By Valka!", "Crom!"); (d) item descriptions for divine relics; (e) battlefield blessings ("May the Valkyrie find you whole"). The Valkyrie are NEVER described in detail per this doc's `narrative_rules` block — they're seen partially (winged shadow, feathered spear-tip). `[high]`
+↔ relates to: KARMA_SYSTEM.md §2.10 (PRAY activity), the-skull-and-pack-luminous-muffin.md (PRAY plan), feedback_real_gendered_pronouns.md
+
+### [AFFECT-VECTOR]
+
+**Q:** What neuro-emotional axes does invoking each deity surface?
+**A:** Open. Best guess, not validated against the atom corpus or `docs/affect-axes.md`: awe (high-tier ritual, Solar Barque ascension), dread (Set, Sekhmet's Helfara face, Outer Dark proximity), wonder (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form), melancholy (Crom-the-silent, Honen-after-the-Cataclysm), reverence (Ma'at's feather-weighing, Anubis's threshold rites). Not formally mapped to the seven canonical axes (fear / excitement / eros / dread / awe / wonder / melancholy) in `docs/affect-axes.md`. `[open]` → see [EV-pantheon-002](EDGE_VECTORS.md#ev-pantheon-002)
+↔ relates to: docs/affect-axes.md, KARMA_SYSTEM.md
+
 ---
 
 # The Pantheon — Living Eamon canonical deities

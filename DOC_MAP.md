@@ -122,6 +122,16 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   status: active
   last_updated: 2026-04-30
   cross_refs: [GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md]
+
+- id: edge_vectors
+  path: EDGE_VECTORS.md
+  title: Edge Vectors — Open Questions Across the Canon
+  role: design-canon
+  canonical_for: [open-questions, design-uncertainty, cross-doc-edges]
+  visibility: creator
+  status: rolling
+  last_updated: 2026-05-09
+  cross_refs: [DOC_MAP.md]
 ```
 
 ## Dev / process docs

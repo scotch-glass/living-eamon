@@ -89,6 +89,24 @@ Every entry conforms to:
 - **Affects:** [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan) (tuning sprint deferred), [GAME_DESIGN.md §11](/library/game_design), [SORCERY.md §7](/library/sorcery) (per-circle Illumination cost)
 - **Resolution path:** ship Sprint 2 PICSSI bedrock + Sprint 3 activity dispatcher → author the first 20 atoms → run Machinations simulations on the resulting state space → record tuned magnitudes in a follow-up `§4a (Tuned YYYY-MM-DD)` block. Promote to `[high]` once the tuning pass produces stable distributions across 100+ simulated playthroughs.
 
+### [MODULE_SYSTEM.md](/library/module_system)
+
+#### EV-module_system-001  `[WIRING]`
+- **Source:** [MODULE_SYSTEM.md](/library/module_system)
+- **Question:** How will `tag_atom()` GPE-trace events be ingested in production — beyond the dev-only `console.log`?
+- **Best guess:** A thin telemetry endpoint (e.g. `app/api/atom-trace/route.ts`) that POSTs `{atom_id, tier, virtues, player_id, session_id, ts}` to a Supabase `atom_traces` table. Use cases: most-traversed atoms, choice-distribution per virtue, archetype-skew vs actual play patterns. Volume planning required (one trace per atom per choice per session adds up).
+- **Confidence:** open
+- **Affects:** [MODULE_SYSTEM.md §4.2 + §5.7](/library/module_system) (tag_atom EXTERNAL + binding), `app/api/atom-trace/route.ts` (planned), `KARMA_IMPLEMENTATION_PLAN.md` Sprint 4b (post-Solomon-Kane authoring analytics)
+- **Resolution path:** unblock when (a) Sprint 4 Ink loader ships and (b) at least one module is in production producing traces. Then formalize the prod ingestion path in MODULE_SYSTEM.md §5.7 with the table schema, retention policy, and a sampling rate to keep volume bounded. Promote to `[high]` once Solomon Kane Whispering Woods has produced 30+ days of traces and a dashboard exists.
+
+#### EV-module_system-002  `[INK-AUTHORING]`
+- **Source:** [MODULE_SYSTEM.md](/library/module_system)
+- **Question:** What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?
+- **Best guess:** Loader inspects `module.json.contractVersion` and either (a) refuses to load 1.0 modules (hard-deprecation, fine while install base is Scotch + 1 author) or (b) routes through a 1.0-shim that re-binds renamed/removed EXTERNALs to no-ops with a deprecation warning. Cost of breaking 1.0 is currently zero — no community modules exist — but Steam Workshop / Itch.io uploads make this load-bearing.
+- **Confidence:** medium
+- **Affects:** [MODULE_SYSTEM.md §4 + §4.5](/library/module_system) (contract + module.json), `lib/karma/loader.ts` (planned shim point), future Steam Workshop / Itch.io ingestion
+- **Resolution path:** document the chosen migration strategy as a new §4.6 in MODULE_SYSTEM.md with worked examples for both rename and removal cases. Promote to `[high]` once a real 2.0 contract lands, an auto-test exercises a 1.0-pinned module under 2.0 runtime, and the deprecation warning surfaces visibly in dev mode.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

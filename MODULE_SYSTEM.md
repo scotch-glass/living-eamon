@@ -6,7 +6,78 @@ canonical_for: [ink-external-functions, gpe-magnitude-bands, combat-picssi-hook-
 visibility: creator
 status: draft
 last_updated: 2026-04-30
-cross_refs: [KARMA_SYSTEM.md, GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md]
+cross_refs: [KARMA_SYSTEM.md, GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md, EDGE_VECTORS.md]
+questions_total: 10
+questions_answered: 8
+questions_open: 2
+edge_vector_ids: [EV-module_system-001, EV-module_system-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [ARCHITECTURE]
+
+**Q:** What three layers does this system define and where does each live?
+**A:** (1) **Authoring layer** — `.ink` files written in Inky by humans, with tags and EXTERNAL calls declaring PICSSI deltas, flag operations, and combat triggers. Lives in `modules/<id>/main.ink`. (2) **Runtime layer** — `lib/karma/*` modules binding Ink to PlayerState (`binding.ts`), running combat→PICSSI hooks (`combat-deltas.ts`), and orchestrating per-turn tick logic (`activities.ts`, `applyKarma.ts`, `recompute.ts`, `loader.ts`). (3) **Tooling layer** — the `living-eamon-gpe` CLI at `tools/gpe/` that statically analyzes modules at build time and outputs balance reports. The three layers are fully decoupled: a writer never touches `lib/`, the runtime never reads `.ink` outside the loader, and the GPE never executes Ink — only parses tags. `[high]`
+↔ relates to: §1 Architecture overview, §2 Repository layout, §5 Runtime adapter
+
+### [INK-AUTHORING]
+
+**Q:** Why inkjs/full at runtime instead of the inklecate C# binary or runtime-only inkjs?
+**A:** Three reasons. (1) **Cross-platform desktop ship is on the roadmap** — Steam/GOG via Tauri/Electron — and inklecate would mean bundling per-platform binaries (Win/Mac/Linux × x64/arm64) plus Steam Deck Linux ARM64. Pure-JS inkjs/full runs identically wherever V8 runs. (2) **Modding-friendliness is on-brand** — Eamon (1980), the namesake, has 270+ fan-authored adventures; shipping `.ink` source alongside compiled `.json` preserves a future Steam Workshop / Itch.io community-uploads pipeline as a configuration choice, not an architectural rewrite. inkjs/full can compile community-submitted `.ink` files at runtime with no build tooling. (3) **Bundle cost is acceptable** — ~200KB minified vs runtime-only inkjs, trivial inside a Tauri/Electron bundle. The runtime-only build is rejected because it lacks Compiler and would break the runtime fall-through. `[high]`
+↔ relates to: §3.1 Compilation strategy, Appendix B (inkjs/full import), project_pre_roll_image_architecture.md (similar pure-JS-everywhere principle)
+
+### [WIRING]
+
+**Q:** What is the contract between an Ink story and PlayerState — what can Ink read, what can Ink call?
+**A:** **Read** (synced from PlayerState into `Story.variablesState` on every Continue cycle, per §4.1): six PICSSI virtues, current/max HP/mana/stamina, gold, action_budget, derived attributes (str_eff/dex_eff/cha_eff), vd_active, ally_count, current_room — 19 variables total. **Call** (bound via `story.BindExternalFunction`, per §4.2): 16 EXTERNAL functions including `apply_karma(virtue, delta)`, `adjust_affection(npc_id, delta)`, `set_flag/clear_flag/has_flag(name, scope)`, `modify_gold/hp/mana/stamina(delta)`, `start_combat(encounter_id)`, `add_item/remove_item/has_item`, `affection(npc_id)`, `tag_atom(atom_id, tier, virtues)` (GPE-trace), `jane_render(text, mood)`. All EXTERNALs return `0` unless documented otherwise (Ink expression-context quirk). Contract version: **1.0.0**. `[high]`
+↔ relates to: §4.1 Variables Ink can READ, §4.2 Functions Ink can CALL, §5.7 binding.ts implementation
+
+### [INK-AUTHORING]
+
+**Q:** What metadata must every atom declare?
+**A:** Four required tags, two optional. **Required:** `# atom: <snake_case_id>` (unique key for GPE + telemetry), `# tier: <trivial|notable|major|defining>` (maps to ±1/±3/±5/±10 magnitude bands), `# touches: <V±>...` (codes P/I/C/S/Sp/Il with sign hints `+`/`-`/`±`), and `# delta: <V><sign><n>` on every choice (the actual delta applied; GPE validates this matches the choice's `apply_karma` calls). **Optional:** `# trigger: <expr>` (atom-trigger matcher condition, e.g. `location=any_tavern`), `# scope: life|legacy` on `set_flag` lines (default `life`). `# requires_item:` and `# requires_flag:` (Appendix A) gate atom availability. The GPE flags `tier`/`delta` magnitude mismatches as warnings — a `tier: notable` atom that applies `delta: P+10` is inconsistent. `[high]`
+↔ relates to: §4.3 Atom declaration syntax, §4.4 Magnitude bands, §7.1 Atom tag schema (parsing target), Appendix A
+
+### [PICSSI-BALANCE]
+
+**Q:** What does the GPE actually check, and how does its score work?
+**A:** GPE walks `.ink` files, extracts atoms by `# atom:` tag, sums per-choice deltas into per-virtue growth/loss totals, and computes a **min/max ratio scaled to 100**: `balanceScore = round((min(growth) / max(growth)) × 100)`. Min/max chosen over stddev because "the weakest virtue gets X% as much growth as the strongest" reads cleanly to non-statistician authors. **Verdict tiers:** 80–100 balanced · 50–79 tilted · 20–49 skewed · 0–19 single-virtue · null narrative-only. Virtues listed in `module.json` `intentionallySkewed` are excluded from the min/max calculation but still reported in the chart, so a Solomon Kane module can score 80+ on its non-skewed virtues while honestly reporting low Passion/Standing growth. Strict-mode CI blocks merges of modules with score < 20 lacking `intentionallySkewed`, missing `# delta:` declarations, or `apply_karma`/`# delta:` mismatches. `[high]`
+↔ relates to: §7.2 Static analysis algorithm, §7.3 Balance score formula, §7.4 Verdict tiers, §7.6 CI integration
+
+### [ARCHITECTURE]
+
+**Q:** How does the loader decide whether to use compiled JSON or raw Ink source?
+**A:** Three-step fall-through in `lib/karma/loader.ts`. (1) Try fetch/read `public/modules/<id>.json`; if present, instantiate with `new Story(json)` and cache. (2) If 404, fetch/read `public/modules/<id>.ink` and run `new Compiler(ink).Compile()` — pure-JS compilation, no native binary. (3) Cache the resulting `Story` per moduleId per session. Server-side variants swap `fetch()` for `fs.readFile()`; cache stays process-wide so Vercel function instances don't recompile across requests. The runtime is the source of truth — pre-compiled `.json` is purely an optimization, with `npm run prebuild` running validate-modules → compile-modules → gpe:all --strict. Dev-mode hot-reload calls `invalidateModule(moduleId)` to drop the cache after `.ink` edits. `[high]`
+↔ relates to: §3.2 Hybrid pattern, §3.5 Runtime loading semantics, §5.6 loader.ts implementation
+
+### [WIRING]
+
+**Q:** How does combat avoid letting per-strike code call applyKarma directly?
+**A:** Combat emits a `CombatContext` event into `lib/karma/combat-deltas.ts`. Hook points in `combatEngine.ts` are pure data-collection: `startCombat` initializes the context, `onEnemyDeath` collects tags and increments kill count, `onAllyFlee` marks `ally.hasFled`, `onPlayerFlee` determines outcome category (`flee` / `flee_ordered` / `flee_abandoned`) by inspecting `allies.every(a => a.hasFled)`. Only at `endCombat` does `applyCombatDeltas(state, ctx)` walk the deltas list and apply each via `applyKarma`. This means combat logic is replaceable without touching karma logic — and the triple-penalty (Courage/Standing/Integrity scaled by `alliesAbandonedCount`) is **non-negotiable in code; no atom override**. The post-combat summary UI reads `state.combatSummary` to itemize earned/lost PICSSI deltas. `[high]`
+↔ relates to: §6.1 Hook points, §6.2 Ordered-retreat detection, §6.3 Triple-penalty enforcement, KARMA_SYSTEM.md §2.8 Group-flee mechanics
+
+### [INK-AUTHORING]
+
+**Q:** What's the first reference module and how does intentionallySkewed work for it?
+**A:** **Solomon Kane in the Whispering Woods**, derived from REH's "Skulls in the Stars" (1929, US PD since 2025). Naturally exercises Integrity (vow to a dying man), Courage (haunted moor at night), Spirituality (Puritan piety), and +Illumination (slaying a vengeful spirit). Module declares `intentionallySkewed: ["passion", "standing"]` in `module.json`, so the GPE excludes those two from min/max scoring and the balance score (target: 15–25) reflects only the four virtues the archetype actually exercises. Module shows the `# atom:`/`# tier:`/`# touches:`/`# delta:` tag pattern in three choices on the entry knot `the_dying_man` (kneel-and-swear → `I+10`; comfort-no-promise → `I+1, Sp+2`; rifle-pockets → `I-5, Il-3`). Sprint 4b in §10 Implementation order. `[high]`
+↔ relates to: §9 First module reference, ADVENTURE_MODULES_PLAN.md (Solomon Kane sub-saga), Public_Domain_Rules.md (Howard 1929 PD timeline)
+
+### [WIRING]
+
+**Q:** How will `tag_atom()` GPE-trace events be ingested in production for telemetry — beyond the dev-only console.log?
+**A:** Open. The §5.7 binding currently just `console.log`s in non-production environments; there's no documented prod ingestion path. Best guess: a thin telemetry endpoint (e.g. `app/api/atom-trace/route.ts`) that POSTs `{atom_id, tier, virtues, player_id, session_id, ts}` to a Supabase `atom_traces` table for post-launch authoring analytics — most-traversed atoms, choice-distribution per virtue, archetype-skew vs actual play patterns. Volume planning needed (one trace per atom per choice per session adds up). Not in any sprint yet. `[open]` → see [EV-module_system-001](EDGE_VECTORS.md#ev-module_system-001)
+↔ relates to: §4.2 (tag_atom EXTERNAL), §5.7 binding.ts (current dev-only log), §7 GPE static analysis (the build-time counterpart)
+
+### [INK-AUTHORING]
+
+**Q:** What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?
+**A:** Medium. §4 declares "current contract version: 1.0.0" and §4.5 puts `contractVersion` in `module.json`, so every module pins its expected contract version — but no concrete migration story is documented. Best guess: when 2.0 lands, the loader inspects `module.json.contractVersion` and either (a) refuses to load 1.0 modules (hard-deprecation, OK if the install base is Scotch + 1 author) or (b) routes through a 1.0-shim that re-binds renamed/removed EXTERNALs to no-ops with a deprecation warning. Living Eamon has no shipped community modules yet, so the cost of breaking 1.0 is currently zero — but once Steam Workshop or Itch.io community uploads exist, the migration story becomes load-bearing. Documenting it before that point is cheap insurance. `[medium]` → see [EV-module_system-002](EDGE_VECTORS.md#ev-module_system-002)
+↔ relates to: §4 The Module Contract (versioned), §4.5 module.json schema, project_doc_orchestration_shipped.md (modding-option preservation)
+
 ---
 
 # Living Eamon — Module System Specification

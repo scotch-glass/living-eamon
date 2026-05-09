@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 6,
-    "edge_count": 100,
+    "ev_count": 8,
+    "edge_count": 107,
     "creator_visible": 26,
     "internal": 8
   },
@@ -212,7 +212,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "draft",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 10,
+      "questions_answered": 8,
+      "questions_open": 2
     },
     "doc:pantheon": {
       "type": "doc",
@@ -392,6 +395,24 @@
       "confidence": "medium",
       "question": "Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, wealth tiers 1k/5k/25k/100k → +5/+10/+20/+30, per-circle Illumination 0/0/0/−2/−4/−8/−15/−30, fatigue penalty +15·tier evasion-vs-player) tuned for end-game balance, or are they opening parameters?",
       "best_guess": "Opening parameters. Scotch's standing direction is \"use your judgment, balance later via Machinations.io.\" Likely tuning targets: action-budget spread too narrow, gear-Standing jewelry doubling too generous, Circle 8's −30 too punishing for a single cast, Tier-4 fatigue lockout too binary."
+    },
+    "ev:EV-module_system-001": {
+      "type": "edge_vector",
+      "id": "EV-module_system-001",
+      "source_doc": "module_system",
+      "category": "WIRING",
+      "confidence": "open",
+      "question": "How will `tag_atom()` GPE-trace events be ingested in production — beyond the dev-only `console.log`?",
+      "best_guess": "A thin telemetry endpoint (e.g. `app/api/atom-trace/route.ts`) that POSTs `{atom_id, tier, virtues, player_id, session_id, ts}` to a Supabase `atom_traces` table. Use cases: most-traversed atoms, choice-distribution per virtue, archetype-skew vs actual play patterns. Volume planning required (one trace per atom per choice per session adds up)."
+    },
+    "ev:EV-module_system-002": {
+      "type": "edge_vector",
+      "id": "EV-module_system-002",
+      "source_doc": "module_system",
+      "category": "INK-AUTHORING",
+      "confidence": "medium",
+      "question": "What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?",
+      "best_guess": "Loader inspects `module.json.contractVersion` and either (a) refuses to load 1.0 modules (hard-deprecation, fine while install base is Scotch + 1 author) or (b) routes through a 1.0-shim that re-binds renamed/removed EXTERNALs to no-ops with a deprecation warning. Cost of breaking 1.0 is currently zero — no community modules exist — but Steam Workshop / Itch.io uploads make this load-bearing."
     },
     "ev:EV-pantheon-001": {
       "type": "edge_vector",
@@ -725,6 +746,11 @@
     },
     {
       "from": "doc:module_system",
+      "to": "doc:adventure_modules_plan",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:module_system",
       "to": "doc:game_design",
       "type": "cross_ref"
     },
@@ -737,6 +763,26 @@
       "from": "doc:module_system",
       "to": "doc:karma_system",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:module_system",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:module_system",
+      "to": "doc:public_domain_rules",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:module_system",
+      "to": "ev:EV-module_system-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:module_system",
+      "to": "ev:EV-module_system-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:pantheon",
@@ -901,6 +947,16 @@
     {
       "from": "ev:EV-karma_system-002",
       "to": "doc:sorcery",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-module_system-001",
+      "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-module_system-002",
+      "to": "doc:module_system",
       "type": "affects"
     },
     {

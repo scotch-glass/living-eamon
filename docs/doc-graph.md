@@ -8,19 +8,19 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 6 open Edge Vectors · 100 edges
+- 34 docs · 8 open Edge Vectors · 107 edges
 - 26 creator-visible · 8 internal
 
 ## Most-connected nodes (by in-degree)
 
 - **game_design** (14 incoming) — Game Design Document
-- **karma_system** (11 incoming) — Karma System
-- **module_system** (10 incoming) — Module System (Ink + GPE)
-- **public_domain_rules** (7 incoming) — Public Domain Rules
+- **karma_system** (12 incoming) — Karma System
+- **module_system** (12 incoming) — Module System (Ink + GPE)
+- **public_domain_rules** (8 incoming) — Public Domain Rules
+- **adventure_modules_plan** (6 incoming) — Adventure Modules Plan
 - **doc_map** (6 incoming) — Documentation Index (this file)
 - **karma_implementation_plan** (6 incoming) — Karma Implementation Plan
 - **sorcery** (6 incoming) — Sorcery (Guild CAST + Occult INVOKE)
-- **adventure_modules_plan** (5 incoming) — Adventure Modules Plan
 
 ## Adjacency
 
@@ -41,8 +41,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **relates_to** → adventure_modules_plan, doc_map, karma_implementation_plan, launch_readiness, module_system
 - **loot_tables** [active] — Loot Tables — per-zone distribution
   - **cross_ref** → world_locations
-- **module_system** [draft] — Module System (Ink + GPE)
+- **module_system** Q:10(open=2) [draft] — Module System (Ink + GPE)
   - **cross_ref** → game_design, hyborian_pd_module_plan, karma_system
+  - **has_open_question** → EV-module_system-001, EV-module_system-002
+  - **relates_to** → adventure_modules_plan, karma_system, public_domain_rules
 - **pantheon** Q:8(open=2) [active] — Pantheon — Living Eamon canonical deities
   - **cross_ref** → game_design, public_domain_rules, sorcery
   - **has_open_question** → EV-pantheon-001, EV-pantheon-002
@@ -116,7 +118,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **karma_implementation_plan** [deferred] — Karma Implementation Plan
   - **cross_ref** → hydrate_next_session, karma_system
 
-## Open Edge Vectors (6)
+## Open Edge Vectors (8)
 
 - **EV-game_design-001** `[AFFECT-VECTOR, open]` ← game_design → affects: karma_system, module_system
   - Q: How do PICSSI virtues correlate with the seven AffectVector axes?
@@ -126,6 +128,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - Q: How will Ink module authors apply PICSSI deltas inside an .ink file?
 - **EV-karma_system-002** `[PICSSI-BALANCE, medium]` ← karma_system → affects: game_design, karma_implementation_plan, sorcery
   - Q: Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, we...
+- **EV-module_system-001** `[WIRING, open]` ← module_system → affects: module_system
+  - Q: How will `tag_atom()` GPE-trace events be ingested in production — beyond the dev-only `console.log`?
+- **EV-module_system-002** `[INK-AUTHORING, medium]` ← module_system → affects: module_system
+  - Q: What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?
 - **EV-pantheon-001** `[INK-AUTHORING, open]` ← pantheon → affects: module_system
   - Q: How will Ink module authors reference deities when writing modules?
 - **EV-pantheon-002** `[AFFECT-VECTOR, open]` ← pantheon → affects: karma_system

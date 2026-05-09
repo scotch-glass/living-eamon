@@ -21,6 +21,7 @@ import {
   type DocEntry,
 } from "../lib/library/docMap";
 import { parseFrontmatter } from "../lib/library/markdown";
+import { loadEdgeVectors } from "../lib/library/edgeVectors";
 
 const REPO_ROOT = process.cwd();
 const OUT_JSON = path.join(REPO_ROOT, "docs", "doc-graph.json");
@@ -150,91 +151,41 @@ function extractRelatesToEdges(
 }
 
 /**
- * Parse EDGE_VECTORS.md for the structured "### EV-<id>" entries.
- * Returns one EvNode per entry plus the implied edges:
+ * Parse EDGE_VECTORS.md via the shared lib/library/edgeVectors parser
+ * and project the entries into graph-shaped nodes + edges:
  *   doc:<source> -> ev:<id>      (has_open_question)
  *   ev:<id>      -> doc:<target> (affects, one per Affects: link)
  */
-function parseEdgeVectors(
-  resolver: Map<string, string>
-): { nodes: EvNode[]; edges: Edge[] } {
-  const file = path.join(REPO_ROOT, "EDGE_VECTORS.md");
-  if (!fs.existsSync(file)) return { nodes: [], edges: [] };
-  const raw = fs.readFileSync(file, "utf-8");
-  const { body } = parseFrontmatter(raw);
-
+function parseEdgeVectors(): { nodes: EvNode[]; edges: Edge[] } {
+  const entries = loadEdgeVectors();
   const nodes: EvNode[] = [];
   const edges: Edge[] = [];
 
-  // Split on "#### EV-" anchors (per the EDGE_VECTORS.md schema; entries
-  // are H4 nested under H3 source-doc groupings). First chunk is preamble.
-  const chunks = body.split(/^####\s+(EV-[a-z0-9_-]+)\s+/im);
-  // chunks: [preamble, id1, body1, id2, body2, ...]
-  for (let i = 1; i < chunks.length; i += 2) {
-    const evId = chunks[i].trim();
-    const evBody = chunks[i + 1] ?? "";
-
-    const category = evBody.match(/`\[([A-Z-]+)\]`/)?.[1] ?? "UNKNOWN";
-
-    // Source: extract first markdown link target inside the Source: line
-    const sourceLine = evBody.match(/-\s*\*\*Source:\*\*\s*(.+)$/m)?.[1] ?? "";
-    const sourceLink = sourceLine.match(/\(([^)]+)\)/)?.[1] ?? sourceLine.trim();
-    const sourceDocId = resolveSourceLink(sourceLink, resolver);
-
-    const question = evBody.match(/-\s*\*\*Question:\*\*\s*(.+)$/m)?.[1]?.trim() ?? "";
-    const bestGuess = evBody.match(/-\s*\*\*Best guess:\*\*\s*(.+)$/m)?.[1]?.trim() ?? "";
-    const confidence = evBody.match(/-\s*\*\*Confidence:\*\*\s*(\w+)/)?.[1]?.trim() ?? "open";
-
+  for (const ev of entries) {
     nodes.push({
       type: "edge_vector",
-      id: evId,
-      source_doc: sourceDocId,
-      category,
-      confidence,
-      question,
-      best_guess: bestGuess,
+      id: ev.id,
+      source_doc: ev.sourceDocId,
+      category: ev.category,
+      confidence: ev.confidence,
+      question: ev.question,
+      best_guess: ev.bestGuess,
     });
 
-    // doc -> ev edge
-    if (sourceDocId) {
+    if (ev.sourceDocId) {
       edges.push({
-        from: `doc:${sourceDocId}`,
-        to: `ev:${evId}`,
+        from: `doc:${ev.sourceDocId}`,
+        to: `ev:${ev.id}`,
         type: "has_open_question",
       });
     }
 
-    // Affects line -- extract every markdown link target on that line
-    const affectsLine = evBody.match(/-\s*\*\*Affects:\*\*\s*(.+)$/m)?.[1] ?? "";
-    const linkTargets = [...affectsLine.matchAll(/\(([^)]+)\)/g)].map((m) => m[1]);
-    const seen = new Set<string>();
-    for (const target of linkTargets) {
-      const id = resolveSourceLink(target, resolver);
-      if (!id) continue;
-      const key = `${evId}->${id}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      edges.push({ from: `ev:${evId}`, to: `doc:${id}`, type: "affects" });
+    for (const target of ev.affects) {
+      edges.push({ from: `ev:${ev.id}`, to: `doc:${target}`, type: "affects" });
     }
   }
 
   return { nodes, edges };
-}
-
-/**
- * "/library/pantheon" or "lore/pantheon/PANTHEON.md" or "pantheon" -> "pantheon"
- */
-function resolveSourceLink(link: string, resolver: Map<string, string>): string {
-  const cleaned = link
-    .replace(/^\/library\//, "")
-    .replace(/#.*$/, "")
-    .trim();
-  return (
-    resolver.get(cleaned) ??
-    resolver.get(cleaned.toLowerCase()) ??
-    resolver.get(path.basename(cleaned)) ??
-    ""
-  );
 }
 
 // ── Main ───────────────────────────────────────────────────────
@@ -317,7 +268,7 @@ function main() {
   }
 
   // 2. EV nodes + has_open_question + affects edges
-  const { nodes: evNodes, edges: evEdges } = parseEdgeVectors(resolver);
+  const { nodes: evNodes, edges: evEdges } = parseEdgeVectors();
   for (const ev of evNodes) {
     nodes[`ev:${ev.id}`] = ev;
   }

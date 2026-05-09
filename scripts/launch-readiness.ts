@@ -23,30 +23,18 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import yaml from "js-yaml";
-import { parseFrontmatter } from "../lib/library/markdown";
+import {
+  loadLaunchItems,
+  isActive,
+  type LaunchItem,
+  type LaunchStatus as Status,
+} from "../lib/library/launchCriteria";
 
 const REPO_ROOT = process.cwd();
 const GRAPH_PATH = path.join(REPO_ROOT, "docs", "doc-graph.json");
-const CRITERIA_PATH = path.join(REPO_ROOT, "LAUNCH_CRITERIA.md");
 const OUT_PATH = path.join(REPO_ROOT, "docs", "launch-readiness.md");
 
 // ── Types ──────────────────────────────────────────────────────
-
-type Status = "shipped" | "in-progress" | "not-started" | "blocked" | "deferred";
-
-interface LaunchItem {
-  id: string;
-  title: string;
-  tier: 0 | 1 | 2;
-  status: Status;
-  source: string;
-  blockers: string[];
-  affects_ev?: string[];
-  affects_docs?: string[];
-  good_looks_like?: string;
-  criticality_flag?: "high" | "low";
-}
 
 interface ScoredItem extends LaunchItem {
   priority: number;
@@ -82,42 +70,6 @@ function loadGraph(): GraphPayload {
     );
   }
   return JSON.parse(fs.readFileSync(GRAPH_PATH, "utf-8")) as GraphPayload;
-}
-
-/**
- * Parse LAUNCH_CRITERIA.md. Walks the markdown for fenced ```yaml blocks
- * inside the Tier 0 / Tier 1 / Tier 2 sections. Each block contains a
- * YAML list of launch items.
- */
-function loadLaunchItems(): LaunchItem[] {
-  const raw = fs.readFileSync(CRITERIA_PATH, "utf-8");
-  const { body } = parseFrontmatter(raw);
-  const lines = body.split(/\r?\n/);
-  const items: LaunchItem[] = [];
-  let inYaml = false;
-  let buffer: string[] = [];
-  for (const line of lines) {
-    if (line.trim() === "```yaml") {
-      inYaml = true;
-      buffer = [];
-      continue;
-    }
-    if (line.trim() === "```" && inYaml) {
-      inYaml = false;
-      const parsed = yaml.load(buffer.join("\n"));
-      if (Array.isArray(parsed)) {
-        for (const entry of parsed) {
-          if (entry && typeof entry === "object" && "id" in entry) {
-            items.push(entry as LaunchItem);
-          }
-        }
-      }
-      buffer = [];
-      continue;
-    }
-    if (inYaml) buffer.push(line);
-  }
-  return items;
 }
 
 // ── Scoring ────────────────────────────────────────────────────
@@ -173,17 +125,6 @@ function scoreItems(items: LaunchItem[], graph: GraphPayload): ScoredItem[] {
       downstream_sprints: downstreamSprints.sort(),
     };
   });
-}
-
-// ── Sorting ────────────────────────────────────────────────────
-//
-// Active blockers (not-started, blocked, in-progress) sort by priority
-// desc. Shipped + deferred items sort separately.
-
-const ACTIVE_STATUSES = new Set<Status>(["not-started", "blocked", "in-progress"]);
-
-function isActive(item: LaunchItem): boolean {
-  return ACTIVE_STATUSES.has(item.status);
 }
 
 // ── Render ─────────────────────────────────────────────────────

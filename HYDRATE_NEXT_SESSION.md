@@ -6,89 +6,110 @@ canonical_for: [session-end-snapshot, next-session-prompt]
 visibility: internal
 status: rolling
 last_updated: 2026-05-09
-cross_refs: [CLAUDE_CONTEXT.md, DOC_MAP.md]
+cross_refs: [CLAUDE_CONTEXT.md, DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md]
 ---
 
 # Hydration prompt — next Living Eamon session
 
 ## Status of the previous session (2026-05-09)
 
-Two-phase session.
+Massive build session. Started by committing the previous session's marathon (~50 unstaged files); shipped the entire **doc-orchestration arc** end-to-end (W1 → W2 → Q+A pilot → graph + launch-readiness report → background watcher) in 13 commits. By session end, the next session can hydrate by reading three files (DOC_MAP + doc-graph + launch-readiness) and immediately know the topology, every open design question, and the prioritized list of launch blockers.
 
-**Phase 1 — Marathon cleanup + lore commit.** The previous session's marathon (Combat Arena v2 FX, spell-registry purge, HASTE rewire, agility → dexterity refactor, CombatantInfoPopup overhaul, lore-sync banners) was ~50 files unstaged on `dev`. Reverted the TEMP `isCrit = true` debug at [lib/combat/engine.ts:371](lib/combat/engine.ts#L371), then committed in three discrete commits: the marathon (`ac875e4`), the Thurian-pantheon integration into [lore/pantheon/PANTHEON.md](lore/pantheon/PANTHEON.md) (`a73fb28`), and a small cleanup removing a stray `QIDP Advantages.png` from `lore/thurian-cartography/` (`9cfbeee`).
-
-**Phase 2 — W1 foundation of the doc-orchestration / `/library` wiki sprint.** Scotch reported doc-volume + overlap concerns and requested a creator-facing wiki. Plan was researched (3 parallel Explore agents + 1 Plan agent), approved, and now lives at `~/.claude/plans/review-the-lore-and-floofy-hamming.md`. W1 (foundation) shipped across three commits — agility purge in KARMA_SYSTEM (`64020ca`), DOC_MAP.md spine + YAML frontmatter on 24 docs + hydration wiring (`5903d1b`), and auth role infrastructure (`97d5b61`).
-
-### Six commits this session
+### Full commit ledger (13 commits, since `dcada39`)
 
 | Commit | Sprint | What |
 |---|---|---|
-| [`97d5b61`](.) | **W1.3** | players.role migration + lib/auth/role.ts + proxy.ts /library gate |
-| [`5903d1b`](.) | **W1.2** | DOC_MAP.md + YAML frontmatter on 24 docs + CLAUDE.md/CLAUDE_CONTEXT.md hydration wiring |
-| [`64020ca`](.) | **W1.1** | agility → evasion in KARMA_SYSTEM.md (4 stale descriptors) |
-| [`9cfbeee`](.) | cleanup | remove stray QIDP Advantages.png from lore tree |
-| [`a73fb28`](.) | lore | merge Thurian-era pantheon integration (Valka/Hotath/Helfara/Honen/Helgor/The-Serpent + Valkyrie + dispatcher notes) into PANTHEON.md |
-| [`ac875e4`](.) | (marathon) | Combat Arena v2 FX + spell purge + HASTE rewire + agility refactor (60 files, +6187/-831) |
+| `3fade76` | **G3** | docs:watch background regenerator + dev:all script |
+| `cf66647` | **G1+G2** | doc graph + launch-readiness report (LAUNCH_CRITERIA.md, build-doc-graph.ts, launch-readiness.ts) |
+| `eef73cd` | **Q+A pilot** | PANTHEON.md + GAME_DESIGN.md Q+A blocks + EDGE_VECTORS.md |
+| `e7fb2b3` | W2-followup | merge two duplicate "Lore" sections; drop em-dash strip |
+| `4364048` | W2-followup | coerce js-yaml Date values to strings (fixed render crash) |
+| `e0304a5` | **W2** | /library wiki UI shipped |
+| `725a316` | (mid-session) | HYDRATE rewrite for post-W1 state — superseded by this file |
+| `97d5b61` | **W1.3** | players.role migration + lib/auth/role.ts + proxy.ts /library gate |
+| `5903d1b` | **W1.2** | DOC_MAP.md spine + YAML frontmatter on 24 docs + hydration wiring |
+| `64020ca` | **W1.1** | agility → evasion in KARMA_SYSTEM.md descriptors |
+| `9cfbeee` | cleanup | remove stray QIDP Advantages.png |
+| `a73fb28` | lore | merge Thurian-era pantheon integration into PANTHEON.md (Valka/Hotath/Helfara/Honen/Helgor/The-Serpent + Valkyrie + dispatcher notes) |
+| `ac875e4` | (marathon) | Combat Arena v2 FX + spell purge + HASTE rewire + agility refactor (60 files, +6187/-831) |
 
-### W1 deliverables — what now exists
+### What now exists (system-level)
 
-**[`DOC_MAP.md`](DOC_MAP.md) (new, ~250 lines) — master documentation spine.** Every doc in the repo has a row declaring `id`, `role` (one of: `design-canon` / `sprint-plan` / `session-log` / `reference-generated` / `lore-artifact` / `legal` / `dev-process`), `canonical_for` (topic ownership), `visibility` (`internal` / `creator`), `status`, `last_updated`, `cross_refs`. Bottom of the file has a topic-lookup table ("PICSSI virtue defs (lore) → GAME_DESIGN.md §11", "Combat-PICSSI delta table → KARMA_SYSTEM.md §4c", etc.) plus maintenance rules.
+**Doc orchestration spine:**
+- [`DOC_MAP.md`](DOC_MAP.md) — master index, **34 docs** in 4 sections (Root design 8 / Dev process 8 / Lore 13 / Generated registries 4)
+- 24 docs have YAML frontmatter; lore artifacts retain their bespoke runtime-loader frontmatter
+- Visibility tiers: `internal` (Scotch + Claude) vs `creator` (Ink module authors)
 
-**YAML frontmatter on 24 docs.** Schema applied to 14 root docs + 9 lore/reference docs. Lore artifacts that already had bespoke frontmatter (15 Scrolls of Thoth, 14 Stobaean fragments, the-conquerors-question, the-lament) NOT touched — their frontmatter is parsed by `lib/karma/scrolls.ts` and a future runtime loader.
+**Creator-facing wiki:** [`/library`](http://localhost:3000/library)
+- Auth-gated via `players.role` (player / creator / admin)
+- Layout matches `/board` `/splash` chrome (Georgia serif, dark navy + cream + gold + copper, inline styles)
+- Sidebar tree from DOC_MAP, filtered by visibility, with active-doc highlighting
+- Markdown rendered via `marked`, internal links rewritten to `/library/<id>` slugs, frontmatter shown in metadata sidebar
+- 31 docs accessible to admin (you), ~22 to creators
 
-**Hydration wiring.** [CLAUDE.md](CLAUDE.md) has a new "Doc index" callout pointing at DOC_MAP.md and a new item-0 in the read-stack. [CLAUDE_CONTEXT.md](CLAUDE_CONTEXT.md) rehydration block has DOC_MAP.md inserted as step 0. Future Claude sessions scan it first.
+**Q+A annotation system (pilot shipped):**
+- 9 question categories: `[LORE]` / `[ARCHITECTURE]` / `[WIRING]` / `[INK-AUTHORING]` / `[PICSSI-BALANCE]` / `[AFFECT-VECTOR]` / `[NAV-MAP]` / `[PLAYER-SURFACE]` / `[PD-SAFETY]`
+- 4 confidence levels: `[high]` / `[medium]` / `[low]` / `[open]`
+- Hybrid placement: frontmatter counts (`questions_total`, `questions_answered`, `questions_open`, `edge_vector_ids`) + markdown body section after frontmatter
+- Pilot doc 1: PANTHEON.md (8 Q, 6 high, 2 open)
+- Pilot doc 2: GAME_DESIGN.md (10 Q, 8 high, 2 open)
+- 18 Q+A entries, 4 open Edge Vectors
 
-**`players.role` column** (migration `20260509000000_w1_player_role.sql`, applied via Management API). Values `'player'` (default, CHECK-constrained) | `'creator'` | `'admin'`. Indexed.
+**[`EDGE_VECTORS.md`](EDGE_VECTORS.md):** open-questions registry with stable IDs (`EV-<doc-id>-NNN`):
+- `EV-pantheon-001` `[INK-AUTHORING, open]` → How Ink authors reference deities
+- `EV-pantheon-002` `[AFFECT-VECTOR, open]` → Per-deity neuro-emotional axes
+- `EV-game_design-001` `[AFFECT-VECTOR, open]` → PICSSI virtues × seven AffectVector axes matrix
+- `EV-game_design-002` `[INK-AUTHORING, medium]` → Module archetype-purity vs PD vs PICSSI compatibility
 
-**[lib/auth/role.ts](lib/auth/role.ts) (new).** `UserRole` type, `getUserRole(userId)` (defaults to `'player'` if missing), `roleMeetsThreshold(role, threshold)`. Treated as auth metadata, NOT WorldState — does not round-trip through `lib/persistence/playerRecord.ts`.
+**[`LAUNCH_CRITERIA.md`](LAUNCH_CRITERIA.md):** three-tier launch checklist, **31 items**:
+- Tier 0 MVP-blockers: 14 items (7 shipped + 7 active)
+- Tier 1 launch polish: 8 items (all not-started)
+- Tier 2 post-launch: 9 items (1 in-progress + 8 deferred)
 
-**[proxy.ts](proxy.ts) `/library` gate.** Inserted between the unauthenticated check and the character-creation gate (so module authors who haven't built a hero can still browse the canon). Insufficient role bounces to splash; W2 will replace with a styled 403.
+**Auto-generated graph + report (regenerated by `npm run graph:build` + `npm run launch:status`):**
+- [`docs/doc-graph.json`](docs/doc-graph.json) — full topology, 34 nodes + 4 EVs + **91 edges**
+- [`docs/doc-graph.md`](docs/doc-graph.md) — adjacency view loaded into Claude hydration as item 0.5
+- [`docs/launch-readiness.md`](docs/launch-readiness.md) — prioritized blocker list loaded as item 0.6
 
-**Account roles flipped:**
-- `joshua.mcclure@gmail.com` → `'admin'`
-- `mcclure.jw@gmail.com` → no `players` row yet (auth.users exists; row auto-created on first login). Per Scotch's spec it should be `'creator'`. **Loose end:** after that account next signs in, run:
+**Background regenerator:** [`scripts/watch-docs.ts`](scripts/watch-docs.ts) — chokidar watcher with 300ms debounce, runs the two generators on every change to a watched markdown file. Run via `npm run docs:watch` (standalone) or `npm run dev:all` (alongside `next dev`).
+
+### The current "what's next?" answer (from `docs/launch-readiness.md`)
+
+**Critical path:** `karma_sprint_chain` — priority **116** — 10 downstream sprints + 3 EVs blocked.
+
+| Rank | Tier-0 item | Priority | Status |
+|---|---|---|---|
+| 1 | KARMA Sprints 1–7 (PICSSI virtue system end-to-end) | 116 | not-started; awaits §6 approval + Sprint 0 audit |
+| 2 | First launch adventure module | 110 | not-started; depends on KARMA + Ink runtime |
+| 3 | MODULE_SYSTEM Ink runtime + GPE authoring CLI | 105 | not-started; depends on KARMA |
+| 4 | Stripe payment gate | 102 | not-started (bridge: email-confirm) |
+| 5 | Hero registration + character creation | 100 | in-progress; blocked by Stripe |
+| 6 | Combat Arena v2 → production | 100 | not-started (still on v1 in production flow) |
+| 7 | Image generation pipeline | 100 | in-progress |
+
+### Decisions / discoveries this session
+
+1. **The doc-overlap audit was wrong about three of four dedup targets.** KARMA §2.5–2.10, MODULE_SYSTEM §5.1, MODULE_SYSTEM §6.1 are NOT duplicates — they contain load-bearing mechanical detail and TypeScript implementation spec. Dropped from W1.1 scope.
+2. **Q+A schema works.** Scotch confirmed the hybrid (frontmatter counts + markdown body) renders correctly in `/library` and the `↔ relates to:` lines are graph data without extra wiring.
+3. **Graphify is complementary, not a replacement.** Tool found via WebSearch — extracts auto-relationships from existing prose; cannot author design intent. Q+A captures what's in your head; Graphify could later layer on top if needed.
+4. **Hybrid graph storage = JSON file (not Neo4j / SQLite / Supabase).** v1 needs no DB; the file regenerates from canonical sources on every change. Migrate only when query needs outgrow file scans.
+5. **Most-connected nodes:** `game_design` (12 incoming), `karma_system` (11), `module_system` (8), `public_domain_rules` (7). The first three are the gravity wells.
+6. **Roles confirmed:** `player` (default) / `creator` (Ink authors) / `admin` (Scotch). `joshua.mcclure@gmail.com` flipped to admin.
+7. **Watcher pattern adopted.** No long-running server, no DB events — just `chokidar` + `concurrently`. Works alongside `next dev` via `npm run dev:all`.
+
+### Loose ends carried forward
+
+- **`mcclure.jw@gmail.com` role flip** — auth.users exists but no `players` row yet (created on first login). After that account next signs in:
   ```sql
   update players set role = 'creator'
     where user_id = (select id from auth.users where email = 'mcclure.jw@gmail.com');
   ```
-
-### Decisions / discoveries this session
-
-1. **The doc-overlap audit was wrong about three of four dedup targets.** KARMA §2.5–2.10, MODULE_SYSTEM §5.1, and MODULE_SYSTEM §6.1 are NOT duplicates of GAME_DESIGN §11 — they contain load-bearing mechanical detail (atom magnitudes, Ordered-Retreat mechanic, triple-penalty rule, group-flee behavior, shop-deal formulas) and TypeScript implementation spec (`PicssiState`, `PICSSI_BOUNDS`, hook-point integration code) respectively. Replacing them with pointers would have destroyed content. The cross-references to GAME_DESIGN.md are already explicit. **Action:** the dedup-pointer items in the original plan were dropped; only the agility purge survived from W1.1.
-2. **Visibility tiers locked.** `creator`-visible: GAME_DESIGN, KARMA_SYSTEM, MODULE_SYSTEM, ADVENTURE_MODULES_PLAN, SORCERY, Public_Domain_Rules, README, all `lore/` files, `docs/*` registries. `internal` only: CLAUDE, CLAUDE_CONTEXT, HYDRATE, KARMA_IMPLEMENTATION_PLAN, AGENTS, TECH, SESSION_001_*, DOC_MAP itself. Encoded in `DOC_MAP.md` and per-doc frontmatter.
-3. **Roles confirmed by Scotch:** three values — `player` (default) / `creator` (Ink module authors) / `admin` (Scotch).
-4. **Substrate decision:** the wiki ships as a Next.js 16 route `/library` inside the existing app (not VitePress / mkdocs / docusaurus / GitHub Wiki / Notion). Reuses `proxy.ts` auth, `/board`+`/splash`+`/legal` chrome, the running Vercel deploy. Single-login UX for Creators.
-
----
-
-## What's next — W2 (wiki UI), ~1 day
-
-The plan file (`~/.claude/plans/review-the-lore-and-floofy-hamming.md`) details Sprint W2 step-by-step. High-level:
-
-1. **Read existing public pages first** (`app/splash/`, `app/board/`, `app/legal/`) to extract Tailwind tokens / typography / chrome. The wiki must visually feel like Living Eamon, not a Confluence clone.
-2. **Build `/library` shell** — `app/library/layout.tsx` with top nav + sidebar. `lib/library/docMap.ts` parses `DOC_MAP.md`, filters by visibility for the current user's role.
-3. **Markdown renderer** — `lib/library/markdown.ts` using `marked` (~30KB). Custom hooks: rewrite internal links (`lore/foo.md` → `/library/...`), parse + display frontmatter as a metadata sidebar on lore pages, syntax-highlight code blocks (`shiki` or `highlight.js`).
-4. **Dynamic page route** — `app/library/[...slug]/page.tsx` with role-gating. Landing page renders DOC_MAP-derived section cards (Setting & Lore / Mechanics & PICSSI / Module Authoring / Registries / PD Rules). Styled 403 page replaces the splash redirect for insufficient-role users.
-5. **Search box** — client-side `fuse.js` (~10KB) over titles + headings.
-
-**New deps to install:** `marked`, `@tailwindcss/typography` (verify not already pulled in), `shiki` OR `highlight.js`, optionally `fuse.js`.
-
-**Verification (per the plan's §Verification section):** build passes, wiki renders at `localhost:3000/library` as admin, sidebar covers all `creator`-visible docs, `internal` docs hidden, internal-link clicks resolve correctly, frontmatter renders in metadata sidebar.
-
-After W2 ships, **W3 (~half day)** extends `npm run registry:dump` to spells / adventures / NPCs with an umbrella `npm run docs:dump` and drift-detection `npm run docs:check`. Closes the auto-sync loop that protects against doc/code drift.
-
----
-
-## Known follow-ups (carried over)
-
-- **`mcclure.jw@gmail.com` role flip** — after first login (see SQL above).
-- **PRAY + Divinity System v1 sprint** — separate plan at `~/.claude/plans/the-skull-and-pack-luminous-muffin.md`. Approved but unimplemented. Independent of the wiki sprint.
-- **Karma approval gates** — KARMA_SYSTEM §6, KARMA_IMPLEMENTATION Sprint 0 audit, MODULE_SYSTEM Stage I all still pending Scotch sign-off. These block Karma Sprint 1 but are unrelated to W2.
-- **maatic-library books (8 files)** + `docs/quest-registry.md` — orchestration-declared in DOC_MAP.md but per-file YAML frontmatter deferred until W2 firms up the renderer's frontmatter expectations.
-- **Corpse loot UI / burial / per-room clock** — deferred per `project_corpse_loot_burial_deferred.md`.
-- **Click-to-slot from spellbook** — original arena Phase 5.
-- **Live-game integration of `<CombatArena>`** — production game flow still on `<CombatScreen>` v1.
-- **`c2-npc-kit.test.ts`** — 4 fixture-drift failures from before this session. Not regressions.
+- **KARMA approval gates** still pending Scotch sign-off: KARMA_SYSTEM §6, KARMA_IMPLEMENTATION Sprint 0 audit, MODULE_SYSTEM Stage I. **These are the literal critical path** per `docs/launch-readiness.md` (priority 116).
+- **Q+A annotation batch** — 12 design-canon + sprint-plan + lore-design docs still need their Q+A blocks. Listed in the previous plan iteration. Densifies the graph + surfaces more EVs once shipped.
+- **Mermaid graph viz at `/library/graph`** — deferred polish. Data is in `docs/doc-graph.json`; a future page can render Mermaid from it.
+- **W3 (registry dumps)** — extends `npm run registry:dump` to spells/adventures/NPCs/gods. Deferred.
+- **Production build is broken** on a pre-existing Turbopack issue with `lib/imageProcessing.ts` referencing a `.venv/bin/python3` symlink. Dev mode tolerates it. Unrelated to any of this session's work.
+- **`c2-npc-kit.test.ts`** has 4 fixture-drift failures from before this session. Not regressions.
 
 ---
 
@@ -96,28 +117,45 @@ After W2 ships, **W3 (~half day)** extends `npm run registry:dump` to spells / a
 
 You are being rehydrated into Living Eamon. Read this stack in order:
 
-0. [`DOC_MAP.md`](DOC_MAP.md) — **NEW master spine**. Every doc declared with role / visibility / status. Scan first.
-1. `CLAUDE.md` (root) — top-level rules + behavioral guidelines.
-2. `CLAUDE_CONTEXT.md` — project overview.
-3. **This file** — the session-end snapshot above.
-4. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index. Pay attention to:
-   - `project_doc_orchestration_plan.md` (NEW — pointer to the approved /library wiki plan)
-   - `feedback_doc_map_discipline.md` (NEW — when adding/moving/role-changing a doc, update DOC_MAP.md in the same commit)
-   - `project_haste_design_locked.md` (HASTE mechanic spec)
-   - `project_spells_purged_2026-05-09.md` (POWER/DAYLIGHT/MIRROR/BANISH/INVOKE-LIGHT removal)
-   - `project_agility_to_dexterity.md` (terminology refactor outcome)
-   - `project_pray_divinity_plan_approved.md` (PRAY plan — separate from wiki work)
-5. **Approved orchestration plan:** `~/.claude/plans/review-the-lore-and-floofy-hamming.md` — currently W1 SHIPPED, W2 (wiki UI) DEFERRED, W3 (registry dumps) DEFERRED. Drive into W2 if Scotch authorizes.
-6. **Approved divinity plan (separate):** `~/.claude/plans/the-skull-and-pack-luminous-muffin.md` — PRAY + Divinity v1.
+0. [`DOC_MAP.md`](DOC_MAP.md) — master spine. Every doc declared with role / visibility / status / cross_refs.
+1. [`docs/doc-graph.md`](docs/doc-graph.md) — **NEW auto-generated topology**. 34 docs · 4 EVs · 91 edges; most-connected nodes; full adjacency view.
+2. [`docs/launch-readiness.md`](docs/launch-readiness.md) — **NEW auto-generated prioritized blocker list**. Tells you exactly what's blocking launch (KARMA gate is currently the critical-path bottleneck).
+3. `CLAUDE.md` (root) — top-level rules + behavioral guidelines.
+4. `CLAUDE_CONTEXT.md` — project overview.
+5. **This file** — the session-end snapshot above.
+6. `~/.claude/projects/-Users-joshuamcclure-Desktop-living-eamon/memory/MEMORY.md` — memory index. Pay attention to:
+   - `project_doc_orchestration_shipped.md` (W1+W2+Q+A pilot+graph+watcher all shipped)
+   - `project_doc_graph_readiness.md` (NEW — graph + launch-readiness + watcher pattern)
+   - `feedback_doc_map_discipline.md` (DOC_MAP.md must be updated in same commit as any doc add/move/role-change)
+   - `project_pray_divinity_plan_approved.md` (separate plan, awaits KARMA gate)
+7. **Approved orchestration plan:** `~/.claude/plans/review-the-lore-and-floofy-hamming.md` — currently the Q+A pilot + G1+G2+G3 are all SHIPPED. Plan file may be overwritten by a new sprint plan next session.
+8. **Approved divinity plan (separate):** `~/.claude/plans/the-skull-and-pack-luminous-muffin.md` — PRAY + Divinity v1, awaiting KARMA gate.
 
-After reading, confirm hydration with one paragraph naming: (a) what shipped in the previous session (W1 foundation: DOC_MAP + frontmatter + role gate), (b) what's next (W2 wiki UI), (c) any open questions or blockers.
+After reading, confirm hydration with one paragraph naming: (a) what shipped in the previous session, (b) the top critical-path item from `docs/launch-readiness.md`, (c) any open questions or blockers.
+
+---
+
+## What's next — your choice
+
+Three plausible directions, ranked by what compounds best:
+
+1. **Authorize the KARMA approval gate.** This is the literal #1 priority on the launch-readiness report. Approving KARMA_SYSTEM §6 + Sprint 0 audit + MODULE_SYSTEM Stage I unblocks 10 downstream sprint items + 3 open EVs. Single highest-leverage decision Scotch can make. **Not a coding task — a review/sign-off task.**
+2. **Q+A annotation batch (~12 docs).** Densifies the graph (estimated +50–100 edges), surfaces more EVs, gives launch-readiness better priority signals. Mechanical work; would take ~1 session. Per the previous plan iteration: KARMA_SYSTEM, MODULE_SYSTEM, SORCERY, Public_Domain_Rules, the three thurian-cartography docs, two lore INDEX docs, ADVENTURE_MODULES_PLAN, hyborian-pd MODULE_PLAN, KARMA_IMPLEMENTATION_PLAN.
+3. **PRAY + Divinity v1** (separate plan, approved). Builds `lib/gods/registry.ts`, divine favor map, PRAY combat handler + out-of-combat verb, two starter divine quests. Resolves EV-pantheon-001 (INK-AUTHORING) once Ink runtime ships. Independent of the wiki work.
+
+If neither feels right, options 4–6 also queued: production-integrate Combat Arena v2 (Tier 0 #6), Stripe payment gate (Tier 0 #4), Mermaid graph viz at `/library/graph` (deferred polish).
 
 ---
 
 ## Operational facts
 
 - **Branch model:** `dev` is working; `main` is Vercel deploy target. Always merge with `--no-ff`.
-- **Dev server:** port **3000**.
+- **Dev server:** port **3000**. **Recommended dev command: `npm run dev:all`** (runs `next dev` + `docs:watch` together via `concurrently`, color-prefixed).
+- **Doc-orchestration npm scripts:**
+  - `graph:build` — regenerates `docs/doc-graph.{json,md}`
+  - `launch:status` — regenerates `docs/launch-readiness.md`
+  - `docs:watch` — chokidar watcher; runs both generators on any markdown change (300ms debounce)
+  - `dev:all` — convenience: runs `next dev` + `docs:watch` in parallel
 - **Auth bypass for dev APIs:** `proxy.ts` whitelists `/api/sprite-list`, `/api/sprite-metadata`, `/api/sprite-regen`, `/api/sprite-touchup`, `/api/prompt-rules`, `/api/item-icon` under `NODE_ENV !== "production"`.
 - **Roles in DB:** `joshua.mcclure@gmail.com` is `admin`. All other accounts default to `player` until flipped.
 - **Supabase migration apply method:** `npx supabase db push` is broken. Use Management API:
@@ -136,22 +174,25 @@ After reading, confirm hydration with one paragraph naming: (a) what shipped in 
 ## Discipline / process notes
 
 - **No live game.** Schema changes + breaking refactors are safe.
-- **`DOC_MAP.md` discipline:** any doc add / move / role-change updates DOC_MAP.md in the same commit. See `feedback_doc_map_discipline.md`.
-- **Hard rule from 2026-05-07 post-mortem (still in force):** do NOT modify `app/dev/combat-test/page.tsx` or `components/CombatScreen.tsx` without explicit specific permission.
+- **`DOC_MAP.md` discipline:** any doc add / move / role-change updates `DOC_MAP.md` in the same commit. See `feedback_doc_map_discipline.md`.
+- **Q+A discipline:** when adding a Q+A block, also add the EV entries to `EDGE_VECTORS.md` AND make sure the source doc's frontmatter `edge_vector_ids` array matches. Run `npm run graph:build` (or rely on the watcher) to verify the graph picks them up.
+- **LAUNCH_CRITERIA discipline:** when an item ships, flip `status: not-started` → `status: shipped` and re-run `npm run launch:status` (or rely on the watcher).
+- **Hard rule from 2026-05-07 post-mortem:** do NOT modify `app/dev/combat-test/page.tsx` or `components/CombatScreen.tsx` without explicit specific permission.
 - **Combat sprite width is never constrained.** Only height. Tailwind preflight `img { max-width: 100%; }` overridden via inline `maxWidth: "none"`.
 - **Lane spacing locked.** `SPACE_OFFSETS = [0.1975, 0.5, 0.8025]`.
 - **Eye-Y is required.** `figureScaleByEye` throws on undefined.
 - **Bandit / hostile NPC sprites apply `UGLY_MEAN_OVERLAY`** in their forge prompts.
 - **Hydration discipline.** `git log --oneline --all --graph | head -20` is authoritative over any doc.
-- **Apostrophes in heredoc commit messages break bash.** Use plain words instead (e.g., "renderer frontmatter expectations" not "renderer's...").
+- **Apostrophes in heredoc commit messages break bash.** Use plain words instead.
 
 ---
 
 ## Standard sprint-ship workflow
 
 ```
-git add <specific files>
+git add <specific files>     # never -A; avoid bundling unrelated drift
 git commit -m "Sprint NX: <what>"
+# (graph + readiness already fresh thanks to docs:watch)
 git checkout main
 git merge --no-ff dev -m "Merge Sprint NX"
 git checkout dev
@@ -159,7 +200,8 @@ git checkout dev
 
 - Typecheck before committing: `npx tsc --noEmit`
 - Run tests: `npx tsx __tests__/<suite>.test.ts`
-- **Never bundle unrelated drift into a sprint commit.** This session left `.claude/settings.json` unstaged for that reason.
+- **Never bundle unrelated drift into a sprint commit.** This session left `.claude/settings.json` unstaged on purpose.
+- If you edit Q+A blocks or DOC_MAP, the watcher rebuilds the graph + readiness automatically. Just commit the source change + the regenerated `docs/*` outputs in the same commit (the diff makes it obvious which is which).
 
 ---
 

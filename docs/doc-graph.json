@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 20,
-    "edge_count": 169,
+    "ev_count": 23,
+    "edge_count": 187,
     "creator_visible": 26,
     "internal": 8
   },
@@ -201,7 +201,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-05-03"
+      "last_updated": "2026-05-03",
+      "questions_total": 6,
+      "questions_answered": 5,
+      "questions_open": 1
     },
     "doc:maatic_library": {
       "type": "doc",
@@ -290,7 +293,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 6,
+      "questions_answered": 5,
+      "questions_open": 1
     },
     "doc:session_001_vast_r2_setup": {
       "type": "doc",
@@ -343,7 +349,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 6,
+      "questions_answered": 5,
+      "questions_open": 1
     },
     "doc:tech_md": {
       "type": "doc",
@@ -471,6 +480,15 @@
       "question": "Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, wealth tiers 1k/5k/25k/100k → +5/+10/+20/+30, per-circle Illumination 0/0/0/−2/−4/−8/−15/−30, fatigue penalty +15·tier evasion-vs-player) tuned for end-game balance, or are they opening parameters?",
       "best_guess": "Opening parameters. Scotch's standing direction is \"use your judgment, balance later via Machinations.io.\" Likely tuning targets: action-budget spread too narrow, gear-Standing jewelry doubling too generous, Circle 8's −30 too punishing for a single cast, Tier-4 fatigue lockout too binary."
     },
+    "ev:EV-loot_tables-001": {
+      "type": "edge_vector",
+      "id": "EV-loot_tables-001",
+      "source_doc": "loot_tables",
+      "category": "PICSSI-BALANCE",
+      "confidence": "open",
+      "question": "Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, or are they opening parameters?",
+      "best_guess": "Opening parameters authored 2026-05-03. Likely tuning surface: Common-tier dominance (45% may feel underwhelming after 20+ hours), Pre-Thurian vault +40 modifier (excessive once vaults become common), rune-blade +10 Illumination cap × 6 blades = +60 lifetime (Defining-tier permanent shift), asymmetric caravan-action PICSSI deltas (`−8/−5/+2` for raiding vs `+4/+3` for helping)."
+    },
     "ev:EV-module_system-001": {
       "type": "edge_vector",
       "id": "EV-module_system-001",
@@ -525,6 +543,15 @@
       "question": "What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, what triggers an early Bucket A migration?",
       "best_guess": "Same approach as the 2026-04-30 audit that moved 1934–1936 stories. Sources: U.S. Copyright Office renewal records (Catalog of Copyright Entries 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg Howard research notes, scholarly consensus on *Weird Tales* renewal practices. Verifies both (a) magazine issue not issue-renewed AND (b) Howard's individual contributions not separately renewed. Recommendation: schedule in LAUNCH_CRITERIA.md Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 entry plus Bucket A migration."
     },
+    "ev:EV-scrolls_of_thoth_index-001": {
+      "type": "edge_vector",
+      "id": "EV-scrolls_of_thoth_index-001",
+      "source_doc": "scrolls_of_thoth_index",
+      "category": "PICSSI-BALANCE",
+      "confidence": "open",
+      "question": "Is the proposed `+3 Notable` Illumination delta per scroll calibrated for the 15-scroll corpus, or is it an opening parameter?",
+      "best_guess": "`15 × +3 = +45 Illumination toward Light`, 45% of the +100 max. Feels right if Way of Thoth is the canonical Light-arc spine; large if other Light-paths also contribute meaningfully. Tuning levers: stage-weighted deltas (XV = +20 Defining capstone), total Way-of-Thoth cap at +50, or PICSSI-Spirituality-multiplied per-scroll deltas."
+    },
     "ev:EV-sorcery-001": {
       "type": "edge_vector",
       "id": "EV-sorcery-001",
@@ -542,6 +569,15 @@
       "confidence": "medium",
       "question": "Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse model still need?",
       "best_guess": "Production today: Guild CAST Circles 1+2 (13 real spells, Sprint C6.1); INVOKE pipeline not wired to combat; Circles 4–8 deferred. Resurrection corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification, hero-death short-circuit, undead-likelihood roll, necromancy variant — is design-only. The mortal/immortal NPC tag is a no-cost addition that should land **before** any Resurrection wiring sprint to avoid retro-tagging every NPC kind."
+    },
+    "ev:EV-stobaean_fragments_index-001": {
+      "type": "edge_vector",
+      "id": "EV-stobaean_fragments_index-001",
+      "source_doc": "stobaean_fragments_index",
+      "category": "PICSSI-BALANCE",
+      "confidence": "open",
+      "question": "Is the default `illuminationDelta: 1` per fragment calibrated across the 14-fragment corpus, or is it an opening parameter?",
+      "best_guess": "`14 × +1 = +14 Illumination`, totaling `+59` combined with the Scrolls' +45 (76% Scrolls / 24% Fragments split). Likely tuning levers: stage-weighted (Stage 1 = +1 Trivial, Stage 2 = +2, Stage 3 = +3 Notable for a `4·1 + 4·2 + 6·3 = 30` total), theme-weighted (cosmological-reveal fragments deliver more), or keep flat `+1`."
     },
     "ev:EV-travel_matrix-001": {
       "type": "edge_vector",
@@ -955,8 +991,18 @@
     },
     {
       "from": "doc:loot_tables",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:loot_tables",
       "to": "doc:world_locations",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:loot_tables",
+      "to": "ev:EV-loot_tables-001",
+      "type": "has_open_question"
     },
     {
       "from": "doc:maatic_library",
@@ -1115,8 +1161,28 @@
     },
     {
       "from": "doc:scrolls_of_thoth_index",
+      "to": "doc:karma_implementation_plan",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:scrolls_of_thoth_index",
       "to": "doc:karma_system",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:scrolls_of_thoth_index",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:scrolls_of_thoth_index",
+      "to": "doc:public_domain_rules",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:scrolls_of_thoth_index",
+      "to": "ev:EV-scrolls_of_thoth_index-001",
+      "type": "has_open_question"
     },
     {
       "from": "doc:sorcery",
@@ -1180,8 +1246,38 @@
     },
     {
       "from": "doc:stobaean_fragments_index",
+      "to": "doc:adventure_modules_plan",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:stobaean_fragments_index",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:stobaean_fragments_index",
+      "to": "doc:public_domain_rules",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:stobaean_fragments_index",
       "to": "doc:quest_registry_dump",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:stobaean_fragments_index",
+      "to": "doc:quest_registry_dump",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:stobaean_fragments_index",
+      "to": "doc:scrolls_of_thoth_index",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:stobaean_fragments_index",
+      "to": "ev:EV-stobaean_fragments_index-001",
+      "type": "has_open_question"
     },
     {
       "from": "doc:tech_md",
@@ -1339,6 +1435,16 @@
       "type": "affects"
     },
     {
+      "from": "ev:EV-loot_tables-001",
+      "to": "doc:loot_tables",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-loot_tables-001",
+      "to": "doc:travel_matrix",
+      "type": "affects"
+    },
+    {
       "from": "ev:EV-module_system-001",
       "to": "doc:module_system",
       "type": "affects"
@@ -1369,6 +1475,16 @@
       "type": "affects"
     },
     {
+      "from": "ev:EV-scrolls_of_thoth_index-001",
+      "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-scrolls_of_thoth_index-001",
+      "to": "doc:scrolls_of_thoth_index",
+      "type": "affects"
+    },
+    {
       "from": "ev:EV-sorcery-001",
       "to": "doc:karma_system",
       "type": "affects"
@@ -1386,6 +1502,16 @@
     {
       "from": "ev:EV-sorcery-002",
       "to": "doc:sorcery",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-stobaean_fragments_index-001",
+      "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-stobaean_fragments_index-001",
+      "to": "doc:stobaean_fragments_index",
       "type": "affects"
     },
     {

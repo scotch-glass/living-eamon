@@ -6,7 +6,54 @@ canonical_for: [loot-tables, per-zone-distribution, treasure-system]
 visibility: creator
 status: active
 last_updated: 2026-05-03
-cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md]
+cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md, lore/thurian-cartography/TRAVEL_MATRIX.md, EDGE_VECTORS.md]
+questions_total: 6
+questions_answered: 5
+questions_open: 1
+edge_vector_ids: [EV-loot_tables-001]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [WIRING]
+
+**Q:** When does a loot roll fire and what's the resolution sequence?
+**A:** Three triggers. (1) **After any combat encounter is resolved** (hero wins or survivors flee) — one loot roll. (2) **Discovery encounters** (ruins, abandoned camps, vaults) — always trigger a loot roll, no combat required, ruins always roll twice and take both results. (3) **Caravan trade** opens a vendor screen *instead of* a loot roll — UNLESS the hero raided the caravan, in which case normal loot rules apply. Resolution sequence: `rollTier(modifiers) → rollItemInTier(tier, zoneType, encounterType) → applyToInventory`. Tier ranges (d100): Common 01–45, Uncommon 46–72, Rare 73–90, Legendary 91–99, Special 100. Implementation: `lib/world/lootTables.ts` keyed by `zoneType + encounterType`; rune-blades at `lib/items/runeBlade.ts` with WorldState flags tracking which have been found per-player. `[high]`
+↔ relates to: §Loot System Mechanics, §Implementation Notes, lib/world/lootTables.ts (planned), lib/items/runeBlade.ts (planned)
+
+### [WIRING]
+
+**Q:** What modifiers does enemy type contribute to the loot tier roll?
+**A:** Eleven enemy/encounter types apply per-roll modifiers. **Negative:** Footpad / starving wolf −10. **Neutral:** Road bandit (standard) +0. **Positive:** Elite bandit / deserter captain +10; Slaver with keys +10; Caravan (raided) +15; Serpent-Man scout +20; Black Vellum courier +20; Ruins discovery (no combat) +25; Serpent-Man ritual procession +30; Black Vellum sorcerer +35; Pre-Thurian vault (no combat) +40. The modifier shifts the d100 tier roll up or down before bucketing — so +30 against a base roll of 70 lands in Legendary territory (91–99). The largest single modifier (+40 Pre-Thurian vault) pushes even a low base roll into the Rare/Legendary range, which is why vaults are the canonical home for rune-blades and Stobaean fragment hooks. `[high]`
+↔ relates to: §Loot tier modifiers by enemy type, §Ruins Loot, §Legendary Rune-Blades
+
+### [INK-AUTHORING]
+
+**Q:** How do zone-specific loot tables interact with universal tables, and what's the structural pattern?
+**A:** **Universal tables** define the canonical Common / Uncommon / Rare / Legendary entries (mostly mundane goods, weapons, armor, healing items, scrolls). **Zone-specific tables** *add to or replace* the trade-goods + named-armor + zone-special rolls within those tiers. When a universal table result calls for "trade goods (zone-specific)" or "named piece of armor (zone-specific)", the resolver indexes into the zone-specific section (10 zones documented: Civilization / Plains / Forest / Mountain / Desert / Cold North / Coastal / River / Jungle / Frontier-Lost-Lands). Each zone has a `Trade goods (d6)` table, a `Zone rare (named armor)` entry, and a `Zone special (roll 100)` entry. Caravan-raid loot has its own per-zone d6 table reflecting what that region's caravans carry — the type of goods reflects what the region trades in (Lemurian silk on coastal, mountain iron on mountain, etc.). `[high]`
+↔ relates to: §Universal Loot Table (Common / Uncommon / Rare / Legendary), §Zone-Specific Loot Additions, §Caravan-Specific Loot (Raided)
+
+### [INK-AUTHORING]
+
+**Q:** What are rune-blades, why are they unique, and how do they interact with WorldState?
+**A:** Rune-blades are the rarest weapon class in Living Eamon — six named weapons of the Elder Age, forged before the Seven Empires existed, before the Serpent-Men were driven into hiding. **Per-blade rules:** greatsword damage class, 3× crit chance, +5 DEX while equipped, never rusts/chips/dulls, blade glows cold blue within 20 feet of a Serpent-Man (built-in Worm-Ward effect), +1 Illumination per Serpent-Man kill (lifetime cap +10 per blade), heavy 2-slot encumbrance. **Per-blade flavor:** each has a name in a dead language and a will of its own — none can be sold, none can be discarded willingly. **WorldState contract:** on hero death the blade vanishes from the corpse and returns to its original vault; the vault's rune-blade flag resets so the blade can be claimed again in a future life. **Six blades:** Veth-Karan (Atlantis), Skeld-Araan (Thule), Vo-Urath (City of Wonders), Khal-Sethet (Zarfhaana), Maerath-Vund (Grondar), Ur-Thann (Pre-Thurian jungle vault, guarded by sleeping Serpent-Man Adept). Each has a static authored discovery moment — never lying in a chest. `[high]`
+↔ relates to: §Legendary Rune-Blades, §Rune-Blade discovery narrative, lib/items/runeBlade.ts (planned), KARMA_SYSTEM.md §2.10 (Illumination caps)
+
+### [PICSSI-BALANCE]
+
+**Q:** What PICSSI deltas attach to loot-related actions?
+**A:** Eight canonical delta rules. **Caravan actions:** raid unprovoked = `−5 Integrity, −3 Standing`; help a caravan being attacked = `+4 Integrity, +3 Standing`; join raiders attacking a caravan = `−8 Integrity, −5 Standing, +2 Passion`. **Body / sacred actions:** bury or burn a fallen enemy = `+2 Spirituality`; leave discovered loot untouched at a sacred site = `+3 Spirituality`; loot a sacred site (temple, altar, Way shrine) = `−4 Integrity, −3 Spirituality`. **Rune-blade actions:** taking a rune-blade that costs Illumination (Vo-Urath, Ur-Thann per their per-blade flavor) — costs as specified per blade; selling a rune-blade is **not possible** (no sell price). These deltas use the canonical KARMA_SYSTEM magnitude bands: Trivial ±1 / Notable ±3 / Major ±5 / Defining ±10 — most loot-action deltas land in Notable / Major. The caravan-raid deltas pair with the 23–25 universal encounter table rolls in TRAVEL_MATRIX. `[high]`
+↔ relates to: §PICSSI Effects on Loot Actions, KARMA_SYSTEM.md §2.5–§2.10, TRAVEL_MATRIX.md universal encounter rows 23–25
+
+### [PICSSI-BALANCE]
+
+**Q:** Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, or are they opening parameters?
+**A:** Open. The per-tier ratios (Common 45% / Uncommon 27% / Rare 18% / Legendary 9% / Special 1%) and enemy modifiers (−10 to +40) and PICSSI deltas are first-guess values authored 2026-05-03 — no tuning record exists. Likely tuning surface: (a) **Common-tier dominance** — 45% Common may feel underwhelming once players are 20+ hours in (consider a level-scaling mod that shifts the curve as the player advances); (b) **Pre-Thurian vault +40** — pushes nearly any roll into Legendary, which is correct for design intent but may be excessive once vaults become common encounters; (c) **Rune-blade +10 Illumination cap per blade** — across 6 blades = +60 lifetime, which is a Defining-tier permanent shift; (d) **PICSSI deltas on caravan actions** — `−8 Integrity, −5 Standing, +2 Passion` for joining raiders is asymmetric (heavier negative than the +4/+3 for helping). Tuning happens once Sprint 4 ships and 30+ play-loops produce realistic distributions. `[open]` → see [EV-loot_tables-001](EDGE_VECTORS.md#ev-loot_tables-001)
+↔ relates to: §Loot tiers, §Loot tier modifiers by enemy type, §PICSSI Effects on Loot Actions, EV-karma_system-002 (parallel KARMA tuning EV)
+
 ---
 
 # Living Eamon — Loot Tables & Treasure System

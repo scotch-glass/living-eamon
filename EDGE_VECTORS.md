@@ -217,6 +217,36 @@ Every entry conforms to:
 - **Affects:** [TRAVEL_MATRIX.md §Travel Matrix](/library/travel_matrix), [TRAVEL_MATRIX.md §Zone Types & Danger Ratings](/library/travel_matrix), `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` (S4 plan), [WORLD_LOCATIONS.md §Adjacency / Route Notes](/library/world_locations)
 - **Resolution path:** ship S4 Graphical Travel System; run 5+ playtest routes; record actual hour-counts vs documented day-counts; calibrate the matrix from that data. Add an explicit `seaOnly: boolean` flag to legs that have no walk-equivalent. Promote to `[high]` once the matrix has been tuning-passed and a §Tuning History section records the calibration.
 
+### [lore/thurian-cartography/LOOT_TABLES.md](/library/loot_tables)
+
+#### EV-loot_tables-001  `[PICSSI-BALANCE]`
+- **Source:** [LOOT_TABLES.md](/library/loot_tables)
+- **Question:** Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, or are they opening parameters?
+- **Best guess:** Opening parameters authored 2026-05-03. Likely tuning surface: Common-tier dominance (45% may feel underwhelming after 20+ hours), Pre-Thurian vault +40 modifier (excessive once vaults become common), rune-blade +10 Illumination cap × 6 blades = +60 lifetime (Defining-tier permanent shift), asymmetric caravan-action PICSSI deltas (`−8/−5/+2` for raiding vs `+4/+3` for helping).
+- **Confidence:** open
+- **Affects:** [LOOT_TABLES.md §Loot tiers + §Loot tier modifiers + §PICSSI Effects on Loot Actions](/library/loot_tables), [TRAVEL_MATRIX.md universal encounter rows 23–25](/library/travel_matrix), [EV-karma_system-002](#ev-karma_system-002) (parallel KARMA tuning EV)
+- **Resolution path:** ship Sprint 4 atom dispatcher; run 30+ play-loops generating realistic loot distributions; calibrate the tier ratios + enemy modifiers + PICSSI deltas from observed data; record in a new §Tuning History section. Promote to `[high]` once tuning lands and 100+ simulated loot rolls confirm the curve feels rewarding.
+
+### [lore/scrolls-of-thoth/INDEX.md](/library/scrolls_of_thoth_index)
+
+#### EV-scrolls_of_thoth_index-001  `[PICSSI-BALANCE]`
+- **Source:** [scrolls-of-thoth/INDEX.md](/library/scrolls_of_thoth_index)
+- **Question:** Is the proposed `+3 Notable` Illumination delta per scroll calibrated for the 15-scroll corpus, or is it an opening parameter?
+- **Best guess:** `15 × +3 = +45 Illumination toward Light`, 45% of the +100 max. Feels right if Way of Thoth is the canonical Light-arc spine; large if other Light-paths also contribute meaningfully. Tuning levers: stage-weighted deltas (XV = +20 Defining capstone), total Way-of-Thoth cap at +50, or PICSSI-Spirituality-multiplied per-scroll deltas.
+- **Confidence:** open
+- **Affects:** [scrolls-of-thoth/INDEX.md §Frontmatter schema + §Riddle list](/library/scrolls_of_thoth_index), [KARMA_SYSTEM.md §2.10 Illumination](/library/karma_system), [EV-karma_system-002](#ev-karma_system-002), [EV-stobaean_fragments_index-001](#ev-stobaean_fragments_index-001)
+- **Resolution path:** ship Sprint 3 scroll-loader + riddle gate; ship Sprint 4 atom dispatcher; observe Light-path Illumination accumulation across simulated full quest-line playthroughs. Decide whether to keep flat `+3`, switch to a stage-weighted curve, or cap total Way-of-Thoth contribution. Promote to `[high]` once the chosen rule produces stable Illumination distributions across 50+ playthroughs.
+
+### [lore/stobaean-fragments/INDEX.md](/library/stobaean_fragments_index)
+
+#### EV-stobaean_fragments_index-001  `[PICSSI-BALANCE]`
+- **Source:** [stobaean-fragments/INDEX.md](/library/stobaean_fragments_index)
+- **Question:** Is the default `illuminationDelta: 1` per fragment calibrated across the 14-fragment corpus, or is it an opening parameter?
+- **Best guess:** `14 × +1 = +14 Illumination`, totaling `+59` combined with the Scrolls' +45 (76% Scrolls / 24% Fragments split). Likely tuning levers: stage-weighted (Stage 1 = +1 Trivial, Stage 2 = +2, Stage 3 = +3 Notable for a `4·1 + 4·2 + 6·3 = 30` total), theme-weighted (cosmological-reveal fragments deliver more), or keep flat `+1`.
+- **Confidence:** open
+- **Affects:** [stobaean-fragments/INDEX.md §Frontmatter schema + §Pacing](/library/stobaean_fragments_index), [KARMA_SYSTEM.md §2.10 Illumination](/library/karma_system), [EV-scrolls_of_thoth_index-001](#ev-scrolls_of_thoth_index-001) (parallel scroll-tuning EV)
+- **Resolution path:** decide alongside scroll-tuning so Scrolls + Fragments share the same calibration philosophy. Tuning happens after Sprint 4 atom dispatcher + first full-quest playthrough. Promote to `[high]` once the chosen per-fragment delta rule yields stable Illumination across 50+ playthroughs.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

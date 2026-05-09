@@ -6,7 +6,54 @@ canonical_for: [fragment-pacing-map, mentor-assignments]
 visibility: creator
 status: active
 last_updated: 2026-04-30
-cross_refs: [docs/quest-registry.md]
+cross_refs: [docs/quest-registry.md, lore/scrolls-of-thoth/INDEX.md, EDGE_VECTORS.md]
+questions_total: 6
+questions_answered: 5
+questions_open: 1
+edge_vector_ids: [EV-stobaean_fragments_index-001]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [LORE]
+
+**Q:** What are the Stobaean Hermetic Fragments and what's their canonical reference scheme?
+**A:** Fourteen short philosophical fragments, each carrying one thread of the broader Hermetic tradition, scattered across the Way of Thoth quest line as supplementary teachings delivered by 14 mentors carrying 15 scrolls. The numbering scheme `SH N.M` (e.g. `SH 2.1`, `SH 11.2`) follows the **canonical reference numbering of the Stobaean Hermetica** — fragments preserved in **Stobaeus's *Anthology* (5th century CE)** of Hermetic-tradition Greek texts (~100–300 CE). The philosophical content is genuinely ancient PD (~1800+ years). **The prose in these files is original Living Eamon writing**, composed to carry each fragment's philosophical meaning into the game's voice; no modern translator's text is reproduced. Frontmatter cites the canonical reference and notes available scholarly readings (Walter Scott 1924, G.R.S. Mead 1906 — both US-PD) for traceability. `[high]`
+↔ relates to: §Pacing, §Map (14-fragment table), §Frontmatter schema, lore/scrolls-of-thoth/INDEX.md (canonical companion)
+
+### [PD-SAFETY]
+
+**Q:** Why is the original-prose-on-PD-ideas approach safe — and how does it differ from the Scrolls' substitution approach?
+**A:** Two complementary methods serving the same PD-safety goal. **Scrolls of Thoth:** mechanical Hermes→Thoth substitution applied to The Kybalion (1908, US-PD); the textual basis is the PD source verbatim with proper-noun substitution. **Stobaean fragments:** the **ideas** are PD by antiquity (~1800 years — Greek-language texts ~100–300 CE preserved in Stobaeus's *Anthology* 5th century CE), but the **prose** is original Living Eamon writing composed to carry each fragment's philosophical meaning into the game voice. No modern translator's text is reproduced — Walter Scott (1924) and G.R.S. Mead (1906) are cited as scholarly references for traceability, but their actual sentences are never quoted. This sidesteps the modern-translator-copyright trap that affects Greek/Latin classics; the underlying philosophy is in the public domain by virtue of being eighteen centuries old, and the game's prose is freshly authored. `[high]`
+↔ relates to: §Frontmatter schema (`note` field documenting the methodology), Public_Domain_Rules.md, lore/scrolls-of-thoth/INDEX.md (companion approach)
+
+### [INK-AUTHORING]
+
+**Q:** How do fragments map to mentors, quest steps, and delivery vectors?
+**A:** **14 fragments × 14 mentors × 14 steps × 6 delivery vectors.** The §Map table assigns each `SH N.M` to one wandering-NPC mentor (Old Bram, Sister Hela, Vivian, Aldric, Hokas, Maelis, Cassian, Tavren, Yssa, Master Orin, Rhonen, Tava, Brother Inan, Mother Khe-Anun) and one Way-of-Thoth quest step (`scroll-2` through `scroll-15` — no fragment lands on `scroll-1` because Scroll I is the entry-quest acceptance). Each fragment fires only when the player is on the matching `scroll-N` step, regardless of which adventure they were in when the prerequisite scroll was acquired (per ADVENTURE_MODULES_PLAN.md §5 Scroll & SH-fragment seeding map note). **Six delivery vectors:** spoken-aloud, mosaic engraving, pillow note, sword pommel, drinking-song verse, sung dream, gravestone, helm interior, healing-rite recitation, book-spine etching, reagent-chest lid, body tattoo, codex flyleaf, prophecy preamble. Each vector authors the moment the fragment is delivered — physical inscription / dialogue / song / dream / etc. — making the same philosophical text feel newly discovered in each playthrough. `[high]`
+↔ relates to: §Pacing, §Map (full 14-fragment table), ADVENTURE_MODULES_PLAN.md §5 Scroll & SH-fragment seeding map, docs/quest-registry.md
+
+### [WIRING]
+
+**Q:** What's the per-fragment frontmatter schema?
+**A:** Eight fields per fragment file. **`fragment`** (canonical reference, e.g. `SH 2.1`), **`title`** (display title, e.g. `"On Virtue"`), **`sourceTradition`** (multi-line provenance citation — Greek source date range, Stobaeus's Anthology preservation, modern scholarly readings cited but not reproduced), **`publicDomain: true`**, **`note`** (multi-line PD methodology disclaimer — explicitly states the LE prose is original and ancient ideas are PD by antiquity, no modern translator's text reproduced), **`deliveryNpc`** (e.g. `old_bram`), **`deliveryStep`** (e.g. `scroll-2`), **`deliveryVector`** (e.g. `spoken-aloud`), **`themes`** (array, e.g. `[virtue, recognition-of-debt]`), **`illuminationDelta`** (default `1` — Trivial-tier per fragment delivery; **see EV-stobaean_fragments_index-001**). The `deliveryNpc` + `deliveryStep` pair drives the QuestNPCDialogue branch firing condition; the `deliveryVector` drives the in-fiction prose around the moment. `[high]`
+↔ relates to: §Frontmatter schema, lib/quests/lines/way-of-thoth.ts, lib/quests/dialogue.ts (QuestNPCDialogue branches)
+
+### [LORE]
+
+**Q:** What's the three-stage pacing structure across the 14 fragments?
+**A:** §Pacing groups fragments into three escalating stages. **Stage 1 — Wisdom flavor (palatable as moral instruction):** SH 2.1 (Virtue), 11.2 (Lamp), 18.3 (Soul's Doors), 1.1 (Standing Firm). Themes: virtue, light, soul-doors, standing-firm. Aimed at early-quest players still learning the Way's vocabulary; reads as gentle moral-philosophy aphorism. **Stage 2 — Soul architecture (daimons, descent, bondage):** SH 19.7 (Forgetfulness), 25.8 (Dreams), 23.5 (Body as Tomb), 7.4 (Three That Weave). Themes: forgetfulness, dreams, body-as-tomb, fate. Mid-quest stage — the player learns the soul has structure, descends through realms, can be bound by daimons. **Stage 3 — Cosmology + Word + warning:** SH 24.2 (Soul-Fashioning), 21.6 (All as One), 11.4 (Word), 26.5 (What Waits Beneath), 3.3 (Strange-Season), 27.1 (Calling-Home). Themes: soul-fashioning, the One, the Word, what-waits, rending, consummation. Late-quest culmination — the player learns the Word is generative, that something waits beneath, that a Calling-Home is coming. The capstone fragment SH 27.1 is read by Mother Khe-Anun at the lighthouse on the player's return from M-13 Red Nails of Xuchotl per ADVENTURE_MODULES_PLAN.md §5. `[high]`
+↔ relates to: §Pacing, §Map (full 14-fragment delivery table), ADVENTURE_MODULES_PLAN.md §5, lib/quests/lines/way-of-thoth.ts
+
+### [PICSSI-BALANCE]
+
+**Q:** Is the default `illuminationDelta: 1` calibrated across the 14-fragment corpus, or is it an opening parameter?
+**A:** Open. Each fragment's frontmatter shows `illuminationDelta: 1` as the default — Trivial-tier per delivery, totaling `+14 Illumination toward Light` across the full corpus. Best-guess context: the 15 Scrolls deliver `+3` each (proposed) for `+45 total`, so SH fragments add `+14` for a combined Way-of-Thoth Light-path total of **+59 of the +100 max**. That ratio (Scrolls 76% / Fragments 24%) feels right for the design intent (Scrolls are the canonical content; Fragments are supplementary teachings) but isn't tuning-validated. Likely tuning levers: (a) **stage-weighted deltas** — Stage 1 fragments deliver `+1` (Trivial), Stage 2 deliver `+2` (between Trivial and Notable), Stage 3 deliver `+3` (Notable) for a `4·1 + 4·2 + 6·3 = 30` total that matches the Scrolls' +45 in narrative significance; (b) **theme-weighted deltas** — fragments touching cosmological reveals (Word, What Waits Beneath, Calling-Home) deliver larger deltas than virtue-coaching fragments; (c) keep flat at `+1` and treat Fragments purely as flavor. Decision deferred until Sprint 4 ships and the full quest line is playtested. `[open]` → see [EV-stobaean_fragments_index-001](EDGE_VECTORS.md#ev-stobaean_fragments_index-001)
+↔ relates to: §Frontmatter schema (illuminationDelta field), KARMA_SYSTEM.md §2.10 Illumination, EV-scrolls_of_thoth_index-001 (parallel scroll-tuning EV)
+
 ---
 
 # Stobaean Hermetic Fragments — Index

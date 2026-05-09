@@ -59,6 +59,36 @@ Fails on Q+A frontmatter drift, missing EV references, broken DOC_MAP paths, bod
 
 **Bonus before Phase B:** added `docs/doc-graph.mmd` + Mermaid renderer to `scripts/build-doc-graph.ts`, generating a visual flowchart with role-clustered subgraphs, status-colored doc nodes, and red-dashed open EVs. Render via `npx mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg`.
 
+### Phase C — parallel coder/interviewer workflow (planned + scaffolded)
+
+Scotch approved a plan to run two AI agents in parallel: Opus codes routine work in one terminal while a separate Haiku-driven interviewer (in a second terminal) walks the open Edge Vector backlog with him, captures structured answers, and writes them back into source-doc Q+A blocks (`[open]` → `[high]`, removes EV from `EDGE_VECTORS.md`, decrements `questions_open`). The watcher regenerates indexes; both lanes proceed without blocking each other.
+
+**Plan file (approved):** `~/.claude/plans/ok-now-i-want-robust-alpaca.md` — full architecture, file list, phase breakdown, verification.
+
+**Locked decisions:**
+- **Interviewer model:** Claude Haiku via the existing Anthropic SDK (uses your `ANTHROPIC_API_KEY`).
+- **Interviewer trigger:** background-while-idle in a second terminal (`npm run interview` runs continuously; asks when the queue has open EVs, sleeps when empty).
+- **3-terminal workflow:** terminal 1 = `npm run dev:all` (next dev + docs:watch); terminal 2 = `npm run interview` (Haiku daemon); terminal 3 = Claude Code (Opus coding `ready_to_code` items).
+
+**Scaffolded this session (commit `74e3ce8`):**
+- `lib/library/edgeVectors.ts` — `loadEdgeVectors()` returns typed `EdgeVectorEntry[]` from `EDGE_VECTORS.md`. Plus `locateEvBlock()` for the future interviewer to delete an entry once answered.
+- `lib/library/launchCriteria.ts` — `loadLaunchItems()` returns typed `LaunchItem[]` from `LAUNCH_CRITERIA.md`, plus `isActive()`.
+
+These two modules are dormant — nothing imports them yet. Existing scripts (`launch-readiness.ts`, `build-doc-graph.ts`) still use their inline parsers. Refactor + new scripts land next session.
+
+**Still to ship next session (per the plan):**
+1. `lib/anthropic/client.ts` — minimal `callHaiku()` helper for the interviewer (do NOT refactor `app/api/chat/route.ts`'s `streamWithFallback` — too risky for this sprint; keep route.ts inline).
+2. `scripts/build-work-queue.ts` — triager. Walks EVs + LAUNCH_CRITERIA + docs frontmatter. Emits `docs/work-queue.json` + `docs/work-queue.md` with classification: `awaits_answer` / `awaits_approval` / `ready_to_code` / `blocked` / `done`.
+3. `scripts/interview.ts` — long-running daemon. Reads `docs/work-queue.json#awaits_answer`, asks each via terminal stdin (Haiku phrases conversationally + structures the answer back), commits the answer to source doc + removes from `EDGE_VECTORS.md` + runs `npm run docs:build`. Idles 30s when queue empty. SIGINT clean exit.
+4. Refactor `scripts/launch-readiness.ts` to import from `lib/library/launchCriteria.ts` (parser is already cleanly extractable).
+5. Refactor `scripts/build-doc-graph.ts:parseEdgeVectors` to use `lib/library/edgeVectors.ts` (parser already extractable).
+6. `package.json` adds `work-queue:build`, `interview` scripts; updates `docs:build` cascade.
+7. `scripts/watch-docs.ts` adds `build-work-queue.ts` to its cascade.
+8. `DOC_MAP.md` adds a `work_queue` reference-generated entry.
+9. `CLAUDE.md` + this file add the 3-terminal workflow note.
+
+Verification steps + reuse table are in the plan file.
+
 ### Commit ledger this session
 
 | Commit | What |
@@ -77,6 +107,8 @@ Fails on Q+A frontmatter drift, missing EV references, broken DOC_MAP paths, bod
 | `6d1cb35` | Layer 1: docs/hydration.md generator |
 | `7c9a9b0` | Layer 2: docs/topic-routes.md generator |
 | `9d1b7ee` | Layer 3: docs:validate + watcher cascade + ritual switch |
+| `1e18401` | session log: refresh HYDRATE_NEXT_SESSION for 2026-05-10 |
+| `74e3ce8` | WIP: extract EV + launch-criteria parsers (parallel-workflow scaffold) |
 
 ### Critical-path answer (from `docs/launch-readiness.md`)
 
@@ -94,15 +126,13 @@ Unchanged: **`karma_sprint_chain`** — priority **136** — KARMA Sprints 1–7
 
 ---
 
-## What's next — your choice
+## What's next — recommended order
 
-Three plausible directions:
+1. **Finish the parallel coder/interviewer workflow** (`~/.claude/plans/ok-now-i-want-robust-alpaca.md`). Two scaffold modules already shipped (commit `74e3ce8`); next session writes `lib/anthropic/client.ts` + `scripts/build-work-queue.ts` + `scripts/interview.ts`, wires npm + watcher, smoke-tests end-to-end. Estimated ~1 session. Once shipped, the workflow itself unblocks parallel progress on the remaining priorities.
+2. **Authorize the KARMA approval gate.** Still the literal #1 priority on the launch-readiness report. Single highest-leverage decision Scotch can make. Not a coding task — a review/sign-off task. After the parallel workflow lands, the interviewer can walk Scotch through the §6 approval list automatically.
+3. **PRAY + Divinity v1** (separate plan, approved at `~/.claude/plans/the-skull-and-pack-luminous-muffin.md`). Gated on KARMA_SYSTEM §6 approval (so blocked until #2).
 
-1. **Authorize the KARMA approval gate.** Still the literal #1 priority on the launch-readiness report. Single highest-leverage decision Scotch can make. **Not a coding task — a review/sign-off task.**
-2. **Layer 4 polish** — speed multipliers Scotch deferred this session: (a) auto-rewrite of `HYDRATE_NEXT_SESSION.md` from `git log` at session-end; (b) `docs:watch:strict` mode that fails the dev server on validation errors; (c) per-task scopes ("loading scope: KARMA-implementation" pre-loads 3 specific docs). Mechanical work; ~1 session.
-3. **PRAY + Divinity v1** (separate plan, approved). Independent of the doc-orchestration work, gated on KARMA_SYSTEM §6 approval (so blocked until #1 above).
-
-Other options queued: production-integrate Combat Arena v2, Stripe payment gate, Mermaid wiki page at `/library/graph`.
+Other options queued: production-integrate Combat Arena v2, Stripe payment gate, Mermaid wiki page at `/library/graph`, Layer 4 speed multipliers (auto-rewrite HYDRATE on session-end via `git log`, `docs:watch:strict` mode, per-task scope pre-loaders).
 
 ---
 

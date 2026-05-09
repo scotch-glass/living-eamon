@@ -96,23 +96,10 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 
 ## Recent activity
 
-Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-09T23:11:21+02:00):
+Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T00:19:52+02:00):
 
-- `9d1b7ee` — Layer 3: docs:validate + watcher cascade + ritual switch
-- `7c9a9b0` — Layer 2: docs/topic-routes.md generator (Q+A category routing manifest)
-- `6d1cb35` — Layer 1: docs/hydration.md generator (compress 7-step stack to 1 page)
-- `b3dee7e` — graph:build emits doc-graph.mmd for Mermaid preview
-- `2494d97` — chore: refresh .claude/settings.json allowlist
-- `b22f8b9` — Q+A: LOOT_TABLES + scrolls/stobaean INDEX docs (final batch of 3)
-- `5d0f448` — Q+A: WORLD_LOCATIONS + TRAVEL_MATRIX (cartography pair)
-- `aac7f0e` — Q+A: hyborian-pd MODULE_PLAN (8 questions, 6 high + 2 non-high)
-- `5bb6748` — Q+A: KARMA_IMPLEMENTATION_PLAN (8 questions, 6 high + 2 non-high)
-- `64cb4f3` — Q+A: ADVENTURE_MODULES_PLAN (8 questions, 6 high + 2 non-high)
-- `ca0e6bf` — Q+A: Public_Domain_Rules (10 questions, 8 high + 2 non-high)
-- `678f8e6` — Q+A: SORCERY (10 questions, 8 high + 2 non-high)
-- `e472c83` — Q+A: MODULE_SYSTEM (10 questions, 8 high + 2 non-high)
-- `857c935` — Q+A: KARMA_SYSTEM (10 questions, 8 high + 2 open)
-- `fa34611` — Session prep: rewrite HYDRATE for post-G3 state
+- `74e3ce8` — WIP: extract EV + launch-criteria parsers (scaffold for parallel workflow)
+- `1e18401` — session log: refresh HYDRATE_NEXT_SESSION for 2026-05-10
 
 ## Reading guide
 

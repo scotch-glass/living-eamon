@@ -6,7 +6,66 @@ canonical_for: [eighteen-module-roadmap, scroll-fragment-seeding]
 visibility: creator
 status: active
 last_updated: 2026-04-30
-cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/hyborian-pd/MODULE_PLAN.md]
+cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/hyborian-pd/MODULE_PLAN.md, EDGE_VECTORS.md]
+questions_total: 8
+questions_answered: 6
+questions_open: 2
+edge_vector_ids: [EV-adventure_modules_plan-001, EV-adventure_modules_plan-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [INK-AUTHORING]
+
+**Q:** What's the 18-module roster shape — Tier 0 / Tier 1 / Tier 2?
+**A:** **Tier 0 (Thurian-Age PD originals, build first):** M-1 Mirror Tower (novice, Mirrors of Tuzun Thune 1929), M-2 Serpent in the Court (moderate, Shadow Kingdom 1929), M-3 Pictish Time-Tomb (deadly, Kings of the Night 1930). **Tier 1 (Hyborian-era PD via 2026-04-30 non-renewal audit, 10 modules):** M-4 Iron Shadows on the Vilayet, M-5 Queen of the Black Coast, M-6 Devil in Iron, M-7 Black Circle of Yimsha, M-8 A Witch Shall Be Born, M-9 Cliff-Vault of Bît-Yakin, M-10 Beyond the Black River, M-11 Shadows in Zamboula, M-12 Hour of the Dragon (capstone), M-13 Red Nails of Xuchotl. **Tier 2 (non-Hyborian late-Howard PD, 5 modules):** M-14 Ring of Conrad & Kirowan, M-15 Moon of Zambebwei, M-16 Black Canaan, M-17 Black Hound of Death, M-18 Fire of Asshurbanipal. The 18-module roster is a working document, not a freeze. `[high]`
+↔ relates to: §3 Module roster, Public_Domain_Rules.md §1.2 (Bucket A non-renewal audit), lore/hyborian-pd/MODULE_PLAN.md (per-module authoring methodology)
+
+### [INK-AUTHORING]
+
+**Q:** What's the recommended build order, and why?
+**A:** §4 sequence: (1) finish PICSSI Sprint 7 + Sprint 8 sub-sprints; (2) M-1 Mirror Tower (novice, smallest scope, proves the module template); (3) M-2 Serpent in the Court (moderate, investigation + combat economy); (4) M-3 Pictish Time-Tomb (deadly, battle climax); (5) **M-10 Beyond the Black River** early because it is the canonical home for the ally-FLEE spec and the triple-penalty ally-abandonment KARMA mechanic — Living Eamon's PICSSI design has been waiting for an in-fiction stage for this moment, and M-10 IS that stage; (6) M-9 Cliff-Vault (stealth-first proof); (7) M-13 Red Nails (ally-NPC + faction-puzzle proof); (8) M-12 Hour of the Dragon (multi-region capstone, late because it pulls together regions and NPCs from many other modules); (9) Tier 1 remainder; (10) Tier 2 last because Atlantean wonder-tech anachronism lands harder once the player has been steeped in Howard-classical Hyborian register first. `[high]`
+↔ relates to: §4 Build order, KARMA_SYSTEM.md §2.7 ally-abandonment triple-penalty, project_ally_combat_flee_spec.md
+
+### [PD-SAFETY]
+
+**Q:** What is the "inspired by" framing applied to every module?
+**A:** Each Living Eamon module is **inspired by** its Howard source — not an adaptation. Three rules per Scotch's standing directive (2026-04-30): (1) **Original prose in Howard's voice register** — newly written in Howard's vocabulary and atmospheric register; we do not reprint or closely paraphrase Howard's sentences. (2) **Substantially mutated plots** — Howard's protagonist (often Conan) is replaced by the player; Howard's supporting cast becomes Living Eamon NPCs (kept in name + core nature, fresh interactions); single-thread Howard plots become branching player arcs with multiple endings tied to PICSSI virtues. (3) **Trademark scrub** — Conan / Cimmerian / Hyborian removed everywhere in module prose; Aquilonia / Stygia / Nemedia / Zamora / Koth / Shem / Kush / Turan / Hyrkania / Vendhya remain safe in narrative via the 1936 essay's PD status. The pillar: **the player IS the hero.** `[high]`
+↔ relates to: §1.3 The Inspired-by framing, Public_Domain_Rules.md §4.4 Customization Discipline, project_pd_expansion_2026-04-30.md
+
+### [LORE]
+
+**Q:** How does the Atlantis-as-age-of-wonders setting expansion shape per-module customization?
+**A:** Pre-Cataclysm Atlantis (Thurian Age) was technologically advanced beyond anything the Hyborian successor-cultures remember. Anachronistic technology — gunpowder weapons, steam-driven engines, energy crystals, beam weapons, automaton war-machines — is canonical for Atlantean ruins, relics, and surviving installations. Each module's "magic" reframes as inherited Atlantean wonder-tech: Khosatral Khel (M-6) is a dormant Atlantean war-machine; the Black Seers' Yimsha mountain (M-7) is a half-sunken Atlantean observatory; the "jewels of Gwahlur" (M-9) are Atlantean energy crystals; Tascela's immortality (M-13) is a stolen Atlantean lifespan-loop; Asshurbanipal's flame-daemon (M-18) is a dormant Atlantean reactor's containment-binding. The hero encounters this as **dormant, broken, half-understood, or revered as magic** by the cultures that inherited the rubble. Living Eamon's voice handles the mix the way Howard handled Lovecraftian elements in *Fire of Asshurbanipal* — ancient evil and broken wonder coexist; the hero is human and small against both. `[high]`
+↔ relates to: §2 Setting expansion, project_pd_expansion_2026-04-30.md (Atlantis = age of wonders ratification 2026-04-30)
+
+### [WIRING]
+
+**Q:** How do the 15 Scrolls of Thoth + 14 Stobaean fragments + Logos Teleios codex distribute across modules?
+**A:** §5 Scroll & SH-fragment seeding map. Scrolls II–XIV seed one-per-module (M-1 → M-13), with Scroll XV branching: either M-18 Asshurbanipal (deep-time recording capstone) OR Mother Khe-Anun's Lighthouse (existing wandering-NPC home) — different capstone-choice consequences. Stobaean fragments co-seed alongside scrolls in many modules (SH 11.2 mosaic in M-1, SH 18.3 pillow-note in M-2, SH 7.4 helm-interior in M-3, etc.). The 11 wandering-NPC homes (Salt Marsh, Old Necropolis, Library Annex, Yssa's Cottage, Eastern Reach Watchtower, Lighthouse, etc.) carry their existing SH fragment wirings AND serve as cross-module thread-points modules reference ("go talk with Maelis in the salt marsh to the east"). SH delivery happens via QuestNPCDialogue branches that fire when the player is on the matching `scroll-N` step, regardless of which module they were in when the prerequisite scroll was acquired. **Scroll I** is already wired at the hub; **SH 1.1, 18.3, 19.7** were reverted from Guild-Hall NPCs on 2026-04-30 — SH 18.3 is now homed at M-2, the other two are tentatively assigned and finalize during M-1 / M-4 authoring. `[high]`
+↔ relates to: §5 seeding map, lib/quests/lines/way-of-thoth.ts, docs/quest-registry.md (regenerable via `npm run registry:dump`)
+
+### [INK-AUTHORING]
+
+**Q:** Which 1932–1933 Conan stories are explicitly excluded from the 18-module roster, and why?
+**A:** All 1932–1933 *Weird Tales* Conan stories — *The Phoenix on the Sword*, *The Scarlet Citadel*, *The Tower of the Elephant*, *Black Colossus*, *The Slithering Shadow*, *The Pool of the Black One*, *Rogues in the House*, *The Frost-Giant's Daughter / Gods of the North* — are excluded because they remain in Bucket B per Public_Domain_Rules.md §1.2 until either non-renewal is verified for those specific *WT* issues (planned 2027 audit per EV-public_domain_rules-002) OR the 95-year clock unlocks them (2028 for 1932 stories, 2029 for 1933 stories). Specific characters tied to those stories — **Thoth-Amon** (Phoenix on the Sword 1932) and **Yag-Kosha-as-named-figure** (Tower of the Elephant 1933) — are similarly deferred, though the project's working stance treats Yag-Kosha as 1934-accessible via *Queen of the Black Coast* (M-5). When the 2027 audit confirms or 2028/2029 unlocks land, these stories enter the roster as M-19+ candidates. `[high]`
+↔ relates to: Public_Domain_Rules.md §1.2 Bucket B + §6.2 + §8 Future PD Calendar, EV-public_domain_rules-002 (2027 audit methodology)
+
+### [PICSSI-BALANCE]
+
+**Q:** Each module's archetype-skew profile (e.g., M-10 = Courage capstone, M-13 = ally-faction Justice puzzle) must be GPE-validated — but what's the per-module target balance score and intentionallySkewed declaration set?
+**A:** Open. §3 entries describe each module's **virtue arcs in prose** (e.g., M-7 = "Mercy + Spirituality virtue forks; major mana-cost combat"; M-8 = "Justice + Mercy + Courage virtue arcs"; M-10 = "Major PICSSI capstone — Courage + Standing + Integrity all triggered hard") but no per-module `intentionallySkewed: ["passion", "standing"]`-style declaration is locked, and no GPE balance-score target band is specified. Best guess: capstone modules (M-10, M-12, M-13) target balanced (≥80) on the four engaged virtues with explicit `intentionallySkewed` covering the unengaged two; novice/moderate modules (M-1, M-9, M-15) accept tilted (50–79) given their narrower scope; Atlantean wonder-tech showcases (M-18, M-13) accept skewed (20–49) when the focus is genre-tonal rather than balance. Locking these targets requires running GPE on the first authored module and calibrating from real data. `[open]` → see [EV-adventure_modules_plan-001](EDGE_VECTORS.md#ev-adventure_modules_plan-001)
+↔ relates to: MODULE_SYSTEM.md §7.4 Verdict tiers, MODULE_SYSTEM.md §4.5 module.json intentionallySkewed, KARMA_SYSTEM.md §2.5–§2.10 PICSSI canonical magnitudes
+
+### [LORE]
+
+**Q:** Tier 2 modules (M-14 through M-18) are "either set in the Atlantean wonder-age past OR treated as cross-genre present-day excursions" — when does each option apply, and does the player notice the framing change?
+**A:** Medium. §3 Tier 2 introduction declares the two framings but does not specify which module gets which, beyond suggestive in-prose hints (M-14 = "modern-day Hyborian London-equivalent OR contemporary Valus with anachronistic gas-lamps and steamcoach"; M-15/M-16/M-17 = "southern-bayou-equivalent" tied to existing Salt-Marsh region; M-18 = explicit Atlantean reactor wonder-tech). Best guess: a per-module decision recorded at authoring time as a `framing: "deep-time-ruin" | "cross-genre-present"` field on `module.json`, surfacing to the player only through atmospheric prose cues (steam-and-occult Valus vs. "you wake in a Hyrkanian fever-tent"). Player should notice tonal shift but not jarring genre rupture — Eamon's classic "anything goes" is the precedent, but the tonal envelope is Howard's voice register either way. Decision deferred until the first Tier 2 module enters scoping. `[medium]` → see [EV-adventure_modules_plan-002](EDGE_VECTORS.md#ev-adventure_modules_plan-002)
+↔ relates to: §3 Tier 2 introduction, MODULE_SYSTEM.md §4.5 module.json (planned framing field), feedback_no_hyborian_in_marketing.md
+
 ---
 
 # Living Eamon — Adventure Modules Plan

@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 12,
-    "edge_count": 126,
+    "ev_count": 14,
+    "edge_count": 137,
     "creator_visible": 26,
     "internal": 8
   },
@@ -16,7 +16,10 @@
       "role": "sprint-plan",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 8,
+      "questions_answered": 6,
+      "questions_open": 2
     },
     "doc:affect_axes_dump": {
       "type": "doc",
@@ -366,6 +369,24 @@
       "status": "active",
       "last_updated": "2026-05-03"
     },
+    "ev:EV-adventure_modules_plan-001": {
+      "type": "edge_vector",
+      "id": "EV-adventure_modules_plan-001",
+      "source_doc": "adventure_modules_plan",
+      "category": "PICSSI-BALANCE",
+      "confidence": "open",
+      "question": "What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modules?",
+      "best_guess": "Capstone modules (M-10, M-12, M-13) target balanced (≥80) on the four engaged virtues with explicit `intentionallySkewed` covering the unengaged two. Novice/moderate modules (M-1, M-9, M-15) accept tilted (50–79). Atlantean wonder-tech showcases (M-18, M-13) accept skewed (20–49) when focus is genre-tonal. Per-module declaration locks during authoring; calibrate from real GPE data on the first module."
+    },
+    "ev:EV-adventure_modules_plan-002": {
+      "type": "edge_vector",
+      "id": "EV-adventure_modules_plan-002",
+      "source_doc": "adventure_modules_plan",
+      "category": "LORE",
+      "confidence": "medium",
+      "question": "Tier 2 modules (M-14 through M-18) are framed as either \"Atlantean wonder-age past\" or \"cross-genre present-day excursion\" — when does each option apply, and does the player notice the framing change?",
+      "best_guess": "A per-module decision recorded at authoring time as `framing: \"deep-time-ruin\" | \"cross-genre-present\"` on `module.json`. Player notices tonal shift but not jarring genre rupture — Eamon's \"anything goes\" precedent applies but Howard's voice register is the consistent envelope. M-18 is explicitly deep-time-ruin (Atlantean reactor); M-14 leans cross-genre-present (steam-and-occult Valus); M-15/M-16/M-17 reuse the Salt-Marsh region and read as cross-genre."
+    },
     "ev:EV-game_design-001": {
       "type": "edge_vector",
       "id": "EV-game_design-001",
@@ -488,13 +509,48 @@
     },
     {
       "from": "doc:adventure_modules_plan",
+      "to": "doc:hyborian_pd_module_plan",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
       "to": "doc:karma_system",
       "type": "cross_ref"
     },
     {
       "from": "doc:adventure_modules_plan",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
+      "to": "doc:module_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
       "to": "doc:public_domain_rules",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
+      "to": "doc:public_domain_rules",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
+      "to": "doc:quest_registry_dump",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
+      "to": "ev:EV-adventure_modules_plan-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:adventure_modules_plan",
+      "to": "ev:EV-adventure_modules_plan-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:agents_md",
@@ -1015,6 +1071,26 @@
       "from": "doc:world_locations",
       "to": "doc:game_design",
       "type": "cross_ref"
+    },
+    {
+      "from": "ev:EV-adventure_modules_plan-001",
+      "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-adventure_modules_plan-001",
+      "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-adventure_modules_plan-002",
+      "to": "doc:adventure_modules_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-adventure_modules_plan-002",
+      "to": "doc:module_system",
+      "type": "affects"
     },
     {
       "from": "ev:EV-game_design-001",

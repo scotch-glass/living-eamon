@@ -8,16 +8,16 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 12 open Edge Vectors · 126 edges
+- 34 docs · 14 open Edge Vectors · 137 edges
 - 26 creator-visible · 8 internal
 
 ## Most-connected nodes (by in-degree)
 
-- **module_system** (16 incoming) — Module System (Ink + GPE)
+- **module_system** (19 incoming) — Module System (Ink + GPE)
+- **karma_system** (16 incoming) — Karma System
 - **game_design** (15 incoming) — Game Design Document
-- **karma_system** (14 incoming) — Karma System
-- **public_domain_rules** (9 incoming) — Public Domain Rules
-- **adventure_modules_plan** (7 incoming) — Adventure Modules Plan
+- **public_domain_rules** (10 incoming) — Public Domain Rules
+- **adventure_modules_plan** (8 incoming) — Adventure Modules Plan
 - **karma_implementation_plan** (7 incoming) — Karma Implementation Plan
 - **sorcery** (7 incoming) — Sorcery (Guild CAST + Occult INVOKE)
 - **doc_map** (6 incoming) — Documentation Index (this file)
@@ -115,15 +115,21 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ### sprint-plan
 
-- **adventure_modules_plan** [active] — Adventure Modules Plan
+- **adventure_modules_plan** Q:8(open=2) [active] — Adventure Modules Plan
   - **cross_ref** → game_design, hyborian_pd_module_plan, karma_system, public_domain_rules
+  - **has_open_question** → EV-adventure_modules_plan-001, EV-adventure_modules_plan-002
+  - **relates_to** → hyborian_pd_module_plan, karma_system, module_system, public_domain_rules, quest_registry_dump
 - **hyborian_pd_module_plan** [active] — Hyborian-PD Module Plan
   - **cross_ref** → adventure_modules_plan, game_design, public_domain_rules
 - **karma_implementation_plan** [deferred] — Karma Implementation Plan
   - **cross_ref** → hydrate_next_session, karma_system
 
-## Open Edge Vectors (12)
+## Open Edge Vectors (14)
 
+- **EV-adventure_modules_plan-001** `[PICSSI-BALANCE, open]` ← adventure_modules_plan → affects: karma_system, module_system
+  - Q: What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modu...
+- **EV-adventure_modules_plan-002** `[LORE, medium]` ← adventure_modules_plan → affects: adventure_modules_plan, module_system
+  - Q: Tier 2 modules (M-14 through M-18) are framed as either "Atlantean wonder-age past" or "cross-genre present-day excur...
 - **EV-game_design-001** `[AFFECT-VECTOR, open]` ← game_design → affects: karma_system, module_system
   - Q: How do PICSSI virtues correlate with the seven AffectVector axes?
 - **EV-game_design-002** `[INK-AUTHORING, medium]` ← game_design → affects: karma_system, module_system

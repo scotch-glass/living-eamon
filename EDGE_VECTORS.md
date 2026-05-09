@@ -143,6 +143,24 @@ Every entry conforms to:
 - **Affects:** [Public_Domain_Rules.md §3.2 + §8 + §11](/library/public_domain_rules), `LAUNCH_CRITERIA.md` Tier 2 (planned 2027 audit item), `ADVENTURE_MODULES_PLAN.md` (1932–1933 modules currently deferred to 2028–2029 unlock)
 - **Resolution path:** add a 2027-Q1 audit item to LAUNCH_CRITERIA.md Tier 2 with the methodology pinned. Run the audit. Document results in §11 Document History. Move stories to Bucket A if confirmed; otherwise leave them for the 2028 / 2029 95-year unlock. Promote to `[high]` once the audit completes and §11 records the outcome.
 
+### [ADVENTURE_MODULES_PLAN.md](/library/adventure_modules_plan)
+
+#### EV-adventure_modules_plan-001  `[PICSSI-BALANCE]`
+- **Source:** [ADVENTURE_MODULES_PLAN.md](/library/adventure_modules_plan)
+- **Question:** What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modules?
+- **Best guess:** Capstone modules (M-10, M-12, M-13) target balanced (≥80) on the four engaged virtues with explicit `intentionallySkewed` covering the unengaged two. Novice/moderate modules (M-1, M-9, M-15) accept tilted (50–79). Atlantean wonder-tech showcases (M-18, M-13) accept skewed (20–49) when focus is genre-tonal. Per-module declaration locks during authoring; calibrate from real GPE data on the first module.
+- **Confidence:** open
+- **Affects:** [MODULE_SYSTEM.md §7.4 Verdict tiers + §4.5 module.json](/library/module_system), [KARMA_SYSTEM.md §2.5–§2.10](/library/karma_system) PICSSI magnitudes, all 18 modules in §3 roster
+- **Resolution path:** unblock when (a) GPE ships per MODULE_SYSTEM Stage I and (b) M-1 Mirror Tower is GPE-scored. Backfill an `intentionallySkewed` + `targetVerdict` field on every roster entry in §3. Promote to `[high]` once 3+ modules have shipped and their GPE scores have been compared against authored intent.
+
+#### EV-adventure_modules_plan-002  `[LORE]`
+- **Source:** [ADVENTURE_MODULES_PLAN.md](/library/adventure_modules_plan)
+- **Question:** Tier 2 modules (M-14 through M-18) are framed as either "Atlantean wonder-age past" or "cross-genre present-day excursion" — when does each option apply, and does the player notice the framing change?
+- **Best guess:** A per-module decision recorded at authoring time as `framing: "deep-time-ruin" | "cross-genre-present"` on `module.json`. Player notices tonal shift but not jarring genre rupture — Eamon's "anything goes" precedent applies but Howard's voice register is the consistent envelope. M-18 is explicitly deep-time-ruin (Atlantean reactor); M-14 leans cross-genre-present (steam-and-occult Valus); M-15/M-16/M-17 reuse the Salt-Marsh region and read as cross-genre.
+- **Confidence:** medium
+- **Affects:** [ADVENTURE_MODULES_PLAN.md §3 Tier 2 introduction + entries M-14..M-18](/library/adventure_modules_plan), [MODULE_SYSTEM.md §4.5 module.json](/library/module_system) (planned framing field), feedback_no_hyborian_in_marketing.md
+- **Resolution path:** when the first Tier 2 module enters scoping, decide its `framing` value and lock the convention. Document the per-module choice in §3 Tier 2 entries. Promote to `[high]` once 2+ Tier 2 modules ship and player tonal-feedback is collected.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

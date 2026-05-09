@@ -179,6 +179,24 @@ Every entry conforms to:
 - **Affects:** [KARMA_IMPLEMENTATION_PLAN.md §Sprint 3 + §Sprint 6](/library/karma_implementation_plan), [lib/karma/scrolls.ts](/) (planned S3 module), `project_scroll_riddle_verification.md`
 - **Resolution path:** ship Sprint 3 with the chat-stream token; gather playtest feedback on attempt-budget desire and reveal-after-N-failures threshold; design the S6 modal with those defaults baked in. Promote to `[high]` once the modal ships and the chat-stream fallback is validated as a headless-test path.
 
+### [lore/hyborian-pd/MODULE_PLAN.md](/library/hyborian_pd_module_plan)
+
+#### EV-hyborian_pd_module_plan-001  `[PD-SAFETY]`
+- **Source:** [lore/hyborian-pd/MODULE_PLAN.md](/library/hyborian_pd_module_plan)
+- **Question:** Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?
+- **Best guess:** Partially stale. §9 still lists *Queen of the Black Coast* (May 1934), *Jewels of Gwahlur* (March 1935), *Beyond the Black River* (May–June 1935), and *Hour of the Dragon* (1935–1936) as 2030/2031 unlocks. All four are now Bucket A per Public_Domain_Rules.md §1.2. Recommended fix: rewrite §9 to reflect the post-audit Bucket A and point to ADVENTURE_MODULES_PLAN.md §3 as the authoritative roster.
+- **Confidence:** medium
+- **Affects:** [lore/hyborian-pd/MODULE_PLAN.md §9](/library/hyborian_pd_module_plan), [Public_Domain_Rules.md §8](/library/public_domain_rules) (current PD calendar), [ADVENTURE_MODULES_PLAN.md §3](/library/adventure_modules_plan) (post-audit roster)
+- **Resolution path:** rewrite §9 in a single PR — keep the 2028 + 2029 entries (still Bucket B until either the planned 2027 audit confirms non-renewal or the 95-year clock unlocks them); replace the 2030 + 2031 entries with a "These are now Bucket A — see ADVENTURE_MODULES_PLAN.md §3 (M-4 through M-13)" pointer; update last_updated. Promote to `[high]` once §9 is rewritten and a roundtrip Q+A regen confirms no other doc references the stale calendar.
+
+#### EV-hyborian_pd_module_plan-002  `[INK-AUTHORING]`
+- **Source:** [lore/hyborian-pd/MODULE_PLAN.md](/library/hyborian_pd_module_plan)
+- **Question:** What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/M-2/M-3?
+- **Best guess:** This doc owns the methodology (PD-First Design Rule, one-short-story-one-module, module template structure, source-to-module conversion stays/mutates/invents/forbids, integration checklist, profile-driven branching, cold open + scene image prompt template, the first-three modules' detailed pitches). ADVENTURE_MODULES_PLAN.md owns the 18-module roster + scroll/SH-fragment seeding map + cross-roster build order. Overlap on M-1/M-2/M-3 is acceptable because this doc carries authoring-detail and the roster doc carries customization-angle (Atlantean wonder-tech accents) + scroll seeding (Scroll II in M-1, etc.).
+- **Confidence:** open
+- **Affects:** [lore/hyborian-pd/MODULE_PLAN.md §8](/library/hyborian_pd_module_plan), [ADVENTURE_MODULES_PLAN.md §3 Tier 0](/library/adventure_modules_plan), [DOC_MAP.md](/library/doc_map) (canonical_for declarations should reflect the split)
+- **Resolution path:** add a back-link from MODULE_PLAN.md §8 introduction to ADVENTURE_MODULES_PLAN.md (today only the forward direction exists). Update both docs' `canonical_for` arrays in DOC_MAP.md to make the split explicit (this doc: pd-module-methodology + first-three-detail; the plan: eighteen-module-roadmap + scroll-fragment-seeding). Promote to `[high]` once both back-links exist and the canonical-for arrays match the actual split.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

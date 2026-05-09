@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 16,
-    "edge_count": 145,
+    "ev_count": 18,
+    "edge_count": 158,
     "creator_visible": 26,
     "internal": 8
   },
@@ -112,7 +112,10 @@
       "role": "sprint-plan",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 8,
+      "questions_answered": 6,
+      "questions_open": 2
     },
     "doc:hyborian_pd_readme": {
       "type": "doc",
@@ -407,6 +410,24 @@
       "confidence": "medium",
       "question": "Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., \"Standing-pure\")?",
       "best_guess": "Probably yes for most archetype themes, but the constraint matrix isn't proven. A Standing-pure module would tend toward visible victory, conspicuous wealth, donations-for-show; that doesn't conflict with PD rules (Howard fiction is full of this) and is internally PICSSI-balanced if the spec says \"intentionally archetype-focused modules can be unbalanced\" (per KARMA_SYSTEM 2026-05-06 update). But edge cases: e.g., a Spirituality-pure module might struggle to ship a Courage \"great odds\" encounter without breaking archetype."
+    },
+    "ev:EV-hyborian_pd_module_plan-001": {
+      "type": "edge_vector",
+      "id": "EV-hyborian_pd_module_plan-001",
+      "source_doc": "hyborian_pd_module_plan",
+      "category": "PD-SAFETY",
+      "confidence": "medium",
+      "question": "Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?",
+      "best_guess": "Partially stale. §9 still lists *Queen of the Black Coast* (May 1934), *Jewels of Gwahlur* (March 1935), *Beyond the Black River* (May–June 1935), and *Hour of the Dragon* (1935–1936) as 2030/2031 unlocks. All four are now Bucket A per Public_Domain_Rules.md §1.2. Recommended fix: rewrite §9 to reflect the post-audit Bucket A and point to ADVENTURE_MODULES_PLAN.md §3 as the authoritative roster."
+    },
+    "ev:EV-hyborian_pd_module_plan-002": {
+      "type": "edge_vector",
+      "id": "EV-hyborian_pd_module_plan-002",
+      "source_doc": "hyborian_pd_module_plan",
+      "category": "INK-AUTHORING",
+      "confidence": "open",
+      "question": "What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/M-2/M-3?",
+      "best_guess": "This doc owns the methodology (PD-First Design Rule, one-short-story-one-module, module template structure, source-to-module conversion stays/mutates/invents/forbids, integration checklist, profile-driven branching, cold open + scene image prompt template, the first-three modules' detailed pitches). ADVENTURE_MODULES_PLAN.md owns the 18-module roster + scroll/SH-fragment seeding map + cross-roster build order. Overlap on M-1/M-2/M-3 is acceptable because this doc carries authoring-detail and the roster doc carries customization-angle (Atlantean wonder-tech accents) + scroll seeding (Scroll II in M-1, etc.)."
     },
     "ev:EV-karma_implementation_plan-001": {
       "type": "edge_vector",
@@ -715,13 +736,48 @@
     },
     {
       "from": "doc:hyborian_pd_module_plan",
+      "to": "doc:adventure_modules_plan",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
+      "to": "doc:doc_map",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
       "to": "doc:game_design",
       "type": "cross_ref"
     },
     {
       "from": "doc:hyborian_pd_module_plan",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
       "to": "doc:public_domain_rules",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
+      "to": "doc:public_domain_rules",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
+      "to": "doc:sorcery",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
+      "to": "ev:EV-hyborian_pd_module_plan-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:hyborian_pd_module_plan",
+      "to": "ev:EV-hyborian_pd_module_plan-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:hyborian_pd_readme",
@@ -1156,6 +1212,36 @@
     {
       "from": "ev:EV-game_design-002",
       "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-hyborian_pd_module_plan-001",
+      "to": "doc:adventure_modules_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-hyborian_pd_module_plan-001",
+      "to": "doc:hyborian_pd_module_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-hyborian_pd_module_plan-001",
+      "to": "doc:public_domain_rules",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-hyborian_pd_module_plan-002",
+      "to": "doc:adventure_modules_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-hyborian_pd_module_plan-002",
+      "to": "doc:doc_map",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-hyborian_pd_module_plan-002",
+      "to": "doc:hyborian_pd_module_plan",
       "type": "affects"
     },
     {

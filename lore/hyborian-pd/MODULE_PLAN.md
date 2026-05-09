@@ -6,7 +6,66 @@ canonical_for: [pd-module-methodology, pd-first-design-rules]
 visibility: creator
 status: active
 last_updated: 2026-04-30
-cross_refs: [Public_Domain_Rules.md, ADVENTURE_MODULES_PLAN.md, GAME_DESIGN.md]
+cross_refs: [Public_Domain_Rules.md, ADVENTURE_MODULES_PLAN.md, GAME_DESIGN.md, EDGE_VECTORS.md]
+questions_total: 8
+questions_answered: 6
+questions_open: 2
+edge_vector_ids: [EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [INK-AUTHORING]
+
+**Q:** What is the PD-First Design Rule and the four-step PD test for any new module element?
+**A:** Every adventure module must trace its named elements (characters, places, magical phenomena, races) to a PD-confirmed Howard source verified in `Public_Domain_Rules.md`. Generic or invented elements are fine; using a copyrighted name is not. The four-step PD test for any new element: (1) Is this name from the *Hyborian Age* essay (1936, PD)? → safe. (2) Is this name from one of the three Thurian-Age PD short stories (*Shadow Kingdom* 1929, *Mirrors of Tuzun Thune* 1929, *Kings of the Night* 1930)? → safe. (3) Is this name a Howard invention from a copyrighted Conan story? → wait until PD entry (mostly 2028–2031, with the 2026-04-30 non-renewal audit having already moved 15 stories to Bucket A — see EV-hyborian_pd_module_plan-001). (4) Is this name freshly invented in Howard-voice with no external IP claim? → safe (mark in source notes). When in doubt, swap for a PD-safe equivalent. `[high]`
+↔ relates to: §1 The PD-First Design Rule, Public_Domain_Rules.md §1.2 + §6, GAME_DESIGN.md top-of-file Safe Harbor / Radioactive tables
+
+### [INK-AUTHORING]
+
+**Q:** What is the "one short story = one module" simplification, and why is it the core methodology?
+**A:** Howard's PD short stories run 6,000–10,000 words — short enough that a single Living Eamon module can adapt the **whole** story, not a fragment. Each module corresponds to one PD source story, extended with: a small original framing (what brings the player to this place in this era?); body-zone combat encounters where Howard's prose summarizes a battle in a sentence; profile-driven branches where Howard's protagonist had a single fixed reaction; Living Eamon system integrations (mana costs, virtue triggers, Chronicle entries, Order detection, charity-system moral choices); and a Hyborian-era frame — even though the PD source is set in the Thurian Age, the player explores the ruin in the Hyborian present (the Thurian event happened thousands of years ago; what remains is the dungeon, the artifact, and the lingering enchantment). `[high]`
+↔ relates to: §2 The "One Short Story = One Module" Simplification, ADVENTURE_MODULES_PLAN.md §3 (per-module customization), KARMA_SYSTEM.md §5 (system integration)
+
+### [INK-AUTHORING]
+
+**Q:** What does the module template structure look like under `lib/adventures/`?
+**A:** Seven files per module folder: `rooms.ts` (room definitions, descriptions, exits, scene tones), `npcs.ts` (module-specific NPCs + scripts), `items.ts` (loot, key items, artifact), `encounters.ts` (combat encounter setup, NPC combat profiles), `cold-open.ts` (entry sequence with text + image prompt), `module.ts` (registration, completion criteria, Chronicle entries), `README.md` (source story attribution + PD verification). The module file registers via `lib/adventures/registry.ts` — same machinery as the guild-hall hub. The README must include source story title, PD-status verification date, difficulty tier, recommended hero level, plot summary, adaptation notes, PD elements used (each cited), and original elements (not from Howard). `[high]`
+↔ relates to: §3 Module Template Structure, lib/adventures/registry.ts, lib/adventures/guild-hall.ts (the canonical reference pattern)
+
+### [INK-AUTHORING]
+
+**Q:** What stays verbatim, what mutates, what is invented, and what is forbidden in source-to-module conversion?
+**A:** **Stays verbatim:** named PD elements (Tuzun Thune, his mirrors, Valusian stonework, Bran Mak Morn, Serpent-Men, the *"Ka nama kaa lajerama"* phrase); short Howard quotes (≤200 words per module) as room descriptions / item inscriptions / Chronicle entries with cited source; characters' core nature (Tuzun Thune is a wizard who built mirror portals — don't invert this). **Mutates:** setting from Thurian present to Thurian ruin in Hyborian present (12,000 years later, mirrors dusty, throne room collapsed); plot from single fixed protagonist arc to branching player arc per Reader's Mirror profile; villain/enemy substitution where source uses an out-of-setting force (Roman legions in *Kings of the Night* swapped for Stygian raiders); outcome plurality (Howard's one ending becomes 2–4 ending paths recorded in Chronicle). **Invented (carefully):** filler rooms between key scenes in Howard's voice; combat encounters expanded from Howard's one-sentence summaries; modern-system loot (potions Zim sells, weapons Sam sells); the cold open. **Forbidden:** any name from a copyrighted Conan story; generic D&D-style flavor that breaks Howard's voice; plot armor for the player (death is permanent, respawn resets gold + inventory, Chronicle is forever). `[high]`
+↔ relates to: §4 Source-Story Module Conversion Methodology, Public_Domain_Rules.md §4.4 (parallel "inspired by" customization rules), ADVENTURE_MODULES_PLAN.md §1.3
+
+### [WIRING]
+
+**Q:** What is the seven-section Living Eamon system integration checklist every module must satisfy?
+**A:** (1) **body-zone combat:** define `combatProfile` for every hostile NPC (agility, weapon skill, per-zone armor, shield); specify which body zones armor covers; set `combatProfile.poisonOnHit: { severity, chance }` for poison-using enemies; confirm at least one combat encounter survivable with starting equipment for novice modules. (2) **Virtue triggers:** list 2–4 moral choice points per module with which virtue moves and how much (note: doc still references the 10-virtue ledger — KARMA_SYSTEM cold-deletes that for PICSSI, so this section needs update once Sprint 2 lands). (3) **Chronicle entries:** identify 3–6 key events worthy of terse annalist-voice records. (4) **Mana / Occult costs:** specify mana costs by circle if the module exposes Occult; document Thurian-artifact CAST/INVOKE buffs; Order detection probability per use. (5) **Bleed/Poison sources:** wire bleed-causing weapons + poison sources where appropriate. (6) **Charity-barrel-style moral choices:** small specific module-local moral choice that costs a virtue point if taken. (7) **Order detection wiring:** public Occult use → Order witness probability; sulfur-trace residue from spent reagents; reagent stockpiling → investigation flag. Plus a difficulty tier (novice/moderate/deadly) + recommended hero level. `[high]`
+↔ relates to: §5 Living Eamon System Integration Checklist, SORCERY.md §4 The Order, KARMA_SYSTEM.md §2.5–§2.10 (virtue trigger replacement)
+
+### [INK-AUTHORING]
+
+**Q:** Why are the first three modules built in the order Mirrors → Serpent → Pictish Time-Tomb?
+**A:** Each demonstrates a different module type while progressively raising combat tier. **M-1 Mirrors of Tuzun Thune (novice):** low combat (1–2 small fights), heavy on exploration + dynamic Grok-generated visions; demonstrates module template, cold-open system, legacy-artifact mechanic without requiring all subsystems at once. **M-2 The Serpent in the Court (moderate):** investigation + combat + social play; demonstrates NPC interrogation, deduction mechanics, and provides combat to advance weapon skills + earn gold for training before M-3; the canonical *"Ka nama kaa lajerama"* exposure mechanic is central. **M-3 Pictish Time-Tomb (deadly):** battle climax module; demonstrates large-scale body-zone combat, time-bridge mechanic (player briefly fights alongside or against a summoned Thurian warrior), and substantial legacy-flag consequence (the Stygian raiders' employer takes notice). M-3 assumes the player has trained up via M-2's gold + skill rewards; punishingly hard without ~100 weapon skill, full zone armor, and a stack of cures. `[high]`
+↔ relates to: §8 The First Three Modules, ADVENTURE_MODULES_PLAN.md §4 (build order — M-1 / M-2 / M-3 are the same Tier-0 modules)
+
+### [PD-SAFETY]
+
+**Q:** Is the §9 PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?
+**A:** Medium — partially stale. §8 notes the expansion ("the project's PD corpus expanded to include 15 additional *Weird Tales* 1934–1936 stories per the non-renewal audit") but §9's per-year calendar was written with old assumptions and still lists *Queen of the Black Coast* (May 1934), *Jewels of Gwahlur* (March 1935), *Beyond the Black River* (May–June 1935), and *Hour of the Dragon* (1935–1936) as 2030 unlocks. Per Public_Domain_Rules.md §1.2 + §8, all of those are now Bucket A. §9's 2031 entry for *Hour of the Dragon* unlocking Acheron / Xaltotun / Heart of Ahriman / Python is also stale — *Hour of the Dragon* is Bucket A and those names are usable now (with the customization discipline). What remains accurate: the 2028 entry for *Phoenix on the Sword* + *Scarlet Citadel* (still Bucket B; 2027 audit may move them) and the 2029 entry for the 1933 Conan corpus (still Bucket B). Recommended fix: a §9 rewrite that reflects the post-audit Bucket A and points to ADVENTURE_MODULES_PLAN.md §3 as the authoritative roster. `[medium]` → see [EV-hyborian_pd_module_plan-001](EDGE_VECTORS.md#ev-hyborian_pd_module_plan-001)
+↔ relates to: §9 After The First Three — The PD Calendar (stale section), Public_Domain_Rules.md §1.2 + §8 (current calendar), ADVENTURE_MODULES_PLAN.md §3 (post-audit module roster)
+
+### [INK-AUTHORING]
+
+**Q:** What's the relationship between this doc and `ADVENTURE_MODULES_PLAN.md` — they overlap on the first three modules; which is canonical for what?
+**A:** Open. Cleanest division: this doc owns the **methodology + per-module conversion patterns** (PD-First Design Rule, one-short-story-one-module simplification, module template structure, source-to-module conversion stays/mutates/invents/forbids, system integration checklist, profile-driven branching, cold open + scene image prompt template, the first-three modules' detailed pitches). ADVENTURE_MODULES_PLAN.md owns the **18-module roster + scroll/SH-fragment seeding map + build order across all 18**. Overlap: both docs detail M-1 / M-2 / M-3 — this doc has the original pitches + difficulty notes + key elements at high detail; ADVENTURE_MODULES_PLAN.md has the customization angle (Atlantean wonder-tech accents) + scroll seeding (Scroll II in M-1, etc.) at the roster level. Recommended canonical split: this doc keeps the M-1/M-2/M-3 detail as authoring reference; ADVENTURE_MODULES_PLAN.md links to it rather than duplicating; both docs should cross-reference each other in their introductions. Today only ADVENTURE_MODULES_PLAN.md links here; the back-link is missing. `[open]` → see [EV-hyborian_pd_module_plan-002](EDGE_VECTORS.md#ev-hyborian_pd_module_plan-002)
+↔ relates to: §8 (first-three detail), ADVENTURE_MODULES_PLAN.md §3 (Tier 0 entries M-1/M-2/M-3), DOC_MAP.md (canonical-for declarations)
+
 ---
 
 # Adventure Module Plan — Building Modules from Public Domain Howard

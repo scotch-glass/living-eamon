@@ -8,19 +8,19 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 16 open Edge Vectors · 145 edges
+- 34 docs · 18 open Edge Vectors · 158 edges
 - 26 creator-visible · 8 internal
 
 ## Most-connected nodes (by in-degree)
 
+- **karma_system** (19 incoming) — Karma System
 - **module_system** (19 incoming) — Module System (Ink + GPE)
-- **karma_system** (18 incoming) — Karma System
 - **game_design** (15 incoming) — Game Design Document
-- **public_domain_rules** (10 incoming) — Public Domain Rules
+- **public_domain_rules** (12 incoming) — Public Domain Rules
+- **adventure_modules_plan** (11 incoming) — Adventure Modules Plan
 - **karma_implementation_plan** (9 incoming) — Karma Implementation Plan
-- **adventure_modules_plan** (8 incoming) — Adventure Modules Plan
-- **sorcery** (7 incoming) — Sorcery (Guild CAST + Occult INVOKE)
-- **doc_map** (6 incoming) — Documentation Index (this file)
+- **doc_map** (8 incoming) — Documentation Index (this file)
+- **sorcery** (8 incoming) — Sorcery (Guild CAST + Occult INVOKE)
 
 ## Adjacency
 
@@ -119,14 +119,16 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **cross_ref** → game_design, hyborian_pd_module_plan, karma_system, public_domain_rules
   - **has_open_question** → EV-adventure_modules_plan-001, EV-adventure_modules_plan-002
   - **relates_to** → hyborian_pd_module_plan, karma_system, module_system, public_domain_rules, quest_registry_dump
-- **hyborian_pd_module_plan** [active] — Hyborian-PD Module Plan
+- **hyborian_pd_module_plan** Q:8(open=2) [active] — Hyborian-PD Module Plan
   - **cross_ref** → adventure_modules_plan, game_design, public_domain_rules
+  - **has_open_question** → EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002
+  - **relates_to** → adventure_modules_plan, doc_map, karma_system, public_domain_rules, sorcery
 - **karma_implementation_plan** Q:8(open=2) [deferred] — Karma Implementation Plan
   - **cross_ref** → hydrate_next_session, karma_system
   - **has_open_question** → EV-karma_implementation_plan-001, EV-karma_implementation_plan-002
   - **relates_to** → hydrate_next_session, karma_system, launch_readiness
 
-## Open Edge Vectors (16)
+## Open Edge Vectors (18)
 
 - **EV-adventure_modules_plan-001** `[PICSSI-BALANCE, open]` ← adventure_modules_plan → affects: karma_system, module_system
   - Q: What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modu...
@@ -136,6 +138,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - Q: How do PICSSI virtues correlate with the seven AffectVector axes?
 - **EV-game_design-002** `[INK-AUTHORING, medium]` ← game_design → affects: karma_system, module_system
   - Q: Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing-pure")?
+- **EV-hyborian_pd_module_plan-001** `[PD-SAFETY, medium]` ← hyborian_pd_module_plan → affects: adventure_modules_plan, hyborian_pd_module_plan, public_domain_rules
+  - Q: Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to...
+- **EV-hyborian_pd_module_plan-002** `[INK-AUTHORING, open]` ← hyborian_pd_module_plan → affects: adventure_modules_plan, doc_map, hyborian_pd_module_plan
+  - Q: What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/M-2/M-3?
 - **EV-karma_implementation_plan-001** `[WIRING, open]` ← karma_implementation_plan → affects: karma_implementation_plan, karma_system
   - Q: When multiple atoms match the same trigger event, what's the priority resolution rule?
 - **EV-karma_implementation_plan-002** `[WIRING, medium]` ← karma_implementation_plan → affects: karma_implementation_plan

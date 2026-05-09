@@ -9,37 +9,37 @@ Generated 2026-05-09.
 - **Tier 0 (MVP-blockers):** 7 active · 7 shipped
 - **Tier 1 (launch polish):** 8 active · 0 shipped
 - **Tier 2 (post-launch):** 1 active · 0 shipped · 8 deferred
-- **Open Edge Vectors:** 16
+- **Open Edge Vectors:** 18
 
-> **Critical path:** [`karma_sprint_chain`](#karma_sprint_chain) — priority **132** — 10 downstream sprint(s) depend on this; 11 EV(s) blocked.
+> **Critical path:** [`karma_sprint_chain`](#karma_sprint_chain) — priority **136** — 10 downstream sprint(s) depend on this; 13 EV(s) blocked.
 
 ## Tier 0 — MVP blockers
 
-### 1. <a id="karma_sprint_chain"></a>KARMA Sprints 1–7 — PICSSI virtue system shipped end-to-end  `priority: 132`
+### 1. <a id="karma_sprint_chain"></a>KARMA Sprints 1–7 — PICSSI virtue system shipped end-to-end  `priority: 136`
 
 - **Status:** not-started
 - **Source:** KARMA_IMPLEMENTATION_PLAN.md
 - **Blockers:** KARMA_SYSTEM.md §6 approval, Sprint 0 audit, MODULE_SYSTEM.md Stage I approval
 - **Blocks (other launch items):** brothel_temple_vd_content, db_transition_sprint_8, first_launch_adventure, invoke_circles_4_through_8, module_system_ink_runtime, multiplayer_phase_3, pegasus_telepathic_ally, pray_divinity_v1, scrolls_of_thoth_ui, three_launch_sagas
-- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-karma_system-002, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-public_domain_rules-001, EV-sorcery-001
+- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002, EV-karma_system-001, EV-karma_system-002, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-public_domain_rules-001, EV-sorcery-001
 - **What good looks like:** PICSSI virtues update on every atom choice; combat-PICSSI deltas fire on kill/flee/abandon; ordered-retreat works; legacy 10-virtue cold-deleted; all magnitudes match KARMA_SYSTEM canon.
 
-### 2. <a id="first_launch_adventure"></a>At least one launch adventure module shipped, end-to-end playable  `priority: 124`
+### 2. <a id="first_launch_adventure"></a>At least one launch adventure module shipped, end-to-end playable  `priority: 128`
 
 - **Status:** not-started
 - **Source:** ADVENTURE_MODULES_PLAN.md
 - **Blockers:** karma_sprint_chain, module_system_ink_runtime
 - **Blocks (other launch items):** crowd_qa_pipeline, multiplayer_phase_3, rest_of_18_module_roadmap, three_launch_sagas
-- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-public_domain_rules-001, EV-sorcery-001
+- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002, EV-karma_system-001, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-public_domain_rules-001, EV-sorcery-001
 - **What good looks like:** A new player can complete the full quest line of one launch saga (Mirrors of Tuzun Thune / Shadow Kingdom / Kings of the Night) with PICSSI consequences, scroll/fragment seeding, NPC affection, combat encounters, and a death-respawn cycle.
 
-### 3. <a id="module_system_ink_runtime"></a>MODULE_SYSTEM Ink runtime + GPE authoring CLI  `priority: 111`
+### 3. <a id="module_system_ink_runtime"></a>MODULE_SYSTEM Ink runtime + GPE authoring CLI  `priority: 115`
 
 - **Status:** not-started
 - **Source:** MODULE_SYSTEM.md
 - **Blockers:** MODULE_SYSTEM.md Stage I approval, karma_sprint_chain
 - **Blocks (other launch items):** first_launch_adventure
-- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-karma_system-002
+- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002, EV-karma_system-002
 - **What good looks like:** Ink module loads at runtime, EXTERNAL functions (apply_karma, apply_npc_affection, set_flag, trigger_combat, etc.) work; GPE CLI produces per-virtue balance scorecards for any .ink module.
 
 ### 4. <a id="stripe_payment_gate"></a>Stripe payment gate before character creation  `priority: 102`
@@ -70,11 +70,11 @@ Generated 2026-05-09.
 
 ## Tier 1 — Launch polish
 
-### 1. <a id="qa_annotations_batch"></a>Q+A annotations on remaining 12 design-canon docs  `priority: 122`
+### 1. <a id="qa_annotations_batch"></a>Q+A annotations on remaining 12 design-canon docs  `priority: 126`
 
 - **Status:** not-started
 - **Source:** ~/.claude/plans/review-the-lore-and-floofy-hamming.md (Q+A pilot batch)
-- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-karma_implementation_plan-001, EV-karma_implementation_plan-002, EV-karma_system-001, EV-karma_system-002, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-pantheon-002, EV-public_domain_rules-001, EV-public_domain_rules-002, EV-sorcery-001, EV-sorcery-002
+- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002, EV-karma_implementation_plan-001, EV-karma_implementation_plan-002, EV-karma_system-001, EV-karma_system-002, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-pantheon-002, EV-public_domain_rules-001, EV-public_domain_rules-002, EV-sorcery-001, EV-sorcery-002
 - **What good looks like:** Every design-canon and sprint-plan doc carries a Q+A block matching the PANTHEON / GAME_DESIGN pilot schema. Edge Vectors registry surfaces cross-canon open questions, not just per-pilot.
 
 ### 2. <a id="pray_divinity_v1"></a>PRAY + Divinity System v1  `priority: 111`
@@ -109,11 +109,12 @@ Generated 2026-05-09.
 - **Blocks (open EVs):** EV-pantheon-001, EV-pantheon-002
 - **What good looks like:** Oaths appear as Ma'atic priest dialogue, NPC consequences (Order alerts when oaths are broken), and post-mortem Hall-of-Two-Truths weighing prose.
 
-### 6. <a id="library_wiki"></a>/library wiki for creators (W2 shipped, W3 outstanding)  `priority: 91`
+### 6. <a id="library_wiki"></a>/library wiki for creators (W2 shipped, W3 outstanding)  `priority: 93`
 
 - **Status:** in-progress
 - **Source:** app/library/, lib/library/, ~/.claude/plans/review-the-lore-and-floofy-hamming.md
 - **Blocks (other launch items):** creator_forge_admin
+- **Blocks (open EVs):** EV-hyborian_pd_module_plan-002
 - **What good looks like:** W2 wiki UI shipped (commit e0304a5). W3 deferred (registry dumps + drift detection). Q+A annotations expanding from 2 docs to 14 (pilot + batch).
 
 ### 7. <a id="three_launch_sagas"></a>All 3 launch sagas complete (Mirrors of Tuzun Thune trilogy)  `priority: 91`

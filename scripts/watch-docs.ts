@@ -46,6 +46,8 @@ const IGNORED = [
   "docs/launch-readiness.md",
   "docs/hydration.md",
   "docs/topic-routes.md",
+  "docs/work-queue.json",
+  "docs/work-queue.md",
 ];
 
 const DEBOUNCE_MS = 300;
@@ -100,13 +102,14 @@ async function regenerate(reason: string): Promise<void> {
   regenerating = true;
   log(`regenerating (${reason})...`);
   const t0 = Date.now();
-  // Cascade: graph -> launch-readiness -> hydration -> topic-routes -> validate
+  // Cascade: graph -> launch-readiness -> hydration -> topic-routes -> work-queue -> validate
   // (validate is non-fatal here; it logs errors but the watcher keeps running)
   const graphCode = await runScript("scripts/build-doc-graph.ts");
   if (graphCode === 0) {
     await runScript("scripts/launch-readiness.ts");
     await runScript("scripts/build-hydration.ts");
     await runScript("scripts/build-topic-routes.ts");
+    await runScript("scripts/build-work-queue.ts");
     await runScript("scripts/validate-docs.ts");
   } else {
     logError("graph:build failed; skipping downstream generators");

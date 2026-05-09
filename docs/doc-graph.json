@@ -1,11 +1,11 @@
 {
   "generated_at": "2026-05-09",
   "stats": {
-    "doc_count": 36,
+    "doc_count": 37,
     "ev_count": 23,
-    "edge_count": 194,
+    "edge_count": 182,
     "creator_visible": 26,
-    "internal": 10
+    "internal": 11
   },
   "nodes": {
     "doc:adventure_modules_plan": {
@@ -399,6 +399,16 @@
       "questions_total": 6,
       "questions_answered": 5,
       "questions_open": 1
+    },
+    "doc:work_queue": {
+      "type": "doc",
+      "id": "work_queue",
+      "path": "docs/work-queue.md",
+      "title": "Work Queue — Triaged Backlog (auto-generated)",
+      "role": "reference-generated",
+      "visibility": "internal",
+      "status": "active",
+      "last_updated": "rebuilt-on-demand"
     },
     "doc:world_locations": {
       "type": "doc",
@@ -1358,6 +1368,16 @@
       "type": "has_open_question"
     },
     {
+      "from": "doc:work_queue",
+      "to": "doc:edge_vectors",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:work_queue",
+      "to": "doc:launch_criteria",
+      "type": "cross_ref"
+    },
+    {
       "from": "doc:world_locations",
       "to": "doc:game_design",
       "type": "cross_ref"
@@ -1399,11 +1419,6 @@
     },
     {
       "from": "ev:EV-adventure_modules_plan-002",
-      "to": "doc:adventure_modules_plan",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-adventure_modules_plan-002",
       "to": "doc:module_system",
       "type": "affects"
     },
@@ -1430,11 +1445,6 @@
     {
       "from": "ev:EV-hyborian_pd_module_plan-001",
       "to": "doc:adventure_modules_plan",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-hyborian_pd_module_plan-001",
-      "to": "doc:hyborian_pd_module_plan",
       "type": "affects"
     },
     {
@@ -1453,23 +1463,8 @@
       "type": "affects"
     },
     {
-      "from": "ev:EV-hyborian_pd_module_plan-002",
-      "to": "doc:hyborian_pd_module_plan",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-karma_implementation_plan-001",
-      "to": "doc:karma_implementation_plan",
-      "type": "affects"
-    },
-    {
       "from": "ev:EV-karma_implementation_plan-001",
       "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-karma_implementation_plan-002",
-      "to": "doc:karma_implementation_plan",
       "type": "affects"
     },
     {
@@ -1494,22 +1489,7 @@
     },
     {
       "from": "ev:EV-loot_tables-001",
-      "to": "doc:loot_tables",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-loot_tables-001",
       "to": "doc:travel_matrix",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-module_system-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-module_system-002",
-      "to": "doc:module_system",
       "type": "affects"
     },
     {
@@ -1528,18 +1508,8 @@
       "type": "affects"
     },
     {
-      "from": "ev:EV-public_domain_rules-002",
-      "to": "doc:public_domain_rules",
-      "type": "affects"
-    },
-    {
       "from": "ev:EV-scrolls_of_thoth_index-001",
       "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-scrolls_of_thoth_index-001",
-      "to": "doc:scrolls_of_thoth_index",
       "type": "affects"
     },
     {
@@ -1558,26 +1528,11 @@
       "type": "affects"
     },
     {
-      "from": "ev:EV-sorcery-002",
-      "to": "doc:sorcery",
-      "type": "affects"
-    },
-    {
       "from": "ev:EV-stobaean_fragments_index-001",
       "to": "doc:karma_system",
       "type": "affects"
     },
     {
-      "from": "ev:EV-stobaean_fragments_index-001",
-      "to": "doc:stobaean_fragments_index",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-travel_matrix-001",
-      "to": "doc:travel_matrix",
-      "type": "affects"
-    },
-    {
       "from": "ev:EV-travel_matrix-001",
       "to": "doc:world_locations",
       "type": "affects"
@@ -1585,11 +1540,6 @@
     {
       "from": "ev:EV-world_locations-001",
       "to": "doc:travel_matrix",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-world_locations-001",
-      "to": "doc:world_locations",
       "type": "affects"
     }
   ]

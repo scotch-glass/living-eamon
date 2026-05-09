@@ -434,6 +434,18 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, docs/hydration.md]
   generated_by: scripts/build-topic-routes.ts
   npm_script: topic-routes:build
+
+- id: work_queue
+  path: docs/work-queue.md
+  title: Work Queue — Triaged Backlog (auto-generated)
+  role: reference-generated
+  canonical_for: [work-queue, awaits-answer-list, ready-to-code-list]
+  visibility: internal
+  status: active
+  last_updated: rebuilt-on-demand
+  cross_refs: [EDGE_VECTORS.md, LAUNCH_CRITERIA.md]
+  generated_by: scripts/build-work-queue.ts
+  npm_script: work-queue:build
 ```
 
 ---

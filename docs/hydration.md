@@ -21,8 +21,8 @@ This page fuses topology + open questions + recent activity into one read so you
 
 ## At a glance
 
-- **Topology:** 36 docs · 23 open Edge Vectors · 194 edges
-- **Visibility:** 26 creator-visible · 10 internal-only
+- **Topology:** 37 docs · 23 open Edge Vectors · 182 edges
+- **Visibility:** 26 creator-visible · 11 internal-only
 - **Q+A coverage:** 115 questions across 15 docs · 92 high-confidence · 23 open
 - **Critical path:** `karma_sprint_chain` — priority **136** — blocks 10 downstream sprint(s)
 
@@ -36,7 +36,7 @@ These eight docs sit at the topological center. When a question crosses domains,
 
 Path: [`KARMA_SYSTEM.md`](../KARMA_SYSTEM.md)
 
-### module_system — Module System (Ink + GPE)  `(19 incoming)`
+### module_system — Module System (Ink + GPE)  `(17 incoming)`
 
 **Owns:** ink-external-functions, gpe-magnitude-bands, combat-picssi-hook-points, runtime-adapter-spec · **Status:** draft · **Q:10/2open**
 
@@ -48,13 +48,13 @@ Path: [`MODULE_SYSTEM.md`](../MODULE_SYSTEM.md)
 
 Path: [`GAME_DESIGN.md`](../GAME_DESIGN.md)
 
-### public_domain_rules — Public Domain Rules  `(15 incoming)`
+### public_domain_rules — Public Domain Rules  `(14 incoming)`
 
 **Owns:** ip-framework, safe-harbor-strategy, howard-pd-timeline, trademark-restrictions · **Status:** active · **Q:10/2open**
 
 Path: [`Public_Domain_Rules.md`](../Public_Domain_Rules.md)
 
-### adventure_modules_plan — Adventure Modules Plan  `(12 incoming)`
+### adventure_modules_plan — Adventure Modules Plan  `(11 incoming)`
 
 **Owns:** eighteen-module-roadmap, scroll-fragment-seeding · **Status:** active · **Q:8/2open**
 
@@ -66,13 +66,13 @@ Path: [`ADVENTURE_MODULES_PLAN.md`](../ADVENTURE_MODULES_PLAN.md)
 
 Path: [`DOC_MAP.md`](../DOC_MAP.md)
 
-### karma_implementation_plan — Karma Implementation Plan  `(10 incoming)`
+### karma_implementation_plan — Karma Implementation Plan  `(8 incoming)`
 
 **Owns:** karma-sprint-roadmap-s0-s7 · **Status:** deferred · **Q:8/2open**
 
 Path: [`KARMA_IMPLEMENTATION_PLAN.md`](../KARMA_IMPLEMENTATION_PLAN.md)
 
-### sorcery — Sorcery (Guild CAST + Occult INVOKE)  `(8 incoming)`
+### sorcery — Sorcery (Guild CAST + Occult INVOKE)  `(7 incoming)`
 
 **Owns:** magic-systems, eight-circles, reagents, the-order · **Status:** active · **Q:10/2open**
 
@@ -88,18 +88,17 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 
 | EV ID | Category | Affects | Question |
 |---|---|---|---|
-| `EV-hyborian_pd_module_plan-001` | PD-SAFETY | 3 doc(s) | Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 sto… |
-| `EV-hyborian_pd_module_plan-002` | INK-AUTHORING | 3 doc(s) | What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/… |
 | `EV-karma_system-002` | PICSSI-BALANCE | 3 doc(s) | Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped … |
 | `EV-adventure_modules_plan-001` | PICSSI-BALANCE | 2 doc(s) | What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the … |
-| `EV-adventure_modules_plan-002` | LORE | 2 doc(s) | Tier 2 modules (M-14 through M-18) are framed as either "Atlantean wonder-age past" or "cross-genre present-da… |
+| `EV-game_design-001` | AFFECT-VECTOR | 2 doc(s) | How do PICSSI virtues correlate with the seven AffectVector axes? |
+| `EV-game_design-002` | INK-AUTHORING | 2 doc(s) | Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing… |
+| `EV-hyborian_pd_module_plan-001` | PD-SAFETY | 2 doc(s) | Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 sto… |
 
 ## Recent activity
 
-Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T00:19:52+02:00):
+Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T00:37:29+02:00):
 
-- `74e3ce8` — WIP: extract EV + launch-criteria parsers (scaffold for parallel workflow)
-- `1e18401` — session log: refresh HYDRATE_NEXT_SESSION for 2026-05-10
+- `9181ce1` — session log: capture parallel-workflow plan + scaffold as next-session work
 
 ## Reading guide
 

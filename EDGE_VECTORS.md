@@ -161,6 +161,24 @@ Every entry conforms to:
 - **Affects:** [ADVENTURE_MODULES_PLAN.md §3 Tier 2 introduction + entries M-14..M-18](/library/adventure_modules_plan), [MODULE_SYSTEM.md §4.5 module.json](/library/module_system) (planned framing field), feedback_no_hyborian_in_marketing.md
 - **Resolution path:** when the first Tier 2 module enters scoping, decide its `framing` value and lock the convention. Document the per-module choice in §3 Tier 2 entries. Promote to `[high]` once 2+ Tier 2 modules ship and player tonal-feedback is collected.
 
+### [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan)
+
+#### EV-karma_implementation_plan-001  `[WIRING]`
+- **Source:** [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan)
+- **Question:** When multiple atoms match the same trigger event, what's the priority resolution rule?
+- **Best guess:** Add a `priority: number` field to `Atom` (default 0) and sort matches by priority desc before picking; tied priorities fall back to load order. Resolves the "Vivian-specific atom should outrank generic tavern atom" case once the corpus grows past ~30 atoms.
+- **Confidence:** open
+- **Affects:** [KARMA_IMPLEMENTATION_PLAN.md §Risks Q2 + §Sprint 4 triggers.ts](/library/karma_implementation_plan), [scripts/balance/simulator.ts](/) (atom-collision flood-fire test surface), [KARMA_SYSTEM.md](/library/karma_system) (atom corpus design)
+- **Resolution path:** unblock during Sprint 4 authoring or when the first balance-simulation surfaces an atom-collision bug. Add the `priority` field, document the tie-break rule, and exercise it through the simulator. Promote to `[high]` once 50+ atoms ship and a curated atom orders-of-precedence pass demonstrates the rule works.
+
+#### EV-karma_implementation_plan-002  `[WIRING]`
+- **Source:** [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan)
+- **Question:** How does the Scroll-of-Thoth riddle UI evolve from v1 chat-stream token to S6 modal?
+- **Best guess:** v1 emits `__RIDDLE__` token via the existing token-driven verb-completion flow (matches `__YESNO__`, `__BARMAID_SELECT__`). S6 modal upgrade open questions: (a) per-scroll attempt budget vs v1 silent-no-Illumination, (b) reveal canonical answer after N failures (the Hermes→Thoth substitution can confuse first-time players), (c) whether the chat-stream fallback survives for headless tests after the modal ships.
+- **Confidence:** medium
+- **Affects:** [KARMA_IMPLEMENTATION_PLAN.md §Sprint 3 + §Sprint 6](/library/karma_implementation_plan), [lib/karma/scrolls.ts](/) (planned S3 module), `project_scroll_riddle_verification.md`
+- **Resolution path:** ship Sprint 3 with the chat-stream token; gather playtest feedback on attempt-budget desire and reveal-after-N-failures threshold; design the S6 modal with those defaults baked in. Promote to `[high]` once the modal ships and the chat-stream fallback is validated as a headless-test path.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

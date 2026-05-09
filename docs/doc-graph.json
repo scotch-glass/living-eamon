@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 14,
-    "edge_count": 137,
+    "ev_count": 16,
+    "edge_count": 145,
     "creator_visible": 26,
     "internal": 8
   },
@@ -142,7 +142,10 @@
       "role": "sprint-plan",
       "visibility": "internal",
       "status": "deferred",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 8,
+      "questions_answered": 6,
+      "questions_open": 2
     },
     "doc:karma_system": {
       "type": "doc",
@@ -404,6 +407,24 @@
       "confidence": "medium",
       "question": "Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., \"Standing-pure\")?",
       "best_guess": "Probably yes for most archetype themes, but the constraint matrix isn't proven. A Standing-pure module would tend toward visible victory, conspicuous wealth, donations-for-show; that doesn't conflict with PD rules (Howard fiction is full of this) and is internally PICSSI-balanced if the spec says \"intentionally archetype-focused modules can be unbalanced\" (per KARMA_SYSTEM 2026-05-06 update). But edge cases: e.g., a Spirituality-pure module might struggle to ship a Courage \"great odds\" encounter without breaking archetype."
+    },
+    "ev:EV-karma_implementation_plan-001": {
+      "type": "edge_vector",
+      "id": "EV-karma_implementation_plan-001",
+      "source_doc": "karma_implementation_plan",
+      "category": "WIRING",
+      "confidence": "open",
+      "question": "When multiple atoms match the same trigger event, what's the priority resolution rule?",
+      "best_guess": "Add a `priority: number` field to `Atom` (default 0) and sort matches by priority desc before picking; tied priorities fall back to load order. Resolves the \"Vivian-specific atom should outrank generic tavern atom\" case once the corpus grows past ~30 atoms."
+    },
+    "ev:EV-karma_implementation_plan-002": {
+      "type": "edge_vector",
+      "id": "EV-karma_implementation_plan-002",
+      "source_doc": "karma_implementation_plan",
+      "category": "WIRING",
+      "confidence": "medium",
+      "question": "How does the Scroll-of-Thoth riddle UI evolve from v1 chat-stream token to S6 modal?",
+      "best_guess": "v1 emits `__RIDDLE__` token via the existing token-driven verb-completion flow (matches `__YESNO__`, `__BARMAID_SELECT__`). S6 modal upgrade open questions: (a) per-scroll attempt budget vs v1 silent-no-Illumination, (b) reveal canonical answer after N failures (the Hermes→Thoth substitution can confuse first-time players), (c) whether the chat-stream fallback survives for headless tests after the modal ships."
     },
     "ev:EV-karma_system-001": {
       "type": "edge_vector",
@@ -719,8 +740,33 @@
     },
     {
       "from": "doc:karma_implementation_plan",
+      "to": "doc:hydrate_next_session",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:karma_implementation_plan",
       "to": "doc:karma_system",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:karma_implementation_plan",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:karma_implementation_plan",
+      "to": "doc:launch_readiness",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:karma_implementation_plan",
+      "to": "ev:EV-karma_implementation_plan-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:karma_implementation_plan",
+      "to": "ev:EV-karma_implementation_plan-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:karma_system",
@@ -1110,6 +1156,21 @@
     {
       "from": "ev:EV-game_design-002",
       "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_implementation_plan-001",
+      "to": "doc:karma_implementation_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_implementation_plan-001",
+      "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_implementation_plan-002",
+      "to": "doc:karma_implementation_plan",
       "type": "affects"
     },
     {

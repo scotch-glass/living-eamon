@@ -6,7 +6,66 @@ canonical_for: [karma-sprint-roadmap-s0-s7]
 visibility: internal
 status: deferred
 last_updated: 2026-04-30
-cross_refs: [KARMA_SYSTEM.md, HYDRATE_NEXT_SESSION.md]
+cross_refs: [KARMA_SYSTEM.md, HYDRATE_NEXT_SESSION.md, EDGE_VECTORS.md]
+questions_total: 8
+questions_answered: 6
+questions_open: 2
+edge_vector_ids: [EV-karma_implementation_plan-001, EV-karma_implementation_plan-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [ARCHITECTURE]
+
+**Q:** What sprint sequence does this plan cover, and what does each sprint own?
+**A:** Eight sprints. **S0 Preflight** (½ day): snapshot DB schema, run baseline tests, audit 4 existing virtue mutation points. **S1 Stamina + fatiguePool + actionBudget bedrock** (2–3 days): body-zone-derived dual-pool, combat-strike drains, fatigue-tier evasion-vs-player penalties, OOC regen gating. **S2 PICSSI bedrock + cold-delete legacy 10-virtue** (2–3 days): single migration drops 10 columns and adds 6 PICSSI + 3 base attribute columns. **S3 Activity dispatcher + Scrolls of Thoth + VD** (3 days): 20+ rest activities, scroll-riddle gate, VD body-state. **S4 Encounter atoms + flags + NPC affection** (3–4 days): atom loader, triggers, resolve, JSONB storage. **S5 Combat-PICSSI deltas** (3 days): triple-penalty, ordered-retreat, combat-end PICSSI deltas. **S6 UI polish** (2 days): PICSSI bars, affection panel, karma history log, riddle modal upgrade. **S7 Sorcery + Illumination drain (deferred)** (5+ days): per-circle drains, Outer Dark mechanics. Total S0–S6: ~16–18 days; ~3–4 calendar weeks solo + Claude. `[high]`
+↔ relates to: §Sprint 0 through §Sprint 7, §Estimated total scope, KARMA_SYSTEM.md §5 Implementation Roadmap
+
+### [WIRING]
+
+**Q:** What new modules under `lib/karma/*` does this plan create, and what does each own?
+**A:** Eight modules. **`types.ts`** (S2): `PicssiState`, `KarmaDelta`, magnitude-band enum, virtue-bounds map. **`recompute.ts`** (S1+S2): `recomputeDerivedStats(state)` — caps raise, current values stay flat. **`activities.ts`** (S3): registry of 20+ rest activities + `applyActivity(state, id)`. **`scrolls.ts`** (S3): `readScroll`, riddle-gate. **`loader.ts`** (S4): `loadAtoms()` returns `Atom[]`. **`triggers.ts`** (S4): `matchTriggers(state, event)` returns `Atom[]`. **`resolve.ts`** (S4): `applyChoice(state, atom, choice)` writes karma + affection + flags + gold/hp deltas. **`combat-deltas.ts`** (S5): table + `applyCombatPICSSI(state, event)`. Existing files extended: `gameState.ts` (PicssiState type, JSONB fields), `gameEngine.ts` (tickWorldState gate, command dispatch), `combatEngine.ts` (stamina/fatigue drains, Spirituality HEAL bonus, endCombat hook). The simulator at `scripts/balance/simulator.ts` re-points its `atom-types` import to `lib/karma/atom-types` per §Risks. `[high]`
+↔ relates to: §Architectural overview, §Sprint 1 through §Sprint 5 (per-module sections)
+
+### [WIRING]
+
+**Q:** What's the DB migration sequencing across sprints — what columns land when, and where do columns drop?
+**A:** Four migrations across S1–S4. **S1:** add `current_stamina`, `max_stamina`, `fatigue_pool`, `action_budget` (smallint columns; sensible defaults 55/55/0/25). **S2 (single transaction):** ADD `picssi_passion`, `picssi_integrity`, `picssi_courage`, `picssi_standing`, `picssi_spirituality` (smallint 0..100 default 0), `picssi_illumination` (smallint −100..+100 default 0), `str_base`, `dex_base`, `cha_base` (smallint defaults 10); DROP the 10 legacy virtue columns (`honesty, compassion, valor, justice, sacrifice, honor, spirituality, humility, grace, mercy`) — same migration, no deprecation period. **S3:** add `vd_active` boolean default false, `scrolls_read` JSONB default `'{}'`. **S4:** add `npc_affection` JSONB default `'{}'`, `flags_life` JSONB default `'{}'`, `flags_legacy` JSONB default `'{}'`. Apply via Management API per the HYDRATE supabase migration recipe (`npx supabase db push` is broken). S0 snapshots schema first for rollback. `[high]`
+↔ relates to: §Sprint 1 DB migration, §Sprint 2 DB migration, §Sprint 3 DB migration, §Sprint 4 DB migration, KARMA_SYSTEM.md §2.5–§2.10
+
+### [ARCHITECTURE]
+
+**Q:** Why is this plan in `status: deferred` and not `active` — what gate must lift?
+**A:** `KARMA_SYSTEM.md §6 "Final approval to begin Sprint 1"` is unsigned. KARMA_SYSTEM declares all design questions resolved as of 2026-04-29 evening (multiplier strategy, magnitude bands, attribute coupling, fatigue penalties, per-circle Illumination, etc.) but the explicit "begin Sprint 1" approval check from Scotch has not been ticked. Per `docs/launch-readiness.md`, this gate is the **critical-path bottleneck** for the entire launch — `karma_sprint_chain` priority 132 blocks 10 downstream sprint items + ~6 open EVs. Lifting the gate is a review/sign-off task, not a coding task; once Scotch ticks the §6 checkbox, this doc flips to `active` and Sprint 0 can begin within hours. The plan is otherwise execution-ready. `[high]`
+↔ relates to: KARMA_SYSTEM.md §6 Approval Gate, docs/launch-readiness.md (karma_sprint_chain Tier-0 priority 132), HYDRATE_NEXT_SESSION.md (loose ends — KARMA approval gates pending)
+
+### [WIRING]
+
+**Q:** What's the rollback path if a sprint breaks production?
+**A:** Three-layer safety net. (1) **S0 DB snapshot** captures the pre-karma schema as `supabase/snapshots/pre_karma_2026-04-29.sql` — restores any sprint's migration on demand. (2) **Baseline tests must stay green**: S0 records `npm run test` + `npx tsc --noEmit` passing; every sprint's Definition of Done re-checks these before declaring complete. (3) **Per-sprint Definition of Done** has explicit verify steps before the next sprint can begin — e.g., S2 cannot ship without round-trip tests on PICSSI clamping, derived-stat recompute correctness, and Illumination bipolar handling. The 4-mutation-point legacy-virtue audit in S0 is also a forward-compatibility check: more than 4 hits means a hidden mutation surface that breaks S2's cold-delete. Rollback after S2 (which drops columns) requires either (a) restoring from snapshot or (b) running an inverse migration that adds the columns back as nullable — the snapshot route is faster. **Pre-launch development = no real users, schema rewrites are safe**, but the discipline still applies because it catches design errors early. `[high]`
+↔ relates to: §Sprint 0 (snapshot), §Cross-cutting concerns / Migration testing, project_no_live_game.md
+
+### [PICSSI-BALANCE]
+
+**Q:** How does this plan execute the legacy 10-virtue cold-delete?
+**A:** Single S2 migration with three steps in one transaction. (1) **DROP columns** `honesty, compassion, valor, justice, sacrifice, honor, spirituality, humility, grace, mercy` from `players`. (2) **ADD columns** for the 6 PICSSI virtues + 3 base attributes. (3) **Code-side cold-delete** in the same PR: remove `lib/gameState.ts:Virtues` type, remove `updateVirtue()` helper, remove the 4 mutation points (Honor ×3, Valor ×1) confirmed by the S0 audit. **No deprecation period.** No backwards-compat shims. Per Scotch's 2026-04-29 decision, the legacy ledger is gone in the same PR as PICSSI introduction, and the migration's down-script is the snapshot restore (not an inverse migration), because no production data depends on the legacy columns. The S0 audit's mutation-point grep is the forward-compatibility gate: more than 4 hits = hidden mutation surface = re-audit before S2 ships. `[high]`
+↔ relates to: §Sprint 2 cold-delete legacy virtue mutations, KARMA_SYSTEM.md §2.5–§2.10 (canonical decision), §6 Approval Gate Q8
+
+### [WIRING]
+
+**Q:** When multiple atoms match the same trigger event, what's the priority resolution rule?
+**A:** Open. v1 picks the first atom by load order (`loadAtoms()` returns array iteration order; whichever atom file `glob` finds first wins). This works while the corpus is small (~20–30 atoms in alpha) but doesn't scale to a curated corpus where, say, a Vivian-specific romantic atom should outrank a generic tavern atom in the same room. Best guess: add a `priority: number` field to `Atom` (default 0) and sort matches by priority desc before picking. Tied priorities fall back to load order. Resolution timing: S4 plus during the first balance simulation that surfaces an atom-collision bug. The `scripts/balance/simulator.ts` is the natural test surface — it can flood-fire trigger events and report which atom wins, exposing collisions early. `[open]` → see [EV-karma_implementation_plan-001](EDGE_VECTORS.md#ev-karma_implementation_plan-001)
+↔ relates to: §Risks / open implementation questions Q2, §Sprint 4 triggers.ts, scripts/balance/simulator.ts
+
+### [WIRING]
+
+**Q:** How is the Scroll-of-Thoth riddle UI delivered — chat-stream token, modal, or something else?
+**A:** Medium. v1 (S3) emits a `__RIDDLE__` token in the chat stream; player types the answer as their next command. This matches the existing token-driven verb-completion flow (`__YESNO__`, `__BARMAID_SELECT__`) so it ships without UI work. S6 may upgrade to a dedicated modal — the modal stub is listed in §Sprint 6 alongside the affection panel and karma history log, but the spec is "design only, not yet wired." Open questions for the upgrade: whether incorrect answers should count down a per-scroll attempt budget (vs the v1 silent-no-Illumination behavior); whether the modal should reveal the canonical answer after N failures (Hermes/Thoth substitution might confuse first-time players), and whether the chat-stream fallback survives as the headless-test path even after the modal lands. `[medium]` → see [EV-karma_implementation_plan-002](EDGE_VECTORS.md#ev-karma_implementation_plan-002)
+↔ relates to: §Risks Q3, §Sprint 3 Scrolls of Thoth, §Sprint 6 Riddle modal, project_scroll_riddle_verification.md
+
 ---
 
 # KARMA_IMPLEMENTATION_PLAN.md — Wiring the Karma System

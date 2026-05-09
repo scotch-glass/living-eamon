@@ -9,37 +9,37 @@ Generated 2026-05-09.
 - **Tier 0 (MVP-blockers):** 7 active · 7 shipped
 - **Tier 1 (launch polish):** 8 active · 0 shipped
 - **Tier 2 (post-launch):** 1 active · 0 shipped · 8 deferred
-- **Open Edge Vectors:** 4
+- **Open Edge Vectors:** 6
 
-> **Critical path:** [`karma_sprint_chain`](#karma_sprint_chain) — priority **116** — 10 downstream sprint(s) depend on this; 3 EV(s) blocked.
+> **Critical path:** [`karma_sprint_chain`](#karma_sprint_chain) — priority **120** — 10 downstream sprint(s) depend on this; 5 EV(s) blocked.
 
 ## Tier 0 — MVP blockers
 
-### 1. <a id="karma_sprint_chain"></a>KARMA Sprints 1–7 — PICSSI virtue system shipped end-to-end  `priority: 116`
+### 1. <a id="karma_sprint_chain"></a>KARMA Sprints 1–7 — PICSSI virtue system shipped end-to-end  `priority: 120`
 
 - **Status:** not-started
 - **Source:** KARMA_IMPLEMENTATION_PLAN.md
 - **Blockers:** KARMA_SYSTEM.md §6 approval, Sprint 0 audit, MODULE_SYSTEM.md Stage I approval
 - **Blocks (other launch items):** brothel_temple_vd_content, db_transition_sprint_8, first_launch_adventure, invoke_circles_4_through_8, module_system_ink_runtime, multiplayer_phase_3, pegasus_telepathic_ally, pray_divinity_v1, scrolls_of_thoth_ui, three_launch_sagas
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-pantheon-001
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-karma_system-002, EV-pantheon-001
 - **What good looks like:** PICSSI virtues update on every atom choice; combat-PICSSI deltas fire on kill/flee/abandon; ordered-retreat works; legacy 10-virtue cold-deleted; all magnitudes match KARMA_SYSTEM canon.
 
-### 2. <a id="first_launch_adventure"></a>At least one launch adventure module shipped, end-to-end playable  `priority: 110`
+### 2. <a id="first_launch_adventure"></a>At least one launch adventure module shipped, end-to-end playable  `priority: 112`
 
 - **Status:** not-started
 - **Source:** ADVENTURE_MODULES_PLAN.md
 - **Blockers:** karma_sprint_chain, module_system_ink_runtime
 - **Blocks (other launch items):** crowd_qa_pipeline, multiplayer_phase_3, rest_of_18_module_roadmap, three_launch_sagas
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-pantheon-001
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-pantheon-001
 - **What good looks like:** A new player can complete the full quest line of one launch saga (Mirrors of Tuzun Thune / Shadow Kingdom / Kings of the Night) with PICSSI consequences, scroll/fragment seeding, NPC affection, combat encounters, and a death-respawn cycle.
 
-### 3. <a id="module_system_ink_runtime"></a>MODULE_SYSTEM Ink runtime + GPE authoring CLI  `priority: 105`
+### 3. <a id="module_system_ink_runtime"></a>MODULE_SYSTEM Ink runtime + GPE authoring CLI  `priority: 107`
 
 - **Status:** not-started
 - **Source:** MODULE_SYSTEM.md
 - **Blockers:** MODULE_SYSTEM.md Stage I approval, karma_sprint_chain
 - **Blocks (other launch items):** first_launch_adventure
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-002
 - **What good looks like:** Ink module loads at runtime, EXTERNAL functions (apply_karma, apply_npc_affection, set_flag, trigger_combat, etc.) work; GPE CLI produces per-virtue balance scorecards for any .ink module.
 
 ### 4. <a id="stripe_payment_gate"></a>Stripe payment gate before character creation  `priority: 102`
@@ -70,36 +70,36 @@ Generated 2026-05-09.
 
 ## Tier 1 — Launch polish
 
-### 1. <a id="pray_divinity_v1"></a>PRAY + Divinity System v1  `priority: 99`
+### 1. <a id="pray_divinity_v1"></a>PRAY + Divinity System v1  `priority: 103`
 
 - **Status:** not-started
 - **Source:** ~/.claude/plans/the-skull-and-pack-luminous-muffin.md, lore/pantheon/PANTHEON.md
 - **Blockers:** karma_sprint_chain
 - **Blocks (other launch items):** pegasus_telepathic_ally
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-pantheon-001, EV-pantheon-002
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-karma_system-002, EV-pantheon-001, EV-pantheon-002
 - **What good looks like:** PRAY combat spell + out-of-combat verb work; per-(player, god) divineFavor track; per-god boon/blessing tables; sacred-site multipliers; 2 starter divine quests (Crom JUDGES + Mithras Honor-the-Contract).
 
-### 2. <a id="qa_annotations_batch"></a>Q+A annotations on remaining 12 design-canon docs  `priority: 98`
+### 2. <a id="qa_annotations_batch"></a>Q+A annotations on remaining 12 design-canon docs  `priority: 102`
 
 - **Status:** not-started
 - **Source:** ~/.claude/plans/review-the-lore-and-floofy-hamming.md (Q+A pilot batch)
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-pantheon-001, EV-pantheon-002
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-karma_system-002, EV-pantheon-001, EV-pantheon-002
 - **What good looks like:** Every design-canon and sprint-plan doc carries a Q+A block matching the PANTHEON / GAME_DESIGN pilot schema. Edge Vectors registry surfaces cross-canon open questions, not just per-pilot.
 
-### 3. <a id="scrolls_of_thoth_ui"></a>15 Scrolls of Thoth — read-verification riddle UI  `priority: 96`
+### 3. <a id="scrolls_of_thoth_ui"></a>15 Scrolls of Thoth — read-verification riddle UI  `priority: 100`
 
 - **Status:** not-started
 - **Source:** lore/scrolls-of-thoth/INDEX.md, KARMA_SYSTEM.md §2.10, project_scroll_riddle_verification.md
 - **Blockers:** karma_sprint_chain
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-pantheon-002
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-001, EV-karma_system-002, EV-pantheon-002
 - **What good looks like:** Player reads scroll → riddle prompt → correct answer awards Illumination delta; incorrect blocks the award until re-read. Wired through lib/karma/scrolls.ts.
 
-### 4. <a id="brothel_temple_vd_content"></a>Brothel + Fertility Temple + VD content (GAME_DESIGN §12)  `priority: 94`
+### 4. <a id="brothel_temple_vd_content"></a>Brothel + Fertility Temple + VD content (GAME_DESIGN §12)  `priority: 96`
 
 - **Status:** not-started
 - **Source:** GAME_DESIGN.md §12
 - **Blockers:** karma_sprint_chain
-- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002
+- **Blocks (open EVs):** EV-game_design-001, EV-game_design-002, EV-karma_system-002
 - **What good looks like:** Brothel atoms work in the hub city; Fertility Temple cure available; VD progression + treatment paths wired through PICSSI Passion + Spirituality.
 
 ### 5. <a id="forty_two_oaths"></a>42 Oaths of Ma'at surfaced in gameplay  `priority: 94`

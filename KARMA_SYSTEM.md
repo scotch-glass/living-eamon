@@ -6,7 +6,78 @@ canonical_for: [picssi-math, virtue-activity-table, combat-picssi-deltas, ordere
 visibility: creator
 status: draft
 last_updated: 2026-05-09
-cross_refs: [GAME_DESIGN.md, SORCERY.md, KARMA_IMPLEMENTATION_PLAN.md, MODULE_SYSTEM.md]
+cross_refs: [GAME_DESIGN.md, SORCERY.md, KARMA_IMPLEMENTATION_PLAN.md, MODULE_SYSTEM.md, EDGE_VECTORS.md]
+questions_total: 10
+questions_answered: 8
+questions_open: 2
+edge_vector_ids: [EV-karma_system-001, EV-karma_system-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [ARCHITECTURE]
+
+**Q:** What is the central feedback loop — how do soul, body, and resources connect?
+**A:** Atoms / combat / world-turns / shop interactions / prayer all write into the **soul** (six PICSSI virtues, life-scoped). PICSSI then drives the **body** — Passion → STR (+floor/10, capped +10), Courage → DEX (same), Standing → CHA (same; Phase 2). Body + virtue-multipliers drive **resources** — Integrity → maxHP (`50 + 2·I`), Illumination → maxMana (`10 + |Illum|/2 + 1·victories`), Spirituality → mana regen rate + heal-spell power, Standing → loot luck + shop deals. Resources drain in combat / spells / heavy travel and refill via stamina-gated rest activities (one of the body-zone-derived dual pool: stamina + fatiguePool). PICSSI is the body's growth axis, not a multiplier over it. `[high]`
+↔ relates to: §1 (Mermaid + ASCII diagrams), GAME_DESIGN.md §11
+
+### [PICSSI-BALANCE]
+
+**Q:** What are the canonical PICSSI ranges, defaults, and reset semantics?
+**A:** Five unipolar virtues (Passion, Integrity, Courage, Standing, Spirituality) at `0..100`; Illumination is bipolar at `−100..+100`. Default 0 for all, including Illumination (neutral, neither Light nor Dark). **Full reset on hero death** — every PICSSI virtue returns to 0 for the next life. Excess deltas clamp silently (no overflow event in v1). The legacy 10-virtue ledger (Honesty/Compassion/Valor/etc.) is **cold-deleted** in the same migration as PICSSI bedrock — no deprecation period. `[high]`
+↔ relates to: §2.5–§2.10 (per-virtue specifics), §6 Approval Gate, GAME_DESIGN.md §11
+
+### [PICSSI-BALANCE]
+
+**Q:** What's the canonical magnitude scale atom authors use for PICSSI deltas?
+**A:** Four named bands: **Trivial ±1**, **Notable ±3**, **Major ±5**, **Defining ±10**. Used by every atom in the corpus, every combat-end delta in `combat-deltas.ts`, every Scroll-of-Thoth read, and every quest-reward tier (short Notable +3, medium Major +5, campaign-defining Defining +10). The bands are also the magnitude vocabulary downstream tooling uses: GPE balance scoring, atom-design templates, and module GPE scorecards. `[high]`
+↔ relates to: §2.5–§2.10 (Common mechanics → Mutation magnitude bands), MODULE_SYSTEM.md §2 (GPE), KARMA_IMPLEMENTATION_PLAN.md
+
+### [PICSSI-BALANCE]
+
+**Q:** What is the triple-penalty rule and exactly when does it fire?
+**A:** Fleeing combat **and** leaving an ally behind triggers the canonical TRIPLE PENALTY: **−Standing (Defining −10 to −15 per ally)** + **−Integrity (broken implicit vow, Major)** + **−Courage (Defining-tier "ultimate cowardice", −10)**. It fires only on `flee command + ¬allAlliesFled` — i.e., the player flees while at least one ally is still in combat and has not been issued a Flee command on a prior turn. The disciplined alternative — **ordered retreat** (issue every ally a Flee, wait one turn for them to leave, then flee yourself) — pays only the Courage cost at the standard solo-flee tier; Standing and Integrity are spared. Magnitudes scale by the count of allies left behind (1 ally = 1×, 2 allies = 2×). `[high]`
+↔ relates to: §2.7 Courage, §2.8 Standing (Ordered Retreat), §4c combat-victory PICSSI delta table, project_ally_combat_flee_spec.md
+
+### [WIRING]
+
+**Q:** What does the ordered-retreat mechanic require the engine to track?
+**A:** Per-ally action queue + per-ally `hasFled` boolean + group-flee resolution check `allAlliesFled === true`. The combat UI exposes a per-ally FLEE button (max party = 3: hero + 2 allies); clicking it on an ally's row makes that NPC AI-roll a random exit on the same turn, and the whole group lands in the chosen room next tick. Broken-leg / cannot-flee allies surface a binary confirmation: *cancel flee* (no penalty) or *flee anyway* (apply triple penalty scaled by abandoned-ally count). Not yet wired — combat-deltas ally branches still dormant per `project_ally_combat_flee_spec.md`. `[high]`
+↔ relates to: §2.8 Group-flee mechanics, §4c flee rows of the combat-PICSSI delta table, project_ally_combat_flee_spec.md
+
+### [ARCHITECTURE]
+
+**Q:** Why ship stamina + fatiguePool **before** PICSSI multipliers, not alongside them?
+**A:** PICSSI multipliers spiral without a pacing brake. A Spirituality-100 hero regens 6 mana/turn — faster than any reasonable spell cost — so without stamina the rest economy collapses. Adopting body-zone's two-pool model (`stamina` for short-term, `fatiguePool` for chronic exhaustion) plus a 25-action `actionBudget` per adventure expedition keeps PICSSI multipliers honest: every cast costs stamina, every rest costs `actionBudget`, and after 25 actions the hero is forced to return to Valus. Stamina ships as Sprint 1 of `KARMA_IMPLEMENTATION_PLAN.md`; PICSSI bedrock ships as Sprint 2. `[high]`
+↔ relates to: §2.3 stamina dual-pool model, §4a Q5 (decided 2026-04-29), KARMA_IMPLEMENTATION_PLAN.md Sprints 1–2
+
+### [WIRING]
+
+**Q:** Which code reads this document at runtime today?
+**A:** None. Of the ~63 flows catalogued in §3, **10 are wired** (combat strikes, potions, mana potions, HEAL spell, OOC HP/mana regen, combat-victory `+1 maxMana`, STR damage multiplier, DEX evasion, bandage bleed, body-zone fatigue level computation in code-only). All SOUL- and STAMINA-driven flows (3.11 onward) are pending. Runtime helpers `applyKarma` / `recomputeDerivedStats` / `applyActivity` are designed but not implemented. The implementation plan (`KARMA_IMPLEMENTATION_PLAN.md`, Sprints 0–7) is the wiring contract; nothing checks "Implement" until §6 Approval Gate is signed. `[high]`
+↔ relates to: §3 Flow Inventory, §6 Approval Gate, KARMA_IMPLEMENTATION_PLAN.md, lib/gameState.ts (planned: applyKarma, recomputeDerivedStats)
+
+### [PLAYER-SURFACE]
+
+**Q:** When does the player surface a PICSSI change in-game?
+**A:** Five surfaces planned (none yet wired): (a) **post-atom resolution** — Jane prints a small soul-shift line ("Your decision steadies your Integrity."); (b) **post-combat summary** — earned/lost PICSSI deltas itemized after every fight; (c) **stats panel** — five 0..100 bars + one bipolar Illumination bar; (d) **karma history log** — Jane's record of recent shifts; (e) **derived-stat side-effects** — bigger HP pool after an Integrity gain, faster mana regen after a Spirituality gain. The bipolar Illumination bar surfaces both poles equally (saintly +100 and abyssal −100 are both maxMana wins; the bored midline is the lowest social-status state). `[high]`
+↔ relates to: §2.10 Illumination, Sprint 6 UI polish, GAME_DESIGN.md §11 (NPC romance attraction at both extremes)
+
+### [INK-AUTHORING]
+
+**Q:** How will Ink module authors apply PICSSI deltas inside an .ink file?
+**A:** Open. Best guess: an EXTERNAL function `apply_karma(virtue_id, magnitude_band)` where `virtue_id ∈ {passion,integrity,courage,standing,spirituality,illumination}` and `magnitude_band ∈ {trivial,notable,major,defining}`. Authors pass band names (not raw integers) so the runtime owns the canonical numbers and balance changes don't require module rewrites. Sign convention TBD — probably a separate `apply_karma_loss` or a signed band like `notable_loss`. The full contract waits on `MODULE_SYSTEM.md` Stage I approval and the runtime adapter sprint. `[open]` → see [EV-karma_system-001](EDGE_VECTORS.md#ev-karma_system-001)
+↔ relates to: MODULE_SYSTEM.md §3 (Ink EXTERNAL contract), KARMA_IMPLEMENTATION_PLAN.md Sprint 4 (atom-trigger hooks)
+
+### [PICSSI-BALANCE]
+
+**Q:** Are the my-judgment proposals (action-budget tiers, gear-Standing formula, wealth tiers, fatigue penalties, per-circle Illumination magnitudes) tuned for end-game balance, or are they opening parameters?
+**A:** Opening parameters. Scotch's standing direction is "use your judgment, balance later via Machinations.io" — so every magnitude in §4a's "Decided 2026-04-29 (evening)" block is a first-guess that compiles into runtime, NOT a tuned end-state. Likely tuning targets: action-budget 20/25/30 (whether the spread is too narrow), gear-Standing cap +20 (whether jewelry doubling is too generous), per-circle Illumination drops (whether Circle 8's −30 is too punishing for a single cast), fatigue penalty +15·tier evasion-vs-player (whether Tier 4 lockout is too binary). Full tuning pass deferred until atom corpus + Sprint-2 PICSSI bedrock are live, then run Machinations simulations. `[medium]` → see [EV-karma_system-002](EDGE_VECTORS.md#ev-karma_system-002)
+↔ relates to: §4a (Decided 2026-04-29 evening block), §4c my-judgment proposals, KARMA_IMPLEMENTATION_PLAN.md (tuning sprint deferred)
+
 ---
 
 # KARMA_SYSTEM.md — Living Eamon's Karmic Web

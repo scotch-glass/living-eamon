@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 4,
-    "edge_count": 91,
+    "ev_count": 6,
+    "edge_count": 100,
     "creator_visible": 26,
     "internal": 8
   },
@@ -149,7 +149,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "draft",
-      "last_updated": "2026-05-09"
+      "last_updated": "2026-05-09",
+      "questions_total": 10,
+      "questions_answered": 8,
+      "questions_open": 2
     },
     "doc:launch_criteria": {
       "type": "doc",
@@ -372,6 +375,24 @@
       "question": "Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., \"Standing-pure\")?",
       "best_guess": "Probably yes for most archetype themes, but the constraint matrix isn't proven. A Standing-pure module would tend toward visible victory, conspicuous wealth, donations-for-show; that doesn't conflict with PD rules (Howard fiction is full of this) and is internally PICSSI-balanced if the spec says \"intentionally archetype-focused modules can be unbalanced\" (per KARMA_SYSTEM 2026-05-06 update). But edge cases: e.g., a Spirituality-pure module might struggle to ship a Courage \"great odds\" encounter without breaking archetype."
     },
+    "ev:EV-karma_system-001": {
+      "type": "edge_vector",
+      "id": "EV-karma_system-001",
+      "source_doc": "karma_system",
+      "category": "INK-AUTHORING",
+      "confidence": "open",
+      "question": "How will Ink module authors apply PICSSI deltas inside an .ink file?",
+      "best_guess": "An EXTERNAL function `apply_karma(virtue_id, magnitude_band)` taking the canonical band names (`trivial` / `notable` / `major` / `defining`) rather than raw integers — runtime owns the numbers so balance changes don't require module rewrites. Sign convention TBD: either a separate `apply_karma_loss` EXTERNAL or a signed band token like `notable_loss`."
+    },
+    "ev:EV-karma_system-002": {
+      "type": "edge_vector",
+      "id": "EV-karma_system-002",
+      "source_doc": "karma_system",
+      "category": "PICSSI-BALANCE",
+      "confidence": "medium",
+      "question": "Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, wealth tiers 1k/5k/25k/100k → +5/+10/+20/+30, per-circle Illumination 0/0/0/−2/−4/−8/−15/−30, fatigue penalty +15·tier evasion-vs-player) tuned for end-game balance, or are they opening parameters?",
+      "best_guess": "Opening parameters. Scotch's standing direction is \"use your judgment, balance later via Machinations.io.\" Likely tuning targets: action-budget spread too narrow, gear-Standing jewelry doubling too generous, Circle 8's −30 too punishing for a single cast, Tier-4 fatigue lockout too binary."
+    },
     "ev:EV-pantheon-001": {
       "type": "edge_vector",
       "id": "EV-pantheon-001",
@@ -589,8 +610,18 @@
     },
     {
       "from": "doc:karma_system",
+      "to": "doc:game_design",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:karma_system",
       "to": "doc:karma_implementation_plan",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:karma_system",
+      "to": "doc:karma_implementation_plan",
+      "type": "relates_to"
     },
     {
       "from": "doc:karma_system",
@@ -599,8 +630,23 @@
     },
     {
       "from": "doc:karma_system",
+      "to": "doc:module_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:karma_system",
       "to": "doc:sorcery",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:karma_system",
+      "to": "ev:EV-karma_system-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:karma_system",
+      "to": "ev:EV-karma_system-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:launch_criteria",
@@ -835,6 +881,26 @@
     {
       "from": "ev:EV-game_design-002",
       "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_system-001",
+      "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_system-002",
+      "to": "doc:game_design",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_system-002",
+      "to": "doc:karma_implementation_plan",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-karma_system-002",
+      "to": "doc:sorcery",
       "type": "affects"
     },
     {

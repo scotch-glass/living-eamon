@@ -71,6 +71,24 @@ Every entry conforms to:
 - **Affects:** [docs/affect-axes.md](/library/affect_axes), [KARMA_SYSTEM.md](/library/karma_system)
 - **Resolution path:** map each deity to a primary + secondary axis from the seven canonical (fear / excitement / eros / dread / awe / wonder / melancholy). Author the table in PANTHEON.md or as a new section in `docs/affect-axes.md`. Validate by sampling 20+ atoms tagged for divine encounters and comparing their AffectVector deltas to the proposed map.
 
+### [KARMA_SYSTEM.md](/library/karma_system)
+
+#### EV-karma_system-001  `[INK-AUTHORING]`
+- **Source:** [KARMA_SYSTEM.md](/library/karma_system)
+- **Question:** How will Ink module authors apply PICSSI deltas inside an .ink file?
+- **Best guess:** An EXTERNAL function `apply_karma(virtue_id, magnitude_band)` taking the canonical band names (`trivial` / `notable` / `major` / `defining`) rather than raw integers — runtime owns the numbers so balance changes don't require module rewrites. Sign convention TBD: either a separate `apply_karma_loss` EXTERNAL or a signed band token like `notable_loss`.
+- **Confidence:** open
+- **Affects:** [MODULE_SYSTEM.md §3 (Ink EXTERNAL contract)](/library/module_system), `KARMA_IMPLEMENTATION_PLAN.md` Sprint 4 (atom-trigger hooks)
+- **Resolution path:** unblock when `MODULE_SYSTEM.md` Stage I approval lands; formalize the apply_karma signature in MODULE_SYSTEM.md §3 with example .ink usage; promote to `[high]` once the first creator-authored module exercises both gain and loss paths end-to-end through GPE balance scoring.
+
+#### EV-karma_system-002  `[PICSSI-BALANCE]`
+- **Source:** [KARMA_SYSTEM.md](/library/karma_system)
+- **Question:** Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, wealth tiers 1k/5k/25k/100k → +5/+10/+20/+30, per-circle Illumination 0/0/0/−2/−4/−8/−15/−30, fatigue penalty +15·tier evasion-vs-player) tuned for end-game balance, or are they opening parameters?
+- **Best guess:** Opening parameters. Scotch's standing direction is "use your judgment, balance later via Machinations.io." Likely tuning targets: action-budget spread too narrow, gear-Standing jewelry doubling too generous, Circle 8's −30 too punishing for a single cast, Tier-4 fatigue lockout too binary.
+- **Confidence:** medium
+- **Affects:** [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan) (tuning sprint deferred), [GAME_DESIGN.md §11](/library/game_design), [SORCERY.md §7](/library/sorcery) (per-circle Illumination cost)
+- **Resolution path:** ship Sprint 2 PICSSI bedrock + Sprint 3 activity dispatcher → author the first 20 atoms → run Machinations simulations on the resulting state space → record tuned magnitudes in a follow-up `§4a (Tuned YYYY-MM-DD)` block. Promote to `[high]` once the tuning pass produces stable distributions across 100+ simulated playthroughs.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

@@ -8,18 +8,18 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 10 open Edge Vectors · 117 edges
+- 34 docs · 12 open Edge Vectors · 126 edges
 - 26 creator-visible · 8 internal
 
 ## Most-connected nodes (by in-degree)
 
-- **game_design** (14 incoming) — Game Design Document
+- **module_system** (16 incoming) — Module System (Ink + GPE)
+- **game_design** (15 incoming) — Game Design Document
 - **karma_system** (14 incoming) — Karma System
-- **module_system** (14 incoming) — Module System (Ink + GPE)
-- **public_domain_rules** (8 incoming) — Public Domain Rules
+- **public_domain_rules** (9 incoming) — Public Domain Rules
+- **adventure_modules_plan** (7 incoming) — Adventure Modules Plan
 - **karma_implementation_plan** (7 incoming) — Karma Implementation Plan
 - **sorcery** (7 incoming) — Sorcery (Guild CAST + Occult INVOKE)
-- **adventure_modules_plan** (6 incoming) — Adventure Modules Plan
 - **doc_map** (6 incoming) — Documentation Index (this file)
 
 ## Adjacency
@@ -80,8 +80,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ### legal
 
-- **public_domain_rules** [active] — Public Domain Rules
+- **public_domain_rules** Q:10(open=2) [active] — Public Domain Rules
   - **cross_ref** → game_design, hyborian_pd_module_plan
+  - **has_open_question** → EV-public_domain_rules-001, EV-public_domain_rules-002
+  - **relates_to** → adventure_modules_plan, claude_md, game_design, module_system, pantheon
 
 ### lore-artifact
 
@@ -120,7 +122,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **karma_implementation_plan** [deferred] — Karma Implementation Plan
   - **cross_ref** → hydrate_next_session, karma_system
 
-## Open Edge Vectors (10)
+## Open Edge Vectors (12)
 
 - **EV-game_design-001** `[AFFECT-VECTOR, open]` ← game_design → affects: karma_system, module_system
   - Q: How do PICSSI virtues correlate with the seven AffectVector axes?
@@ -138,6 +140,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - Q: How will Ink module authors reference deities when writing modules?
 - **EV-pantheon-002** `[AFFECT-VECTOR, open]` ← pantheon → affects: karma_system
   - Q: What neuro-emotional axes does invoking each deity surface?
+- **EV-public_domain_rules-001** `[INK-AUTHORING, open]` ← public_domain_rules → affects: module_system
+  - Q: Is there an automated check that flags PD-violation candidates in module prose before commit?
+- **EV-public_domain_rules-002** `[PD-SAFETY, medium]` ← public_domain_rules → affects: public_domain_rules
+  - Q: What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, w...
 - **EV-sorcery-001** `[INK-AUTHORING, open]` ← sorcery → affects: karma_system, module_system
   - Q: How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom,...
 - **EV-sorcery-002** `[WIRING, medium]` ← sorcery → affects: karma_implementation_plan, sorcery

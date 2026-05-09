@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 10,
-    "edge_count": 117,
+    "ev_count": 12,
+    "edge_count": 126,
     "creator_visible": 26,
     "internal": 8
   },
@@ -238,7 +238,10 @@
       "role": "legal",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30"
+      "last_updated": "2026-04-30",
+      "questions_total": 10,
+      "questions_answered": 8,
+      "questions_open": 2
     },
     "doc:quest_registry_dump": {
       "type": "doc",
@@ -434,6 +437,24 @@
       "confidence": "open",
       "question": "What neuro-emotional axes does invoking each deity surface?",
       "best_guess": "awe (high-tier ritual, Solar Barque ascension); dread (Set, Sekhmet's Helfara face, Outer Dark proximity); wonder (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form); melancholy (Crom-the-silent, Honen-after-the-Cataclysm); reverence (Ma'at's feather-weighing, Anubis's threshold rites). Not validated against the atom corpus."
+    },
+    "ev:EV-public_domain_rules-001": {
+      "type": "edge_vector",
+      "id": "EV-public_domain_rules-001",
+      "source_doc": "public_domain_rules",
+      "category": "INK-AUTHORING",
+      "confidence": "open",
+      "question": "Is there an automated check that flags PD-violation candidates in module prose before commit?",
+      "best_guess": "A `tools/pd-lint/` script that walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup. Runs in `prebuild` alongside `validate-modules` and `gpe:all --strict`. Ambiguity: Aquilonia is allowed in narrative but forbidden in marketing — the linter needs conservative defaults plus per-rule allowlist + per-string surface-context tags from authors."
+    },
+    "ev:EV-public_domain_rules-002": {
+      "type": "edge_vector",
+      "id": "EV-public_domain_rules-002",
+      "source_doc": "public_domain_rules",
+      "category": "PD-SAFETY",
+      "confidence": "medium",
+      "question": "What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, what triggers an early Bucket A migration?",
+      "best_guess": "Same approach as the 2026-04-30 audit that moved 1934–1936 stories. Sources: U.S. Copyright Office renewal records (Catalog of Copyright Entries 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg Howard research notes, scholarly consensus on *Weird Tales* renewal practices. Verifies both (a) magazine issue not issue-renewed AND (b) Howard's individual contributions not separately renewed. Recommendation: schedule in LAUNCH_CRITERIA.md Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 entry plus Bucket A migration."
     },
     "ev:EV-sorcery-001": {
       "type": "edge_vector",
@@ -862,13 +883,48 @@
     },
     {
       "from": "doc:public_domain_rules",
+      "to": "doc:adventure_modules_plan",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:public_domain_rules",
+      "to": "doc:claude_md",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:public_domain_rules",
       "to": "doc:game_design",
       "type": "cross_ref"
     },
     {
       "from": "doc:public_domain_rules",
+      "to": "doc:game_design",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:public_domain_rules",
       "to": "doc:hyborian_pd_module_plan",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:public_domain_rules",
+      "to": "doc:module_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:public_domain_rules",
+      "to": "doc:pantheon",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:public_domain_rules",
+      "to": "ev:EV-public_domain_rules-001",
+      "type": "has_open_question"
+    },
+    {
+      "from": "doc:public_domain_rules",
+      "to": "ev:EV-public_domain_rules-002",
+      "type": "has_open_question"
     },
     {
       "from": "doc:scrolls_of_thoth_corpus",
@@ -1018,6 +1074,16 @@
     {
       "from": "ev:EV-pantheon-002",
       "to": "doc:karma_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-public_domain_rules-001",
+      "to": "doc:module_system",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-public_domain_rules-002",
+      "to": "doc:public_domain_rules",
       "type": "affects"
     },
     {

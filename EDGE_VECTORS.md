@@ -125,6 +125,24 @@ Every entry conforms to:
 - **Affects:** [SORCERY.md §9.3](/library/sorcery) (Resurrection implementation entailments), `project_corpse_loot_burial_deferred.md`, `project_occult_sorcery_deferred.md`, [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan) Sprint 7 (deferred Sorcery sprint)
 - **Resolution path:** add `mortalOrImmortal: 'mortal' | 'immortal'` to every NPC kind during the next NPC-data sweep (cheap, no-state). When the corpse-loot/burial sprint lands per `project_corpse_loot_burial_deferred.md`, extend the corpse model with `sunExposed` + `moonExposed` flags + a `locationContext: 'surface' | 'buried' | 'underground'` enum, and tick the celestial flags in `tickWorldState`. Promote to `[high]` once a Resurrection cast in test exercises a buried corpse vs a sun-and-moon-exposed corpse and produces the documented outcomes.
 
+### [Public_Domain_Rules.md](/library/public_domain_rules)
+
+#### EV-public_domain_rules-001  `[INK-AUTHORING]`
+- **Source:** [Public_Domain_Rules.md](/library/public_domain_rules)
+- **Question:** Is there an automated check that flags PD-violation candidates in module prose before commit?
+- **Best guess:** A `tools/pd-lint/` script that walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup. Runs in `prebuild` alongside `validate-modules` and `gpe:all --strict`. Ambiguity: Aquilonia is allowed in narrative but forbidden in marketing — the linter needs conservative defaults plus per-rule allowlist + per-string surface-context tags from authors.
+- **Confidence:** open
+- **Affects:** [MODULE_SYSTEM.md §3](/library/module_system) (prebuild hooks), `tools/pd-lint/` (planned), `GAME_DESIGN.md` top-of-file Safe Harbor / Radioactive tables (lookup data source)
+- **Resolution path:** unblock when (a) `MODULE_SYSTEM.md` Stage I lands and (b) the first community-authored module attempts a commit. Author the linter with the §2.1 trademark list as a hard-fail rule, the Bucket B character list as a warning-with-justification rule, and a per-string surface-context tag (`# context: marketing` vs `# context: prose`) so the GAME_DESIGN.md "Aquilonia OK in prose, forbidden in marketing" rule can resolve. Promote to `[high]` once the linter ships and at least one PR has surfaced a real catch.
+
+#### EV-public_domain_rules-002  `[PD-SAFETY]`
+- **Source:** [Public_Domain_Rules.md](/library/public_domain_rules)
+- **Question:** What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, what triggers an early Bucket A migration?
+- **Best guess:** Same approach as the 2026-04-30 audit that moved 1934–1936 stories. Sources: U.S. Copyright Office renewal records (Catalog of Copyright Entries 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg Howard research notes, scholarly consensus on *Weird Tales* renewal practices. Verifies both (a) magazine issue not issue-renewed AND (b) Howard's individual contributions not separately renewed. Recommendation: schedule in LAUNCH_CRITERIA.md Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 entry plus Bucket A migration.
+- **Confidence:** medium
+- **Affects:** [Public_Domain_Rules.md §3.2 + §8 + §11](/library/public_domain_rules), `LAUNCH_CRITERIA.md` Tier 2 (planned 2027 audit item), `ADVENTURE_MODULES_PLAN.md` (1932–1933 modules currently deferred to 2028–2029 unlock)
+- **Resolution path:** add a 2027-Q1 audit item to LAUNCH_CRITERIA.md Tier 2 with the methodology pinned. Run the audit. Document results in §11 Document History. Move stories to Bucket A if confirmed; otherwise leave them for the 2028 / 2029 95-year unlock. Promote to `[high]` once the audit completes and §11 records the outcome.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

@@ -116,7 +116,7 @@ flowchart TB
     S -- "+legendary loot chance + shop deals" --> WORLD
 
     STR -- damage multiplier --> COMBAT
-    DEX -- agility / evasion --> COMBAT
+    DEX -- evasion --> COMBAT
     CHA -- dialogue, prices --> SHOP
 
     COMBAT -- damage --> HP
@@ -175,7 +175,7 @@ flowchart TB
    │   Stamina / maxStamina + fatiguePool (body-zone-derived) │
    │                                                     │
    │   STR also drives damage (combatEngine.ts:319)      │
-   │   DEX drives agility / evasion (combatEngine.ts:47) │
+   │   DEX drives evasion (combatEngine.ts:47)           │
    └─────────────────────────────────────────────────────┘
 
    WORLD STATE (alongside): NPC affection, flags, body state.
@@ -304,7 +304,7 @@ body-zone uses `time_left = 25` per chapter — a hard cap on rest actions per s
 
 **Canonical link (GAME_DESIGN.md §11):** Passion → STR; Courage → DEX. CHA is independent (no PICSSI link documented).
 
-- [x] **Currently exists in code:** STR multiplies damage (`combatEngine.ts:319`), DEX feeds agility/evasion (`combatEngine.ts:47`), CHA is currently unread.
+- [x] **Currently exists in code:** STR multiplies damage (`combatEngine.ts:319`), DEX feeds evasion (`combatEngine.ts:47`), CHA is currently unread.
 - [ ] **STR derivation (best-guess; canonical "Passion → STR" but no formula in GAME_DESIGN.md):**
   `STR_effective = STR_base + floor(Passion / 10)` → Passion 0 = +0; Passion 50 = +5; Passion 100 = +10. Base STR is set at creation (currently 10 default), so a Passion-100 hero has effective STR 20 — at the top end of typical sword-and-sorcery scaling.
   **Open question §4b:** is the link additive (above), capped, or multiplicative? Need Scotch's intent.
@@ -551,7 +551,7 @@ Flows are the wires between stocks. Each one is independently checkable.
 | 3.6 | Passive mana regen +1/turn (OOC) | turn tick → mana | [x] Wired (`gameState.ts:1051`) |
 | 3.7 | Combat victory → maxMana +1 | combat → maxMana | [x] Wired (`gameEngine.ts:4726`) |
 | 3.8 | STR → damage multiplier | STR → combat | [x] Wired (`combatEngine.ts:319`) |
-| 3.9 | DEX → agility/evasion | DEX → combat | [x] Wired (`combatEngine.ts:47`) |
+| 3.9 | DEX → evasion | DEX → combat | [x] Wired (`combatEngine.ts:47`) |
 | 3.10 | CHA → dialogue/prices | CHA → shop | [ ] Not wired (CHA is dead in code) |
 | 3.11 | Atom choice → 10-virtue legacy delta | choice → virtue | Partial: 4 mutations exist (Honor ×3, Valor ×1) |
 | 3.12 | Atom choice → PICSSI delta | choice → PICSSI stock | [ ] Not wired |

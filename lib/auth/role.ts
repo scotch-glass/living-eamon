@@ -13,6 +13,7 @@
 // ============================================================
 
 import { createClient } from "@supabase/supabase-js";
+import { createServerSupabase } from "../supabaseAuthServer";
 
 export type UserRole = "player" | "creator" | "admin";
 
@@ -47,4 +48,24 @@ export async function getUserRole(userId: string): Promise<UserRole> {
  */
 export function roleMeetsThreshold(role: UserRole, threshold: UserRole): boolean {
   return ROLE_RANK[role] >= ROLE_RANK[threshold];
+}
+
+/**
+ * Server-component helper: reads the current session via the SSR
+ * Supabase client and resolves to { userId, email, role }. If there
+ * is no authenticated user, returns userId/email = null and role
+ * = 'player'. Used by app/library/* server components.
+ */
+export async function getCurrentUserRole(): Promise<{
+  userId: string | null;
+  email: string | null;
+  role: UserRole;
+}> {
+  const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { userId: null, email: null, role: "player" };
+  const role = await getUserRole(user.id);
+  return { userId: user.id, email: user.email ?? null, role };
 }

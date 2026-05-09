@@ -12,6 +12,10 @@
     "registry:dump": "tsx scripts/dump-quest-registry.ts",
     "graph:build": "tsx scripts/build-doc-graph.ts",
     "launch:status": "tsx scripts/launch-readiness.ts",
+    "hydration:build": "tsx scripts/build-hydration.ts",
+    "topic-routes:build": "tsx scripts/build-topic-routes.ts",
+    "docs:build": "npm run graph:build && npm run launch:status && npm run hydration:build && npm run topic-routes:build",
+    "docs:validate": "tsx scripts/validate-docs.ts",
     "docs:watch": "tsx scripts/watch-docs.ts",
     "dev:all": "concurrently -n next,docs -c blue,green \"npm:dev\" \"npm:docs:watch\""
   },

@@ -42,7 +42,10 @@ const IGNORED = [
   "**/.venv/**",
   "docs/doc-graph.json",
   "docs/doc-graph.md",
+  "docs/doc-graph.mmd",
   "docs/launch-readiness.md",
+  "docs/hydration.md",
+  "docs/topic-routes.md",
 ];
 
 const DEBOUNCE_MS = 300;
@@ -97,11 +100,16 @@ async function regenerate(reason: string): Promise<void> {
   regenerating = true;
   log(`regenerating (${reason})...`);
   const t0 = Date.now();
+  // Cascade: graph -> launch-readiness -> hydration -> topic-routes -> validate
+  // (validate is non-fatal here; it logs errors but the watcher keeps running)
   const graphCode = await runScript("scripts/build-doc-graph.ts");
   if (graphCode === 0) {
     await runScript("scripts/launch-readiness.ts");
+    await runScript("scripts/build-hydration.ts");
+    await runScript("scripts/build-topic-routes.ts");
+    await runScript("scripts/validate-docs.ts");
   } else {
-    logError("graph:build failed; skipping launch:status");
+    logError("graph:build failed; skipping downstream generators");
   }
   log(`done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
   regenerating = false;

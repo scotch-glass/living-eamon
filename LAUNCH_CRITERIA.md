@@ -6,7 +6,11 @@ canonical_for: [launch-readiness, tier-0-mvp-blockers, tier-1-polish, tier-2-pos
 visibility: creator
 status: draft
 last_updated: 2026-05-09
-cross_refs: [DOC_MAP.md, ADVENTURE_MODULES_PLAN.md, KARMA_IMPLEMENTATION_PLAN.md, GAME_DESIGN.md]
+cross_refs: [DOC_MAP.md, ADVENTURE_MODULES_PLAN.md, KARMA_IMPLEMENTATION_PLAN.md, GAME_DESIGN.md, EDGE_VECTORS.md]
+questions_total: 3
+questions_answered: 3
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document

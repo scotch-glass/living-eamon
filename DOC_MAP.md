@@ -410,6 +410,30 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   cross_refs: [LAUNCH_CRITERIA.md, docs/doc-graph.md]
   generated_by: scripts/launch-readiness.ts
   npm_script: launch:status
+
+- id: hydration
+  path: docs/hydration.md
+  title: Hydration Primer (auto-generated)
+  role: reference-generated
+  canonical_for: [hydration-stack, gravity-wells, critical-path-summary, session-diff]
+  visibility: internal
+  status: active
+  last_updated: rebuilt-on-demand
+  cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, HYDRATE_NEXT_SESSION.md]
+  generated_by: scripts/build-hydration.ts
+  npm_script: hydration:build
+
+- id: topic_routes
+  path: docs/topic-routes.md
+  title: Topic Routes — Q+A Category Manifest (auto-generated)
+  role: reference-generated
+  canonical_for: [topic-routing, qa-category-index]
+  visibility: internal
+  status: active
+  last_updated: rebuilt-on-demand
+  cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, docs/hydration.md]
+  generated_by: scripts/build-topic-routes.ts
+  npm_script: topic-routes:build
 ```
 
 ---

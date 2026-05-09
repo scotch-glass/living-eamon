@@ -13,7 +13,23 @@ cross_refs: [CLAUDE_CONTEXT.md, AGENTS.md, DOC_MAP.md]
 
 **Doc index:** [`DOC_MAP.md`](./DOC_MAP.md) is the master spine — every doc has a row declaring its role (`design-canon` / `sprint-plan` / `session-log` / `reference-generated` / `lore-artifact` / `legal` / `dev-process`), canonical scope, visibility tier (`internal` / `creator`), and status. Consult it when you need to know which doc owns a topic, or what's safe to surface to Creators in the `/library` wiki. **Adding/moving/role-changing any doc must be reflected in `DOC_MAP.md` in the same commit.**
 
-**Before starting work, read this stack in order:**
+## Hydration ritual (compressed 2026-05-10)
+
+**Default minimum stack** — read these three for any session:
+
+1. [**`docs/hydration.md`**](./docs/hydration.md) — auto-generated topology + gravity wells + critical-path + recent activity. Replaces the former 7-step ladder. ~1600 tokens.
+2. [**`docs/launch-readiness.md`**](./docs/launch-readiness.md) — auto-generated prioritized blocker list.
+3. **`MEMORY.md`** — auto-loaded by the harness; pay attention to feedback memories.
+
+**Then for any specific task** — look the topic up in [**`docs/topic-routes.md`**](./docs/topic-routes.md) and load the 2–4 docs ranked there. Each design-canon doc has a Q+A block at the top that answers most questions in ~600 tokens; load the full body only on deep dives.
+
+**Visual topology (optional):** [`docs/doc-graph.svg`](./docs/doc-graph.svg) — re-render via `npx -y -p @mermaid-js/mermaid-cli@latest mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg`.
+
+**Discipline:** any doc add / move / role-change updates `DOC_MAP.md` in the same commit. Q+A frontmatter must satisfy `questions_total = questions_answered + questions_open` and `edge_vector_ids.length = questions_open`. Run `npm run docs:validate` before commits — the script fails on drift.
+
+## Full-audit hydration (rare — first session, deep refactor)
+
+If you need exhaustive context (e.g., onboarding a new contributor, doing cross-system refactor), the historical ladder still works:
 
 0. [**DOC_MAP.md**](./DOC_MAP.md) — index of every doc in the repo (~30 sec scan)
 1. [**CLAUDE_CONTEXT.md**](./CLAUDE_CONTEXT.md) — project overview, architecture, current status, file map, player state, world state, art system
@@ -21,9 +37,9 @@ cross_refs: [CLAUDE_CONTEXT.md, AGENTS.md, DOC_MAP.md]
 3. [**SORCERY.md**](./SORCERY.md) — canonical for both magic systems (Guild CAST + Occult INVOKE), Eight Circles, reagents, The Order, per-circle Illumination cost. Extracted from GAME_DESIGN.md §9 on 2026-04-29.
 4. [**KARMA_SYSTEM.md**](./KARMA_SYSTEM.md) — canonical stock-and-flow design for PICSSI virtues, attributes, consumables (HP / mana / stamina+fatiguePool), atoms, NPC affection, flags. **Single source of truth for design values.**
 5. [**KARMA_IMPLEMENTATION_PLAN.md**](./KARMA_IMPLEMENTATION_PLAN.md) — sprint-by-sprint wiring plan for KARMA_SYSTEM.md (file/function-level detail). Loads alongside KARMA_SYSTEM.md when implementing. Sprint 0 → 7.
-5. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — **CRITICAL, authoritative**: consolidated IP legal framework, Howard PD timeline, trademark restrictions, Always-Safe Corpus, future PD calendar, Safe Harbor strategy. (Supersedes and replaces the former `lore/hyborian-pd/PD_RESEARCH.md`, which was deleted April 19, 2026.)
-6. [**GAME_DESIGN.md**](./GAME_DESIGN.md) top-of-file tables — name-by-name Safe Harbor / Radioactive lookup. Supersedes any other doc on individual term status.
-7. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) — methodology for converting PD stories into adventure modules
+6. [**Public_Domain_Rules.md**](./Public_Domain_Rules.md) — **CRITICAL, authoritative**: consolidated IP legal framework, Howard PD timeline, trademark restrictions, Always-Safe Corpus, future PD calendar, Safe Harbor strategy.
+7. [**GAME_DESIGN.md**](./GAME_DESIGN.md) top-of-file tables — name-by-name Safe Harbor / Radioactive lookup. Supersedes any other doc on individual term status.
+8. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) — methodology for converting PD stories into adventure modules
 
 **User profile:** Scotch — non-developer founder/designer. All technical instructions must be explicit step-by-step or exact Cursor prompts. No vague guidance.
 

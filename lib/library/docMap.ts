@@ -70,6 +70,30 @@ const SECTION_HEADINGS: Record<string, string> = {
   "Generated registries (auto-derived; never hand-edit)": "registries",
 };
 
+// ── Parse helpers ─────────────────────────────────────────────
+//
+// js-yaml auto-converts unquoted ISO dates (e.g. `2026-04-30`) to
+// JavaScript Date objects. We need string fields end-to-end so the
+// React renderer doesn't throw "Objects are not valid as a React
+// child (found: [object Date])". Coerce any Date values to a plain
+// YYYY-MM-DD string at parse time.
+
+function coerceDates(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v instanceof Date) {
+      out[k] = v.toISOString().slice(0, 10); // YYYY-MM-DD
+    } else if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        item instanceof Date ? item.toISOString().slice(0, 10) : item
+      );
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 // ── File loading + caching ─────────────────────────────────────
 
 const REPO_ROOT = process.cwd();
@@ -121,7 +145,9 @@ function loadSections(): DocSection[] {
       if (Array.isArray(parsed) && currentSectionKey) {
         for (const entry of parsed) {
           if (entry && typeof entry === "object" && "id" in entry) {
-            sections[currentSectionKey].docs.push(entry as DocEntry);
+            sections[currentSectionKey].docs.push(
+              coerceDates(entry as Record<string, unknown>) as unknown as DocEntry
+            );
           }
         }
       }

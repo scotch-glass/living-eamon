@@ -57,6 +57,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(splashUrl);
   }
 
+  // /library — Creator-facing wiki. Requires players.role IN ('creator', 'admin').
+  // Sits BEFORE the character-creation gate so module authors who haven't built
+  // a hero can still browse the canon. Sprint W2 will replace the redirect with
+  // a styled 403 page; for now, insufficient role bounces to splash.
+  if (pathname.startsWith("/library")) {
+    const { data: roleRow } = await supabaseAdmin
+      .from("players")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const role = (roleRow?.role as "player" | "creator" | "admin" | undefined) ?? "player";
+    if (role !== "creator" && role !== "admin") {
+      return NextResponse.redirect(new URL("/splash", request.url));
+    }
+    return response;
+  }
+
   // Character-creation gate: authenticated users without a chosen hero
   // master go to the wizard. The wizard itself is allowed through.
   if (pathname.startsWith("/forge-avatar")) {

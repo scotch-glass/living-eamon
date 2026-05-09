@@ -1,11 +1,11 @@
 {
   "generated_at": "2026-05-09",
   "stats": {
-    "doc_count": 34,
+    "doc_count": 36,
     "ev_count": 23,
-    "edge_count": 187,
+    "edge_count": 194,
     "creator_visible": 26,
-    "internal": 8
+    "internal": 10
   },
   "nodes": {
     "doc:adventure_modules_plan": {
@@ -137,6 +137,16 @@
       "status": "rolling",
       "last_updated": "2026-05-09"
     },
+    "doc:hydration": {
+      "type": "doc",
+      "id": "hydration",
+      "path": "docs/hydration.md",
+      "title": "Hydration Primer (auto-generated)",
+      "role": "reference-generated",
+      "visibility": "internal",
+      "status": "active",
+      "last_updated": "rebuilt-on-demand"
+    },
     "doc:karma_implementation_plan": {
       "type": "doc",
       "id": "karma_implementation_plan",
@@ -171,7 +181,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "draft",
-      "last_updated": "2026-05-09"
+      "last_updated": "2026-05-09",
+      "questions_total": 3,
+      "questions_answered": 3,
+      "questions_open": 0
     },
     "doc:launch_readiness": {
       "type": "doc",
@@ -363,6 +376,16 @@
       "visibility": "internal",
       "status": "active",
       "last_updated": "2026-04-25"
+    },
+    "doc:topic_routes": {
+      "type": "doc",
+      "id": "topic_routes",
+      "path": "docs/topic-routes.md",
+      "title": "Topic Routes — Q+A Category Manifest (auto-generated)",
+      "role": "reference-generated",
+      "visibility": "internal",
+      "status": "active",
+      "last_updated": "rebuilt-on-demand"
     },
     "doc:travel_matrix": {
       "type": "doc",
@@ -850,6 +873,26 @@
       "type": "cross_ref"
     },
     {
+      "from": "doc:hydration",
+      "to": "doc:doc_map",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:hydration",
+      "to": "doc:edge_vectors",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:hydration",
+      "to": "doc:hydrate_next_session",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:hydration",
+      "to": "doc:launch_criteria",
+      "type": "cross_ref"
+    },
+    {
       "from": "doc:karma_implementation_plan",
       "to": "doc:hydrate_next_session",
       "type": "cross_ref"
@@ -1282,6 +1325,21 @@
     {
       "from": "doc:tech_md",
       "to": "doc:claude_context",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:topic_routes",
+      "to": "doc:doc_map",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:topic_routes",
+      "to": "doc:edge_vectors",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:topic_routes",
+      "to": "doc:hydration",
       "type": "cross_ref"
     },
     {

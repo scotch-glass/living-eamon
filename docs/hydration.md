@@ -21,8 +21,8 @@ This page fuses topology + open questions + recent activity into one read so you
 
 ## At a glance
 
-- **Topology:** 34 docs · 23 open Edge Vectors · 187 edges
-- **Visibility:** 26 creator-visible · 8 internal-only
+- **Topology:** 36 docs · 23 open Edge Vectors · 194 edges
+- **Visibility:** 26 creator-visible · 10 internal-only
 - **Q+A coverage:** 115 questions across 15 docs · 92 high-confidence · 23 open
 - **Critical path:** `karma_sprint_chain` — priority **136** — blocks 10 downstream sprint(s)
 
@@ -60,17 +60,17 @@ Path: [`Public_Domain_Rules.md`](../Public_Domain_Rules.md)
 
 Path: [`ADVENTURE_MODULES_PLAN.md`](../ADVENTURE_MODULES_PLAN.md)
 
+### doc_map — Documentation Index (this file)  `(10 incoming)`
+
+**Owns:** doc-orchestration, visibility-tiers, role-classes · **Status:** active · **no Q+A**
+
+Path: [`DOC_MAP.md`](../DOC_MAP.md)
+
 ### karma_implementation_plan — Karma Implementation Plan  `(10 incoming)`
 
 **Owns:** karma-sprint-roadmap-s0-s7 · **Status:** deferred · **Q:8/2open**
 
 Path: [`KARMA_IMPLEMENTATION_PLAN.md`](../KARMA_IMPLEMENTATION_PLAN.md)
-
-### doc_map — Documentation Index (this file)  `(8 incoming)`
-
-**Owns:** doc-orchestration, visibility-tiers, role-classes · **Status:** active · **no Q+A**
-
-Path: [`DOC_MAP.md`](../DOC_MAP.md)
 
 ### sorcery — Sorcery (Guild CAST + Occult INVOKE)  `(8 incoming)`
 
@@ -98,6 +98,9 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 
 Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-09T23:11:21+02:00):
 
+- `9d1b7ee` — Layer 3: docs:validate + watcher cascade + ritual switch
+- `7c9a9b0` — Layer 2: docs/topic-routes.md generator (Q+A category routing manifest)
+- `6d1cb35` — Layer 1: docs/hydration.md generator (compress 7-step stack to 1 page)
 - `b3dee7e` — graph:build emits doc-graph.mmd for Mermaid preview
 - `2494d97` — chore: refresh .claude/settings.json allowlist
 - `b22f8b9` — Q+A: LOOT_TABLES + scrolls/stobaean INDEX docs (final batch of 3)

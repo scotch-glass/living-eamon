@@ -8,8 +8,8 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 23 open Edge Vectors · 187 edges
-- 26 creator-visible · 8 internal
+- 36 docs · 23 open Edge Vectors · 194 edges
+- 26 creator-visible · 10 internal
 
 ## Most-connected nodes (by in-degree)
 
@@ -18,8 +18,8 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **game_design** (15 incoming) — Game Design Document
 - **public_domain_rules** (15 incoming) — Public Domain Rules
 - **adventure_modules_plan** (12 incoming) — Adventure Modules Plan
+- **doc_map** (10 incoming) — Documentation Index (this file)
 - **karma_implementation_plan** (10 incoming) — Karma Implementation Plan
-- **doc_map** (8 incoming) — Documentation Index (this file)
 - **sorcery** (8 incoming) — Sorcery (Guild CAST + Occult INVOKE)
 
 ## Adjacency
@@ -113,9 +113,13 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **affect_axes_dump** [active] — AffectVector — neuro-emotional mapping
 - **doc_graph** [active] — Doc Graph (auto-generated adjacency list)
   - **cross_ref** → doc_map, edge_vectors
+- **hydration** [active] — Hydration Primer (auto-generated)
+  - **cross_ref** → doc_map, edge_vectors, hydrate_next_session, launch_criteria
 - **launch_readiness** [active] — Launch Readiness Report (auto-generated)
   - **cross_ref** → doc_graph, launch_criteria
 - **quest_registry_dump** [active] — Quest + Dialogue Registry (generated)
+- **topic_routes** [active] — Topic Routes — Q+A Category Manifest (auto-generated)
+  - **cross_ref** → doc_map, edge_vectors, hydration
 
 ### session-log
 

@@ -8,15 +8,15 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 34 docs · 18 open Edge Vectors · 158 edges
+- 34 docs · 20 open Edge Vectors · 169 edges
 - 26 creator-visible · 8 internal
 
 ## Most-connected nodes (by in-degree)
 
-- **karma_system** (19 incoming) — Karma System
+- **karma_system** (21 incoming) — Karma System
 - **module_system** (19 incoming) — Module System (Ink + GPE)
 - **game_design** (15 incoming) — Game Design Document
-- **public_domain_rules** (12 incoming) — Public Domain Rules
+- **public_domain_rules** (13 incoming) — Public Domain Rules
 - **adventure_modules_plan** (11 incoming) — Adventure Modules Plan
 - **karma_implementation_plan** (9 incoming) — Karma Implementation Plan
 - **doc_map** (8 incoming) — Documentation Index (this file)
@@ -57,10 +57,14 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **relates_to** → karma_system, logos_teleios, module_system, pantheon
 - **stobaean_fragments_index** [active] — Stobaean Fragments — Registry
   - **cross_ref** → quest_registry_dump
-- **travel_matrix** [active] — Travel Cost Matrix
+- **travel_matrix** Q:6(open=1) [active] — Travel Cost Matrix
   - **cross_ref** → world_locations
-- **world_locations** [active] — World Locations — Thurian Cartography
+  - **has_open_question** → EV-travel_matrix-001
+  - **relates_to** → karma_system
+- **world_locations** Q:6(open=1) [active] — World Locations — Thurian Cartography
   - **cross_ref** → game_design
+  - **has_open_question** → EV-world_locations-001
+  - **relates_to** → karma_system, loot_tables, public_domain_rules, travel_matrix
 
 ### dev-process
 
@@ -128,7 +132,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **has_open_question** → EV-karma_implementation_plan-001, EV-karma_implementation_plan-002
   - **relates_to** → hydrate_next_session, karma_system, launch_readiness
 
-## Open Edge Vectors (18)
+## Open Edge Vectors (20)
 
 - **EV-adventure_modules_plan-001** `[PICSSI-BALANCE, open]` ← adventure_modules_plan → affects: karma_system, module_system
   - Q: What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modu...
@@ -166,3 +170,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - Q: How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom,...
 - **EV-sorcery-002** `[WIRING, medium]` ← sorcery → affects: karma_implementation_plan, sorcery
   - Q: Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse mo...
+- **EV-travel_matrix-001** `[NAV-MAP, open]` ← travel_matrix → affects: travel_matrix, world_locations
+  - Q: Are the per-route day-counts and danger ratings in the Travel Matrix empirically tuned, or are they opening parameters?
+- **EV-world_locations-001** `[NAV-MAP, open]` ← world_locations → affects: travel_matrix, world_locations
+  - Q: Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore...

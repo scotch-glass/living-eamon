@@ -197,6 +197,26 @@ Every entry conforms to:
 - **Affects:** [lore/hyborian-pd/MODULE_PLAN.md §8](/library/hyborian_pd_module_plan), [ADVENTURE_MODULES_PLAN.md §3 Tier 0](/library/adventure_modules_plan), [DOC_MAP.md](/library/doc_map) (canonical_for declarations should reflect the split)
 - **Resolution path:** add a back-link from MODULE_PLAN.md §8 introduction to ADVENTURE_MODULES_PLAN.md (today only the forward direction exists). Update both docs' `canonical_for` arrays in DOC_MAP.md to make the split explicit (this doc: pd-module-methodology + first-three-detail; the plan: eighteen-module-roadmap + scroll-fragment-seeding). Promote to `[high]` once both back-links exist and the canonical-for arrays match the actual split.
 
+### [lore/thurian-cartography/WORLD_LOCATIONS.md](/library/world_locations)
+
+#### EV-world_locations-001  `[NAV-MAP]`
+- **Source:** [WORLD_LOCATIONS.md](/library/world_locations)
+- **Question:** Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore-on-map references?
+- **Best guess:** TRAVEL_MATRIX.md §Travel Nodes lists only 16 destinations. The other 18 nodes (8 nations, 10 wilderness areas) appear here with map coords + lore but have no destination row in the matrix — likely lore-on-map references for narrative texture, traversed as zones during travel but not direct click targets in v1.
+- **Confidence:** open
+- **Affects:** [TRAVEL_MATRIX.md §Travel Nodes](/library/travel_matrix) (16-destination list), [WORLD_LOCATIONS.md §Adventure module location tagging](/library/world_locations), `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` (S4 click-targets)
+- **Resolution path:** Scotch decides per-node whether each lore-only node should become a travel destination. Update TRAVEL_MATRIX.md §Travel Nodes with the new destinations + matrix rows from `valus`. Add a `nodeKind: 'destination' | 'lore-only'` field to WORLD_LOCATIONS entries so the travel UI can filter click-targets without ambiguity. Promote to `[high]` once the registry is consistent and module `locationId` validation rejects lore-only ids.
+
+### [lore/thurian-cartography/TRAVEL_MATRIX.md](/library/travel_matrix)
+
+#### EV-travel_matrix-001  `[NAV-MAP]`
+- **Source:** [TRAVEL_MATRIX.md](/library/travel_matrix)
+- **Question:** Are the per-route day-counts and danger ratings in the Travel Matrix empirically tuned, or are they opening parameters?
+- **Best guess:** Opening parameters. First-guess values based on rough pixel distance between map coordinates. Likely tuning surface: per-leg day-count vs historical pre-modern travel rates (~20 miles/day on foot), zone-mix consistency, horse divisor (real-world horse advantage closer to 3× short / 1.5× sustained), sea-only vs walk-also separation in the matrix.
+- **Confidence:** open
+- **Affects:** [TRAVEL_MATRIX.md §Travel Matrix](/library/travel_matrix), [TRAVEL_MATRIX.md §Zone Types & Danger Ratings](/library/travel_matrix), `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` (S4 plan), [WORLD_LOCATIONS.md §Adjacency / Route Notes](/library/world_locations)
+- **Resolution path:** ship S4 Graphical Travel System; run 5+ playtest routes; record actual hour-counts vs documented day-counts; calibrate the matrix from that data. Add an explicit `seaOnly: boolean` flag to legs that have no walk-equivalent. Promote to `[high]` once the matrix has been tuning-passed and a §Tuning History section records the calibration.
+
 ### [GAME_DESIGN.md](/library/game_design)
 
 #### EV-game_design-001  `[AFFECT-VECTOR]`

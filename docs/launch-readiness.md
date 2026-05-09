@@ -9,7 +9,7 @@ Generated 2026-05-09.
 - **Tier 0 (MVP-blockers):** 7 active · 7 shipped
 - **Tier 1 (launch polish):** 8 active · 0 shipped
 - **Tier 2 (post-launch):** 1 active · 0 shipped · 8 deferred
-- **Open Edge Vectors:** 18
+- **Open Edge Vectors:** 20
 
 > **Critical path:** [`karma_sprint_chain`](#karma_sprint_chain) — priority **136** — 10 downstream sprint(s) depend on this; 13 EV(s) blocked.
 
@@ -70,11 +70,11 @@ Generated 2026-05-09.
 
 ## Tier 1 — Launch polish
 
-### 1. <a id="qa_annotations_batch"></a>Q+A annotations on remaining 12 design-canon docs  `priority: 126`
+### 1. <a id="qa_annotations_batch"></a>Q+A annotations on remaining 12 design-canon docs  `priority: 130`
 
 - **Status:** not-started
 - **Source:** ~/.claude/plans/review-the-lore-and-floofy-hamming.md (Q+A pilot batch)
-- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002, EV-karma_implementation_plan-001, EV-karma_implementation_plan-002, EV-karma_system-001, EV-karma_system-002, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-pantheon-002, EV-public_domain_rules-001, EV-public_domain_rules-002, EV-sorcery-001, EV-sorcery-002
+- **Blocks (open EVs):** EV-adventure_modules_plan-001, EV-adventure_modules_plan-002, EV-game_design-001, EV-game_design-002, EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002, EV-karma_implementation_plan-001, EV-karma_implementation_plan-002, EV-karma_system-001, EV-karma_system-002, EV-module_system-001, EV-module_system-002, EV-pantheon-001, EV-pantheon-002, EV-public_domain_rules-001, EV-public_domain_rules-002, EV-sorcery-001, EV-sorcery-002, EV-travel_matrix-001, EV-world_locations-001
 - **What good looks like:** Every design-canon and sprint-plan doc carries a Q+A block matching the PANTHEON / GAME_DESIGN pilot schema. Edge Vectors registry surfaces cross-canon open questions, not just per-pilot.
 
 ### 2. <a id="pray_divinity_v1"></a>PRAY + Divinity System v1  `priority: 111`

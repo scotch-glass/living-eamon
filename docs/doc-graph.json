@@ -2,8 +2,8 @@
   "generated_at": "2026-05-09",
   "stats": {
     "doc_count": 34,
-    "ev_count": 18,
-    "edge_count": 158,
+    "ev_count": 20,
+    "edge_count": 169,
     "creator_visible": 26,
     "internal": 8
   },
@@ -363,7 +363,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-05-03"
+      "last_updated": "2026-05-03",
+      "questions_total": 6,
+      "questions_answered": 5,
+      "questions_open": 1
     },
     "doc:world_locations": {
       "type": "doc",
@@ -373,7 +376,10 @@
       "role": "design-canon",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-05-03"
+      "last_updated": "2026-05-03",
+      "questions_total": 6,
+      "questions_answered": 5,
+      "questions_open": 1
     },
     "ev:EV-adventure_modules_plan-001": {
       "type": "edge_vector",
@@ -536,6 +542,24 @@
       "confidence": "medium",
       "question": "Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse model still need?",
       "best_guess": "Production today: Guild CAST Circles 1+2 (13 real spells, Sprint C6.1); INVOKE pipeline not wired to combat; Circles 4–8 deferred. Resurrection corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification, hero-death short-circuit, undead-likelihood roll, necromancy variant — is design-only. The mortal/immortal NPC tag is a no-cost addition that should land **before** any Resurrection wiring sprint to avoid retro-tagging every NPC kind."
+    },
+    "ev:EV-travel_matrix-001": {
+      "type": "edge_vector",
+      "id": "EV-travel_matrix-001",
+      "source_doc": "travel_matrix",
+      "category": "NAV-MAP",
+      "confidence": "open",
+      "question": "Are the per-route day-counts and danger ratings in the Travel Matrix empirically tuned, or are they opening parameters?",
+      "best_guess": "Opening parameters. First-guess values based on rough pixel distance between map coordinates. Likely tuning surface: per-leg day-count vs historical pre-modern travel rates (~20 miles/day on foot), zone-mix consistency, horse divisor (real-world horse advantage closer to 3× short / 1.5× sustained), sea-only vs walk-also separation in the matrix."
+    },
+    "ev:EV-world_locations-001": {
+      "type": "edge_vector",
+      "id": "EV-world_locations-001",
+      "source_doc": "world_locations",
+      "category": "NAV-MAP",
+      "confidence": "open",
+      "question": "Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore-on-map references?",
+      "best_guess": "TRAVEL_MATRIX.md §Travel Nodes lists only 16 destinations. The other 18 nodes (8 nations, 10 wilderness areas) appear here with map coords + lore but have no destination row in the matrix — likely lore-on-map references for narrative texture, traversed as zones during travel but not direct click targets in v1."
     }
   },
   "edges": [
@@ -1166,13 +1190,48 @@
     },
     {
       "from": "doc:travel_matrix",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:travel_matrix",
       "to": "doc:world_locations",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:travel_matrix",
+      "to": "ev:EV-travel_matrix-001",
+      "type": "has_open_question"
     },
     {
       "from": "doc:world_locations",
       "to": "doc:game_design",
       "type": "cross_ref"
+    },
+    {
+      "from": "doc:world_locations",
+      "to": "doc:karma_system",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:world_locations",
+      "to": "doc:loot_tables",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:world_locations",
+      "to": "doc:public_domain_rules",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:world_locations",
+      "to": "doc:travel_matrix",
+      "type": "relates_to"
+    },
+    {
+      "from": "doc:world_locations",
+      "to": "ev:EV-world_locations-001",
+      "type": "has_open_question"
     },
     {
       "from": "ev:EV-adventure_modules_plan-001",
@@ -1327,6 +1386,26 @@
     {
       "from": "ev:EV-sorcery-002",
       "to": "doc:sorcery",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-travel_matrix-001",
+      "to": "doc:travel_matrix",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-travel_matrix-001",
+      "to": "doc:world_locations",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-world_locations-001",
+      "to": "doc:travel_matrix",
+      "type": "affects"
+    },
+    {
+      "from": "ev:EV-world_locations-001",
+      "to": "doc:world_locations",
       "type": "affects"
     }
   ]

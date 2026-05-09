@@ -1,7 +1,21 @@
+---
+id: claude_md
+title: Claude Session Bootstrap
+role: dev-process
+canonical_for: [claude-session-rules, behavioral-guidelines, project-constraints]
+visibility: internal
+status: active
+last_updated: 2026-05-09
+cross_refs: [CLAUDE_CONTEXT.md, AGENTS.md, DOC_MAP.md]
+---
+
 # Living Eamon — Claude Instructions
+
+**Doc index:** [`DOC_MAP.md`](./DOC_MAP.md) is the master spine — every doc has a row declaring its role (`design-canon` / `sprint-plan` / `session-log` / `reference-generated` / `lore-artifact` / `legal` / `dev-process`), canonical scope, visibility tier (`internal` / `creator`), and status. Consult it when you need to know which doc owns a topic, or what's safe to surface to Creators in the `/library` wiki. **Adding/moving/role-changing any doc must be reflected in `DOC_MAP.md` in the same commit.**
 
 **Before starting work, read this stack in order:**
 
+0. [**DOC_MAP.md**](./DOC_MAP.md) — index of every doc in the repo (~30 sec scan)
 1. [**CLAUDE_CONTEXT.md**](./CLAUDE_CONTEXT.md) — project overview, architecture, current status, file map, player state, world state, art system
 2. [**GAME_DESIGN.md**](./GAME_DESIGN.md) — full game design document (§10 Thurian Age Lore is canonical for setting; §11 PICSSI is the canonical virtue model)
 3. [**SORCERY.md**](./SORCERY.md) — canonical for both magic systems (Guild CAST + Occult INVOKE), Eight Circles, reagents, The Order, per-circle Illumination cost. Extracted from GAME_DESIGN.md §9 on 2026-04-29.

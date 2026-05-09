@@ -1,3 +1,14 @@
+---
+id: claude_context
+title: Claude Project Context
+role: dev-process
+canonical_for: [project-overview, architecture, rehydration-stack, file-map]
+visibility: internal
+status: active
+last_updated: 2026-05-09
+cross_refs: [CLAUDE.md, MEMORY.md, DOC_MAP.md]
+---
+
 Living Eamon — Claude Context & Rehydration Guide
 
 > **Development status (2026-05-03):** The game is in active development.
@@ -77,6 +88,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 REHYDRATION INSTRUCTIONS FOR EVERY NEW SESSION
 Before doing any work, read these files in order:
 
+0. **`DOC_MAP.md`** — master spine. One row per doc declaring `role` / `canonical_for` / `visibility` (`internal` vs `creator`) / `status`. Scan first; it tells you which doc owns what topic, which docs are creator-facing in the `/library` wiki, and which are internal-only. Updated alongside any doc create/move/role-change.
 1. This file (CLAUDE_CONTEXT.md) — project overview, architecture, current status
 2. **`Public_Domain_Rules.md`** — CRITICAL: Legal framework & Safe Harbor strategy for using Howard's public domain works. Establishes branding rules, trademark restrictions, timeline (Phase 1: Thurian/Aurelion pre-2028; Phase 2: Hyborian modules post-2028), and content sourcing rules. Read this before any design decision involving IP.
 3. **`GAME_DESIGN.md`** — full game design document. **§10 (Thurian Age Lore) is the canonical source for ALL setting decisions** — adventures, NPCs, magic, monsters, magical items. **§11 (PICSSI Virtue System, ratified 2026-04-26)** documents the six-dimensional character scoring framework — Passion, Integrity, Courage, Standing, Spirituality, Illumination — that drives NPC reactions, prayer reach, sorcery cost, and quest gating. **§12 (Brothels + Fertility Temple + VD)** added 2026-04-29. PICSSI replaces the legacy 10-virtue ledger entirely; cold-delete is wired into KARMA_IMPLEMENTATION_PLAN.md Sprint 2.

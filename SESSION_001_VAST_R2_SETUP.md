@@ -1,3 +1,14 @@
+---
+id: session_001_vast_r2_setup
+title: Session 001 — Vast.ai + Cloudflare R2 Setup
+role: session-log
+canonical_for: [vast-ai-setup, cloudflare-r2-setup, ai-toolkit-bootstrap]
+visibility: internal
+status: historical
+last_updated: 2026-04-26
+cross_refs: []
+---
+
 # Session 001 — Vast.ai + Cloudflare R2 Setup
 
 **For:** Claude Code working in Cursor IDE

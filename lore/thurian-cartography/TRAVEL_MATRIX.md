@@ -1,3 +1,14 @@
+---
+id: travel_matrix
+title: Travel Cost Matrix
+role: design-canon
+canonical_for: [travel-cost-matrix, travel-mode-table, random-encounter-pools]
+visibility: creator
+status: active
+last_updated: 2026-05-03
+cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md]
+---
+
 # Living Eamon — Travel Matrix & Random Encounter Design
 
 > **Status:** Design reference — feeds the S4 Graphical Travel System sprint.

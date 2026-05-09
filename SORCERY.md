@@ -1,3 +1,14 @@
+---
+id: sorcery
+title: Sorcery (Guild CAST + Occult INVOKE)
+role: design-canon
+canonical_for: [magic-systems, eight-circles, reagents, the-order, illumination-cost]
+visibility: creator
+status: active
+last_updated: 2026-04-29
+cross_refs: [GAME_DESIGN.md, lore/pantheon/PANTHEON.md]
+---
+
 # SORCERY.md — The Two Magics of Living Eamon
 
 > **Status:** Canonical reference for Living Eamon's magic systems.

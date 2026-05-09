@@ -1,3 +1,14 @@
+---
+id: adventure_modules_plan
+title: Adventure Modules Plan
+role: sprint-plan
+canonical_for: [eighteen-module-roadmap, scroll-fragment-seeding]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/hyborian-pd/MODULE_PLAN.md]
+---
+
 # Living Eamon — Adventure Modules Plan
 
 > **Authoritative roadmap** for converting Living Eamon's expanded

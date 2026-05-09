@@ -1,3 +1,14 @@
+---
+id: karma_system
+title: Karma System
+role: design-canon
+canonical_for: [picssi-math, virtue-activity-table, combat-picssi-deltas, ordered-retreat-mechanic, triple-penalty-rule]
+visibility: creator
+status: draft
+last_updated: 2026-05-09
+cross_refs: [GAME_DESIGN.md, SORCERY.md, KARMA_IMPLEMENTATION_PLAN.md, MODULE_SYSTEM.md]
+---
+
 # KARMA_SYSTEM.md — Living Eamon's Karmic Web
 
 > **Status:** Stage I draft (Plan, not yet approved). All math is **PROPOSAL** until Scotch greenlights it.

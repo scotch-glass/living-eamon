@@ -1,3 +1,14 @@
+---
+id: hyborian_pd_readme
+title: Hyborian-PD Subdir README
+role: dev-process
+canonical_for: [pd-research-consolidation-note]
+visibility: creator
+status: historical
+last_updated: 2026-04-19
+cross_refs: [Public_Domain_Rules.md]
+---
+
 # lore/hyborian-pd/ — Public Domain Howard Module Methodology
 
 This folder holds the methodology for turning public-domain Robert E.

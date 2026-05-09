@@ -1,3 +1,14 @@
+---
+id: karma_implementation_plan
+title: Karma Implementation Plan
+role: sprint-plan
+canonical_for: [karma-sprint-roadmap-s0-s7]
+visibility: internal
+status: deferred
+last_updated: 2026-04-30
+cross_refs: [KARMA_SYSTEM.md, HYDRATE_NEXT_SESSION.md]
+---
+
 # KARMA_IMPLEMENTATION_PLAN.md — Wiring the Karma System
 
 > **Companion to [KARMA_SYSTEM.md](./KARMA_SYSTEM.md), which is the single source of truth for design values.** This document does not redefine PICSSI math, formulas, or tables — it tells the engineer (or pairing AI) WHERE in the codebase to wire each part, in what order, with what types, and how to verify.

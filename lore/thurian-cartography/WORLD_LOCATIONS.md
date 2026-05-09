@@ -1,3 +1,14 @@
+---
+id: world_locations
+title: World Locations — Thurian Cartography
+role: design-canon
+canonical_for: [travel-node-registry, nation-roster, loot-zone-ids]
+visibility: creator
+status: active
+last_updated: 2026-05-03
+cross_refs: [GAME_DESIGN.md, lore/thurian-cartography/TRAVEL_MATRIX.md, lore/thurian-cartography/LOOT_TABLES.md]
+---
+
 # Living Eamon — World Map Location Reference
 
 > **Source map (canonical / branded):** `lore/thurian-cartography/living-eamon-map.png` — 2560×1693, includes "LIVING EAMON" logo. This is the travel screen background asset.

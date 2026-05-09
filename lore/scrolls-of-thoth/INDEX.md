@@ -1,3 +1,14 @@
+---
+id: scrolls_of_thoth_index
+title: Scrolls of Thoth — Registry
+role: design-canon
+canonical_for: [scroll-registry, riddle-schema, illumination-delta-table]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [KARMA_SYSTEM.md, lib/karma/scrolls.ts]
+---
+
 # The Scrolls of Thoth — Index
 
 Fifteen scrolls modeled on *The Kybalion* (1908/1912, Three Initiates), with all "Hermes" and "Hermetic" references substituted for "Thoth" and "Thothian" respectively, fitting the Thurian-Age setting (Thoth the Egyptian/Pre-Thurian patron of wisdom is the canonical analog of Hermes Trismegistus). The Kybalion is firmly in U.S. public domain.

@@ -1,3 +1,14 @@
+---
+id: hyborian_pd_module_plan
+title: Hyborian-PD Module Plan
+role: sprint-plan
+canonical_for: [pd-module-methodology, pd-first-design-rules]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [Public_Domain_Rules.md, ADVENTURE_MODULES_PLAN.md, GAME_DESIGN.md]
+---
+
 # Adventure Module Plan — Building Modules from Public Domain Howard
 
 > **Read `Public_Domain_Rules.md` first** (the consolidated PD-safety

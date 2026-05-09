@@ -1,3 +1,14 @@
+---
+id: hydrate_next_session
+title: Hydrate Next Session
+role: session-log
+canonical_for: [session-end-snapshot, next-session-prompt]
+visibility: internal
+status: rolling
+last_updated: 2026-05-09
+cross_refs: [CLAUDE_CONTEXT.md]
+---
+
 # Hydration prompt — next Living Eamon session
 
 ## Status of the previous session (2026-05-09)

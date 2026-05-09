@@ -1,3 +1,14 @@
+---
+id: game_design
+title: Game Design Document
+role: design-canon
+canonical_for: [game-design, thurian-age-lore, picssi-virtue-defs, brothels-vd]
+visibility: creator
+status: approved
+last_updated: 2026-04-30
+cross_refs: [Public_Domain_Rules.md, KARMA_SYSTEM.md, SORCERY.md, MODULE_SYSTEM.md, ADVENTURE_MODULES_PLAN.md]
+---
+
 # Living Eamon — Game Design
 
 ---

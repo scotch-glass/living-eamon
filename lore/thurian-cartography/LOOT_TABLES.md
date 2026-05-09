@@ -1,3 +1,14 @@
+---
+id: loot_tables
+title: Loot Tables & Treasure System
+role: design-canon
+canonical_for: [loot-tables, per-zone-distribution, treasure-system]
+visibility: creator
+status: active
+last_updated: 2026-05-03
+cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md]
+---
+
 # Living Eamon — Loot Tables & Treasure System
 
 > **Feeds:** Travel encounter resolution, dungeon room loot, caravan raids.

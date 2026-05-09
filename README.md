@@ -1,3 +1,14 @@
+---
+id: readme
+title: Repo README
+role: dev-process
+canonical_for: [repo-intro]
+visibility: creator
+status: active
+last_updated: 2026-04-25
+cross_refs: []
+---
+
 # Living Eamon
 
 > *One hero. Infinite realms. The universe remembers you.*

@@ -1,3 +1,14 @@
+---
+id: pantheon
+title: Pantheon — Living Eamon canonical deities
+role: design-canon
+canonical_for: [god-roster, thurian-aliases, valkyrie-host, dual-aspect-mapping, deity-room-tag-resolution]
+visibility: creator
+status: active
+last_updated: 2026-05-09
+cross_refs: [SORCERY.md, GAME_DESIGN.md, Public_Domain_Rules.md]
+---
+
 # The Pantheon — Living Eamon canonical deities
 
 Single source of truth for which gods exist in the Living Eamon cosmos, who they are, and how they relate to Ma'at and to one another. Used by:

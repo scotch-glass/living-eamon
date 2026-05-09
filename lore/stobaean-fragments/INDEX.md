@@ -1,3 +1,14 @@
+---
+id: stobaean_fragments_index
+title: Stobaean Fragments — Registry
+role: design-canon
+canonical_for: [fragment-pacing-map, mentor-assignments]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [docs/quest-registry.md]
+---
+
 # Stobaean Hermetic Fragments — Index
 
 Fourteen short fragments, each carrying one philosophical thread of the broader Hermetic tradition. They are scattered across the Way of Thoth quest line as supplementary teachings — delivered by the fifteen mentors who carry the scrolls.

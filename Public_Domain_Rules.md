@@ -1,3 +1,14 @@
+---
+id: public_domain_rules
+title: Public Domain Rules
+role: legal
+canonical_for: [ip-framework, safe-harbor-strategy, howard-pd-timeline, trademark-restrictions, always-safe-corpus]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md]
+---
+
 # Public Domain Rules & Safe Harbor Strategy
 
 **CRITICAL: All Claude sessions must read this document before any design or development work.**

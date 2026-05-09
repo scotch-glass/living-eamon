@@ -1,3 +1,14 @@
+---
+id: module_system
+title: Module System (Ink + GPE)
+role: design-canon
+canonical_for: [ink-external-functions, gpe-magnitude-bands, combat-picssi-hook-points, runtime-adapter-spec]
+visibility: creator
+status: draft
+last_updated: 2026-04-30
+cross_refs: [KARMA_SYSTEM.md, GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md]
+---
+
 # Living Eamon — Module System Specification
 
 *Implementation spec for Claude Code. This document specifies the integration of three systems into Living Eamon: the Ink narrative authoring engine, the PICSSI karma model, and combat–PICSSI feedback. It also defines the Growth Path Equalizer (GPE), an authoring tool that scores each module on per-virtue growth balance.*

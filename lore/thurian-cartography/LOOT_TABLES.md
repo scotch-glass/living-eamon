@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-05-03
 cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md, lore/thurian-cartography/TRAVEL_MATRIX.md, EDGE_VECTORS.md]
 questions_total: 6
-questions_answered: 5
-questions_open: 1
-edge_vector_ids: [EV-loot_tables-001]
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -51,7 +51,7 @@ edge_vector_ids: [EV-loot_tables-001]
 ### [PICSSI-BALANCE]
 
 **Q:** Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, or are they opening parameters?
-**A:** Open. The per-tier ratios (Common 45% / Uncommon 27% / Rare 18% / Legendary 9% / Special 1%) and enemy modifiers (−10 to +40) and PICSSI deltas are first-guess values authored 2026-05-03 — no tuning record exists. Likely tuning surface: (a) **Common-tier dominance** — 45% Common may feel underwhelming once players are 20+ hours in (consider a level-scaling mod that shifts the curve as the player advances); (b) **Pre-Thurian vault +40** — pushes nearly any roll into Legendary, which is correct for design intent but may be excessive once vaults become common encounters; (c) **Rune-blade +10 Illumination cap per blade** — across 6 blades = +60 lifetime, which is a Defining-tier permanent shift; (d) **PICSSI deltas on caravan actions** — `−8 Integrity, −5 Standing, +2 Passion` for joining raiders is asymmetric (heavier negative than the +4/+3 for helping). Tuning happens once Sprint 4 ships and 30+ play-loops produce realistic distributions. `[open]` → see [EV-loot_tables-001](EDGE_VECTORS.md#ev-loot_tables-001)
+**A:** Opening parameters. The per-tier ratios (Common 45% / Uncommon 27% / Rare 18% / Legendary 9% / Special 1%), enemy modifiers (−10 to +40), and PICSSI deltas are first-guess values authored 2026-05-03. Tuning happens via (1) simulation of 30+ play-loops generating realistic loot distributions, and (2) player testing feedback once the game is functional. The identified likely tuning surfaces remain valid: Common-tier dominance, Pre-Thurian vault over-power, rune-blade Illumination lifetimes, and caravan-action PICSSI asymmetry. Tuning pass records results in a new §Tuning History section. `[high]`
 ↔ relates to: §Loot tiers, §Loot tier modifiers by enemy type, §PICSSI Effects on Loot Actions, EV-karma_system-002 (parallel KARMA tuning EV)
 
 ---

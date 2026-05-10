@@ -8,9 +8,9 @@ status: deferred
 last_updated: 2026-04-30
 cross_refs: [KARMA_SYSTEM.md, HYDRATE_NEXT_SESSION.md, EDGE_VECTORS.md]
 questions_total: 8
-questions_answered: 6
-questions_open: 2
-edge_vector_ids: [EV-karma_implementation_plan-001, EV-karma_implementation_plan-002]
+questions_answered: 7
+questions_open: 1
+edge_vector_ids: [EV-karma_implementation_plan-002]
 ---
 
 ## Questions answered by this document
@@ -57,7 +57,7 @@ edge_vector_ids: [EV-karma_implementation_plan-001, EV-karma_implementation_plan
 ### [WIRING]
 
 **Q:** When multiple atoms match the same trigger event, what's the priority resolution rule?
-**A:** Open. v1 picks the first atom by load order (`loadAtoms()` returns array iteration order; whichever atom file `glob` finds first wins). This works while the corpus is small (~20–30 atoms in alpha) but doesn't scale to a curated corpus where, say, a Vivian-specific romantic atom should outrank a generic tavern atom in the same room. Best guess: add a `priority: number` field to `Atom` (default 0) and sort matches by priority desc before picking. Tied priorities fall back to load order. Resolution timing: S4 plus during the first balance simulation that surfaces an atom-collision bug. The `scripts/balance/simulator.ts` is the natural test surface — it can flood-fire trigger events and report which atom wins, exposing collisions early. `[open]` → see [EV-karma_implementation_plan-001](EDGE_VECTORS.md#ev-karma_implementation_plan-001)
+**A:** Atoms are prioritized by three classes (highest to lowest): (1) **Scroll-quest atoms** — atoms that are central to the Scroll quest line; (2) **Quest-related atoms** — atoms directly tied to quests but not Scroll-central; (3) **AffectVector atoms** — atoms primarily driven by emotional/psychological resonance. If multiple atoms fall in the same class, call an agent to break the tie. This replaces the load-order fallback with a semantic decision that respects narrative coherence. Resolution timing: implement during Sprint 4 atom loading; add a `priorityClass` field to `Atom` and a matching function that calls an LLM agent when ties occur. `[high]`
 ↔ relates to: §Risks / open implementation questions Q2, §Sprint 4 triggers.ts, scripts/balance/simulator.ts
 
 ### [WIRING]

@@ -1,16 +1,16 @@
 ---
-id: hyborian_pd_module_plan
-title: Hyborian-PD Module Plan
+id: thurian_pd_module_plan
+title: Thurian-Age Module Methodology
 role: sprint-plan
 canonical_for: [pd-module-methodology, pd-first-design-rules]
 visibility: creator
 status: active
-last_updated: 2026-04-30
-cross_refs: [Public_Domain_Rules.md, ADVENTURE_MODULES_PLAN.md, GAME_DESIGN.md, EDGE_VECTORS.md]
+last_updated: 2026-05-10
+cross_refs: [Public_Domain_Rules.md, ADVENTURE_MODULES_SYSTEM.md, GAME_DESIGN.md, EDGE_VECTORS.md]
 questions_total: 8
-questions_answered: 6
-questions_open: 2
-edge_vector_ids: [EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002]
+questions_answered: 8
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -56,24 +56,26 @@ edge_vector_ids: [EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002
 
 ### [PD-SAFETY]
 
-**Q:** Is the §9 PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?
-**A:** Medium — partially stale. §8 notes the expansion ("the project's PD corpus expanded to include 15 additional *Weird Tales* 1934–1936 stories per the non-renewal audit") but §9's per-year calendar was written with old assumptions and still lists *Queen of the Black Coast* (May 1934), *Jewels of Gwahlur* (March 1935), *Beyond the Black River* (May–June 1935), and *Hour of the Dragon* (1935–1936) as 2030 unlocks. Per Public_Domain_Rules.md §1.2 + §8, all of those are now Bucket A. §9's 2031 entry for *Hour of the Dragon* unlocking Acheron / Xaltotun / Heart of Ahriman / Python is also stale — *Hour of the Dragon* is Bucket A and those names are usable now (with the customization discipline). What remains accurate: the 2028 entry for *Phoenix on the Sword* + *Scarlet Citadel* (still Bucket B; 2027 audit may move them) and the 2029 entry for the 1933 Conan corpus (still Bucket B). Recommended fix: a §9 rewrite that reflects the post-audit Bucket A and points to ADVENTURE_MODULES_PLAN.md §3 as the authoritative roster. `[medium]` → see [EV-hyborian_pd_module_plan-001](EDGE_VECTORS.md#ev-hyborian_pd_module_plan-001)
-↔ relates to: §9 After The First Three — The PD Calendar (stale section), Public_Domain_Rules.md §1.2 + §8 (current calendar), ADVENTURE_MODULES_PLAN.md §3 (post-audit module roster)
+**Q:** Is the §9 public-domain calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?
+**A:** §9 has been rewritten (2026-05-10) to reflect the post-audit public-domain status. The stale calendar entries for *Queen of the Black Coast*, *Jewels of Gwahlur*, *Beyond the Black River*, and *Hour of the Dragon* — which were previously listed as 2030/2031 unlocks — have been removed. All four stories are now in Bucket A per Public_Domain_Rules.md §1.2. Their named elements (Bêlit, Acheron, Xaltotun, Heart of Ahriman, Python) are usable now with the customization discipline. §9 now points to ADVENTURE_MODULES_PLAN.md §3 as the authoritative 18-module roster and explains the remaining future-PD timeline (2027 audit, 2028 unlocks, etc.). `[high]`
+↔ relates to: §9 After The First Three — The PD Calendar (post-audit rewrite), Public_Domain_Rules.md §1.2 + §8 (current calendar), ADVENTURE_MODULES_PLAN.md §3 (post-audit module roster)
 
 ### [INK-AUTHORING]
 
-**Q:** What's the relationship between this doc and `ADVENTURE_MODULES_PLAN.md` — they overlap on the first three modules; which is canonical for what?
-**A:** Open. Cleanest division: this doc owns the **methodology + per-module conversion patterns** (PD-First Design Rule, one-short-story-one-module simplification, module template structure, source-to-module conversion stays/mutates/invents/forbids, system integration checklist, profile-driven branching, cold open + scene image prompt template, the first-three modules' detailed pitches). ADVENTURE_MODULES_PLAN.md owns the **18-module roster + scroll/SH-fragment seeding map + build order across all 18**. Overlap: both docs detail M-1 / M-2 / M-3 — this doc has the original pitches + difficulty notes + key elements at high detail; ADVENTURE_MODULES_PLAN.md has the customization angle (Atlantean wonder-tech accents) + scroll seeding (Scroll II in M-1, etc.) at the roster level. Recommended canonical split: this doc keeps the M-1/M-2/M-3 detail as authoring reference; ADVENTURE_MODULES_PLAN.md links to it rather than duplicating; both docs should cross-reference each other in their introductions. Today only ADVENTURE_MODULES_PLAN.md links here; the back-link is missing. `[open]` → see [EV-hyborian_pd_module_plan-002](EDGE_VECTORS.md#ev-hyborian_pd_module_plan-002)
-↔ relates to: §8 (first-three detail), ADVENTURE_MODULES_PLAN.md §3 (Tier 0 entries M-1/M-2/M-3), DOC_MAP.md (canonical-for declarations)
+**Q:** What's the canonical division of ownership between this doc and ADVENTURE_MODULES_PLAN.md?
+**A:** This doc owns the **methodology and template for building any module** — PD-First Design Rule, one-short-story-one-module simplification, module template structure, source-to-module conversion rules (stays/mutates/invents/forbids), system integration checklist, profile-driven branching, cold open + scene image prompt template, and the first-three modules' detailed authoring reference. Note: This doc's title references "Hyborian" but the methodology applies universally; the game is set in the Thurian Age. ADVENTURE_MODULES_PLAN.md owns the **overall strategic plan for the entire module system** — the 18-module roster, scroll/SH-fragment seeding map, cross-roster build order, and per-module customization (Atlantean wonder-tech accents, etc.). **Individual module implementations** (M-1, M-2, M-3, etc.) each own their own short story source, module template code, world travel requirements, room map, NPCs, items, and encounters. `[high]`
+↔ relates to: §1–8 (methodology and template), ADVENTURE_MODULES_PLAN.md §3 (18-module roster), lib/adventures/ (individual module implementations)
 
 ---
 
-# Adventure Module Plan — Building Modules from Public Domain Howard
+# Thurian-Age Module Methodology — Building Modules from Public Domain Howard
 
 > **Read `Public_Domain_Rules.md` first** (the consolidated PD-safety
 > doc at the repo root). This document presumes you know what is and
 > isn't currently PD. The single most important rule:
 > **only build modules from PD-confirmed source material.**
+> 
+> **Note:** This document describes the methodology and template for building any module in the Thurian-Age setting. The overall strategic plan for the 18-module system is in [`ADVENTURE_MODULES_SYSTEM.md`](../../ADVENTURE_MODULES_SYSTEM.md).
 
 ---
 
@@ -474,45 +476,39 @@ and a stack of cures.
 
 ---
 
-## 9. After The First Three — The PD Calendar
+## 9. After The First Three — The PD Calendar (Post-Audit)
 
-Once the three Thurian modules ship, **we are out of currently-PD
-source material for net-new modules.** The next significant PD
-event is **January 2028,** when the first Conan stories enter
-public domain.
+**2026-04-30 update:** The non-renewal audit in `Public_Domain_Rules.md` 
+§1.2 moved 15 additional *Weird Tales* 1934–1936 Howard stories 
+from the future-PD calendar into the **current Bucket A** (usable now). 
+This includes *Queen of the Black Coast*, *Jewels of Gwahlur*, 
+*Beyond the Black River*, and *The Hour of the Dragon* — along with 
+all their named elements (Bêlit, Acheron, Xaltotun, Heart of Ahriman, 
+Python, etc.).
 
-Until then, additional content should be:
+**Authoritative roster:** [`ADVENTURE_MODULES_PLAN.md` §3](../../ADVENTURE_MODULES_PLAN.md) 
+lists the full 18-module roadmap with customization details. That 
+document is the single source of truth for module build order, per-module 
+PD-safety, and scroll/fragment seeding.
 
-- **Original modules in Howard's voice** that use only PD-safe
-  named elements (kingdoms from the essay, Thurian elements
-  from the three PD stories, freshly-invented original names)
-- **Extensions to existing modules** (deeper Tuzun Thune mirror
-  visions, more Serpent-Man cells discovered across the realms,
-  recurring Bran Mak Morn appearances)
-- **Module-set arcs** that link the three Thurian modules into a
-  larger campaign (e.g., the same Stygian sorcerer-priest
-  surfaces across all three)
+**Remaining future-PD timeline:**
 
-When 2028 hits, **revisit `Public_Domain_Rules.md` §8 calendar and this
-document together** and queue Conan modules:
+- **2027 (planned audit):** Non-renewal audit for 1932–1933 *Weird Tales* 
+  Conan stories (*The Phoenix on the Sword*, *The Scarlet Citadel*, etc.). 
+  Today they remain Bucket B; the 2027 audit may move some/all to Bucket A.
+  See `Public_Domain_Rules.md` §8 for methodology.
+- **2028:** If the 2027 audit confirms non-renewal, Conan-era modules 
+  become possible. Otherwise, the 95-year clock still requires waiting 
+  until 2027–2029.
+- **2029–2032:** Per the historical pattern, subsequent cohorts of 1930s 
+  *Weird Tales* stories unlock as the 95-year window slides forward.
 
-- **2028:** *The Phoenix on the Sword*, *The Scarlet Citadel* —
-  Conan himself becomes PD; first Conan-era modules possible
-- **2029:** Major batch (*Tower of the Elephant*, *Black Colossus*,
-  *Rogues in the House*, etc.) — pick the 2–3 best fits, queue
-  more for later
-- **2030:** *Queen of the Black Coast*, *Jewels of Gwahlur*,
-  *Beyond the Black River* — naval, treasure-dungeon, frontier
-  modules
-- **2031:** ⭐ *The Hour of the Dragon* enters PD — finally
-  unlocking **Acheron, Xaltotun, Heart of Ahriman, Python**.
-  Reverse the temporary "Acheron → Thurian" substitution where
-  appropriate; ship a major Hour-of-the-Dragon-derived module.
-
-Treat each PD unlock as a deliberate design event, not an
-automatic batch import. Pick the best 2–3 newly-unlocked stories
-per year for full module conversion; let the rest inform
-worldbuilding without becoming separate modules.
+**Design philosophy:** Treat each PD event as a deliberate design moment, 
+not an automatic batch import. The existing 18-module roster in 
+`ADVENTURE_MODULES_PLAN.md` represents the best-fit selections from the 
+current Bucket A. As future audits and unlocks land, evaluate the new 
+corpus and deliberately choose which stories warrant full module treatment 
+vs. which inform worldbuilding without becoming separate modules.
 
 ---
 

@@ -35,7 +35,7 @@ import type { WorldState } from "../gameState";
 import { FATIGUE_TIER_EVASION_PENALTY } from "../gameState";
 import { isCrossingBarrier, tickBarriers } from "./barriers";
 import { NPCS, ITEMS, getEnemyDeathPool } from "../gameData";
-import { fatigueLevel } from "../karma/recompute";
+import { fatigueLevel, weaponStaminaCost } from "../karma/recompute";
 import { pickAction, DEFAULT_BANDIT_POLICY } from "../npcAi";
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -2271,6 +2271,26 @@ export function resolveCombatRound(
   }
   if (enemy.droppedWeaponId) {
     enemy = { ...enemy, weaponId: enemy.droppedWeaponId, droppedWeaponId: null };
+  }
+
+  // 2c. Sprint 1 — Tier 4 exhaustion blocks player action
+  // Per KARMA_SYSTEM.md §2.3, fatiguePool ≤ −4·maxStamina = tier 4 (exhausted).
+  // Player cannot raise their arms; turn is forfeit. (No strike, no spell, nothing.)
+  if ((player.fatigueTier ?? 0) === 4) {
+    return {
+      playerStrike: null,
+      enemyStrike: null,
+      playerGoesFirst: false,
+      initiativeNarrative: "",
+      roundNumber,
+      combatOver: false,
+      playerWon: false,
+      playerDied: false,
+      updatedPlayer: player,
+      updatedEnemy: enemy,
+      statusTickNarrative: statusTickNarrative + "\n🔥 **You are utterly exhausted. You cannot raise your arms.** Rest to recover stamina.",
+      updatedBarriers,
+    };
   }
 
   // 3. Initiative

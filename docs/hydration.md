@@ -5,7 +5,7 @@ role: reference-generated
 canonical_for: [hydration-stack, gravity-wells, critical-path-summary, session-diff]
 visibility: internal
 status: active
-last_updated: 2026-05-09
+last_updated: 2026-05-10
 cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, HYDRATE_NEXT_SESSION.md]
 generated_by: scripts/build-hydration.ts
 npm_script: hydration:build
@@ -15,72 +15,72 @@ npm_script: hydration:build
 
 # Hydration Primer
 
-Generated 2026-05-09. **Read this first; it is the new top of the rehydration stack.**
+Generated 2026-05-10. **Read this first; it is the new top of the rehydration stack.**
 
 This page fuses topology + open questions + recent activity into one read so you can skip the per-doc grep cycle. Load **this**, then `docs/launch-readiness.md`, then `MEMORY.md`. Routes for specific topics are in [`docs/topic-routes.md`](topic-routes.md). Visual: [`docs/doc-graph.svg`](doc-graph.svg) (regen via `npx -y -p @mermaid-js/mermaid-cli@latest mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg`).
 
 ## At a glance
 
-- **Topology:** 37 docs · 23 open Edge Vectors · 182 edges
+- **Topology:** 37 docs · 6 open Edge Vectors · 130 edges
 - **Visibility:** 26 creator-visible · 11 internal-only
-- **Q+A coverage:** 115 questions across 15 docs · 92 high-confidence · 23 open
-- **Critical path:** `karma_sprint_chain` — priority **136** — blocks 10 downstream sprint(s)
+- **Q+A coverage:** 108 questions across 14 docs · 102 high-confidence · 6 open
+- **Critical path:** `karma_sprint_chain` — priority **116** — blocks 10 downstream sprint(s)
 
 ## Gravity wells (most-incoming docs)
 
 These eight docs sit at the topological center. When a question crosses domains, one of these almost certainly owns it.
 
-### karma_system — Karma System  `(26 incoming)`
+### karma_system — Karma System  `(17 incoming)`
 
-**Owns:** picssi-math, virtue-activity-table, combat-picssi-deltas, ordered-retreat-mechanic · **Status:** draft · **Q:10/2open**
+**Owns:** picssi-math, virtue-activity-table, combat-picssi-deltas, ordered-retreat-mechanic · **Status:** draft · **Q:10/0open**
 
 Path: [`KARMA_SYSTEM.md`](../KARMA_SYSTEM.md)
 
-### module_system — Module System (Ink + GPE)  `(17 incoming)`
+### game_design — Game Design Document  `(16 incoming)`
+
+**Owns:** game-design, thurian-age-lore, picssi-virtue-defs, brothels-vd · **Status:** approved · **Q:11/1open**
+
+Path: [`GAME_DESIGN.md`](../GAME_DESIGN.md)
+
+### public_domain_rules — Public Domain Rules  `(12 incoming)`
+
+**Owns:** ip-framework, safe-harbor-strategy, howard-pd-timeline, trademark-restrictions · **Status:** active · **Q:10/1open**
+
+Path: [`Public_Domain_Rules.md`](../Public_Domain_Rules.md)
+
+### module_system — Module System (Ink + GPE)  `(9 incoming)`
 
 **Owns:** ink-external-functions, gpe-magnitude-bands, combat-picssi-hook-points, runtime-adapter-spec · **Status:** draft · **Q:10/2open**
 
 Path: [`MODULE_SYSTEM.md`](../MODULE_SYSTEM.md)
 
-### game_design — Game Design Document  `(15 incoming)`
-
-**Owns:** game-design, thurian-age-lore, picssi-virtue-defs, brothels-vd · **Status:** approved · **Q:10/2open**
-
-Path: [`GAME_DESIGN.md`](../GAME_DESIGN.md)
-
-### public_domain_rules — Public Domain Rules  `(14 incoming)`
-
-**Owns:** ip-framework, safe-harbor-strategy, howard-pd-timeline, trademark-restrictions · **Status:** active · **Q:10/2open**
-
-Path: [`Public_Domain_Rules.md`](../Public_Domain_Rules.md)
-
-### adventure_modules_plan — Adventure Modules Plan  `(11 incoming)`
-
-**Owns:** eighteen-module-roadmap, scroll-fragment-seeding · **Status:** active · **Q:8/2open**
-
-Path: [`ADVENTURE_MODULES_PLAN.md`](../ADVENTURE_MODULES_PLAN.md)
-
-### doc_map — Documentation Index (this file)  `(10 incoming)`
+### doc_map — Documentation Index (this file)  `(8 incoming)`
 
 **Owns:** doc-orchestration, visibility-tiers, role-classes · **Status:** active · **no Q+A**
 
 Path: [`DOC_MAP.md`](../DOC_MAP.md)
 
-### karma_implementation_plan — Karma Implementation Plan  `(8 incoming)`
+### karma_implementation_plan — Karma Implementation Plan  `(7 incoming)`
 
-**Owns:** karma-sprint-roadmap-s0-s7 · **Status:** deferred · **Q:8/2open**
+**Owns:** karma-sprint-roadmap-s0-s7 · **Status:** deferred · **Q:8/1open**
 
 Path: [`KARMA_IMPLEMENTATION_PLAN.md`](../KARMA_IMPLEMENTATION_PLAN.md)
 
-### sorcery — Sorcery (Guild CAST + Occult INVOKE)  `(7 incoming)`
+### sorcery — Sorcery (Guild CAST + Occult INVOKE)  `(6 incoming)`
 
-**Owns:** magic-systems, eight-circles, reagents, the-order · **Status:** active · **Q:10/2open**
+**Owns:** magic-systems, eight-circles, reagents, the-order · **Status:** active · **Q:10/0open**
 
 Path: [`SORCERY.md`](../SORCERY.md)
 
+### pantheon — Pantheon — Living Eamon canonical deities  `(5 incoming)`
+
+**Owns:** god-roster, thurian-aliases, valkyrie-host, dual-aspect-mapping · **Status:** active · **Q:8/0open**
+
+Path: [`lore/pantheon/PANTHEON.md`](../lore/pantheon/PANTHEON.md)
+
 ## Critical path
 
-The single highest-priority blocker per `docs/launch-readiness.md` is **`karma_sprint_chain`** (priority 136). It blocks **10** downstream sprint(s). Consult `docs/launch-readiness.md` Tier-0 entry for what good looks like, what's blocking it, and what it blocks.
+The single highest-priority blocker per `docs/launch-readiness.md` is **`karma_sprint_chain`** (priority 116). It blocks **10** downstream sprint(s). Consult `docs/launch-readiness.md` Tier-0 entry for what good looks like, what's blocking it, and what it blocks.
 
 ## High-impact open questions
 
@@ -89,16 +89,13 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 | EV ID | Category | Affects | Question |
 |---|---|---|---|
 | `EV-karma_system-002` | PICSSI-BALANCE | 3 doc(s) | Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped … |
-| `EV-adventure_modules_plan-001` | PICSSI-BALANCE | 2 doc(s) | What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the … |
-| `EV-game_design-001` | AFFECT-VECTOR | 2 doc(s) | How do PICSSI virtues correlate with the seven AffectVector axes? |
-| `EV-game_design-002` | INK-AUTHORING | 2 doc(s) | Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing… |
-| `EV-hyborian_pd_module_plan-001` | PD-SAFETY | 2 doc(s) | Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 sto… |
+| `EV-world_locations-001` | NAV-MAP | 1 doc(s) | Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations … |
 
 ## Recent activity
 
-Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T00:37:29+02:00):
+Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T01:00:31+02:00):
 
-- `9181ce1` — session log: capture parallel-workflow plan + scaffold as next-session work
+- `0fb2198` — session log: refresh HYDRATE_NEXT_SESSION for 2026-05-11
 
 ## Reading guide
 

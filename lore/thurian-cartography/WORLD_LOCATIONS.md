@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-05-03
 cross_refs: [GAME_DESIGN.md, lore/thurian-cartography/TRAVEL_MATRIX.md, lore/thurian-cartography/LOOT_TABLES.md, EDGE_VECTORS.md]
 questions_total: 6
-questions_answered: 5
-questions_open: 1
-edge_vector_ids: [EV-world_locations-001]
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document

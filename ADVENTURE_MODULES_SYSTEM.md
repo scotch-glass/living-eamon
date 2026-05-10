@@ -1,16 +1,16 @@
 ---
-id: adventure_modules_plan
-title: Adventure Modules Plan
+id: adventure_modules_system
+title: Adventure Modules System
 role: sprint-plan
 canonical_for: [eighteen-module-roadmap, scroll-fragment-seeding]
 visibility: creator
 status: active
-last_updated: 2026-04-30
-cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/hyborian-pd/MODULE_PLAN.md, EDGE_VECTORS.md]
+last_updated: 2026-05-10
+cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/thurian-pd/MODULE_PLAN.md, EDGE_VECTORS.md]
 questions_total: 8
-questions_answered: 6
-questions_open: 2
-edge_vector_ids: [EV-adventure_modules_plan-001, EV-adventure_modules_plan-002]
+questions_answered: 8
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -56,15 +56,15 @@ edge_vector_ids: [EV-adventure_modules_plan-001, EV-adventure_modules_plan-002]
 
 ### [PICSSI-BALANCE]
 
-**Q:** Each module's archetype-skew profile (e.g., M-10 = Courage capstone, M-13 = ally-faction Justice puzzle) must be GPE-validated — but what's the per-module target balance score and intentionallySkewed declaration set?
-**A:** Open. §3 entries describe each module's **virtue arcs in prose** (e.g., M-7 = "Mercy + Spirituality virtue forks; major mana-cost combat"; M-8 = "Justice + Mercy + Courage virtue arcs"; M-10 = "Major PICSSI capstone — Courage + Standing + Integrity all triggered hard") but no per-module `intentionallySkewed: ["passion", "standing"]`-style declaration is locked, and no GPE balance-score target band is specified. Best guess: capstone modules (M-10, M-12, M-13) target balanced (≥80) on the four engaged virtues with explicit `intentionallySkewed` covering the unengaged two; novice/moderate modules (M-1, M-9, M-15) accept tilted (50–79) given their narrower scope; Atlantean wonder-tech showcases (M-18, M-13) accept skewed (20–49) when the focus is genre-tonal rather than balance. Locking these targets requires running GPE on the first authored module and calibrating from real data. `[open]` → see [EV-adventure_modules_plan-001](EDGE_VECTORS.md#ev-adventure_modules_plan-001)
+**Q:** Each module's archetype-skew profile (e.g., M-10 = Courage capstone, M-13 = ally-faction Justice puzzle) must be Growth Path Equalizer-validated — but what's the per-module target balance score and intentionallySkewed declaration set?
+**A:** There will never be a perfectly balanced module where all PICSSI virtues are equal. Instead, each module has a distinct PICSSI focus — some for Spirituality growth, others for Courage, others for Illumination. Describe each module in in-game Robert E. Howard voice that explains what virtue growth the player can expect. Players choose modules that let them sculpt their character into what they want. This turns module selection into character development strategy: want a more spiritual hero? Pick the Spirituality-focused modules. Want more Courage? Choose the Courage arcs. The Growth Path Equalizer validates each module's declared virtue focus against its actual design. `[high]`
 ↔ relates to: MODULE_SYSTEM.md §7.4 Verdict tiers, MODULE_SYSTEM.md §4.5 module.json intentionallySkewed, KARMA_SYSTEM.md §2.5–§2.10 PICSSI canonical magnitudes
 
 ### [LORE]
 
-**Q:** Tier 2 modules (M-14 through M-18) are "either set in the Atlantean wonder-age past OR treated as cross-genre present-day excursions" — when does each option apply, and does the player notice the framing change?
-**A:** Medium. §3 Tier 2 introduction declares the two framings but does not specify which module gets which, beyond suggestive in-prose hints (M-14 = "modern-day Hyborian London-equivalent OR contemporary Valus with anachronistic gas-lamps and steamcoach"; M-15/M-16/M-17 = "southern-bayou-equivalent" tied to existing Salt-Marsh region; M-18 = explicit Atlantean reactor wonder-tech). Best guess: a per-module decision recorded at authoring time as a `framing: "deep-time-ruin" | "cross-genre-present"` field on `module.json`, surfacing to the player only through atmospheric prose cues (steam-and-occult Valus vs. "you wake in a Hyrkanian fever-tent"). Player should notice tonal shift but not jarring genre rupture — Eamon's classic "anything goes" is the precedent, but the tonal envelope is Howard's voice register either way. Decision deferred until the first Tier 2 module enters scoping. `[medium]` → see [EV-adventure_modules_plan-002](EDGE_VECTORS.md#ev-adventure_modules_plan-002)
-↔ relates to: §3 Tier 2 introduction, MODULE_SYSTEM.md §4.5 module.json (planned framing field), feedback_no_hyborian_in_marketing.md
+**Q:** Tier 2 modules (M-14 through M-18) — do they shift framing between Atlantean wonder-age and cross-genre present-day, or stay consistent?
+**A:** All Tier 2 modules are set in the Thurian Age with consistent setting and Howard's voice throughout. No framing change between modules. The modules are inspired by Robert E. Howard's key ideas, challenges, settings, and descriptions — not exact copies. Each Tier 2 module uses Atlantean wonder-tech (steam engines, energy crystals, automata) as part of the Thurian setting naturally, not as a genre shift. The player experiences all modules as one cohesive Thurian-Age world. `[high]`
+↔ relates to: §2 Setting expansion (Atlantis = age of wonders), §3 Tier 2 introduction, GAME_DESIGN.md (Thurian Age canonical setting)
 
 ---
 

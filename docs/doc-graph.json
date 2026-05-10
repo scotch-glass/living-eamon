@@ -1,25 +1,25 @@
 {
-  "generated_at": "2026-05-09",
+  "generated_at": "2026-05-10",
   "stats": {
     "doc_count": 37,
-    "ev_count": 23,
-    "edge_count": 182,
+    "ev_count": 6,
+    "edge_count": 130,
     "creator_visible": 26,
     "internal": 11
   },
   "nodes": {
-    "doc:adventure_modules_plan": {
+    "doc:adventure_modules_system": {
       "type": "doc",
-      "id": "adventure_modules_plan",
-      "path": "ADVENTURE_MODULES_PLAN.md",
-      "title": "Adventure Modules Plan",
+      "id": "adventure_modules_system",
+      "path": "ADVENTURE_MODULES_SYSTEM.md",
+      "title": "Adventure Modules System",
       "role": "sprint-plan",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30",
+      "last_updated": "2026-05-10",
       "questions_total": 8,
-      "questions_answered": 6,
-      "questions_open": 2
+      "questions_answered": 8,
+      "questions_open": 0
     },
     "doc:affect_axes_dump": {
       "type": "doc",
@@ -100,9 +100,9 @@
       "visibility": "creator",
       "status": "approved",
       "last_updated": "2026-04-30",
-      "questions_total": 10,
-      "questions_answered": 8,
-      "questions_open": 2
+      "questions_total": 11,
+      "questions_answered": 10,
+      "questions_open": 1
     },
     "doc:hyborian_pd_module_plan": {
       "type": "doc",
@@ -112,10 +112,7 @@
       "role": "sprint-plan",
       "visibility": "creator",
       "status": "active",
-      "last_updated": "2026-04-30",
-      "questions_total": 8,
-      "questions_answered": 6,
-      "questions_open": 2
+      "last_updated": "2026-04-30"
     },
     "doc:hyborian_pd_readme": {
       "type": "doc",
@@ -157,8 +154,8 @@
       "status": "deferred",
       "last_updated": "2026-04-30",
       "questions_total": 8,
-      "questions_answered": 6,
-      "questions_open": 2
+      "questions_answered": 7,
+      "questions_open": 1
     },
     "doc:karma_system": {
       "type": "doc",
@@ -170,8 +167,8 @@
       "status": "draft",
       "last_updated": "2026-05-09",
       "questions_total": 10,
-      "questions_answered": 8,
-      "questions_open": 2
+      "questions_answered": 10,
+      "questions_open": 0
     },
     "doc:launch_criteria": {
       "type": "doc",
@@ -216,8 +213,8 @@
       "status": "active",
       "last_updated": "2026-05-03",
       "questions_total": 6,
-      "questions_answered": 5,
-      "questions_open": 1
+      "questions_answered": 6,
+      "questions_open": 0
     },
     "doc:maatic_library": {
       "type": "doc",
@@ -252,8 +249,8 @@
       "status": "active",
       "last_updated": "2026-05-09",
       "questions_total": 8,
-      "questions_answered": 6,
-      "questions_open": 2
+      "questions_answered": 8,
+      "questions_open": 0
     },
     "doc:public_domain_rules": {
       "type": "doc",
@@ -265,8 +262,8 @@
       "status": "active",
       "last_updated": "2026-04-30",
       "questions_total": 10,
-      "questions_answered": 8,
-      "questions_open": 2
+      "questions_answered": 9,
+      "questions_open": 1
     },
     "doc:quest_registry_dump": {
       "type": "doc",
@@ -308,8 +305,8 @@
       "status": "active",
       "last_updated": "2026-04-30",
       "questions_total": 6,
-      "questions_answered": 5,
-      "questions_open": 1
+      "questions_answered": 6,
+      "questions_open": 0
     },
     "doc:session_001_vast_r2_setup": {
       "type": "doc",
@@ -331,8 +328,8 @@
       "status": "active",
       "last_updated": "2026-04-29",
       "questions_total": 10,
-      "questions_answered": 8,
-      "questions_open": 2
+      "questions_answered": 10,
+      "questions_open": 0
     },
     "doc:standing_creeds": {
       "type": "doc",
@@ -364,8 +361,8 @@
       "status": "active",
       "last_updated": "2026-04-30",
       "questions_total": 6,
-      "questions_answered": 5,
-      "questions_open": 1
+      "questions_answered": 6,
+      "questions_open": 0
     },
     "doc:tech_md": {
       "type": "doc",
@@ -397,8 +394,8 @@
       "status": "active",
       "last_updated": "2026-05-03",
       "questions_total": 6,
-      "questions_answered": 5,
-      "questions_open": 1
+      "questions_answered": 6,
+      "questions_open": 0
     },
     "doc:work_queue": {
       "type": "doc",
@@ -423,69 +420,6 @@
       "questions_answered": 5,
       "questions_open": 1
     },
-    "ev:EV-adventure_modules_plan-001": {
-      "type": "edge_vector",
-      "id": "EV-adventure_modules_plan-001",
-      "source_doc": "adventure_modules_plan",
-      "category": "PICSSI-BALANCE",
-      "confidence": "open",
-      "question": "What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modules?",
-      "best_guess": "Capstone modules (M-10, M-12, M-13) target balanced (≥80) on the four engaged virtues with explicit `intentionallySkewed` covering the unengaged two. Novice/moderate modules (M-1, M-9, M-15) accept tilted (50–79). Atlantean wonder-tech showcases (M-18, M-13) accept skewed (20–49) when focus is genre-tonal. Per-module declaration locks during authoring; calibrate from real GPE data on the first module."
-    },
-    "ev:EV-adventure_modules_plan-002": {
-      "type": "edge_vector",
-      "id": "EV-adventure_modules_plan-002",
-      "source_doc": "adventure_modules_plan",
-      "category": "LORE",
-      "confidence": "medium",
-      "question": "Tier 2 modules (M-14 through M-18) are framed as either \"Atlantean wonder-age past\" or \"cross-genre present-day excursion\" — when does each option apply, and does the player notice the framing change?",
-      "best_guess": "A per-module decision recorded at authoring time as `framing: \"deep-time-ruin\" | \"cross-genre-present\"` on `module.json`. Player notices tonal shift but not jarring genre rupture — Eamon's \"anything goes\" precedent applies but Howard's voice register is the consistent envelope. M-18 is explicitly deep-time-ruin (Atlantean reactor); M-14 leans cross-genre-present (steam-and-occult Valus); M-15/M-16/M-17 reuse the Salt-Marsh region and read as cross-genre."
-    },
-    "ev:EV-game_design-001": {
-      "type": "edge_vector",
-      "id": "EV-game_design-001",
-      "source_doc": "game_design",
-      "category": "AFFECT-VECTOR",
-      "confidence": "open",
-      "question": "How do PICSSI virtues correlate with the seven AffectVector axes?",
-      "best_guess": "Likely correlated but unformalized. Examples: Passion ↔ eros + excitement; Courage ↔ fear (overcome) + dread (faced); Spirituality ↔ awe + wonder; Standing ↔ excitement + maybe dread (humiliation as anti-Standing). Not specified anywhere."
-    },
-    "ev:EV-game_design-002": {
-      "type": "edge_vector",
-      "id": "EV-game_design-002",
-      "source_doc": "game_design",
-      "category": "INK-AUTHORING",
-      "confidence": "medium",
-      "question": "Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., \"Standing-pure\")?",
-      "best_guess": "Probably yes for most archetype themes, but the constraint matrix isn't proven. A Standing-pure module would tend toward visible victory, conspicuous wealth, donations-for-show; that doesn't conflict with PD rules (Howard fiction is full of this) and is internally PICSSI-balanced if the spec says \"intentionally archetype-focused modules can be unbalanced\" (per KARMA_SYSTEM 2026-05-06 update). But edge cases: e.g., a Spirituality-pure module might struggle to ship a Courage \"great odds\" encounter without breaking archetype."
-    },
-    "ev:EV-hyborian_pd_module_plan-001": {
-      "type": "edge_vector",
-      "id": "EV-hyborian_pd_module_plan-001",
-      "source_doc": "hyborian_pd_module_plan",
-      "category": "PD-SAFETY",
-      "confidence": "medium",
-      "question": "Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?",
-      "best_guess": "Partially stale. §9 still lists *Queen of the Black Coast* (May 1934), *Jewels of Gwahlur* (March 1935), *Beyond the Black River* (May–June 1935), and *Hour of the Dragon* (1935–1936) as 2030/2031 unlocks. All four are now Bucket A per Public_Domain_Rules.md §1.2. Recommended fix: rewrite §9 to reflect the post-audit Bucket A and point to ADVENTURE_MODULES_PLAN.md §3 as the authoritative roster."
-    },
-    "ev:EV-hyborian_pd_module_plan-002": {
-      "type": "edge_vector",
-      "id": "EV-hyborian_pd_module_plan-002",
-      "source_doc": "hyborian_pd_module_plan",
-      "category": "INK-AUTHORING",
-      "confidence": "open",
-      "question": "What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/M-2/M-3?",
-      "best_guess": "This doc owns the methodology (PD-First Design Rule, one-short-story-one-module, module template structure, source-to-module conversion stays/mutates/invents/forbids, integration checklist, profile-driven branching, cold open + scene image prompt template, the first-three modules' detailed pitches). ADVENTURE_MODULES_PLAN.md owns the 18-module roster + scroll/SH-fragment seeding map + cross-roster build order. Overlap on M-1/M-2/M-3 is acceptable because this doc carries authoring-detail and the roster doc carries customization-angle (Atlantean wonder-tech accents) + scroll seeding (Scroll II in M-1, etc.)."
-    },
-    "ev:EV-karma_implementation_plan-001": {
-      "type": "edge_vector",
-      "id": "EV-karma_implementation_plan-001",
-      "source_doc": "karma_implementation_plan",
-      "category": "WIRING",
-      "confidence": "open",
-      "question": "When multiple atoms match the same trigger event, what's the priority resolution rule?",
-      "best_guess": "Add a `priority: number` field to `Atom` (default 0) and sort matches by priority desc before picking; tied priorities fall back to load order. Resolves the \"Vivian-specific atom should outrank generic tavern atom\" case once the corpus grows past ~30 atoms."
-    },
     "ev:EV-karma_implementation_plan-002": {
       "type": "edge_vector",
       "id": "EV-karma_implementation_plan-002",
@@ -495,15 +429,6 @@
       "question": "How does the Scroll-of-Thoth riddle UI evolve from v1 chat-stream token to S6 modal?",
       "best_guess": "v1 emits `__RIDDLE__` token via the existing token-driven verb-completion flow (matches `__YESNO__`, `__BARMAID_SELECT__`). S6 modal upgrade open questions: (a) per-scroll attempt budget vs v1 silent-no-Illumination, (b) reveal canonical answer after N failures (the Hermes→Thoth substitution can confuse first-time players), (c) whether the chat-stream fallback survives for headless tests after the modal ships."
     },
-    "ev:EV-karma_system-001": {
-      "type": "edge_vector",
-      "id": "EV-karma_system-001",
-      "source_doc": "karma_system",
-      "category": "INK-AUTHORING",
-      "confidence": "open",
-      "question": "How will Ink module authors apply PICSSI deltas inside an .ink file?",
-      "best_guess": "An EXTERNAL function `apply_karma(virtue_id, magnitude_band)` taking the canonical band names (`trivial` / `notable` / `major` / `defining`) rather than raw integers — runtime owns the numbers so balance changes don't require module rewrites. Sign convention TBD: either a separate `apply_karma_loss` EXTERNAL or a signed band token like `notable_loss`."
-    },
     "ev:EV-karma_system-002": {
       "type": "edge_vector",
       "id": "EV-karma_system-002",
@@ -512,15 +437,6 @@
       "confidence": "medium",
       "question": "Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, wealth tiers 1k/5k/25k/100k → +5/+10/+20/+30, per-circle Illumination 0/0/0/−2/−4/−8/−15/−30, fatigue penalty +15·tier evasion-vs-player) tuned for end-game balance, or are they opening parameters?",
       "best_guess": "Opening parameters. Scotch's standing direction is \"use your judgment, balance later via Machinations.io.\" Likely tuning targets: action-budget spread too narrow, gear-Standing jewelry doubling too generous, Circle 8's −30 too punishing for a single cast, Tier-4 fatigue lockout too binary."
-    },
-    "ev:EV-loot_tables-001": {
-      "type": "edge_vector",
-      "id": "EV-loot_tables-001",
-      "source_doc": "loot_tables",
-      "category": "PICSSI-BALANCE",
-      "confidence": "open",
-      "question": "Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, or are they opening parameters?",
-      "best_guess": "Opening parameters authored 2026-05-03. Likely tuning surface: Common-tier dominance (45% may feel underwhelming after 20+ hours), Pre-Thurian vault +40 modifier (excessive once vaults become common), rune-blade +10 Illumination cap × 6 blades = +60 lifetime (Defining-tier permanent shift), asymmetric caravan-action PICSSI deltas (`−8/−5/+2` for raiding vs `+4/+3` for helping)."
     },
     "ev:EV-module_system-001": {
       "type": "edge_vector",
@@ -540,33 +456,6 @@
       "question": "What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?",
       "best_guess": "Loader inspects `module.json.contractVersion` and either (a) refuses to load 1.0 modules (hard-deprecation, fine while install base is Scotch + 1 author) or (b) routes through a 1.0-shim that re-binds renamed/removed EXTERNALs to no-ops with a deprecation warning. Cost of breaking 1.0 is currently zero — no community modules exist — but Steam Workshop / Itch.io uploads make this load-bearing."
     },
-    "ev:EV-pantheon-001": {
-      "type": "edge_vector",
-      "id": "EV-pantheon-001",
-      "source_doc": "pantheon",
-      "category": "INK-AUTHORING",
-      "confidence": "open",
-      "question": "How will Ink module authors reference deities when writing modules?",
-      "best_guess": "An EXTERNAL function `pray_to(deity_id)` mutating `divineFavor` + maybe `picssi_spirituality` per the deity's `acceptsActs` / `rejectsActs` table (defined in the future god registry). Module authors would also use deity-keyed flags in atom choices (e.g., `flag_set(\"witnessed_anubis_rite\")`)."
-    },
-    "ev:EV-pantheon-002": {
-      "type": "edge_vector",
-      "id": "EV-pantheon-002",
-      "source_doc": "pantheon",
-      "category": "AFFECT-VECTOR",
-      "confidence": "open",
-      "question": "What neuro-emotional axes does invoking each deity surface?",
-      "best_guess": "awe (high-tier ritual, Solar Barque ascension); dread (Set, Sekhmet's Helfara face, Outer Dark proximity); wonder (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form); melancholy (Crom-the-silent, Honen-after-the-Cataclysm); reverence (Ma'at's feather-weighing, Anubis's threshold rites). Not validated against the atom corpus."
-    },
-    "ev:EV-public_domain_rules-001": {
-      "type": "edge_vector",
-      "id": "EV-public_domain_rules-001",
-      "source_doc": "public_domain_rules",
-      "category": "INK-AUTHORING",
-      "confidence": "open",
-      "question": "Is there an automated check that flags PD-violation candidates in module prose before commit?",
-      "best_guess": "A `tools/pd-lint/` script that walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup. Runs in `prebuild` alongside `validate-modules` and `gpe:all --strict`. Ambiguity: Aquilonia is allowed in narrative but forbidden in marketing — the linter needs conservative defaults plus per-rule allowlist + per-string surface-context tags from authors."
-    },
     "ev:EV-public_domain_rules-002": {
       "type": "edge_vector",
       "id": "EV-public_domain_rules-002",
@@ -575,51 +464,6 @@
       "confidence": "medium",
       "question": "What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, what triggers an early Bucket A migration?",
       "best_guess": "Same approach as the 2026-04-30 audit that moved 1934–1936 stories. Sources: U.S. Copyright Office renewal records (Catalog of Copyright Entries 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg Howard research notes, scholarly consensus on *Weird Tales* renewal practices. Verifies both (a) magazine issue not issue-renewed AND (b) Howard's individual contributions not separately renewed. Recommendation: schedule in LAUNCH_CRITERIA.md Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 entry plus Bucket A migration."
-    },
-    "ev:EV-scrolls_of_thoth_index-001": {
-      "type": "edge_vector",
-      "id": "EV-scrolls_of_thoth_index-001",
-      "source_doc": "scrolls_of_thoth_index",
-      "category": "PICSSI-BALANCE",
-      "confidence": "open",
-      "question": "Is the proposed `+3 Notable` Illumination delta per scroll calibrated for the 15-scroll corpus, or is it an opening parameter?",
-      "best_guess": "`15 × +3 = +45 Illumination toward Light`, 45% of the +100 max. Feels right if Way of Thoth is the canonical Light-arc spine; large if other Light-paths also contribute meaningfully. Tuning levers: stage-weighted deltas (XV = +20 Defining capstone), total Way-of-Thoth cap at +50, or PICSSI-Spirituality-multiplied per-scroll deltas."
-    },
-    "ev:EV-sorcery-001": {
-      "type": "edge_vector",
-      "id": "EV-sorcery-001",
-      "source_doc": "sorcery",
-      "category": "INK-AUTHORING",
-      "confidence": "open",
-      "question": "How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom, or an atom granting a custom invocation rune?",
-      "best_guess": "Either (a) two new EXTERNALs — `npc_invoke(npc_id, spell_id, target_id)` routing through the existing Force-0 combat-engine path, plus `add_invocation(spell_id)` for the known-Words registry on PlayerState — or (b) keep NPC sorcery scripted in `lib/encounters/<id>.ts` and only expose `add_invocation` to Ink. Decision deferred until the first module needs an enemy sorcerer beat."
-    },
-    "ev:EV-sorcery-002": {
-      "type": "edge_vector",
-      "id": "EV-sorcery-002",
-      "source_doc": "sorcery",
-      "category": "WIRING",
-      "confidence": "medium",
-      "question": "Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse model still need?",
-      "best_guess": "Production today: Guild CAST Circles 1+2 (13 real spells, Sprint C6.1); INVOKE pipeline not wired to combat; Circles 4–8 deferred. Resurrection corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification, hero-death short-circuit, undead-likelihood roll, necromancy variant — is design-only. The mortal/immortal NPC tag is a no-cost addition that should land **before** any Resurrection wiring sprint to avoid retro-tagging every NPC kind."
-    },
-    "ev:EV-stobaean_fragments_index-001": {
-      "type": "edge_vector",
-      "id": "EV-stobaean_fragments_index-001",
-      "source_doc": "stobaean_fragments_index",
-      "category": "PICSSI-BALANCE",
-      "confidence": "open",
-      "question": "Is the default `illuminationDelta: 1` per fragment calibrated across the 14-fragment corpus, or is it an opening parameter?",
-      "best_guess": "`14 × +1 = +14 Illumination`, totaling `+59` combined with the Scrolls' +45 (76% Scrolls / 24% Fragments split). Likely tuning levers: stage-weighted (Stage 1 = +1 Trivial, Stage 2 = +2, Stage 3 = +3 Notable for a `4·1 + 4·2 + 6·3 = 30` total), theme-weighted (cosmological-reveal fragments deliver more), or keep flat `+1`."
-    },
-    "ev:EV-travel_matrix-001": {
-      "type": "edge_vector",
-      "id": "EV-travel_matrix-001",
-      "source_doc": "travel_matrix",
-      "category": "NAV-MAP",
-      "confidence": "open",
-      "question": "Are the per-route day-counts and danger ratings in the Travel Matrix empirically tuned, or are they opening parameters?",
-      "best_guess": "Opening parameters. First-guess values based on rough pixel distance between map coordinates. Likely tuning surface: per-leg day-count vs historical pre-modern travel rates (~20 miles/day on foot), zone-mix consistency, horse divisor (real-world horse advantage closer to 3× short / 1.5× sustained), sea-only vs walk-also separation in the matrix."
     },
     "ev:EV-world_locations-001": {
       "type": "edge_vector",
@@ -633,59 +477,49 @@
   },
   "edges": [
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:game_design",
       "type": "cross_ref"
     },
     {
-      "from": "doc:adventure_modules_plan",
-      "to": "doc:hyborian_pd_module_plan",
-      "type": "cross_ref"
+      "from": "doc:adventure_modules_system",
+      "to": "doc:game_design",
+      "type": "relates_to"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:hyborian_pd_module_plan",
       "type": "relates_to"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:karma_system",
       "type": "cross_ref"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:karma_system",
       "type": "relates_to"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:module_system",
       "type": "relates_to"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:public_domain_rules",
       "type": "cross_ref"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:public_domain_rules",
       "type": "relates_to"
     },
     {
-      "from": "doc:adventure_modules_plan",
+      "from": "doc:adventure_modules_system",
       "to": "doc:quest_registry_dump",
       "type": "relates_to"
-    },
-    {
-      "from": "doc:adventure_modules_plan",
-      "to": "ev:EV-adventure_modules_plan-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:adventure_modules_plan",
-      "to": "ev:EV-adventure_modules_plan-002",
-      "type": "has_open_question"
     },
     {
       "from": "doc:agents_md",
@@ -741,16 +575,6 @@
       "from": "doc:edge_vectors",
       "to": "doc:doc_map",
       "type": "cross_ref"
-    },
-    {
-      "from": "doc:game_design",
-      "to": "doc:adventure_modules_plan",
-      "type": "cross_ref"
-    },
-    {
-      "from": "doc:game_design",
-      "to": "doc:adventure_modules_plan",
-      "type": "relates_to"
     },
     {
       "from": "doc:game_design",
@@ -813,64 +637,14 @@
       "type": "relates_to"
     },
     {
-      "from": "doc:game_design",
-      "to": "ev:EV-game_design-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:game_design",
-      "to": "ev:EV-game_design-002",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "doc:adventure_modules_plan",
-      "type": "cross_ref"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "doc:adventure_modules_plan",
-      "type": "relates_to"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "doc:doc_map",
-      "type": "relates_to"
-    },
-    {
       "from": "doc:hyborian_pd_module_plan",
       "to": "doc:game_design",
       "type": "cross_ref"
     },
     {
       "from": "doc:hyborian_pd_module_plan",
-      "to": "doc:karma_system",
-      "type": "relates_to"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
       "to": "doc:public_domain_rules",
       "type": "cross_ref"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "doc:public_domain_rules",
-      "type": "relates_to"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "doc:sorcery",
-      "type": "relates_to"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "ev:EV-hyborian_pd_module_plan-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:hyborian_pd_module_plan",
-      "to": "ev:EV-hyborian_pd_module_plan-002",
-      "type": "has_open_question"
     },
     {
       "from": "doc:hyborian_pd_readme",
@@ -929,11 +703,6 @@
     },
     {
       "from": "doc:karma_implementation_plan",
-      "to": "ev:EV-karma_implementation_plan-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:karma_implementation_plan",
       "to": "ev:EV-karma_implementation_plan-002",
       "type": "has_open_question"
     },
@@ -974,23 +743,8 @@
     },
     {
       "from": "doc:karma_system",
-      "to": "ev:EV-karma_system-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:karma_system",
       "to": "ev:EV-karma_system-002",
       "type": "has_open_question"
-    },
-    {
-      "from": "doc:launch_criteria",
-      "to": "doc:adventure_modules_plan",
-      "type": "cross_ref"
-    },
-    {
-      "from": "doc:launch_criteria",
-      "to": "doc:adventure_modules_plan",
-      "type": "relates_to"
     },
     {
       "from": "doc:launch_criteria",
@@ -1053,11 +807,6 @@
       "type": "cross_ref"
     },
     {
-      "from": "doc:loot_tables",
-      "to": "ev:EV-loot_tables-001",
-      "type": "has_open_question"
-    },
-    {
       "from": "doc:maatic_library",
       "to": "doc:game_design",
       "type": "cross_ref"
@@ -1069,7 +818,7 @@
     },
     {
       "from": "doc:module_system",
-      "to": "doc:adventure_modules_plan",
+      "to": "doc:adventure_modules_system",
       "type": "relates_to"
     },
     {
@@ -1153,21 +902,6 @@
       "type": "relates_to"
     },
     {
-      "from": "doc:pantheon",
-      "to": "ev:EV-pantheon-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:pantheon",
-      "to": "ev:EV-pantheon-002",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:public_domain_rules",
-      "to": "doc:adventure_modules_plan",
-      "type": "relates_to"
-    },
-    {
       "from": "doc:public_domain_rules",
       "to": "doc:claude_md",
       "type": "relates_to"
@@ -1196,11 +930,6 @@
       "from": "doc:public_domain_rules",
       "to": "doc:pantheon",
       "type": "relates_to"
-    },
-    {
-      "from": "doc:public_domain_rules",
-      "to": "ev:EV-public_domain_rules-001",
-      "type": "has_open_question"
     },
     {
       "from": "doc:public_domain_rules",
@@ -1233,11 +962,6 @@
       "type": "relates_to"
     },
     {
-      "from": "doc:scrolls_of_thoth_index",
-      "to": "ev:EV-scrolls_of_thoth_index-001",
-      "type": "has_open_question"
-    },
-    {
       "from": "doc:sorcery",
       "to": "doc:game_design",
       "type": "cross_ref"
@@ -1268,16 +992,6 @@
       "type": "relates_to"
     },
     {
-      "from": "doc:sorcery",
-      "to": "ev:EV-sorcery-001",
-      "type": "has_open_question"
-    },
-    {
-      "from": "doc:sorcery",
-      "to": "ev:EV-sorcery-002",
-      "type": "has_open_question"
-    },
-    {
       "from": "doc:standing_creeds",
       "to": "doc:game_design",
       "type": "cross_ref"
@@ -1296,11 +1010,6 @@
       "from": "doc:stobaean_fragments_corpus",
       "to": "doc:stobaean_fragments_index",
       "type": "cross_ref"
-    },
-    {
-      "from": "doc:stobaean_fragments_index",
-      "to": "doc:adventure_modules_plan",
-      "type": "relates_to"
     },
     {
       "from": "doc:stobaean_fragments_index",
@@ -1326,11 +1035,6 @@
       "from": "doc:stobaean_fragments_index",
       "to": "doc:scrolls_of_thoth_index",
       "type": "relates_to"
-    },
-    {
-      "from": "doc:stobaean_fragments_index",
-      "to": "ev:EV-stobaean_fragments_index-001",
-      "type": "has_open_question"
     },
     {
       "from": "doc:tech_md",
@@ -1361,11 +1065,6 @@
       "from": "doc:travel_matrix",
       "to": "doc:world_locations",
       "type": "cross_ref"
-    },
-    {
-      "from": "doc:travel_matrix",
-      "to": "ev:EV-travel_matrix-001",
-      "type": "has_open_question"
     },
     {
       "from": "doc:work_queue",
@@ -1408,71 +1107,6 @@
       "type": "has_open_question"
     },
     {
-      "from": "ev:EV-adventure_modules_plan-001",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-adventure_modules_plan-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-adventure_modules_plan-002",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-game_design-001",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-game_design-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-game_design-002",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-game_design-002",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-hyborian_pd_module_plan-001",
-      "to": "doc:adventure_modules_plan",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-hyborian_pd_module_plan-001",
-      "to": "doc:public_domain_rules",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-hyborian_pd_module_plan-002",
-      "to": "doc:adventure_modules_plan",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-hyborian_pd_module_plan-002",
-      "to": "doc:doc_map",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-karma_implementation_plan-001",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-karma_system-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
       "from": "ev:EV-karma_system-002",
       "to": "doc:game_design",
       "type": "affects"
@@ -1485,56 +1119,6 @@
     {
       "from": "ev:EV-karma_system-002",
       "to": "doc:sorcery",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-loot_tables-001",
-      "to": "doc:travel_matrix",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-pantheon-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-pantheon-002",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-public_domain_rules-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-scrolls_of_thoth_index-001",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-sorcery-001",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-sorcery-001",
-      "to": "doc:module_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-sorcery-002",
-      "to": "doc:karma_implementation_plan",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-stobaean_fragments_index-001",
-      "to": "doc:karma_system",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-travel_matrix-001",
-      "to": "doc:world_locations",
       "type": "affects"
     },
     {

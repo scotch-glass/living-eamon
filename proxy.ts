@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     // Dev-only routes (combat test harness, etc.). Gated on NODE_ENV so
     // they can't leak past staging into production builds.
     (pathname.startsWith("/dev/") && process.env.NODE_ENV !== "production") ||
+    (pathname.startsWith("/admin/") && process.env.NODE_ENV !== "production") ||
     // Sprite Review Tool APIs — paired with /dev/sprite-review. Same
     // NODE_ENV gate so they can't leak past staging.
     ((pathname === "/api/sprite-list" ||

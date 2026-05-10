@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-04-30
 cross_refs: [KARMA_SYSTEM.md, lib/karma/scrolls.ts, EDGE_VECTORS.md]
 questions_total: 6
-questions_answered: 5
-questions_open: 1
-edge_vector_ids: [EV-scrolls_of_thoth_index-001]
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -51,7 +51,7 @@ edge_vector_ids: [EV-scrolls_of_thoth_index-001]
 ### [PICSSI-BALANCE]
 
 **Q:** Is the proposed `+3 Notable` Illumination delta per scroll calibrated for the 15-scroll corpus, or is it an opening parameter?
-**A:** Open. The doc declares `illuminationDelta: 3 (proposed +3 Notable per scroll, tunable)` and §Pacing implies all 15 scrolls share the same delta — but no tuning record exists for the cumulative impact. Best-guess accounting: `15 scrolls × +3 = +45 Illumination toward Light`, which is **45% of the way to the +100 max** from a single quest-line. That matches design intent if the Way of Thoth is the canonical Light-arc spine, but feels large if other Light-paths (killing dark beings, healing innocents, restoring holy sites per KARMA_SYSTEM §2.10) also contribute meaningfully. Likely tuning levers: (a) make later scrolls deliver larger deltas (e.g. `+3 / +3 / +3 / +3 / +5 / +5 / +5 / +5 / +5 / +10 / +10 / +10 / +10 / +10 / +20` curve = +118 capped at +100, with the capstone XV scroll worth a Defining +20); (b) keep per-scroll flat but cap total Way-of-Thoth Illumination contribution at `+50` so other Light paths matter; (c) make per-scroll deltas **PICSSI-Spirituality-multiplied** (high-Spirit hero gains more from sacred reading). Decision deferred until atom corpus + Sprint 3 land. `[open]` → see [EV-scrolls_of_thoth_index-001](EDGE_VECTORS.md#ev-scrolls_of_thoth_index-001)
+**A:** Opening parameter. The `+3 Notable` per scroll is a best guess (`15 scrolls × +3 = +45 Illumination toward Light`, 45% of the +100 max). Tuning happens via (1) simulation of full-quest playthroughs generating realistic Illumination distributions, and (2) player testing feedback once the game is functional. Likely tuning surfaces remain valid: stage-weighting (later scrolls deliver more), total Way-of-Thoth contribution cap, PICSSI-Spirituality multipliers. Tuning pass records results in a new §Tuning History section. `[high]`
 ↔ relates to: §Riddle-verification mechanism, KARMA_SYSTEM.md §2.10 Illumination, EV-karma_system-002 (parallel KARMA tuning EV)
 
 ---

@@ -5,7 +5,7 @@ role: reference-generated
 canonical_for: [topic-routing, qa-category-index]
 visibility: internal
 status: active
-last_updated: 2026-05-09
+last_updated: 2026-05-10
 cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, hydration.md]
 generated_by: scripts/build-topic-routes.ts
 npm_script: topic-routes:build
@@ -15,23 +15,23 @@ npm_script: topic-routes:build
 
 # Topic Routes — Q+A Category Manifest
 
-Generated 2026-05-09. **Use this when a task asks a domain question.** The category-to-doc index below tells you the 2–4 docs that answer any topic, ranked by question count. Load them in order; stop when answered.
+Generated 2026-05-10. **Use this when a task asks a domain question.** The category-to-doc index below tells you the 2–4 docs that answer any topic, ranked by question count. Load them in order; stop when answered.
 
-**Coverage:** 115 Q+A entries across 15 docs · 9 categories. Source: each doc's `## Questions answered by this document` block.
+**Coverage:** 109 Q+A entries across 14 docs · 9 categories. Source: each doc's `## Questions answered by this document` block.
 
 ## Index
 
 | Category | Total entries | Top doc | Anchor |
 |----------|---------------|---------|--------|
-| [`LORE`](#lore) | 10 | `adventure_modules_plan` (2) | [`LORE`](#lore) |
+| [`LORE`](#lore) | 10 | `adventure_modules_system` (2) | [`LORE`](#lore) |
 | [`ARCHITECTURE`](#architecture) | 13 | `karma_system` (2) | [`ARCHITECTURE`](#architecture) |
-| [`WIRING`](#wiring) | 25 | `karma_implementation_plan` (5) | [`WIRING`](#wiring) |
-| [`INK-AUTHORING`](#ink-authoring) | 26 | `hyborian_pd_module_plan` (6) | [`INK-AUTHORING`](#ink-authoring) |
+| [`WIRING`](#wiring) | 24 | `karma_implementation_plan` (5) | [`WIRING`](#wiring) |
+| [`INK-AUTHORING`](#ink-authoring) | 21 | `module_system` (4) | [`INK-AUTHORING`](#ink-authoring) |
 | [`PICSSI-BALANCE`](#picssi-balance) | 13 | `karma_system` (4) | [`PICSSI-BALANCE`](#picssi-balance) |
-| [`AFFECT-VECTOR`](#affect-vector) | 2 | `game_design` (1) | [`AFFECT-VECTOR`](#affect-vector) |
+| [`AFFECT-VECTOR`](#affect-vector) | 3 | `game_design` (2) | [`AFFECT-VECTOR`](#affect-vector) |
 | [`NAV-MAP`](#nav-map) | 7 | `world_locations` (4) | [`NAV-MAP`](#nav-map) |
 | [`PLAYER-SURFACE`](#player-surface) | 4 | `game_design` (1) | [`PLAYER-SURFACE`](#player-surface) |
-| [`PD-SAFETY`](#pd-safety) | 15 | `public_domain_rules` (8) | [`PD-SAFETY`](#pd-safety) |
+| [`PD-SAFETY`](#pd-safety) | 14 | `public_domain_rules` (8) | [`PD-SAFETY`](#pd-safety) |
 
 ## [LORE]
 
@@ -39,10 +39,10 @@ Generated 2026-05-09. **Use this when a task asks a domain question.** The categ
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
-| 1 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 2 | 0 | — |
-| 2 | [`sorcery`](../SORCERY.md) | 2 | 0 | — |
-| 3 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 2 | 0 | — |
-| 4 | [`adventure_modules_plan`](../ADVENTURE_MODULES_PLAN.md) | 1 | 1 | `EV-adventure_modules_plan-002` |
+| 1 | [`adventure_modules_system`](../ADVENTURE_MODULES_SYSTEM.md) | 2 | 0 | — |
+| 2 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 2 | 0 | — |
+| 3 | [`sorcery`](../SORCERY.md) | 2 | 0 | — |
+| 4 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 2 | 0 | — |
 | 5 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
 | 6 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 1 | 0 | — |
 
@@ -63,42 +63,40 @@ Generated 2026-05-09. **Use this when a task asks a domain question.** The categ
 
 ## [WIRING]
 
-25 entries across 13 doc(s).
+24 entries across 12 doc(s).
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
-| 1 | [`karma_implementation_plan`](../KARMA_IMPLEMENTATION_PLAN.md) | 3 | 2 | `EV-karma_implementation_plan-001`, `EV-karma_implementation_plan-002` |
-| 2 | [`travel_matrix`](../lore/thurian-cartography/TRAVEL_MATRIX.md) | 3 | 0 | — |
-| 3 | [`module_system`](../MODULE_SYSTEM.md) | 2 | 1 | `EV-module_system-001` |
-| 4 | [`sorcery`](../SORCERY.md) | 2 | 1 | `EV-sorcery-002` |
+| 1 | [`karma_implementation_plan`](../KARMA_IMPLEMENTATION_PLAN.md) | 4 | 1 | `EV-karma_implementation_plan-002` |
+| 2 | [`sorcery`](../SORCERY.md) | 3 | 0 | — |
+| 3 | [`travel_matrix`](../lore/thurian-cartography/TRAVEL_MATRIX.md) | 3 | 0 | — |
+| 4 | [`module_system`](../MODULE_SYSTEM.md) | 2 | 1 | `EV-module_system-001` |
 | 5 | [`karma_system`](../KARMA_SYSTEM.md) | 2 | 0 | — |
 | 6 | [`loot_tables`](../lore/thurian-cartography/LOOT_TABLES.md) | 2 | 0 | — |
-| 7 | [`adventure_modules_plan`](../ADVENTURE_MODULES_PLAN.md) | 1 | 0 | — |
+| 7 | [`adventure_modules_system`](../ADVENTURE_MODULES_SYSTEM.md) | 1 | 0 | — |
 | 8 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
-| 9 | [`hyborian_pd_module_plan`](../lore/hyborian-pd/MODULE_PLAN.md) | 1 | 0 | — |
-| 10 | [`launch_criteria`](../LAUNCH_CRITERIA.md) | 1 | 0 | — |
-| 11 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 1 | 0 | — |
-| 12 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 1 | 0 | `EV-karma_implementation_plan-002` |
-| 13 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 1 | 0 | `EV-stobaean_fragments_index-001` |
+| 9 | [`launch_criteria`](../LAUNCH_CRITERIA.md) | 1 | 0 | — |
+| 10 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 1 | 0 | — |
+| 11 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 1 | 0 | `EV-karma_implementation_plan-002` |
+| 12 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 1 | 0 | `EV-stobaean_fragments_index-001` |
 
 ## [INK-AUTHORING]
 
-26 entries across 12 doc(s).
+21 entries across 11 doc(s).
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
-| 1 | [`hyborian_pd_module_plan`](../lore/hyborian-pd/MODULE_PLAN.md) | 5 | 1 | `EV-hyborian_pd_module_plan-001`, `EV-hyborian_pd_module_plan-002` |
-| 2 | [`module_system`](../MODULE_SYSTEM.md) | 3 | 1 | `EV-module_system-002` |
-| 3 | [`adventure_modules_plan`](../ADVENTURE_MODULES_PLAN.md) | 3 | 0 | `EV-public_domain_rules-002` |
+| 1 | [`module_system`](../MODULE_SYSTEM.md) | 3 | 1 | `EV-module_system-002` |
+| 2 | [`adventure_modules_system`](../ADVENTURE_MODULES_SYSTEM.md) | 3 | 0 | `EV-public_domain_rules-002` |
+| 3 | [`game_design`](../GAME_DESIGN.md) | 3 | 0 | — |
 | 4 | [`loot_tables`](../lore/thurian-cartography/LOOT_TABLES.md) | 2 | 0 | — |
 | 5 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 2 | 0 | — |
-| 6 | [`game_design`](../GAME_DESIGN.md) | 1 | 1 | `EV-game_design-002` |
-| 7 | [`sorcery`](../SORCERY.md) | 1 | 1 | `EV-sorcery-001` |
-| 8 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 1 | 0 | — |
-| 9 | [`world_locations`](../lore/thurian-cartography/WORLD_LOCATIONS.md) | 1 | 0 | — |
-| 10 | [`karma_system`](../KARMA_SYSTEM.md) | 0 | 1 | `EV-karma_system-001` |
-| 11 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 0 | 1 | `EV-pantheon-001` |
-| 12 | [`public_domain_rules`](../Public_Domain_Rules.md) | 0 | 1 | `EV-public_domain_rules-001` |
+| 6 | [`sorcery`](../SORCERY.md) | 2 | 0 | — |
+| 7 | [`karma_system`](../KARMA_SYSTEM.md) | 1 | 0 | — |
+| 8 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 1 | 0 | — |
+| 9 | [`public_domain_rules`](../Public_Domain_Rules.md) | 1 | 0 | — |
+| 10 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 1 | 0 | — |
+| 11 | [`world_locations`](../lore/thurian-cartography/WORLD_LOCATIONS.md) | 1 | 0 | — |
 
 ## [PICSSI-BALANCE]
 
@@ -106,24 +104,24 @@ Generated 2026-05-09. **Use this when a task asks a domain question.** The categ
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
-| 1 | [`karma_system`](../KARMA_SYSTEM.md) | 3 | 1 | `EV-karma_system-002` |
-| 2 | [`loot_tables`](../lore/thurian-cartography/LOOT_TABLES.md) | 1 | 1 | `EV-loot_tables-001`, `EV-karma_system-002` |
-| 3 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
-| 4 | [`karma_implementation_plan`](../KARMA_IMPLEMENTATION_PLAN.md) | 1 | 0 | — |
-| 5 | [`module_system`](../MODULE_SYSTEM.md) | 1 | 0 | — |
-| 6 | [`sorcery`](../SORCERY.md) | 1 | 0 | `EV-karma_system-002` |
-| 7 | [`adventure_modules_plan`](../ADVENTURE_MODULES_PLAN.md) | 0 | 1 | `EV-adventure_modules_plan-001` |
-| 8 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 0 | 1 | `EV-scrolls_of_thoth_index-001`, `EV-karma_system-002` |
-| 9 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 0 | 1 | `EV-stobaean_fragments_index-001`, `EV-scrolls_of_thoth_index-001` |
+| 1 | [`karma_system`](../KARMA_SYSTEM.md) | 4 | 0 | — |
+| 2 | [`loot_tables`](../lore/thurian-cartography/LOOT_TABLES.md) | 2 | 0 | `EV-karma_system-002` |
+| 3 | [`adventure_modules_system`](../ADVENTURE_MODULES_SYSTEM.md) | 1 | 0 | — |
+| 4 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
+| 5 | [`karma_implementation_plan`](../KARMA_IMPLEMENTATION_PLAN.md) | 1 | 0 | — |
+| 6 | [`module_system`](../MODULE_SYSTEM.md) | 1 | 0 | — |
+| 7 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 1 | 0 | `EV-karma_system-002` |
+| 8 | [`sorcery`](../SORCERY.md) | 1 | 0 | `EV-karma_system-002` |
+| 9 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 1 | 0 | `EV-scrolls_of_thoth_index-001` |
 
 ## [AFFECT-VECTOR]
 
-2 entries across 2 doc(s).
+3 entries across 2 doc(s).
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
-| 1 | [`game_design`](../GAME_DESIGN.md) | 0 | 1 | `EV-game_design-001` |
-| 2 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 0 | 1 | `EV-pantheon-002` |
+| 1 | [`game_design`](../GAME_DESIGN.md) | 2 | 0 | — |
+| 2 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 1 | 0 | — |
 
 ## [NAV-MAP]
 
@@ -132,7 +130,7 @@ Generated 2026-05-09. **Use this when a task asks a domain question.** The categ
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
 | 1 | [`world_locations`](../lore/thurian-cartography/WORLD_LOCATIONS.md) | 3 | 1 | `EV-world_locations-001` |
-| 2 | [`travel_matrix`](../lore/thurian-cartography/TRAVEL_MATRIX.md) | 1 | 1 | `EV-travel_matrix-001` |
+| 2 | [`travel_matrix`](../lore/thurian-cartography/TRAVEL_MATRIX.md) | 2 | 0 | — |
 | 3 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
 
 ## [PLAYER-SURFACE]
@@ -148,18 +146,17 @@ Generated 2026-05-09. **Use this when a task asks a domain question.** The categ
 
 ## [PD-SAFETY]
 
-15 entries across 8 doc(s).
+14 entries across 7 doc(s).
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
 | 1 | [`public_domain_rules`](../Public_Domain_Rules.md) | 7 | 1 | `EV-module_system-002`, `EV-public_domain_rules-002` |
-| 2 | [`adventure_modules_plan`](../ADVENTURE_MODULES_PLAN.md) | 1 | 0 | — |
+| 2 | [`adventure_modules_system`](../ADVENTURE_MODULES_SYSTEM.md) | 1 | 0 | — |
 | 3 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
 | 4 | [`pantheon`](../lore/pantheon/PANTHEON.md) | 1 | 0 | — |
 | 5 | [`scrolls_of_thoth_index`](../lore/scrolls-of-thoth/INDEX.md) | 1 | 0 | — |
 | 6 | [`stobaean_fragments_index`](../lore/stobaean-fragments/INDEX.md) | 1 | 0 | — |
 | 7 | [`world_locations`](../lore/thurian-cartography/WORLD_LOCATIONS.md) | 1 | 0 | — |
-| 8 | [`hyborian_pd_module_plan`](../lore/hyborian-pd/MODULE_PLAN.md) | 0 | 1 | `EV-hyborian_pd_module_plan-001` |
 
 ## Per-doc category footprint
 
@@ -167,9 +164,8 @@ Reverse index: each doc's contribution across categories. Useful when triaging w
 
 | Doc | Total | Categories |
 |-----|-------|------------|
-| `adventure_modules_plan` | 8 | `[INK-AUTHORING]` 3, `[LORE]` 2, `[PD-SAFETY]` 1, `[PICSSI-BALANCE]` 1, `[WIRING]` 1 |
-| `game_design` | 10 | `[AFFECT-VECTOR]` 1, `[ARCHITECTURE]` 1, `[INK-AUTHORING]` 2, `[LORE]` 1, `[NAV-MAP]` 1, `[PD-SAFETY]` 1, `[PICSSI-BALANCE]` 1, `[PLAYER-SURFACE]` 1, `[WIRING]` 1 |
-| `hyborian_pd_module_plan` | 8 | `[INK-AUTHORING]` 6, `[PD-SAFETY]` 1, `[WIRING]` 1 |
+| `adventure_modules_system` | 8 | `[INK-AUTHORING]` 3, `[LORE]` 2, `[PD-SAFETY]` 1, `[PICSSI-BALANCE]` 1, `[WIRING]` 1 |
+| `game_design` | 12 | `[AFFECT-VECTOR]` 2, `[ARCHITECTURE]` 1, `[INK-AUTHORING]` 3, `[LORE]` 1, `[NAV-MAP]` 1, `[PD-SAFETY]` 1, `[PICSSI-BALANCE]` 1, `[PLAYER-SURFACE]` 1, `[WIRING]` 1 |
 | `karma_implementation_plan` | 8 | `[ARCHITECTURE]` 2, `[PICSSI-BALANCE]` 1, `[WIRING]` 5 |
 | `karma_system` | 10 | `[ARCHITECTURE]` 2, `[INK-AUTHORING]` 1, `[PICSSI-BALANCE]` 4, `[PLAYER-SURFACE]` 1, `[WIRING]` 2 |
 | `launch_criteria` | 3 | `[ARCHITECTURE]` 2, `[WIRING]` 1 |

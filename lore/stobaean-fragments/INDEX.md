@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-04-30
 cross_refs: [docs/quest-registry.md, lore/scrolls-of-thoth/INDEX.md, EDGE_VECTORS.md]
 questions_total: 6
-questions_answered: 5
-questions_open: 1
-edge_vector_ids: [EV-stobaean_fragments_index-001]
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -51,7 +51,7 @@ edge_vector_ids: [EV-stobaean_fragments_index-001]
 ### [PICSSI-BALANCE]
 
 **Q:** Is the default `illuminationDelta: 1` calibrated across the 14-fragment corpus, or is it an opening parameter?
-**A:** Open. Each fragment's frontmatter shows `illuminationDelta: 1` as the default — Trivial-tier per delivery, totaling `+14 Illumination toward Light` across the full corpus. Best-guess context: the 15 Scrolls deliver `+3` each (proposed) for `+45 total`, so SH fragments add `+14` for a combined Way-of-Thoth Light-path total of **+59 of the +100 max**. That ratio (Scrolls 76% / Fragments 24%) feels right for the design intent (Scrolls are the canonical content; Fragments are supplementary teachings) but isn't tuning-validated. Likely tuning levers: (a) **stage-weighted deltas** — Stage 1 fragments deliver `+1` (Trivial), Stage 2 deliver `+2` (between Trivial and Notable), Stage 3 deliver `+3` (Notable) for a `4·1 + 4·2 + 6·3 = 30` total that matches the Scrolls' +45 in narrative significance; (b) **theme-weighted deltas** — fragments touching cosmological reveals (Word, What Waits Beneath, Calling-Home) deliver larger deltas than virtue-coaching fragments; (c) keep flat at `+1` and treat Fragments purely as flavor. Decision deferred until Sprint 4 ships and the full quest line is playtested. `[open]` → see [EV-stobaean_fragments_index-001](EDGE_VECTORS.md#ev-stobaean_fragments_index-001)
+**A:** Opening parameter. Keep flat at `+1 Trivial` per fragment (`14 × +1 = +14 Illumination`). Combined with Scrolls' proposed `+45`, the Way-of-Thoth Light-path totals `+59 of the +100 max` (Scrolls 76% / Fragments 24% split). Tuning happens in parallel with Scrolls tuning via (1) simulation of full-quest playthroughs, (2) player testing feedback. Likely tuning lever: **stage-weighted deltas** — if early/late quests show imbalance in Illumination pacing, adjust Fragments to deliver `+1 / +2 / +3` across the three stages (total `+30`) to mirror Scrolls' significance distribution. Document tuning decisions in a new §Tuning History section. `[high]`
 ↔ relates to: §Frontmatter schema (illuminationDelta field), KARMA_SYSTEM.md §2.10 Illumination, EV-scrolls_of_thoth_index-001 (parallel scroll-tuning EV)
 
 ---

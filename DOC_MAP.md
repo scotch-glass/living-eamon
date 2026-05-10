@@ -93,15 +93,15 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   last_updated: 2026-04-30
   cross_refs: [KARMA_SYSTEM.md, GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md]
 
-- id: adventure_modules_plan
-  path: ADVENTURE_MODULES_PLAN.md
-  title: Adventure Modules Plan
+- id: adventure_modules_system
+  path: ADVENTURE_MODULES_SYSTEM.md
+  title: Adventure Modules System
   role: sprint-plan
   canonical_for: [eighteen-module-roadmap, scroll-fragment-seeding]
   visibility: creator
   status: active
-  last_updated: 2026-04-30
-  cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/hyborian-pd/MODULE_PLAN.md]
+  last_updated: 2026-05-10
+  cross_refs: [Public_Domain_Rules.md, GAME_DESIGN.md, KARMA_SYSTEM.md, lore/thurian-pd/MODULE_PLAN.md]
 
 - id: sorcery
   path: SORCERY.md
@@ -360,6 +360,20 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   status: active
   last_updated: 2026-04-29
   cross_refs: [GAME_DESIGN.md, KARMA_SYSTEM.md]
+```
+
+## Mechanics guides
+
+```yaml
+- id: stamina_recovery
+  path: docs/stamina-recovery.md
+  title: Stamina & Fatigue Recovery — Out-of-Combat Pacing
+  role: design-canon
+  canonical_for: [stamina-mechanics, fatiguepool-recovery, hwrr-inspiration]
+  visibility: internal
+  status: active
+  last_updated: 2026-05-10
+  cross_refs: [KARMA_SYSTEM.md]
 ```
 
 ## Generated registries

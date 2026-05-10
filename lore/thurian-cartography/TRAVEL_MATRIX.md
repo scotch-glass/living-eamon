@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-05-03
 cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md, EDGE_VECTORS.md]
 questions_total: 6
-questions_answered: 5
-questions_open: 1
-edge_vector_ids: [EV-travel_matrix-001]
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -51,7 +51,7 @@ edge_vector_ids: [EV-travel_matrix-001]
 ### [NAV-MAP]
 
 **Q:** Are the matrix's per-route day-counts and danger ratings empirically tuned, or are they opening parameters?
-**A:** Open. The doc declares each route's `Days (foot)`, `Days (horse = ÷2 rounded up)`, zones crossed, and danger rating as a single matrix row, but no tuning record exists — these are first-guess values based on rough pixel distance between map coordinates. Likely tuning surface: (a) day-count per leg (is `valus → city_stagus` really 11 days on foot? compare to historical pre-modern travel rates ~20 miles/day), (b) zone-mix consistency (the Talunia route says "Camoonia Desert (3d) → Zarfhaana valleys (2d)" but the desert sub-leg's encounter rolls all key off the worst zone), (c) horse divisor of 2 rounded up (real-world horse advantage was closer to 3× over short distances and 1.5× sustained), (d) sea crossings have no horse-equivalent so the matrix shows `—` — needs explicit ship-only-vs-walk-also separation. Tuning happens once the S4 sprint ships and 5+ playtest routes produce a realistic base. `[open]` → see [EV-travel_matrix-001](EDGE_VECTORS.md#ev-travel_matrix-001)
+**A:** Opening parameters. Current day-counts are first-guess values based on rough pixel distance and are **likely too short** — should be recalibrated upward based on historical pre-modern travel rates (~20 miles/day on foot). Horse divisor of 2 should be replaced with more realistic 3× advantage on short distances and 1.5× on sustained legs. Sea crossings need explicit `seaOnly: boolean` flag to distinguish from walk-equivalent routes. Danger ratings based on zone-mix are baseline-sound; tuning focuses on day-count recalibration via (1) exact map-pixel-to-mileage conversion, (2) zone-type speed modifiers (desert/mountain slower than plains), (3) comparison against historical rates. Tuning pass happens during S4 playtest routes and produces updated matrix with a §Tuning History section. `[high]`
 ↔ relates to: §Travel Matrix (Routes from Valus + intermediate legs), §Implementation Notes, ~/.claude/plans/i-accidentally-submitted-the-misty-map.md (S4 plan)
 
 ---

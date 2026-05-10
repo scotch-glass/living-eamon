@@ -55,31 +55,7 @@ Every entry conforms to:
 
 ### [lore/pantheon/PANTHEON.md](/library/pantheon)
 
-#### EV-pantheon-001  `[INK-AUTHORING]`
-- **Source:** [lore/pantheon/PANTHEON.md](/library/pantheon)
-- **Question:** How will Ink module authors reference deities when writing modules?
-- **Best guess:** An EXTERNAL function `pray_to(deity_id)` mutating `divineFavor` + maybe `picssi_spirituality` per the deity's `acceptsActs` / `rejectsActs` table (defined in the future god registry). Module authors would also use deity-keyed flags in atom choices (e.g., `flag_set("witnessed_anubis_rite")`).
-- **Confidence:** open
-- **Affects:** [MODULE_SYSTEM.md §3 (Ink EXTERNAL contract)](/library/module_system), `lib/gods/registry.ts` (planned)
-- **Resolution path:** unblock when (a) `MODULE_SYSTEM.md` Stage I approval lands and (b) `lib/gods/` ships in the PRAY+Divinity v1 sprint (`~/.claude/plans/the-skull-and-pack-luminous-muffin.md`). Then formalize the deity-touching EXTERNAL functions in MODULE_SYSTEM.md §3 with examples; promote this to `[high]` once a creator-authored test module exercises them end-to-end.
-
-#### EV-pantheon-002  `[AFFECT-VECTOR]`
-- **Source:** [lore/pantheon/PANTHEON.md](/library/pantheon)
-- **Question:** What neuro-emotional axes does invoking each deity surface?
-- **Best guess:** awe (high-tier ritual, Solar Barque ascension); dread (Set, Sekhmet's Helfara face, Outer Dark proximity); wonder (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form); melancholy (Crom-the-silent, Honen-after-the-Cataclysm); reverence (Ma'at's feather-weighing, Anubis's threshold rites). Not validated against the atom corpus.
-- **Confidence:** open
-- **Affects:** [docs/affect-axes.md](/library/affect_axes), [KARMA_SYSTEM.md](/library/karma_system)
-- **Resolution path:** map each deity to a primary + secondary axis from the seven canonical (fear / excitement / eros / dread / awe / wonder / melancholy). Author the table in PANTHEON.md or as a new section in `docs/affect-axes.md`. Validate by sampling 20+ atoms tagged for divine encounters and comparing their AffectVector deltas to the proposed map.
-
 ### [KARMA_SYSTEM.md](/library/karma_system)
-
-#### EV-karma_system-001  `[INK-AUTHORING]`
-- **Source:** [KARMA_SYSTEM.md](/library/karma_system)
-- **Question:** How will Ink module authors apply PICSSI deltas inside an .ink file?
-- **Best guess:** An EXTERNAL function `apply_karma(virtue_id, magnitude_band)` taking the canonical band names (`trivial` / `notable` / `major` / `defining`) rather than raw integers — runtime owns the numbers so balance changes don't require module rewrites. Sign convention TBD: either a separate `apply_karma_loss` EXTERNAL or a signed band token like `notable_loss`.
-- **Confidence:** open
-- **Affects:** [MODULE_SYSTEM.md §3 (Ink EXTERNAL contract)](/library/module_system), `KARMA_IMPLEMENTATION_PLAN.md` Sprint 4 (atom-trigger hooks)
-- **Resolution path:** unblock when `MODULE_SYSTEM.md` Stage I approval lands; formalize the apply_karma signature in MODULE_SYSTEM.md §3 with example .ink usage; promote to `[high]` once the first creator-authored module exercises both gain and loss paths end-to-end through GPE balance scoring.
 
 #### EV-karma_system-002  `[PICSSI-BALANCE]`
 - **Source:** [KARMA_SYSTEM.md](/library/karma_system)
@@ -109,31 +85,7 @@ Every entry conforms to:
 
 ### [SORCERY.md](/library/sorcery)
 
-#### EV-sorcery-001  `[INK-AUTHORING]`
-- **Source:** [SORCERY.md](/library/sorcery)
-- **Question:** How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom, or an atom granting a custom invocation rune?
-- **Best guess:** Either (a) two new EXTERNALs — `npc_invoke(npc_id, spell_id, target_id)` routing through the existing Force-0 combat-engine path, plus `add_invocation(spell_id)` for the known-Words registry on PlayerState — or (b) keep NPC sorcery scripted in `lib/encounters/<id>.ts` and only expose `add_invocation` to Ink. Decision deferred until the first module needs an enemy sorcerer beat.
-- **Confidence:** open
-- **Affects:** [MODULE_SYSTEM.md §4.2](/library/module_system) (EXTERNAL contract), `lib/encounters/<id>.ts` (planned NPC sorcery records), [KARMA_SYSTEM.md §2.10](/library/karma_system) (Illumination on player-caused vs NPC-caused sorcery)
-- **Resolution path:** when the first PD module with a named sorcerer antagonist enters scoping, design the minimal EXTERNAL surface (probably `add_invocation` first, `npc_invoke` only if scripted encounters prove insufficient). Document the chosen contract in MODULE_SYSTEM.md §4.2 with worked examples. Promote to `[high]` once a module exercises both paths through a real Ink-driven encounter.
-
-#### EV-sorcery-002  `[WIRING]`
-- **Source:** [SORCERY.md](/library/sorcery)
-- **Question:** Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse model still need?
-- **Best guess:** Production today: Guild CAST Circles 1+2 (13 real spells, Sprint C6.1); INVOKE pipeline not wired to combat; Circles 4–8 deferred. Resurrection corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification, hero-death short-circuit, undead-likelihood roll, necromancy variant — is design-only. The mortal/immortal NPC tag is a no-cost addition that should land **before** any Resurrection wiring sprint to avoid retro-tagging every NPC kind.
-- **Confidence:** medium
-- **Affects:** [SORCERY.md §9.3](/library/sorcery) (Resurrection implementation entailments), `project_corpse_loot_burial_deferred.md`, `project_occult_sorcery_deferred.md`, [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan) Sprint 7 (deferred Sorcery sprint)
-- **Resolution path:** add `mortalOrImmortal: 'mortal' | 'immortal'` to every NPC kind during the next NPC-data sweep (cheap, no-state). When the corpse-loot/burial sprint lands per `project_corpse_loot_burial_deferred.md`, extend the corpse model with `sunExposed` + `moonExposed` flags + a `locationContext: 'surface' | 'buried' | 'underground'` enum, and tick the celestial flags in `tickWorldState`. Promote to `[high]` once a Resurrection cast in test exercises a buried corpse vs a sun-and-moon-exposed corpse and produces the documented outcomes.
-
 ### [Public_Domain_Rules.md](/library/public_domain_rules)
-
-#### EV-public_domain_rules-001  `[INK-AUTHORING]`
-- **Source:** [Public_Domain_Rules.md](/library/public_domain_rules)
-- **Question:** Is there an automated check that flags PD-violation candidates in module prose before commit?
-- **Best guess:** A `tools/pd-lint/` script that walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup. Runs in `prebuild` alongside `validate-modules` and `gpe:all --strict`. Ambiguity: Aquilonia is allowed in narrative but forbidden in marketing — the linter needs conservative defaults plus per-rule allowlist + per-string surface-context tags from authors.
-- **Confidence:** open
-- **Affects:** [MODULE_SYSTEM.md §3](/library/module_system) (prebuild hooks), `tools/pd-lint/` (planned), `GAME_DESIGN.md` top-of-file Safe Harbor / Radioactive tables (lookup data source)
-- **Resolution path:** unblock when (a) `MODULE_SYSTEM.md` Stage I lands and (b) the first community-authored module attempts a commit. Author the linter with the §2.1 trademark list as a hard-fail rule, the Bucket B character list as a warning-with-justification rule, and a per-string surface-context tag (`# context: marketing` vs `# context: prose`) so the GAME_DESIGN.md "Aquilonia OK in prose, forbidden in marketing" rule can resolve. Promote to `[high]` once the linter ships and at least one PR has surfaced a real catch.
 
 #### EV-public_domain_rules-002  `[PD-SAFETY]`
 - **Source:** [Public_Domain_Rules.md](/library/public_domain_rules)
@@ -145,31 +97,7 @@ Every entry conforms to:
 
 ### [ADVENTURE_MODULES_PLAN.md](/library/adventure_modules_plan)
 
-#### EV-adventure_modules_plan-001  `[PICSSI-BALANCE]`
-- **Source:** [ADVENTURE_MODULES_PLAN.md](/library/adventure_modules_plan)
-- **Question:** What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modules?
-- **Best guess:** Capstone modules (M-10, M-12, M-13) target balanced (≥80) on the four engaged virtues with explicit `intentionallySkewed` covering the unengaged two. Novice/moderate modules (M-1, M-9, M-15) accept tilted (50–79). Atlantean wonder-tech showcases (M-18, M-13) accept skewed (20–49) when focus is genre-tonal. Per-module declaration locks during authoring; calibrate from real GPE data on the first module.
-- **Confidence:** open
-- **Affects:** [MODULE_SYSTEM.md §7.4 Verdict tiers + §4.5 module.json](/library/module_system), [KARMA_SYSTEM.md §2.5–§2.10](/library/karma_system) PICSSI magnitudes, all 18 modules in §3 roster
-- **Resolution path:** unblock when (a) GPE ships per MODULE_SYSTEM Stage I and (b) M-1 Mirror Tower is GPE-scored. Backfill an `intentionallySkewed` + `targetVerdict` field on every roster entry in §3. Promote to `[high]` once 3+ modules have shipped and their GPE scores have been compared against authored intent.
-
-#### EV-adventure_modules_plan-002  `[LORE]`
-- **Source:** [ADVENTURE_MODULES_PLAN.md](/library/adventure_modules_plan)
-- **Question:** Tier 2 modules (M-14 through M-18) are framed as either "Atlantean wonder-age past" or "cross-genre present-day excursion" — when does each option apply, and does the player notice the framing change?
-- **Best guess:** A per-module decision recorded at authoring time as `framing: "deep-time-ruin" | "cross-genre-present"` on `module.json`. Player notices tonal shift but not jarring genre rupture — Eamon's "anything goes" precedent applies but Howard's voice register is the consistent envelope. M-18 is explicitly deep-time-ruin (Atlantean reactor); M-14 leans cross-genre-present (steam-and-occult Valus); M-15/M-16/M-17 reuse the Salt-Marsh region and read as cross-genre.
-- **Confidence:** medium
-- **Affects:** [ADVENTURE_MODULES_PLAN.md §3 Tier 2 introduction + entries M-14..M-18](/library/adventure_modules_plan), [MODULE_SYSTEM.md §4.5 module.json](/library/module_system) (planned framing field), feedback_no_hyborian_in_marketing.md
-- **Resolution path:** when the first Tier 2 module enters scoping, decide its `framing` value and lock the convention. Document the per-module choice in §3 Tier 2 entries. Promote to `[high]` once 2+ Tier 2 modules ship and player tonal-feedback is collected.
-
 ### [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan)
-
-#### EV-karma_implementation_plan-001  `[WIRING]`
-- **Source:** [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan)
-- **Question:** When multiple atoms match the same trigger event, what's the priority resolution rule?
-- **Best guess:** Add a `priority: number` field to `Atom` (default 0) and sort matches by priority desc before picking; tied priorities fall back to load order. Resolves the "Vivian-specific atom should outrank generic tavern atom" case once the corpus grows past ~30 atoms.
-- **Confidence:** open
-- **Affects:** [KARMA_IMPLEMENTATION_PLAN.md §Risks Q2 + §Sprint 4 triggers.ts](/library/karma_implementation_plan), [scripts/balance/simulator.ts](/) (atom-collision flood-fire test surface), [KARMA_SYSTEM.md](/library/karma_system) (atom corpus design)
-- **Resolution path:** unblock during Sprint 4 authoring or when the first balance-simulation surfaces an atom-collision bug. Add the `priority` field, document the tie-break rule, and exercise it through the simulator. Promote to `[high]` once 50+ atoms ship and a curated atom orders-of-precedence pass demonstrates the rule works.
 
 #### EV-karma_implementation_plan-002  `[WIRING]`
 - **Source:** [KARMA_IMPLEMENTATION_PLAN.md](/library/karma_implementation_plan)
@@ -180,22 +108,6 @@ Every entry conforms to:
 - **Resolution path:** ship Sprint 3 with the chat-stream token; gather playtest feedback on attempt-budget desire and reveal-after-N-failures threshold; design the S6 modal with those defaults baked in. Promote to `[high]` once the modal ships and the chat-stream fallback is validated as a headless-test path.
 
 ### [lore/hyborian-pd/MODULE_PLAN.md](/library/hyborian_pd_module_plan)
-
-#### EV-hyborian_pd_module_plan-001  `[PD-SAFETY]`
-- **Source:** [lore/hyborian-pd/MODULE_PLAN.md](/library/hyborian_pd_module_plan)
-- **Question:** Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to Bucket A?
-- **Best guess:** Partially stale. §9 still lists *Queen of the Black Coast* (May 1934), *Jewels of Gwahlur* (March 1935), *Beyond the Black River* (May–June 1935), and *Hour of the Dragon* (1935–1936) as 2030/2031 unlocks. All four are now Bucket A per Public_Domain_Rules.md §1.2. Recommended fix: rewrite §9 to reflect the post-audit Bucket A and point to ADVENTURE_MODULES_PLAN.md §3 as the authoritative roster.
-- **Confidence:** medium
-- **Affects:** [lore/hyborian-pd/MODULE_PLAN.md §9](/library/hyborian_pd_module_plan), [Public_Domain_Rules.md §8](/library/public_domain_rules) (current PD calendar), [ADVENTURE_MODULES_PLAN.md §3](/library/adventure_modules_plan) (post-audit roster)
-- **Resolution path:** rewrite §9 in a single PR — keep the 2028 + 2029 entries (still Bucket B until either the planned 2027 audit confirms non-renewal or the 95-year clock unlocks them); replace the 2030 + 2031 entries with a "These are now Bucket A — see ADVENTURE_MODULES_PLAN.md §3 (M-4 through M-13)" pointer; update last_updated. Promote to `[high]` once §9 is rewritten and a roundtrip Q+A regen confirms no other doc references the stale calendar.
-
-#### EV-hyborian_pd_module_plan-002  `[INK-AUTHORING]`
-- **Source:** [lore/hyborian-pd/MODULE_PLAN.md](/library/hyborian_pd_module_plan)
-- **Question:** What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/M-2/M-3?
-- **Best guess:** This doc owns the methodology (PD-First Design Rule, one-short-story-one-module, module template structure, source-to-module conversion stays/mutates/invents/forbids, integration checklist, profile-driven branching, cold open + scene image prompt template, the first-three modules' detailed pitches). ADVENTURE_MODULES_PLAN.md owns the 18-module roster + scroll/SH-fragment seeding map + cross-roster build order. Overlap on M-1/M-2/M-3 is acceptable because this doc carries authoring-detail and the roster doc carries customization-angle (Atlantean wonder-tech accents) + scroll seeding (Scroll II in M-1, etc.).
-- **Confidence:** open
-- **Affects:** [lore/hyborian-pd/MODULE_PLAN.md §8](/library/hyborian_pd_module_plan), [ADVENTURE_MODULES_PLAN.md §3 Tier 0](/library/adventure_modules_plan), [DOC_MAP.md](/library/doc_map) (canonical_for declarations should reflect the split)
-- **Resolution path:** add a back-link from MODULE_PLAN.md §8 introduction to ADVENTURE_MODULES_PLAN.md (today only the forward direction exists). Update both docs' `canonical_for` arrays in DOC_MAP.md to make the split explicit (this doc: pd-module-methodology + first-three-detail; the plan: eighteen-module-roadmap + scroll-fragment-seeding). Promote to `[high]` once both back-links exist and the canonical-for arrays match the actual split.
 
 ### [lore/thurian-cartography/WORLD_LOCATIONS.md](/library/world_locations)
 
@@ -209,61 +121,13 @@ Every entry conforms to:
 
 ### [lore/thurian-cartography/TRAVEL_MATRIX.md](/library/travel_matrix)
 
-#### EV-travel_matrix-001  `[NAV-MAP]`
-- **Source:** [TRAVEL_MATRIX.md](/library/travel_matrix)
-- **Question:** Are the per-route day-counts and danger ratings in the Travel Matrix empirically tuned, or are they opening parameters?
-- **Best guess:** Opening parameters. First-guess values based on rough pixel distance between map coordinates. Likely tuning surface: per-leg day-count vs historical pre-modern travel rates (~20 miles/day on foot), zone-mix consistency, horse divisor (real-world horse advantage closer to 3× short / 1.5× sustained), sea-only vs walk-also separation in the matrix.
-- **Confidence:** open
-- **Affects:** [TRAVEL_MATRIX.md §Travel Matrix](/library/travel_matrix), [TRAVEL_MATRIX.md §Zone Types & Danger Ratings](/library/travel_matrix), `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` (S4 plan), [WORLD_LOCATIONS.md §Adjacency / Route Notes](/library/world_locations)
-- **Resolution path:** ship S4 Graphical Travel System; run 5+ playtest routes; record actual hour-counts vs documented day-counts; calibrate the matrix from that data. Add an explicit `seaOnly: boolean` flag to legs that have no walk-equivalent. Promote to `[high]` once the matrix has been tuning-passed and a §Tuning History section records the calibration.
-
 ### [lore/thurian-cartography/LOOT_TABLES.md](/library/loot_tables)
-
-#### EV-loot_tables-001  `[PICSSI-BALANCE]`
-- **Source:** [LOOT_TABLES.md](/library/loot_tables)
-- **Question:** Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, or are they opening parameters?
-- **Best guess:** Opening parameters authored 2026-05-03. Likely tuning surface: Common-tier dominance (45% may feel underwhelming after 20+ hours), Pre-Thurian vault +40 modifier (excessive once vaults become common), rune-blade +10 Illumination cap × 6 blades = +60 lifetime (Defining-tier permanent shift), asymmetric caravan-action PICSSI deltas (`−8/−5/+2` for raiding vs `+4/+3` for helping).
-- **Confidence:** open
-- **Affects:** [LOOT_TABLES.md §Loot tiers + §Loot tier modifiers + §PICSSI Effects on Loot Actions](/library/loot_tables), [TRAVEL_MATRIX.md universal encounter rows 23–25](/library/travel_matrix), [EV-karma_system-002](#ev-karma_system-002) (parallel KARMA tuning EV)
-- **Resolution path:** ship Sprint 4 atom dispatcher; run 30+ play-loops generating realistic loot distributions; calibrate the tier ratios + enemy modifiers + PICSSI deltas from observed data; record in a new §Tuning History section. Promote to `[high]` once tuning lands and 100+ simulated loot rolls confirm the curve feels rewarding.
 
 ### [lore/scrolls-of-thoth/INDEX.md](/library/scrolls_of_thoth_index)
 
-#### EV-scrolls_of_thoth_index-001  `[PICSSI-BALANCE]`
-- **Source:** [scrolls-of-thoth/INDEX.md](/library/scrolls_of_thoth_index)
-- **Question:** Is the proposed `+3 Notable` Illumination delta per scroll calibrated for the 15-scroll corpus, or is it an opening parameter?
-- **Best guess:** `15 × +3 = +45 Illumination toward Light`, 45% of the +100 max. Feels right if Way of Thoth is the canonical Light-arc spine; large if other Light-paths also contribute meaningfully. Tuning levers: stage-weighted deltas (XV = +20 Defining capstone), total Way-of-Thoth cap at +50, or PICSSI-Spirituality-multiplied per-scroll deltas.
-- **Confidence:** open
-- **Affects:** [scrolls-of-thoth/INDEX.md §Frontmatter schema + §Riddle list](/library/scrolls_of_thoth_index), [KARMA_SYSTEM.md §2.10 Illumination](/library/karma_system), [EV-karma_system-002](#ev-karma_system-002), [EV-stobaean_fragments_index-001](#ev-stobaean_fragments_index-001)
-- **Resolution path:** ship Sprint 3 scroll-loader + riddle gate; ship Sprint 4 atom dispatcher; observe Light-path Illumination accumulation across simulated full quest-line playthroughs. Decide whether to keep flat `+3`, switch to a stage-weighted curve, or cap total Way-of-Thoth contribution. Promote to `[high]` once the chosen rule produces stable Illumination distributions across 50+ playthroughs.
-
 ### [lore/stobaean-fragments/INDEX.md](/library/stobaean_fragments_index)
 
-#### EV-stobaean_fragments_index-001  `[PICSSI-BALANCE]`
-- **Source:** [stobaean-fragments/INDEX.md](/library/stobaean_fragments_index)
-- **Question:** Is the default `illuminationDelta: 1` per fragment calibrated across the 14-fragment corpus, or is it an opening parameter?
-- **Best guess:** `14 × +1 = +14 Illumination`, totaling `+59` combined with the Scrolls' +45 (76% Scrolls / 24% Fragments split). Likely tuning levers: stage-weighted (Stage 1 = +1 Trivial, Stage 2 = +2, Stage 3 = +3 Notable for a `4·1 + 4·2 + 6·3 = 30` total), theme-weighted (cosmological-reveal fragments deliver more), or keep flat `+1`.
-- **Confidence:** open
-- **Affects:** [stobaean-fragments/INDEX.md §Frontmatter schema + §Pacing](/library/stobaean_fragments_index), [KARMA_SYSTEM.md §2.10 Illumination](/library/karma_system), [EV-scrolls_of_thoth_index-001](#ev-scrolls_of_thoth_index-001) (parallel scroll-tuning EV)
-- **Resolution path:** decide alongside scroll-tuning so Scrolls + Fragments share the same calibration philosophy. Tuning happens after Sprint 4 atom dispatcher + first full-quest playthrough. Promote to `[high]` once the chosen per-fragment delta rule yields stable Illumination across 50+ playthroughs.
-
 ### [GAME_DESIGN.md](/library/game_design)
-
-#### EV-game_design-001  `[AFFECT-VECTOR]`
-- **Source:** [GAME_DESIGN.md](/library/game_design)
-- **Question:** How do PICSSI virtues correlate with the seven AffectVector axes?
-- **Best guess:** Likely correlated but unformalized. Examples: Passion ↔ eros + excitement; Courage ↔ fear (overcome) + dread (faced); Spirituality ↔ awe + wonder; Standing ↔ excitement + maybe dread (humiliation as anti-Standing). Not specified anywhere.
-- **Confidence:** open
-- **Affects:** [docs/affect-axes.md](/library/affect_axes), [KARMA_SYSTEM.md](/library/karma_system), [MODULE_SYSTEM.md §7 (GPE)](/library/module_system)
-- **Resolution path:** author a virtue↔axis matrix as a new section in `docs/affect-axes.md` (or as §11.X of GAME_DESIGN.md). Cross-validate against the atom registry — do high-eros atoms typically have +Passion deltas? Once the matrix is locked, GPE can use it to score AffectVector balance per module alongside PICSSI balance.
-
-#### EV-game_design-002  `[INK-AUTHORING]`
-- **Source:** [GAME_DESIGN.md](/library/game_design)
-- **Question:** Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing-pure")?
-- **Best guess:** Probably yes for most archetype themes, but the constraint matrix isn't proven. A Standing-pure module would tend toward visible victory, conspicuous wealth, donations-for-show; that doesn't conflict with PD rules (Howard fiction is full of this) and is internally PICSSI-balanced if the spec says "intentionally archetype-focused modules can be unbalanced" (per KARMA_SYSTEM 2026-05-06 update). But edge cases: e.g., a Spirituality-pure module might struggle to ship a Courage "great odds" encounter without breaking archetype.
-- **Confidence:** medium
-- **Affects:** [MODULE_SYSTEM.md §2 (GPE)](/library/module_system), [MODULE_SYSTEM.md §7](/library/module_system), [KARMA_SYSTEM.md](/library/karma_system) (Courage robust paths rule)
-- **Resolution path:** when the first creator authors a real "archetype-pure" module, run GPE on it and check whether the PICSSI-balance + PD-safety + archetype-purity all hold simultaneously. Document the resolution as either a "yes, all three are compatible" or as a list of incompatible archetype + balance combinations.
 
 ---
 

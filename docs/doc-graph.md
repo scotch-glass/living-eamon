@@ -2,25 +2,25 @@
 
 # Doc Graph
 
-Generated 2026-05-09.
+Generated 2026-05-10.
 
 Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and the relationships between them. **This file is loaded into Claude hydration as item 0.5 of the rehydration stack** so future sessions get the topology in one read instead of grep-and-load 5–30K tokens per cross-doc question.
 
 ## Stats
 
-- 37 docs · 23 open Edge Vectors · 182 edges
+- 37 docs · 6 open Edge Vectors · 130 edges
 - 26 creator-visible · 11 internal
 
 ## Most-connected nodes (by in-degree)
 
-- **karma_system** (26 incoming) — Karma System
-- **module_system** (17 incoming) — Module System (Ink + GPE)
-- **game_design** (15 incoming) — Game Design Document
-- **public_domain_rules** (14 incoming) — Public Domain Rules
-- **adventure_modules_plan** (11 incoming) — Adventure Modules Plan
-- **doc_map** (10 incoming) — Documentation Index (this file)
-- **karma_implementation_plan** (8 incoming) — Karma Implementation Plan
-- **sorcery** (7 incoming) — Sorcery (Guild CAST + Occult INVOKE)
+- **karma_system** (17 incoming) — Karma System
+- **game_design** (16 incoming) — Game Design Document
+- **public_domain_rules** (12 incoming) — Public Domain Rules
+- **module_system** (9 incoming) — Module System (Ink + GPE)
+- **doc_map** (8 incoming) — Documentation Index (this file)
+- **karma_implementation_plan** (7 incoming) — Karma Implementation Plan
+- **sorcery** (6 incoming) — Sorcery (Guild CAST + Occult INVOKE)
+- **pantheon** (5 incoming) — Pantheon — Living Eamon canonical deities
 
 ## Adjacency
 
@@ -28,44 +28,37 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 - **edge_vectors** [rolling] — Edge Vectors — Open Questions Across the Canon
   - **cross_ref** → doc_map
-- **game_design** Q:10(open=2) [approved] — Game Design Document
-  - **cross_ref** → adventure_modules_plan, karma_system, module_system, public_domain_rules, sorcery
-  - **has_open_question** → EV-game_design-001, EV-game_design-002
-  - **relates_to** → adventure_modules_plan, affect_axes_dump, karma_implementation_plan, karma_system, module_system, pantheon, public_domain_rules, sorcery, world_locations
-- **karma_system** Q:10(open=2) [draft] — Karma System
+- **game_design** Q:11(open=1) [approved] — Game Design Document
+  - **cross_ref** → karma_system, module_system, public_domain_rules, sorcery
+  - **relates_to** → affect_axes_dump, karma_implementation_plan, karma_system, module_system, pantheon, public_domain_rules, sorcery, world_locations
+- **karma_system** [draft] — Karma System
   - **cross_ref** → game_design, karma_implementation_plan, module_system, sorcery
-  - **has_open_question** → EV-karma_system-001, EV-karma_system-002
+  - **has_open_question** → EV-karma_system-002
   - **relates_to** → game_design, karma_implementation_plan, module_system
 - **launch_criteria** [draft] — Launch Criteria — Three-Tier Checklist
-  - **cross_ref** → adventure_modules_plan, doc_map, game_design, karma_implementation_plan
-  - **relates_to** → adventure_modules_plan, doc_map, karma_implementation_plan, launch_readiness, module_system
-- **loot_tables** Q:6(open=1) [active] — Loot Tables — per-zone distribution
+  - **cross_ref** → doc_map, game_design, karma_implementation_plan
+  - **relates_to** → doc_map, karma_implementation_plan, launch_readiness, module_system
+- **loot_tables** [active] — Loot Tables — per-zone distribution
   - **cross_ref** → world_locations
-  - **has_open_question** → EV-loot_tables-001
   - **relates_to** → karma_system
 - **module_system** Q:10(open=2) [draft] — Module System (Ink + GPE)
   - **cross_ref** → game_design, hyborian_pd_module_plan, karma_system
   - **has_open_question** → EV-module_system-001, EV-module_system-002
-  - **relates_to** → adventure_modules_plan, karma_system, public_domain_rules
-- **pantheon** Q:8(open=2) [active] — Pantheon — Living Eamon canonical deities
+  - **relates_to** → adventure_modules_system, karma_system, public_domain_rules
+- **pantheon** [active] — Pantheon — Living Eamon canonical deities
   - **cross_ref** → game_design, public_domain_rules, sorcery
-  - **has_open_question** → EV-pantheon-001, EV-pantheon-002
   - **relates_to** → affect_axes_dump, game_design, karma_system, module_system, public_domain_rules, sorcery
-- **scrolls_of_thoth_index** Q:6(open=1) [active] — Scrolls of Thoth — Registry
+- **scrolls_of_thoth_index** [active] — Scrolls of Thoth — Registry
   - **cross_ref** → karma_system
-  - **has_open_question** → EV-scrolls_of_thoth_index-001
   - **relates_to** → karma_implementation_plan, karma_system, public_domain_rules
-- **sorcery** Q:10(open=2) [active] — Sorcery (Guild CAST + Occult INVOKE)
+- **sorcery** [active] — Sorcery (Guild CAST + Occult INVOKE)
   - **cross_ref** → game_design, pantheon
-  - **has_open_question** → EV-sorcery-001, EV-sorcery-002
   - **relates_to** → karma_system, logos_teleios, module_system, pantheon
-- **stobaean_fragments_index** Q:6(open=1) [active] — Stobaean Fragments — Registry
+- **stobaean_fragments_index** [active] — Stobaean Fragments — Registry
   - **cross_ref** → quest_registry_dump
-  - **has_open_question** → EV-stobaean_fragments_index-001
-  - **relates_to** → adventure_modules_plan, karma_system, public_domain_rules, quest_registry_dump, scrolls_of_thoth_index
-- **travel_matrix** Q:6(open=1) [active] — Travel Cost Matrix
+  - **relates_to** → karma_system, public_domain_rules, quest_registry_dump, scrolls_of_thoth_index
+- **travel_matrix** [active] — Travel Cost Matrix
   - **cross_ref** → world_locations
-  - **has_open_question** → EV-travel_matrix-001
   - **relates_to** → karma_system
 - **world_locations** Q:6(open=1) [active] — World Locations — Thurian Cartography
   - **cross_ref** → game_design
@@ -90,10 +83,10 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ### legal
 
-- **public_domain_rules** Q:10(open=2) [active] — Public Domain Rules
+- **public_domain_rules** Q:10(open=1) [active] — Public Domain Rules
   - **cross_ref** → game_design, hyborian_pd_module_plan
-  - **has_open_question** → EV-public_domain_rules-001, EV-public_domain_rules-002
-  - **relates_to** → adventure_modules_plan, claude_md, game_design, module_system, pantheon
+  - **has_open_question** → EV-public_domain_rules-002
+  - **relates_to** → claude_md, game_design, module_system, pantheon
 
 ### lore-artifact
 
@@ -131,64 +124,27 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ### sprint-plan
 
-- **adventure_modules_plan** Q:8(open=2) [active] — Adventure Modules Plan
-  - **cross_ref** → game_design, hyborian_pd_module_plan, karma_system, public_domain_rules
-  - **has_open_question** → EV-adventure_modules_plan-001, EV-adventure_modules_plan-002
-  - **relates_to** → hyborian_pd_module_plan, karma_system, module_system, public_domain_rules, quest_registry_dump
-- **hyborian_pd_module_plan** Q:8(open=2) [active] — Hyborian-PD Module Plan
-  - **cross_ref** → adventure_modules_plan, game_design, public_domain_rules
-  - **has_open_question** → EV-hyborian_pd_module_plan-001, EV-hyborian_pd_module_plan-002
-  - **relates_to** → adventure_modules_plan, doc_map, karma_system, public_domain_rules, sorcery
-- **karma_implementation_plan** Q:8(open=2) [deferred] — Karma Implementation Plan
+- **adventure_modules_system** [active] — Adventure Modules System
+  - **cross_ref** → game_design, karma_system, public_domain_rules
+  - **relates_to** → game_design, hyborian_pd_module_plan, karma_system, module_system, public_domain_rules, quest_registry_dump
+- **hyborian_pd_module_plan** [active] — Hyborian-PD Module Plan
+  - **cross_ref** → game_design, public_domain_rules
+- **karma_implementation_plan** Q:8(open=1) [deferred] — Karma Implementation Plan
   - **cross_ref** → hydrate_next_session, karma_system
-  - **has_open_question** → EV-karma_implementation_plan-001, EV-karma_implementation_plan-002
+  - **has_open_question** → EV-karma_implementation_plan-002
   - **relates_to** → hydrate_next_session, karma_system, launch_readiness
 
-## Open Edge Vectors (23)
+## Open Edge Vectors (6)
 
-- **EV-adventure_modules_plan-001** `[PICSSI-BALANCE, open]` ← adventure_modules_plan → affects: karma_system, module_system
-  - Q: What's the per-module GPE balance-score target band and `intentionallySkewed` declaration set for each of the 18 modu...
-- **EV-adventure_modules_plan-002** `[LORE, medium]` ← adventure_modules_plan → affects: module_system
-  - Q: Tier 2 modules (M-14 through M-18) are framed as either "Atlantean wonder-age past" or "cross-genre present-day excur...
-- **EV-game_design-001** `[AFFECT-VECTOR, open]` ← game_design → affects: karma_system, module_system
-  - Q: How do PICSSI virtues correlate with the seven AffectVector axes?
-- **EV-game_design-002** `[INK-AUTHORING, medium]` ← game_design → affects: karma_system, module_system
-  - Q: Can a module simultaneously satisfy PD-safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing-pure")?
-- **EV-hyborian_pd_module_plan-001** `[PD-SAFETY, medium]` ← hyborian_pd_module_plan → affects: adventure_modules_plan, public_domain_rules
-  - Q: Is §9's PD calendar still accurate after the 2026-04-30 non-renewal audit moved 15 *Weird Tales* 1934–1936 stories to...
-- **EV-hyborian_pd_module_plan-002** `[INK-AUTHORING, open]` ← hyborian_pd_module_plan → affects: adventure_modules_plan, doc_map
-  - Q: What's the canonical division of ownership between this doc and `ADVENTURE_MODULES_PLAN.md` — both detail M-1/M-2/M-3?
-- **EV-karma_implementation_plan-001** `[WIRING, open]` ← karma_implementation_plan → affects: karma_system
-  - Q: When multiple atoms match the same trigger event, what's the priority resolution rule?
 - **EV-karma_implementation_plan-002** `[WIRING, medium]` ← karma_implementation_plan → affects: (none mapped)
   - Q: How does the Scroll-of-Thoth riddle UI evolve from v1 chat-stream token to S6 modal?
-- **EV-karma_system-001** `[INK-AUTHORING, open]` ← karma_system → affects: module_system
-  - Q: How will Ink module authors apply PICSSI deltas inside an .ink file?
 - **EV-karma_system-002** `[PICSSI-BALANCE, medium]` ← karma_system → affects: game_design, karma_implementation_plan, sorcery
   - Q: Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, we...
-- **EV-loot_tables-001** `[PICSSI-BALANCE, open]` ← loot_tables → affects: travel_matrix
-  - Q: Are the loot tier ratios (45/27/18/9/1), enemy modifiers (−10 to +40), and PICSSI deltas tuned for end-game balance, ...
 - **EV-module_system-001** `[WIRING, open]` ← module_system → affects: (none mapped)
   - Q: How will `tag_atom()` GPE-trace events be ingested in production — beyond the dev-only `console.log`?
 - **EV-module_system-002** `[INK-AUTHORING, medium]` ← module_system → affects: (none mapped)
   - Q: What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?
-- **EV-pantheon-001** `[INK-AUTHORING, open]` ← pantheon → affects: module_system
-  - Q: How will Ink module authors reference deities when writing modules?
-- **EV-pantheon-002** `[AFFECT-VECTOR, open]` ← pantheon → affects: karma_system
-  - Q: What neuro-emotional axes does invoking each deity surface?
-- **EV-public_domain_rules-001** `[INK-AUTHORING, open]` ← public_domain_rules → affects: module_system
-  - Q: Is there an automated check that flags PD-violation candidates in module prose before commit?
 - **EV-public_domain_rules-002** `[PD-SAFETY, medium]` ← public_domain_rules → affects: (none mapped)
   - Q: What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, w...
-- **EV-scrolls_of_thoth_index-001** `[PICSSI-BALANCE, open]` ← scrolls_of_thoth_index → affects: karma_system
-  - Q: Is the proposed `+3 Notable` Illumination delta per scroll calibrated for the 15-scroll corpus, or is it an opening p...
-- **EV-sorcery-001** `[INK-AUTHORING, open]` ← sorcery → affects: karma_system, module_system
-  - Q: How will an Ink module author force a sorcery effect on the player — e.g., an NPC sorcerer casting Circle-7 mid-atom,...
-- **EV-sorcery-002** `[WIRING, medium]` ← sorcery → affects: karma_implementation_plan
-  - Q: Which Circles are actually wired in production code, and what infrastructure does the Resurrection sun/moon corpse mo...
-- **EV-stobaean_fragments_index-001** `[PICSSI-BALANCE, open]` ← stobaean_fragments_index → affects: karma_system
-  - Q: Is the default `illuminationDelta: 1` per fragment calibrated across the 14-fragment corpus, or is it an opening para...
-- **EV-travel_matrix-001** `[NAV-MAP, open]` ← travel_matrix → affects: world_locations
-  - Q: Are the per-route day-counts and danger ratings in the Travel Matrix empirically tuned, or are they opening parameters?
 - **EV-world_locations-001** `[NAV-MAP, open]` ← world_locations → affects: travel_matrix
   - Q: Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore...

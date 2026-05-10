@@ -64,7 +64,7 @@ edge_vector_ids: [EV-module_system-001, EV-module_system-002]
 
 **Q:** What's the first reference module and how does intentionallySkewed work for it?
 **A:** **Solomon Kane in the Whispering Woods**, derived from REH's "Skulls in the Stars" (1929, US PD since 2025). Naturally exercises Integrity (vow to a dying man), Courage (haunted moor at night), Spirituality (Puritan piety), and +Illumination (slaying a vengeful spirit). Module declares `intentionallySkewed: ["passion", "standing"]` in `module.json`, so the GPE excludes those two from min/max scoring and the balance score (target: 15–25) reflects only the four virtues the archetype actually exercises. Module shows the `# atom:`/`# tier:`/`# touches:`/`# delta:` tag pattern in three choices on the entry knot `the_dying_man` (kneel-and-swear → `I+10`; comfort-no-promise → `I+1, Sp+2`; rifle-pockets → `I-5, Il-3`). Sprint 4b in §10 Implementation order. `[high]`
-↔ relates to: §9 First module reference, ADVENTURE_MODULES_PLAN.md (Solomon Kane sub-saga), Public_Domain_Rules.md (Howard 1929 PD timeline)
+↔ relates to: §9 First module reference, ADVENTURE_MODULES_SYSTEM.md (Solomon Kane sub-saga), Public_Domain_Rules.md (Howard 1929 PD timeline)
 
 ### [WIRING]
 

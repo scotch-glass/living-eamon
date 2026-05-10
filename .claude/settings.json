@@ -229,7 +229,19 @@
       "Bash(curl -s -o /dev/null -w \"library=%{http_code} \\(location=%{redirect_url}\\)\\\\nlibrary_pantheon=%{http_code}\\\\nlibrary_unknown=%{http_code}\\\\n\" -L --max-redirs 0 http://localhost:3000/library)",
       "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library)",
       "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library/pantheon)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library/some_unknown_doc)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library/some_unknown_doc)",
+      "Bash(mmdc --version)",
+      "Bash(grep -c '^  end$' docs/doc-graph.mmd)",
+      "Bash(echo \"Subgraph closes: $\\(grep -c '^  end$' docs/doc-graph.mmd\\)\")",
+      "Bash(npx -y -p @mermaid-js/mermaid-cli@latest mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg)",
+      "Bash(open docs/doc-graph.svg)",
+      "Bash(echo \"---EXIT: $?---\")",
+      "Bash(echo \"TSX EXIT: $?\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(pkill -f \"tsx scripts/interview.ts\")",
+      "Bash(npx vitest *)",
+      "Bash(npm list *)",
+      "Bash(node_modules/.bin/mmdc --version)"
     ],
     "additionalDirectories": [
       "/Users/joshuamcclure/.claude/plans",

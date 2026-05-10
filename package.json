@@ -19,6 +19,8 @@
     "docs:validate": "tsx scripts/validate-docs.ts",
     "docs:watch": "tsx scripts/watch-docs.ts",
     "interview": "tsx scripts/interview.ts",
+    "room-graph:build": "tsx scripts/build-room-graph.ts",
+    "room-graph:build:svg": "tsx scripts/build-room-graph.ts --svg",
     "dev:all": "concurrently -n next,docs -c blue,green \"npm:dev\" \"npm:docs:watch\""
   },
   "dependencies": {

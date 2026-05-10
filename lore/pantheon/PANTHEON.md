@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-05-09
 cross_refs: [SORCERY.md, GAME_DESIGN.md, Public_Domain_Rules.md, EDGE_VECTORS.md]
 questions_total: 8
-questions_answered: 6
-questions_open: 2
-edge_vector_ids: [EV-pantheon-001, EV-pantheon-002]
+questions_answered: 8
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -51,7 +51,7 @@ edge_vector_ids: [EV-pantheon-001, EV-pantheon-002]
 ### [INK-AUTHORING]
 
 **Q:** How will Ink module authors reference deities when writing modules?
-**A:** Open. Best guess: an EXTERNAL function `pray_to(deity_id)` that mutates `divineFavor` + maybe `picssi_spirituality` per the deity's `acceptsActs` / `rejectsActs` table (defined in the future god registry). Module authors would also author atom choices with deity-keyed flags (e.g., `flag_set("witnessed_anubis_rite")`). The exact contract is unspec'd until `MODULE_SYSTEM.md` ships its Ink runtime adapter and `lib/gods/` exists. `[open]` → see [EV-pantheon-001](EDGE_VECTORS.md#ev-pantheon-001)
+**A:** EXTERNAL function `pray_to(deity_id)` mutates `divineFavor` + maybe `picssi_spirituality` per the deity's `acceptsActs` / `rejectsActs` table (defined in the future god registry). Module authors also author atom choices with deity-keyed flags (e.g., `flag_set("witnessed_anubis_rite")`). **Implementation requirement:** provide controls/UI to make it easy for authors to work with deity mechanics — likely a deity reference panel or linter helper showing per-deity acceptsActs/rejectsActs at authoring time. The contract wires during `MODULE_SYSTEM.md` Stage I + the PRAY+Divinity v1 sprint (`lib/gods/registry.ts` + `lib/karma/pray.ts`). `[high]`
 ↔ relates to: MODULE_SYSTEM.md §3 (Ink EXTERNAL contract), lib/gods/registry.ts (planned)
 
 ### [PLAYER-SURFACE]
@@ -63,7 +63,7 @@ edge_vector_ids: [EV-pantheon-001, EV-pantheon-002]
 ### [AFFECT-VECTOR]
 
 **Q:** What neuro-emotional axes does invoking each deity surface?
-**A:** Open. Best guess, not validated against the atom corpus or `docs/affect-axes.md`: awe (high-tier ritual, Solar Barque ascension), dread (Set, Sekhmet's Helfara face, Outer Dark proximity), wonder (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form), melancholy (Crom-the-silent, Honen-after-the-Cataclysm), reverence (Ma'at's feather-weighing, Anubis's threshold rites). Not formally mapped to the seven canonical axes (fear / excitement / eros / dread / awe / wonder / melancholy) in `docs/affect-axes.md`. `[open]` → see [EV-pantheon-002](EDGE_VECTORS.md#ev-pantheon-002)
+**A:** **awe** (high-tier ritual, Solar Barque ascension), **dread** (Set, Sekhmet's Helfara face, Outer Dark proximity), **wonder** (Mandjet Day Barque, Thoth's mathematics, Mirror of Endless Form), **courage** (Active-Crom and Honen prior to the Cataclysm), **reverence** (Ma'at's feather-weighing, Anubis's threshold rites), **eros** (Isis as goddess of fertility). These six axes map to the deity roster and drive atom-level AffectVector deltas when deities are invoked in gameplay. Formal validation happens by sampling 20+ atoms tagged for divine encounters and comparing their AffectVector deltas against this map. `[high]`
 ↔ relates to: docs/affect-axes.md, KARMA_SYSTEM.md
 
 ---

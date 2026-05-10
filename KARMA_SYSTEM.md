@@ -8,9 +8,9 @@ status: draft
 last_updated: 2026-05-09
 cross_refs: [GAME_DESIGN.md, SORCERY.md, KARMA_IMPLEMENTATION_PLAN.md, MODULE_SYSTEM.md, EDGE_VECTORS.md]
 questions_total: 10
-questions_answered: 8
-questions_open: 2
-edge_vector_ids: [EV-karma_system-001, EV-karma_system-002]
+questions_answered: 10
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -69,13 +69,13 @@ edge_vector_ids: [EV-karma_system-001, EV-karma_system-002]
 ### [INK-AUTHORING]
 
 **Q:** How will Ink module authors apply PICSSI deltas inside an .ink file?
-**A:** Open. Best guess: an EXTERNAL function `apply_karma(virtue_id, magnitude_band)` where `virtue_id ∈ {passion,integrity,courage,standing,spirituality,illumination}` and `magnitude_band ∈ {trivial,notable,major,defining}`. Authors pass band names (not raw integers) so the runtime owns the canonical numbers and balance changes don't require module rewrites. Sign convention TBD — probably a separate `apply_karma_loss` or a signed band like `notable_loss`. The full contract waits on `MODULE_SYSTEM.md` Stage I approval and the runtime adapter sprint. `[open]` → see [EV-karma_system-001](EDGE_VECTORS.md#ev-karma_system-001)
+**A:** `apply_karma(virtue_id, magnitude_band)` with signed band tokens. `virtue_id ∈ {passion,integrity,courage,standing,spirituality,illumination}` and `magnitude_band ∈ {trivial,trivial_loss,notable,notable_loss,major,major_loss,defining,defining_loss}`. Authors pass band names (not raw integers) so the runtime owns the canonical numbers and balance changes don't require module rewrites. Single function with signed tokens is simpler than dual `apply_karma` / `apply_karma_loss` functions. Example usage in .ink: `apply_karma("standing","notable_loss")` or `apply_karma("integrity","defining")`. The full contract wires during `MODULE_SYSTEM.md` Stage I + `KARMA_IMPLEMENTATION_PLAN.md` Sprint 4. `[high]`
 ↔ relates to: MODULE_SYSTEM.md §3 (Ink EXTERNAL contract), KARMA_IMPLEMENTATION_PLAN.md Sprint 4 (atom-trigger hooks)
 
 ### [PICSSI-BALANCE]
 
 **Q:** Are the my-judgment proposals (action-budget tiers, gear-Standing formula, wealth tiers, fatigue penalties, per-circle Illumination magnitudes) tuned for end-game balance, or are they opening parameters?
-**A:** Opening parameters. Scotch's standing direction is "use your judgment, balance later via Machinations.io" — so every magnitude in §4a's "Decided 2026-04-29 (evening)" block is a first-guess that compiles into runtime, NOT a tuned end-state. Likely tuning targets: action-budget 20/25/30 (whether the spread is too narrow), gear-Standing cap +20 (whether jewelry doubling is too generous), per-circle Illumination drops (whether Circle 8's −30 is too punishing for a single cast), fatigue penalty +15·tier evasion-vs-player (whether Tier 4 lockout is too binary). Full tuning pass deferred until atom corpus + Sprint-2 PICSSI bedrock are live, then run Machinations simulations. `[medium]` → see [EV-karma_system-002](EDGE_VECTORS.md#ev-karma_system-002)
+**A:** They are opening parameters that will need to be balanced later via (1st) simulations, (2nd) play testing once game is functional. `[high]`
 ↔ relates to: §4a (Decided 2026-04-29 evening block), §4c my-judgment proposals, KARMA_IMPLEMENTATION_PLAN.md (tuning sprint deferred)
 
 ---
@@ -891,7 +891,13 @@ When all Stage II approvals are in, this is the suggested build order. **DO NOT 
 - [x] Expensive-gear → Standing — locked formula (floor(value/100), 2× for jewelry/flashy, capped +20) *(2026-04-29 evening, my-judgment)*
 
 **Next gate:**
-- [ ] **Final approval to begin Sprint 1 (stamina bedrock) per KARMA_IMPLEMENTATION_PLAN.md:** ____ (date)
+- [x] **Final approval to begin Sprint 1 (stamina bedrock) per KARMA_IMPLEMENTATION_PLAN.md:** 2026-05-10 (Scotch approved)
+- [x] **Sprint 2 (PICSSI bedrock + legacy 10-virtue cold delete) — COMPLETE:** 2026-05-10
+  - DB migration created (picssi_passion/integrity/courage/spirituality/illumination columns)
+  - PlayerState updated with picssi field ✓
+  - lib/karma/recompute.ts complete (applyKarma, recomputeDerivedStats, clampPicssi, etc.) ✓
+  - Legacy 10-virtue functions already removed ✓
+  - recomputeDerivedStats wired at player load (app/api/chat/route.ts:594) ✓
 
 KARMA_SYSTEM.md is now the single source of truth for design values. KARMA_IMPLEMENTATION_PLAN.md handles the wiring.
 

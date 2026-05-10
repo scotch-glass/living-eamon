@@ -1611,10 +1611,22 @@ export function tickWorldState(state: WorldState): WorldState {
     const nextMana = regenActive
       ? Math.min(maxMana, (p.currentMana ?? maxMana) + MANA_REGEN_PER_TURN)
       : (p.currentMana ?? maxMana);
-    if (nextHp !== p.hp || nextMana !== p.currentMana || p !== newState.player) {
+
+    // Passive fatiguePool recovery (Sprint 1) — HWRR-style per-turn regen.
+    // Out-of-combat only; stamina>0 gate (same as HP/mana above).
+    // Base recovery = ceil(maxStamina * 0.1); Sprint 3's activity dispatcher
+    // can add bonuses for PRAY/DRINK/REST/etc.
+    // Clamp at 0 (never goes positive); capped at 0 because negative is "tired".
+    let nextFatigue = p.fatiguePool;
+    if (regenActive && nextFatigue < 0) {
+      const recovery = Math.ceil(p.maxStamina * 0.1);
+      nextFatigue = Math.min(0, nextFatigue + recovery);
+    }
+
+    if (nextHp !== p.hp || nextMana !== p.currentMana || nextFatigue !== p.fatiguePool || p !== newState.player) {
       newState = {
         ...newState,
-        player: { ...p, hp: nextHp, currentMana: nextMana },
+        player: { ...p, hp: nextHp, currentMana: nextMana, fatiguePool: nextFatigue },
       };
     }
 

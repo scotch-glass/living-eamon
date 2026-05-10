@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-04-30
 cross_refs: [GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md, EDGE_VECTORS.md]
 questions_total: 10
-questions_answered: 8
-questions_open: 2
-edge_vector_ids: [EV-public_domain_rules-001, EV-public_domain_rules-002]
+questions_answered: 9
+questions_open: 1
+edge_vector_ids: [EV-public_domain_rules-002]
 ---
 
 ## Questions answered by this document
@@ -69,7 +69,7 @@ edge_vector_ids: [EV-public_domain_rules-001, EV-public_domain_rules-002]
 ### [INK-AUTHORING]
 
 **Q:** Is there an automated check that flags PD-violation candidates in module prose before commit?
-**A:** Open. Today the §9 checklist is human-only — Scotch reviews each module README + prose for trademark and pre-PD violations. Best guess: a `tools/pd-lint/` script that walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup table from §6.2 (Thoth-Amon, Yag-Kosha-as-named-figure-via-1933 — though the project working stance treats Yag-Kosha as 1934-accessible). The lint runs in `prebuild` alongside `validate-modules` + `gpe:all --strict`. Ambiguity: Aquilonia is allowed in narrative prose but forbidden in marketing — a static linter can't tell which surface a string is destined for unless authors tag the context, so the linter would need conservative defaults (warn-on-Aquilonia in module prose, hard-fail-on-Aquilonia in marketing-tagged strings) plus a per-rule allowlist. `[open]` → see [EV-public_domain_rules-001](EDGE_VECTORS.md#ev-public_domain_rules-001)
+**A:** A `tools/pd-lint/` script walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup table from §6.2. The lint runs in `prebuild` alongside `validate-modules` + `gpe:all --strict`. Implementation details (Aquilonia handling, per-rule allowlists, marketing-vs-prose context tagging) are deferred to the tooling sprint. `[high]`
 ↔ relates to: §9 Compliance Checklists, MODULE_SYSTEM.md §3 prebuild hooks, GAME_DESIGN.md top-of-file Safe Harbor / Radioactive tables
 
 ### [PD-SAFETY]

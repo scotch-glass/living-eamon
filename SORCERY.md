@@ -8,9 +8,9 @@ status: active
 last_updated: 2026-05-09
 cross_refs: [GAME_DESIGN.md, lore/pantheon/PANTHEON.md, KARMA_SYSTEM.md, EDGE_VECTORS.md]
 questions_total: 10
-questions_answered: 8
-questions_open: 2
-edge_vector_ids: [EV-sorcery-001, EV-sorcery-002]
+questions_answered: 10
+questions_open: 0
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -69,13 +69,13 @@ edge_vector_ids: [EV-sorcery-001, EV-sorcery-002]
 ### [INK-AUTHORING]
 
 **Q:** How will an Ink module author force a sorcery effect on the player (e.g., an NPC sorcerer casting Circle-7 mid-atom, or an atom granting a custom invocation rune)?
-**A:** Open. MODULE_SYSTEM.md §4.2 binds `start_combat(encounter_id)`, `add_item`, `apply_karma`, etc. — but no EXTERNAL exists for "an NPC casts X spell at the player on this beat" or "this rune teaches the player invocation Y." Best guess: an `npc_invoke(npc_id, spell_id, target_id)` EXTERNAL routing through the same combat-engine path Force 0 spells use, plus an `add_invocation(spell_id)` EXTERNAL adding to a player's known-Words registry on PlayerState. Alternative: leave NPC sorcery to scripted encounter records in `lib/encounters/<id>.ts` and only expose `add_invocation` to Ink. Decision deferred until the first module needs an enemy sorcerer beat. `[open]` → see [EV-sorcery-001](EDGE_VECTORS.md#ev-sorcery-001)
+**A:** Keep NPC sorcery scripted in `lib/encounters/<id>.ts` and only expose `add_invocation(spell_id)` to Ink for granting runes. This keeps the sorcery triggering logic in the combat-engine layer where it can properly interact with NPC AI, turn order, and damage calculations. Ink modules use `add_invocation` to teach the player new spells (for rune discovery atoms, reward for defeating a sorcerer, etc.), but NPC-initiated sorcery stays as scripted encounters. `[high]`
 ↔ relates to: MODULE_SYSTEM.md §4.2 (EXTERNAL contract), §6 Eight Circles tables, KARMA_SYSTEM.md §2.10 (Illumination on player-caused sorcery vs NPC-caused)
 
 ### [WIRING]
 
 **Q:** Which Circles are actually wired in code today, and what infrastructure is the Resurrection sun/moon corpse model still missing?
-**A:** Medium. §6 declares "Circles 1–4 are implemented" but in current production combat the picture is more partial: Sprint C6.1 ships Guild CAST Circles 1+2 with 13 real spells (per `project_occult_sorcery_deferred.md`); the INVOKE pipeline is not wired to combat, and Circles 4–8 are explicitly deferred. Resurrection's corpse model — sun/moon exposure flags, world-tick exposure updates, burial mechanic moving location-context to underground, mortal/immortal classification on every NPC kind, hero-death short-circuit, undead-likelihood roll scaling with time-since-death, necromancy-variant infrastructure — is **all design-only, no code yet** (see `project_corpse_loot_burial_deferred.md`: combat-arena Phase-1 ships persistent corpse markers but click only opens the read-only stats popup; loot-claim and burial wait on KARMA + per-room clock design). The mortal/immortal NPC tag is a no-cost addition that should land before any Resurrection wiring sprint to avoid retro-tagging every NPC kind. `[medium]` → see [EV-sorcery-002](EDGE_VECTORS.md#ev-sorcery-002)
+**A:** **Guild CAST:** Circles 1+2 spells are registered and most are functionally wired in `lib/combat/engine.ts` (HEAL, GREATER-HEAL, FIREBOLT, HASTE, WARD, STEELSKIN, SILENCE, RESIST, CLEANSE, and others — handlers verified in resolveAction and NPC cast paths). Circles 3–8 are registered but handlers are stubbed (effectKind only; no numeric resolution). **Occult INVOKE:** Zero spells wired to combat; the INVOKE pipeline exists as a parser (`INVOKE <circle-words>`) but does not dispatch to handlers. **Resurrection corpse model:** Design-only, no code yet. Missing infrastructure: sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification on every NPC kind, hero-death short-circuit, undead-likelihood roll, necromancy-variant handlers. Combat-arena Phase-1 ships persistent corpse markers (read-only stats popup); loot-claim and burial deferred per `project_corpse_loot_burial_deferred.md`. Add `mortalOrImmortal` NPC tag before Resurrection wiring sprint. `[high]`
 ↔ relates to: §9.3 Resurrection implementation entailments, project_occult_sorcery_deferred.md, project_corpse_loot_burial_deferred.md
 
 ---

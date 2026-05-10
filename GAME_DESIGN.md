@@ -7,10 +7,10 @@ visibility: creator
 status: approved
 last_updated: 2026-04-30
 cross_refs: [Public_Domain_Rules.md, KARMA_SYSTEM.md, SORCERY.md, MODULE_SYSTEM.md, ADVENTURE_MODULES_PLAN.md, EDGE_VECTORS.md]
-questions_total: 10
-questions_answered: 8
-questions_open: 2
-edge_vector_ids: [EV-game_design-001, EV-game_design-002]
+questions_total: 11
+questions_answered: 10
+questions_open: 1
+edge_vector_ids: []
 ---
 
 ## Questions answered by this document
@@ -69,14 +69,26 @@ edge_vector_ids: [EV-game_design-001, EV-game_design-002]
 ### [AFFECT-VECTOR]
 
 **Q:** What does this doc say about "fun factor" / neuro-emotional pacing?
-**A:** Open. §11 PICSSI is itself a fun-factor scaffold (six axes for the player to optimize across), but the doc doesn't formally articulate the seven AffectVector axes (fear / excitement / eros / dread / awe / wonder / melancholy) — those live in `docs/affect-axes.md` and the atom-system code. The relationship between PICSSI virtues and AffectVector axes is undocumented: e.g., does pursuing Passion correlate with high-eros + high-excitement encounter selection? Best guess: yes, but not formally specified. `[open]` → see [EV-game_design-001](EDGE_VECTORS.md#ev-game_design-001)
+**A:** Open. §11 PICSSI is itself a fun-factor scaffold (six axes for the player to optimize across), but the doc doesn't formally articulate the seven AffectVector axes (fear / excitement / eros / dread / awe / wonder / melancholy) — those live in `docs/affect-axes.md` and the atom-system code. The relationship between PICSSI virtues and AffectVector axes is undocumented: e.g., does pursuing Passion correlate with high-eros + high-excitement encounter selection? Best guess: yes, but not formally specified.
 ↔ relates to: docs/affect-axes.md, KARMA_SYSTEM.md
+
+### [AFFECT-VECTOR]
+
+**Q:** How do PICSSI virtues correlate with the seven AffectVector axes?
+**A:** PICSSI and AffectVector are separate systems. PICSSI is how the character develops (the mechanics/stats system) — easily balanced via simulation and weights. AffectVector is how the player *feels* (the emotional/psychological system) — harder to balance but still estimable by algorithm. They are not formally correlated yet because AffectVector needs significant development work for simulation. Once AffectVector matures, we can formalize the connections: e.g., Passion may drive high-eros/high-excitement atoms, Spirituality may drive awe/wonder atoms. `[high]`
+↔ relates to: docs/affect-axes.md, MODULE_SYSTEM.md §7 (Growth Path Equalizer balance scoring will eventually incorporate both axes)
 
 ### [INK-AUTHORING]
 
-**Q:** How does the Growth Path Equalizer (GPE) score modules against §11 PICSSI?
-**A:** Medium. `MODULE_SYSTEM.md` §2 + §7 specify GPE as a static analyzer that scores each `.ink` module on per-virtue growth balance (intentionally archetype-focused modules can be unbalanced; "balanced" modules need at least one Courage "great odds" encounter per `KARMA_SYSTEM.md` 2026-05-06 update). GPE bands are defined in `MODULE_SYSTEM.md`, not here. The interaction between §11's virtue character and GPE's banding is correlated but not formally specified — e.g., does a "Standing-pure" module stay PD-safe AND PICSSI-balanced simultaneously? No spec. `[medium]` → see [EV-game_design-002](EDGE_VECTORS.md#ev-game_design-002)
-↔ relates to: MODULE_SYSTEM.md §2 (GPE), MODULE_SYSTEM.md §7 (magnitude bands), KARMA_SYSTEM.md (Courage robust paths rule)
+**Q:** How does the Growth Path Equalizer score modules against §11 PICSSI?
+**A:** Medium. `MODULE_SYSTEM.md` §2 + §7 specify Growth Path Equalizer as a static analyzer that scores each `.ink` module on per-virtue growth balance (intentionally archetype-focused modules can be unbalanced; "balanced" modules need at least one Courage "great odds" encounter per `KARMA_SYSTEM.md` 2026-05-06 update). Growth Path Equalizer bands are defined in `MODULE_SYSTEM.md`, not here. The interaction between §11's virtue character and Growth Path Equalizer's banding is correlated but not formally specified.
+↔ relates to: MODULE_SYSTEM.md §2 (Growth Path Equalizer), MODULE_SYSTEM.md §7 (magnitude bands), KARMA_SYSTEM.md (Courage robust paths rule)
+
+### [INK-AUTHORING]
+
+**Q:** Can a module simultaneously satisfy public-domain safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing-pure")?
+**A:** Yes. Public-domain safety has no correlation to PICSSI-balance or single-archetype focus. Each module has its own PICSSI balance or imbalance. Some players want to be "balanced" (fighter-mage-priest type); others want to be very Conan-like (warrior archetype); others want to be Kull-like (mystic warrior). Our job is to make a buffet of modules for players to choose from. We are not constrained to only copying existing Robert E. Howard works — we use those works to provide the lattice and canon. The setting is the same as Howard's, but the player is not Kull or Conan, and makes different choices. Most players will want to play through the public-domain stories adapted as modules, but they will not be the same as the original stories. The player's agency rewrites the narrative. `[high]`
+↔ relates to: MODULE_SYSTEM.md §2 (Growth Path Equalizer), MODULE_SYSTEM.md §7, KARMA_SYSTEM.md (virtue archetype focus), Public_Domain_Rules.md
 
 ---
 

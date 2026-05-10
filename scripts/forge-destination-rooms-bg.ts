@@ -775,7 +775,7 @@ async function callGrokImaginePro(prompt: string): Promise<string> {
     prompt,
     response_format: "b64_json",
     aspect_ratio: "16:9",
-    resolution: "1600x900",
+    resolution: "2k",
   } as Parameters<typeof grok.images.generate>[0] & {
     aspect_ratio: string;
     resolution: string;

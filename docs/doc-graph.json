@@ -2,8 +2,8 @@
   "generated_at": "2026-05-10",
   "stats": {
     "doc_count": 37,
-    "ev_count": 6,
-    "edge_count": 130,
+    "ev_count": 5,
+    "edge_count": 128,
     "creator_visible": 26,
     "internal": 11
   },
@@ -417,8 +417,8 @@
       "status": "active",
       "last_updated": "2026-05-03",
       "questions_total": 6,
-      "questions_answered": 5,
-      "questions_open": 1
+      "questions_answered": 6,
+      "questions_open": 0
     },
     "ev:EV-karma_implementation_plan-002": {
       "type": "edge_vector",
@@ -464,15 +464,6 @@
       "confidence": "medium",
       "question": "What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, what triggers an early Bucket A migration?",
       "best_guess": "Same approach as the 2026-04-30 audit that moved 1934–1936 stories. Sources: U.S. Copyright Office renewal records (Catalog of Copyright Entries 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg Howard research notes, scholarly consensus on *Weird Tales* renewal practices. Verifies both (a) magazine issue not issue-renewed AND (b) Howard's individual contributions not separately renewed. Recommendation: schedule in LAUNCH_CRITERIA.md Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 entry plus Bucket A migration."
-    },
-    "ev:EV-world_locations-001": {
-      "type": "edge_vector",
-      "id": "EV-world_locations-001",
-      "source_doc": "world_locations",
-      "category": "NAV-MAP",
-      "confidence": "open",
-      "question": "Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore-on-map references?",
-      "best_guess": "TRAVEL_MATRIX.md §Travel Nodes lists only 16 destinations. The other 18 nodes (8 nations, 10 wilderness areas) appear here with map coords + lore but have no destination row in the matrix — likely lore-on-map references for narrative texture, traversed as zones during travel but not direct click targets in v1."
     }
   },
   "edges": [
@@ -1102,11 +1093,6 @@
       "type": "relates_to"
     },
     {
-      "from": "doc:world_locations",
-      "to": "ev:EV-world_locations-001",
-      "type": "has_open_question"
-    },
-    {
       "from": "ev:EV-karma_system-002",
       "to": "doc:game_design",
       "type": "affects"
@@ -1119,11 +1105,6 @@
     {
       "from": "ev:EV-karma_system-002",
       "to": "doc:sorcery",
-      "type": "affects"
-    },
-    {
-      "from": "ev:EV-world_locations-001",
-      "to": "doc:travel_matrix",
       "type": "affects"
     }
   ]

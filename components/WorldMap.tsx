@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { TRAVEL_NODES, TravelNode, TravelMode } from "../lib/world/travelNodes";
 import { getLeg, TRAVEL_LEGS } from "../lib/world/travelMatrix";
+import { getModules } from "../lib/adventures/registry";
 
 // Source image dimensions (living-eamon-map.png — lore/thurian-cartography/)
 const MAP_W = 2092;
@@ -19,6 +20,12 @@ const DANGER_COLORS: Record<string, string> = {
   dangerous: "#f97316",
   extreme: "#ef4444",
   deadly: "#a855f7",
+};
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  novice: "#86efac",     // green
+  moderate: "#fbbf24",   // amber
+  deadly: "#ef4444",     // red
 };
 
 const MODE_ICONS: Record<TravelMode, string> = {
@@ -58,6 +65,18 @@ export default function WorldMap({ currentNodeId, onClose, onTravelConfirm }: Pr
   const [pinOverrides, setPinOverrides] = useState<Record<string, { x: number; y: number }>>({});
   const dragRef = useRef<DragState | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
+
+  // Build nodeId -> difficulty lookup from registered modules
+  const difficultyByNode = useMemo(() => {
+    const lookup: Record<string, string> = {};
+    const modules = getModules();
+    for (const mod of modules) {
+      if (mod.locationId && mod.difficulty) {
+        lookup[mod.locationId] = mod.difficulty;
+      }
+    }
+    return lookup;
+  }, []);
 
   const reachableIds = new Set<string>(
     Object.keys(TRAVEL_NODES).filter(
@@ -295,6 +314,24 @@ export default function WorldMap({ currentNodeId, onClose, onTravelConfirm }: Pr
                   }}
                 />
 
+                {/* Difficulty badge — small circle below pin if module registered */}
+                {difficultyByNode[node.id] && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      marginTop: 2,
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      backgroundColor: DIFFICULTY_COLORS[difficultyByNode[node.id]] || "#9ca3af",
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+
                 {/* Tooltip — hover only, never auto-open */}
                 {isHovered && !placingPins && (
                   <div
@@ -325,6 +362,11 @@ export default function WorldMap({ currentNodeId, onClose, onTravelConfirm }: Pr
                     {isReachable && !isCurrent && travel && (
                       <div style={{ color: dangerColor, fontSize: 10, fontFamily: "Georgia, serif", marginTop: 2 }}>
                         {MODE_ICONS[travel.mode]} {travel.days} day{travel.days !== 1 ? "s" : ""} · {leg?.dangerRating}
+                      </div>
+                    )}
+                    {difficultyByNode[node.id] && (
+                      <div style={{ color: DIFFICULTY_COLORS[difficultyByNode[node.id]], fontSize: 10, fontFamily: "Georgia, serif", marginTop: 4, textTransform: "capitalize" }}>
+                        {difficultyByNode[node.id]}
                       </div>
                     )}
                   </div>

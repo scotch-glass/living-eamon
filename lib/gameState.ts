@@ -17,6 +17,8 @@ import { getLeg } from "./world/travelMatrix";
 import type { TravelMode } from "./world/travelNodes";
 import { TRAVEL_NODES } from "./world/travelNodes";
 import { getFlavorText } from "./world/travelFlavor";
+import type { TravelEncounter } from "./world/travelEncounters";
+import { pickEncounter } from "./world/travelEncounters";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -1135,11 +1137,11 @@ export function movePlayer(
 // ── S4d Travel execution ──────────────────────────────────────
 
 const DANGER_ENCOUNTER_CHANCE: Record<DangerRating, number> = {
-  safe: 0.05,
-  moderate: 0.15,
-  dangerous: 0.25,
-  extreme: 0.40,
-  deadly: 0.60,
+  safe: 0.10,
+  moderate: 0.25,
+  dangerous: 0.40,
+  extreme: 0.57,
+  deadly: 0.75,
 };
 
 export function startTravel(
@@ -1177,17 +1179,15 @@ export interface AdvanceTravelResult {
   state: WorldState;
   narrative: string;
   arrived: boolean;
-  encounter: boolean;
+  encounter: TravelEncounter | null;
 }
 
 export function advanceTravel(state: WorldState): AdvanceTravelResult {
   const route = state.player.travelRoute;
-  if (!route) return { state, narrative: "You are not traveling.", arrived: false, encounter: false };
+  if (!route) return { state, narrative: "You are not traveling.", arrived: false, encounter: null };
 
   const newElapsed = route.daysElapsed + 1;
   const arrived = newElapsed >= route.totalDays;
-
-  const encounter = !arrived && Math.random() < DANGER_ENCOUNTER_CHANCE[route.dangerRating];
 
   const zoneIndex = Math.min(
     Math.floor((newElapsed / route.totalDays) * route.zones.length),
@@ -1195,6 +1195,11 @@ export function advanceTravel(state: WorldState): AdvanceTravelResult {
   );
   const zone = route.zones[zoneIndex];
   const flavor = getFlavorText(zone);
+
+  const encounter =
+    !arrived && Math.random() < DANGER_ENCOUNTER_CHANCE[route.dangerRating]
+      ? pickEncounter(zone, route.dangerRating)
+      : null;
 
   const destNode = TRAVEL_NODES[route.destinationNodeId];
   const destName = destNode?.name ?? route.destinationNodeId;

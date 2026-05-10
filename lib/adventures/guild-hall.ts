@@ -482,6 +482,7 @@ export const GUILD_HALL: AdventureModule = {
   id: "guild_hall",
   name: "The Guild Hall, Valus",
   description: "The Guild of Free Adventurers in Valus, the City of Wonders — capital of Valusia and hub of all roads.",
+  difficulty: "novice",
   entryRoom: "church_of_perpetual_life",
   rooms,
   npcScripts: GUILD_HALL_NPC_SCRIPTS,

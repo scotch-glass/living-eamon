@@ -111,14 +111,6 @@ Every entry conforms to:
 
 ### [lore/thurian-cartography/WORLD_LOCATIONS.md](/library/world_locations)
 
-#### EV-world_locations-001  `[NAV-MAP]`
-- **Source:** [WORLD_LOCATIONS.md](/library/world_locations)
-- **Question:** Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore-on-map references?
-- **Best guess:** TRAVEL_MATRIX.md §Travel Nodes lists only 16 destinations. The other 18 nodes (8 nations, 10 wilderness areas) appear here with map coords + lore but have no destination row in the matrix — likely lore-on-map references for narrative texture, traversed as zones during travel but not direct click targets in v1.
-- **Confidence:** open
-- **Affects:** [TRAVEL_MATRIX.md §Travel Nodes](/library/travel_matrix) (16-destination list), [WORLD_LOCATIONS.md §Adventure module location tagging](/library/world_locations), `~/.claude/plans/i-accidentally-submitted-the-misty-map.md` (S4 click-targets)
-- **Resolution path:** Scotch decides per-node whether each lore-only node should become a travel destination. Update TRAVEL_MATRIX.md §Travel Nodes with the new destinations + matrix rows from `valus`. Add a `nodeKind: 'destination' | 'lore-only'` field to WORLD_LOCATIONS entries so the travel UI can filter click-targets without ambiguity. Promote to `[high]` once the registry is consistent and module `locationId` validation rejects lore-only ids.
-
 ### [lore/thurian-cartography/TRAVEL_MATRIX.md](/library/travel_matrix)
 
 ### [lore/thurian-cartography/LOOT_TABLES.md](/library/loot_tables)

@@ -14,6 +14,7 @@ export const DESTINATION_STUBS: AdventureModule = {
   id: "destination_stubs",
   name: "Destination Arrival Stubs",
   description: "Stub arrival rooms for all travel nodes pending full adventure modules.",
+  difficulty: "novice",
   entryRoom: "arrive_city_stagus",
   rooms: {
     arrive_city_vanara: {

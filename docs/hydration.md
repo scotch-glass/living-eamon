@@ -21,9 +21,9 @@ This page fuses topology + open questions + recent activity into one read so you
 
 ## At a glance
 
-- **Topology:** 37 docs · 6 open Edge Vectors · 130 edges
+- **Topology:** 37 docs · 5 open Edge Vectors · 128 edges
 - **Visibility:** 26 creator-visible · 11 internal-only
-- **Q+A coverage:** 108 questions across 14 docs · 102 high-confidence · 6 open
+- **Q+A coverage:** 108 questions across 14 docs · 103 high-confidence · 5 open
 - **Critical path:** `karma_sprint_chain` — priority **116** — blocks 10 downstream sprint(s)
 
 ## Gravity wells (most-incoming docs)
@@ -89,12 +89,12 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 | EV ID | Category | Affects | Question |
 |---|---|---|---|
 | `EV-karma_system-002` | PICSSI-BALANCE | 3 doc(s) | Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped … |
-| `EV-world_locations-001` | NAV-MAP | 1 doc(s) | Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations … |
 
 ## Recent activity
 
 Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T01:00:31+02:00):
 
+- `6fc248b` — System 1: Room Map Maker — Mermaid diagram of room connectivity
 - `0fb2198` — session log: refresh HYDRATE_NEXT_SESSION for 2026-05-11
 
 ## Reading guide

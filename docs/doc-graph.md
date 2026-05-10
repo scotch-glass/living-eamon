@@ -8,7 +8,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 
 ## Stats
 
-- 37 docs · 6 open Edge Vectors · 130 edges
+- 37 docs · 5 open Edge Vectors · 128 edges
 - 26 creator-visible · 11 internal
 
 ## Most-connected nodes (by in-degree)
@@ -60,9 +60,8 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **travel_matrix** [active] — Travel Cost Matrix
   - **cross_ref** → world_locations
   - **relates_to** → karma_system
-- **world_locations** Q:6(open=1) [active] — World Locations — Thurian Cartography
+- **world_locations** [active] — World Locations — Thurian Cartography
   - **cross_ref** → game_design
-  - **has_open_question** → EV-world_locations-001
   - **relates_to** → karma_system, loot_tables, public_domain_rules, travel_matrix
 
 ### dev-process
@@ -134,7 +133,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **has_open_question** → EV-karma_implementation_plan-002
   - **relates_to** → hydrate_next_session, karma_system, launch_readiness
 
-## Open Edge Vectors (6)
+## Open Edge Vectors (5)
 
 - **EV-karma_implementation_plan-002** `[WIRING, medium]` ← karma_implementation_plan → affects: (none mapped)
   - Q: How does the Scroll-of-Thoth riddle UI evolve from v1 chat-stream token to S6 modal?
@@ -146,5 +145,3 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - Q: What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?
 - **EV-public_domain_rules-002** `[PD-SAFETY, medium]` ← public_domain_rules → affects: (none mapped)
   - Q: What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, w...
-- **EV-world_locations-001** `[NAV-MAP, open]` ← world_locations → affects: travel_matrix
-  - Q: Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore...

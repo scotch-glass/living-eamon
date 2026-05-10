@@ -129,7 +129,7 @@ Generated 2026-05-10. **Use this when a task asks a domain question.** The categ
 
 | Rank | Doc | High | Non-high | EVs |
 |------|-----|------|----------|-----|
-| 1 | [`world_locations`](../lore/thurian-cartography/WORLD_LOCATIONS.md) | 3 | 1 | `EV-world_locations-001` |
+| 1 | [`world_locations`](../lore/thurian-cartography/WORLD_LOCATIONS.md) | 4 | 0 | — |
 | 2 | [`travel_matrix`](../lore/thurian-cartography/TRAVEL_MATRIX.md) | 2 | 0 | — |
 | 3 | [`game_design`](../GAME_DESIGN.md) | 1 | 0 | — |
 

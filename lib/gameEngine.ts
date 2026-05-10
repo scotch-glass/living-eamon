@@ -5564,6 +5564,12 @@ export function processInput(
       const destNode = TRAVEL_NODES[result.state.player.currentNodeId];
       response += `\n\n*You have arrived. Type __CMD:LOOK__ to take in your surroundings.*`;
       void destNode;
+    } else if (result.encounter) {
+      // Encounter fires — append event text if applicable, append continuation prompt
+      if (result.encounter.kind === "event" && result.encounter.eventText) {
+        response += `\n\n${result.encounter.eventText}`;
+      }
+      response += `\n\nType __CMD:CONTINUE__ to press on.`;
     } else {
       response += `\n\nType __CMD:CONTINUE__ to press on.`;
     }

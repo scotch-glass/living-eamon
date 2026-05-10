@@ -5,7 +5,7 @@ role: session-log
 canonical_for: [session-end-snapshot, next-session-prompt]
 visibility: internal
 status: rolling
-last_updated: 2026-05-11
+last_updated: 2026-05-10
 cross_refs: [CLAUDE_CONTEXT.md, DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, docs/hydration.md, docs/topic-routes.md]
 ---
 
@@ -27,7 +27,60 @@ Read these three, in order, and stop:
 
 ---
 
-## Status of the previous session (2026-05-11)
+## Status of this session (2026-05-10)
+
+**Three-system infrastructure sprint: Systems 1–2 complete, System 3 pending approval.**
+
+### What shipped
+
+**System 1: Room Map Maker** ✓ (1 day)
+- `scripts/build-room-graph.ts` — Mermaid flowchart generator from ALL_ROOMS registry
+- `app/admin/room-map/page.tsx` — dev-only SVG visualization at `/admin/room-map` (NODE_ENV gated)
+- Output: `docs/room-graph.{mmd,svg}` with 34 rooms, 16 edges, 2 modules (guild_hall=9 rooms, destination_stubs=25 rooms)
+- CLI: `npm run room-graph:build` / `npm run room-graph:build:svg`
+- Commit: `6fc248b`
+
+**System 2.1: Encounters + Difficulty Badges** ✓ (1.5 days)
+- `lib/world/travelEncounters.ts` — 13 zone-type encounter pools (mix of combat + narrative events)
+- Travel encounter system wired: `DANGER_ENCOUNTER_CHANCE` tuned (safe=10%, moderate=25%, dangerous=40%, extreme=57%, deadly=75%)
+- `lib/gameState.ts`: `AdvanceTravelResult.encounter` changed from boolean → TravelEncounter | null; `advanceTravel()` now picks actual encounters via `pickEncounter(zone, danger)`
+- `lib/gameEngine.ts`: Encounter wired into travel dispatch block; event text appends to narrative
+- `components/WorldMap.tsx`: Difficulty badges (green/amber/red circles) render below pins; difficulty label in hover tooltip
+- Modules tagged: `guild_hall` and `destination_stubs` both set `difficulty: "novice"`
+- Commit: `1a4432c`
+
+**System 2.2: Multi-hop Pathfinding** ✓ (1 day)
+- `lib/world/travelMatrix.ts`: Added `findRoute(source, target)` BFS pathfinder (returns TravelLeg[] path or null)
+- `lib/gameState.ts`: Extended TravelRoute with `waypoints[]` (intermediate nodes) + `currentLegIndex` (0-indexed current leg)
+- `startTravel()` now: tries direct leg first (fast path), falls back to BFS if unreachable; sums days across all legs, combines zones, uses max danger rating
+- DB migration marker (documentation-only): `supabase/migrations/20260510150000_travel_route_v2_waypoints.sql`
+- Commit: `43ef7a2`
+
+### What's pending
+
+**System 3: Ink Runtime** — requires Scotch approval before coding:
+1. Read and approve `MODULE_SYSTEM.md` Stage I (Ink spec, 16 EXTERNAL functions, 19 variable bindings)
+2. Choose which travel node the first Ink module should anchor to
+
+Once approved, System 3 will add:
+- Ink module loader + Story caching + compilation/validation scripts
+- 16 EXTERNAL function bindings (apply_karma, set_flag, start_combat, etc.)
+- 19 PlayerState variable synchronization
+- GPE balance analyzer for per-virtue PICSSI deltas
+
+### Next sprint: Destination Room Authoring
+
+All 25 destination stubs need rich descriptions + exotic NPCs. Authoring template ready at `~/.claude/plans/destination-rooms-authoring.md`:
+- 5 Cities (Vanara, Kamula, Talunia, Blaal, Stagus)
+- 5 Landmarks (Skull of Silence, Lake of Visions, Accursed Gardens, Forbidden Lake, Tiger Valley)
+- 7 Nations (Atlantis, Thule, Commoria, Lemuria, Farsun, Thurania, Kamelia)
+- 8 Wilderness (Lost Lands, Camoonian Desert, Deep Jungle, World's End, Red Isles, Mu, Tathel Isle, Zalgara Mts)
+
+Process: Author descriptions in conversation (prose + exotic NPC details), then convert to Room definitions. ~2-4 hours total.
+
+---
+
+## Status of the previous session (2026-05-11) [PRIOR SESSION LOG]
 
 **Parallel coder/interviewer workflow shipped end-to-end.** Three commits (`a447333`, `cc4294d`, `ec94618`) on top of the prior session's scaffold (`74e3ce8`) bring the full plan from `~/.claude/plans/ok-now-i-want-robust-alpaca.md` to operational. All nine "still to ship" items from the previous session log are done.
 

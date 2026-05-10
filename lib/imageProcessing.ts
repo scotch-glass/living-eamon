@@ -66,3 +66,11 @@ export async function grokImageToTransparentPng(
   const inputBuffer = Buffer.from(base64Jpeg, "base64");
   return removeBackground(inputBuffer);
 }
+
+/**
+ * Convert base64-encoded JPEG from Grok Imagine to JPEG buffer (no rembg).
+ * Used for background scene graphics that should NOT have background removed.
+ */
+export async function grokImageToJpeg(base64Jpeg: string): Promise<Buffer> {
+  return Buffer.from(base64Jpeg, "base64");
+}

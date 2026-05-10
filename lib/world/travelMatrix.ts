@@ -442,6 +442,46 @@ export function getRouteZones(from: string, to: string): ZoneType[] {
 }
 
 /**
+ * BFS pathfinder: find the shortest route from sourceId to targetId.
+ * Returns an ordered array of legs forming a path, or null if unreachable.
+ *
+ * The graph is treated as undirected (legs can be traversed in either direction).
+ */
+export function findRoute(sourceId: string, targetId: string): TravelLeg[] | null {
+  if (sourceId === targetId) return [];
+
+  const queue: Array<{ nodeId: string; path: TravelLeg[] }> = [{ nodeId: sourceId, path: [] }];
+  const visited = new Set<string>([sourceId]);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const { nodeId, path } = current;
+
+    // Find all legs adjacent to current node (in either direction)
+    const adjacentLegs = TRAVEL_LEGS.filter((leg) => leg.from === nodeId || leg.to === nodeId);
+
+    for (const leg of adjacentLegs) {
+      // Determine the "next" node and which direction we're going
+      const isForward = leg.from === nodeId;
+      const nextNodeId = isForward ? leg.to : leg.from;
+
+      if (nextNodeId === targetId) {
+        // Found the target!
+        return [...path, leg];
+      }
+
+      if (!visited.has(nextNodeId)) {
+        visited.add(nextNodeId);
+        queue.push({ nodeId: nextNodeId, path: [...path, leg] });
+      }
+    }
+  }
+
+  // No path found
+  return null;
+}
+
+/**
  * Scene background ID for a zone type and time of day.
  * Day: worldTurn % 24 in [6,18]. Night: otherwise.
  */

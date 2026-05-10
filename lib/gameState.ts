@@ -13,7 +13,7 @@ import type { RoomTimeOfDay } from "./roomTypes";
 import type { WeatherKind } from "./world/weatherDescriptions";
 import type { SpellResidue, ResidueType } from "./world/spellResidue";
 import type { ZoneType, DangerRating } from "./world/travelMatrix";
-import { getLeg } from "./world/travelMatrix";
+import { getLeg, findRoute } from "./world/travelMatrix";
 import type { TravelMode } from "./world/travelNodes";
 import { TRAVEL_NODES } from "./world/travelNodes";
 import { getFlavorText } from "./world/travelFlavor";
@@ -266,6 +266,10 @@ export interface TravelRoute {
   mode: TravelMode;
   zones: ZoneType[];
   dangerRating: DangerRating;
+  /** For multi-hop routes: intermediate node ids along the path. Empty for direct routes. */
+  waypoints?: string[];
+  /** For multi-hop routes: current leg index (0 = first leg). Default 0. */
+  currentLegIndex?: number;
 }
 
 export interface WeaponSkills {
@@ -1149,13 +1153,66 @@ export function startTravel(
   destinationNodeId: string,
   mode: TravelMode
 ): WorldState {
-  const leg = getLeg(state.player.currentNodeId, destinationNodeId);
-  if (!leg) return state;
+  // Try direct leg first (fast path)
+  const directLeg = getLeg(state.player.currentNodeId, destinationNodeId);
 
-  let totalDays: number;
-  if (mode === "walk") totalDays = leg.daysFoot ?? 1;
-  else if (mode === "horse") totalDays = leg.daysHorse ?? 1;
-  else totalDays = (leg.daysHorse ?? 0) + (leg.daysShip ?? 0);
+  if (directLeg) {
+    // Direct route — single leg
+    let totalDays: number;
+    if (mode === "walk") totalDays = directLeg.daysFoot ?? 1;
+    else if (mode === "horse") totalDays = directLeg.daysHorse ?? 1;
+    else totalDays = (directLeg.daysHorse ?? 0) + (directLeg.daysShip ?? 0);
+
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        isTraveling: true,
+        travelRoute: {
+          originNodeId: state.player.currentNodeId,
+          destinationNodeId,
+          totalDays: Math.max(1, totalDays),
+          daysElapsed: 0,
+          mode,
+          zones: directLeg.zones,
+          dangerRating: directLeg.dangerRating,
+          waypoints: [],
+          currentLegIndex: 0,
+        },
+      },
+    };
+  }
+
+  // No direct leg — try BFS pathfinding
+  const path = findRoute(state.player.currentNodeId, destinationNodeId);
+  if (!path || path.length === 0) return state;
+
+  // Multi-hop route — sum days across all legs, combine zones
+  let totalDays = 0;
+  const allZones: ZoneType[] = [];
+  let maxDanger: DangerRating = "safe";
+  const dangerRanking: Record<DangerRating, number> = {
+    safe: 0,
+    moderate: 1,
+    dangerous: 2,
+    extreme: 3,
+    deadly: 4,
+  };
+
+  for (const leg of path) {
+    if (mode === "walk") totalDays += leg.daysFoot ?? 1;
+    else if (mode === "horse") totalDays += leg.daysHorse ?? 1;
+    else totalDays += (leg.daysShip ?? 1);
+
+    allZones.push(...leg.zones);
+
+    if (dangerRanking[leg.dangerRating] > dangerRanking[maxDanger]) {
+      maxDanger = leg.dangerRating;
+    }
+  }
+
+  // Build waypoints list (intermediate nodes)
+  const waypoints = path.slice(0, -1).map((leg) => leg.to);
 
   return {
     ...state,
@@ -1168,8 +1225,10 @@ export function startTravel(
         totalDays: Math.max(1, totalDays),
         daysElapsed: 0,
         mode,
-        zones: leg.zones,
-        dangerRating: leg.dangerRating,
+        zones: allZones,
+        dangerRating: maxDanger,
+        waypoints,
+        currentLegIndex: 0,
       },
     },
   };

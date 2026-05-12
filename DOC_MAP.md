@@ -224,8 +224,18 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   canonical_for: [doc-orchestration, visibility-tiers, role-classes]
   visibility: internal
   status: active
-  last_updated: 2026-05-09
+  last_updated: 2026-05-12
   cross_refs: [CLAUDE.md, CLAUDE_CONTEXT.md]
+
+- id: plan_creator_forge
+  path: docs/plans/creator-forge-and-quest-line-orchestrator.md
+  title: Creator Forge + Quest Line Orchestrator — multi-sprint roadmap
+  role: sprint-plan
+  canonical_for: [creator-forge-roadmap, quest-line-orchestrator-roadmap, admin-text-uses-claude-opus]
+  visibility: internal
+  status: approved
+  last_updated: 2026-05-12
+  cross_refs: [MODULE_SYSTEM.md, ADVENTURE_MODULES_PLAN.md, KARMA_IMPLEMENTATION_PLAN.md]
 ```
 
 ## Lore

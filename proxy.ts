@@ -18,6 +18,29 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Creator Forge + Quest Line Orchestrator — admin-role required in
+  // BOTH dev and prod (Hard Rule #3 of the Creator Forge plan: admin-
+  // gated until proven). Sits before the general /admin/ dev-open gate
+  // so the role check is never skipped.
+  if (
+    pathname.startsWith("/admin/creator-forge") ||
+    pathname.startsWith("/admin/quest-lines")
+  ) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/splash", request.url));
+    }
+    const { data: roleRow } = await supabaseAdmin
+      .from("players")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const role = (roleRow?.role as "player" | "creator" | "admin" | undefined) ?? "player";
+    if (role !== "admin") {
+      return NextResponse.redirect(new URL("/splash", request.url));
+    }
+    return response;
+  }
+
   // Public routes — allow through always (no auth required)
   if (
     pathname.startsWith("/splash") ||

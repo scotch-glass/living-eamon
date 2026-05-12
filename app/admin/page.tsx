@@ -193,12 +193,37 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-900 p-8">
       <div className="max-w-6xl mx-auto">
-        <header className="mb-10">
+        <header className="mb-8">
           <h1 className="text-5xl font-bold text-white mb-2">Living Eamon — Admin</h1>
           <p className="text-slate-400 text-lg">
             Internal tools for content authoring, art review, and world-building.
           </p>
         </header>
+
+        <nav className="mb-10 bg-slate-800 rounded-lg p-4 border border-slate-700">
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">
+            Open a tool
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {TOOLS.map((tool) => {
+              const badge = statusBadge(tool.status);
+              return (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="group inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-blue-900 text-slate-200 hover:text-white text-sm rounded border border-slate-700 hover:border-blue-700 transition-colors"
+                >
+                  <span>{tool.name}</span>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${badge.className}`}
+                  >
+                    {badge.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
 
         <section className="mb-10 bg-slate-800 rounded-lg p-6 border border-slate-700">
           <h2 className="text-2xl font-bold text-white mb-4">At a glance</h2>

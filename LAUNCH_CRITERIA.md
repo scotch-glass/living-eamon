@@ -78,14 +78,14 @@ Each item declares: `id`, `title`, `tier`, `status`, `source`, `blockers`, `affe
   good_looks_like: "Stripe Checkout integration; payment success unlocks the hero forge; failed payment redirects to retry. Bridge (email-confirm = payment success) replaced."
 
 - id: karma_sprint_chain
-  title: "KARMA Sprints 1–7 — PICSSI virtue system shipped end-to-end"
+  title: "KARMA Sprints 1–6 — PICSSI virtue system shipped end-to-end"
   tier: 0
-  status: not-started
-  source: KARMA_IMPLEMENTATION_PLAN.md
-  blockers: ["KARMA_SYSTEM.md §6 approval", "Sprint 0 audit", "MODULE_SYSTEM.md Stage I approval"]
+  status: shipped
+  source: KARMA_IMPLEMENTATION_PLAN.md, rescue commit 88ce683 (2026-04-30), audit 2026-05-12
+  blockers: []
   affects_ev: [EV-game_design-001, EV-game_design-002]
   affects_docs: [game_design, module_system, adventure_modules_plan]
-  good_looks_like: "PICSSI virtues update on every atom choice; combat-PICSSI deltas fire on kill/flee/abandon; ordered-retreat works; legacy 10-virtue cold-deleted; all magnitudes match KARMA_SYSTEM canon."
+  good_looks_like: "PICSSI virtues update on every atom choice; combat-PICSSI deltas fire on kill/flee/abandon; ordered-retreat works; legacy 10-virtue cold-deleted; all magnitudes match KARMA_SYSTEM canon. Sprint 7 (Sorcery + Illumination drain) remains explicitly deferred per KARMA_IMPLEMENTATION_PLAN.md."
 
 - id: first_launch_adventure
   title: "At least one launch adventure module shipped, end-to-end playable"

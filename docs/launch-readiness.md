@@ -2,29 +2,20 @@
 
 # Launch Readiness Report
 
-Generated 2026-05-10.
+Generated 2026-05-12.
 
 ## Headline
 
-- **Tier 0 (MVP-blockers):** 7 active · 7 shipped
+- **Tier 0 (MVP-blockers):** 6 active · 8 shipped
 - **Tier 1 (launch polish):** 8 active · 0 shipped
 - **Tier 2 (post-launch):** 1 active · 0 shipped · 8 deferred
 - **Open Edge Vectors:** 5
 
-> **Critical path:** [`karma_sprint_chain`](#karma_sprint_chain) — priority **116** — 10 downstream sprint(s) depend on this; 3 EV(s) blocked.
+> **Critical path:** [`first_launch_adventure`](#first_launch_adventure) — priority **108** — 4 downstream sprint(s) depend on this; 2 EV(s) blocked.
 
 ## Tier 0 — MVP blockers
 
-### 1. <a id="karma_sprint_chain"></a>KARMA Sprints 1–7 — PICSSI virtue system shipped end-to-end  `priority: 116`
-
-- **Status:** not-started
-- **Source:** KARMA_IMPLEMENTATION_PLAN.md
-- **Blockers:** KARMA_SYSTEM.md §6 approval, Sprint 0 audit, MODULE_SYSTEM.md Stage I approval
-- **Blocks (other launch items):** brothel_temple_vd_content, db_transition_sprint_8, first_launch_adventure, invoke_circles_4_through_8, module_system_ink_runtime, multiplayer_phase_3, pegasus_telepathic_ally, pray_divinity_v1, scrolls_of_thoth_ui, three_launch_sagas
-- **Blocks (open EVs):** EV-karma_system-002, EV-module_system-001, EV-module_system-002
-- **What good looks like:** PICSSI virtues update on every atom choice; combat-PICSSI deltas fire on kill/flee/abandon; ordered-retreat works; legacy 10-virtue cold-deleted; all magnitudes match KARMA_SYSTEM canon.
-
-### 2. <a id="first_launch_adventure"></a>At least one launch adventure module shipped, end-to-end playable  `priority: 108`
+### 1. <a id="first_launch_adventure"></a>At least one launch adventure module shipped, end-to-end playable  `priority: 108`
 
 - **Status:** not-started
 - **Source:** ADVENTURE_MODULES_PLAN.md
@@ -33,7 +24,7 @@ Generated 2026-05-10.
 - **Blocks (open EVs):** EV-module_system-001, EV-module_system-002
 - **What good looks like:** A new player can complete the full quest line of one launch saga (Mirrors of Tuzun Thune / Shadow Kingdom / Kings of the Night) with PICSSI consequences, scroll/fragment seeding, NPC affection, combat encounters, and a death-respawn cycle.
 
-### 3. <a id="module_system_ink_runtime"></a>MODULE_SYSTEM Ink runtime + GPE authoring CLI  `priority: 103`
+### 2. <a id="module_system_ink_runtime"></a>MODULE_SYSTEM Ink runtime + GPE authoring CLI  `priority: 103`
 
 - **Status:** not-started
 - **Source:** MODULE_SYSTEM.md
@@ -42,27 +33,27 @@ Generated 2026-05-10.
 - **Blocks (open EVs):** EV-karma_system-002
 - **What good looks like:** Ink module loads at runtime, EXTERNAL functions (apply_karma, apply_npc_affection, set_flag, trigger_combat, etc.) work; GPE CLI produces per-virtue balance scorecards for any .ink module.
 
-### 4. <a id="stripe_payment_gate"></a>Stripe payment gate before character creation  `priority: 102`
+### 3. <a id="stripe_payment_gate"></a>Stripe payment gate before character creation  `priority: 102`
 
 - **Status:** not-started
 - **Source:** project_payment_before_character_creation.md
 - **Blocks (other launch items):** hero_registration, payment_success_email_flow
 - **What good looks like:** Stripe Checkout integration; payment success unlocks the hero forge; failed payment redirects to retry. Bridge (email-confirm = payment success) replaced.
 
-### 5. <a id="combat_arena_production_integration"></a>Combat Arena v2 integrated into production game flow  `priority: 100`
+### 4. <a id="combat_arena_production_integration"></a>Combat Arena v2 integrated into production game flow  `priority: 100`
 
 - **Status:** not-started
 - **Source:** components/CombatScreen.tsx (v1), components/CombatArena.tsx (v2)
 - **What good looks like:** Production game flow uses CombatArena, not CombatScreen. v1 retired or kept as fallback. All v1 features parity-tested in v2.
 
-### 6. <a id="hero_registration"></a>Hero registration + character creation flow  `priority: 100`
+### 5. <a id="hero_registration"></a>Hero registration + character creation flow  `priority: 100`
 
 - **Status:** in-progress
 - **Source:** app/forge-avatar/, lib/heroTypes.ts, project_payment_before_character_creation.md
 - **Blockers:** stripe_payment_gate
 - **What good looks like:** New player visits /splash, registers email, pays via Stripe, builds a hero through the wizard, lands in the Church of Perpetual Life with a saved row in players. No bridge auth path.
 
-### 7. <a id="image_generation_baseline"></a>Image generation pipeline (heroes + scenes + NPCs)  `priority: 100`
+### 6. <a id="image_generation_baseline"></a>Image generation pipeline (heroes + scenes + NPCs)  `priority: 100`
 
 - **Status:** in-progress
 - **Source:** scripts/forge-*.ts, lib/scenePrompt.ts, project_pre_roll_image_architecture.md
@@ -145,6 +136,7 @@ Generated 2026-05-10.
 - ✅ **Combat system stable (body-zone + Combat Arena v2 FX)** — components/CombatArena.tsx, lib/combat/engine.ts
 - ✅ **Death + respawn (Church of Perpetual Life)** — lib/adventures/guild-hall.ts (Church spawn), KARMA_SYSTEM.md §2.6 (Integrity reset)
 - ✅ **Jane AI narrator + streaming chat** — app/api/chat/route.ts, lib/gameEngine.ts
+- ✅ **KARMA Sprints 1–6 — PICSSI virtue system shipped end-to-end** — KARMA_IMPLEMENTATION_PLAN.md, rescue commit 88ce683 (2026-04-30), audit 2026-05-12
 - ✅ **Living-world database (cached room descriptions, NPC memory)** — lib/gameEngine.ts, Supabase rooms + objects tables
 - ✅ **Persistent hero with full Chronicle of Deeds** — lib/persistence/playerRecord.ts, lib/gameState.ts
 - ✅ **Production deploy on Vercel + main branch** — vercel.json (implicit), project memory

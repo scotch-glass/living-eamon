@@ -5,7 +5,7 @@ role: reference-generated
 canonical_for: [hydration-stack, gravity-wells, critical-path-summary, session-diff]
 visibility: internal
 status: active
-last_updated: 2026-05-10
+last_updated: 2026-05-12
 cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, HYDRATE_NEXT_SESSION.md]
 generated_by: scripts/build-hydration.ts
 npm_script: hydration:build
@@ -15,16 +15,16 @@ npm_script: hydration:build
 
 # Hydration Primer
 
-Generated 2026-05-10. **Read this first; it is the new top of the rehydration stack.**
+Generated 2026-05-12. **Read this first; it is the new top of the rehydration stack.**
 
 This page fuses topology + open questions + recent activity into one read so you can skip the per-doc grep cycle. Load **this**, then `docs/launch-readiness.md`, then `MEMORY.md`. Routes for specific topics are in [`docs/topic-routes.md`](topic-routes.md). Visual: [`docs/doc-graph.svg`](doc-graph.svg) (regen via `npx -y -p @mermaid-js/mermaid-cli@latest mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg`).
 
 ## At a glance
 
-- **Topology:** 37 docs · 5 open Edge Vectors · 128 edges
-- **Visibility:** 26 creator-visible · 11 internal-only
+- **Topology:** 39 docs · 5 open Edge Vectors · 131 edges
+- **Visibility:** 26 creator-visible · 13 internal-only
 - **Q+A coverage:** 108 questions across 14 docs · 103 high-confidence · 5 open
-- **Critical path:** `karma_sprint_chain` — priority **116** — blocks 10 downstream sprint(s)
+- **Critical path:** `first_launch_adventure` — priority **108** — blocks 4 downstream sprint(s)
 
 ## Gravity wells (most-incoming docs)
 
@@ -48,7 +48,7 @@ Path: [`GAME_DESIGN.md`](../GAME_DESIGN.md)
 
 Path: [`Public_Domain_Rules.md`](../Public_Domain_Rules.md)
 
-### module_system — Module System (Ink + GPE)  `(9 incoming)`
+### module_system — Module System (Ink + GPE)  `(10 incoming)`
 
 **Owns:** ink-external-functions, gpe-magnitude-bands, combat-picssi-hook-points, runtime-adapter-spec · **Status:** draft · **Q:10/2open**
 
@@ -60,7 +60,7 @@ Path: [`MODULE_SYSTEM.md`](../MODULE_SYSTEM.md)
 
 Path: [`DOC_MAP.md`](../DOC_MAP.md)
 
-### karma_implementation_plan — Karma Implementation Plan  `(7 incoming)`
+### karma_implementation_plan — Karma Implementation Plan  `(8 incoming)`
 
 **Owns:** karma-sprint-roadmap-s0-s7 · **Status:** deferred · **Q:8/1open**
 
@@ -80,7 +80,7 @@ Path: [`lore/pantheon/PANTHEON.md`](../lore/pantheon/PANTHEON.md)
 
 ## Critical path
 
-The single highest-priority blocker per `docs/launch-readiness.md` is **`karma_sprint_chain`** (priority 116). It blocks **10** downstream sprint(s). Consult `docs/launch-readiness.md` Tier-0 entry for what good looks like, what's blocking it, and what it blocks.
+The single highest-priority blocker per `docs/launch-readiness.md` is **`first_launch_adventure`** (priority 108). It blocks **4** downstream sprint(s). Consult `docs/launch-readiness.md` Tier-0 entry for what good looks like, what's blocking it, and what it blocks.
 
 ## High-impact open questions
 
@@ -92,10 +92,14 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 
 ## Recent activity
 
-Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T01:00:31+02:00):
+Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T18:58:49+02:00):
 
-- `6fc248b` — System 1: Room Map Maker — Mermaid diagram of room connectivity
-- `0fb2198` — session log: refresh HYDRATE_NEXT_SESSION for 2026-05-11
+- `f855060` — Sprint CF-0: Creator Forge + Quest Line Orchestrator foundation
+- `38f7ea2` — Generated: 50 destination room NPC sprites + all prompts saved
+- `ea47f02` — Fix: Background scene resolution parameter for Grok API
+- `da84194` — Atlantis lore integration: Phoenician culture + Elder-Races rune heritage
+- `e654b7a` — Session 001: Destination rooms authoring + forge scripts
+- `1879ddc` — Session prep: Destination rooms authoring plan + hydration update
 
 ## Reading guide
 

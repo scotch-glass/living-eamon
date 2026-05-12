@@ -898,6 +898,28 @@ When all Stage II approvals are in, this is the suggested build order. **DO NOT 
   - lib/karma/recompute.ts complete (applyKarma, recomputeDerivedStats, clampPicssi, etc.) ✓
   - Legacy 10-virtue functions already removed ✓
   - recomputeDerivedStats wired at player load (app/api/chat/route.ts:594) ✓
+- [x] **Sprint 3 (Activity dispatcher + Brothel/VD + Scrolls READ) — COMPLETE:** rescue commit 88ce683 (2026-04-30); audit 2026-05-12
+  - DB migration `20260502100000_karma_activity_state.sql` shipped (vd_active + scrolls_read JSONB columns)
+  - `lib/karma/activities.ts` shipped (ACTIVITIES registry, applyActivity, matchActivity)
+  - `lib/karma/brothel.ts` shipped (maybeContractVD, maybeFertilityCureVD)
+  - `lib/karma/scrolls.ts` shipped (readScroll, riddle gating)
+  - Wired into `lib/gameEngine.ts` (imports at line 83; dispatch at line 2646-2656)
+- [x] **Sprint 4 (Encounter loader + trigger matcher + choice resolution + NPC affection + flags) — COMPLETE:** rescue commit 88ce683 (2026-04-30); audit 2026-05-12
+  - DB migration `20260503100000_karma_world_state.sql` shipped (npc_affection + flags_life + flags_legacy JSONB)
+  - `lib/karma/loader.ts` shipped (loadAtoms)
+  - `lib/karma/triggers.ts` shipped (matchTriggers, KarmaEvent type)
+  - `lib/karma/resolve.ts` shipped (applyChoice)
+  - `lib/karma/atom-types.ts` shipped (Encounter, Choice, AffectVector, etc.)
+  - Wired into `lib/gameEngine.ts` (imports at line 85; trigger dispatch at line 5638)
+- [x] **Sprint 5 (Combat-PICSSI deltas + per-ally Flee + ordered retreat) — COMPLETE:** rescue commit 88ce683 (2026-04-30); audit 2026-05-12
+  - `lib/karma/combat-deltas.ts` shipped
+  - Wired into `lib/gameEngine.ts` (imports at line 93)
+  - DB migration `20260504100000_karma_log.sql` shipped (karma_log JSONB for Sprint 6 history)
+- [x] **Sprint 6 (UI polish — PICSSI sidebar, affection panel, karma log, riddle modal) — COMPLETE:** rescue commit 88ce683 (2026-04-30); audit 2026-05-12
+  - `app/page.tsx`: PICSSI virtue bars (line 1346-1350: Passion/Integrity/Courage/Standing/Spirituality), pendingRiddle modal hook (line 1330), affection panel (line 1399), karmaLog history (line 1431)
+- [ ] **Sprint 7 (Sorcery + Illumination drain) — DEFERRED** per KARMA_IMPLEMENTATION_PLAN.md heading; depends on SORCERY.md per-circle Illumination cost table. Out of scope for the initial karma rollout. Separate design exercise (~5+ days).
+
+**Status as of 2026-05-12:** Sprints 1–6 shipped. KARMA system is operationally complete except Sprint 7 (deferred).
 
 KARMA_SYSTEM.md is now the single source of truth for design values. KARMA_IMPLEMENTATION_PLAN.md handles the wiring.
 

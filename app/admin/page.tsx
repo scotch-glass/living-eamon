@@ -3,14 +3,30 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
+type SprintStatus = 'planned' | 'in-progress' | 'shipped';
+
+interface PlannedSprint {
+  id: string;          // e.g., "CF-1"
+  name: string;        // meaningful name, e.g., "Multiple-choice template engine"
+  anchor: string;      // links to /library/plans/{planSlug}#{anchor}
+  status: SprintStatus;
+}
+
 interface Tool {
   href: string;
   name: string;
   description: string;
   status: 'live' | 'partial' | 'planned';
+  /** Slug of the canonical plan in docs/plans/ (without .md), if any. */
+  planSlug?: string;
   pendingTasks: string[];
+  /** Sprints from the canonical plan. Each links to the plan's anchor. */
+  plannedSprints?: PlannedSprint[];
+  /** Free-form feature ideas not yet captured as plan-tracked sprints. */
   featuresToCode: string[];
 }
+
+const CREATOR_FORGE_PLAN = 'creator-forge-and-quest-line-orchestrator';
 
 const TOOLS: Tool[] = [
   {
@@ -19,16 +35,19 @@ const TOOLS: Tool[] = [
     description:
       'Author adventure modules end-to-end: rooms, atoms, NPCs, henchmen, art, Howard-voice prose, Eamon-style maps. Open to creator + admin roles.',
     status: 'planned',
-    pendingTasks: ['Sprint CF-0 foundation only — wizard ships in CF-1'],
-    featuresToCode: [
-      'CF-1: Multiple-choice template engine + module skeleton wizard',
-      'CF-2: Claude Opus 4.7 narrative prose generation (Howard grimdark)',
-      'CF-3: Eamon-style SVG map generator (1980s graph-paper aesthetic)',
-      'CF-4: NPC + henchman authoring with difficulty-clamped stats',
-      'CF-5: Room art + NPC sprite workflow (Grok-Imagine-Pro only)',
-      'CF-6: Ink scaffolding + JSON compile + promote-module CLI',
-      'CF-8: Validation + GPE balance scorecard + publish gate',
+    planSlug: CREATOR_FORGE_PLAN,
+    pendingTasks: ['Sprint CF-0 foundation shipped — wizard ships in CF-1'],
+    plannedSprints: [
+      { id: 'CF-0', name: 'Foundation — routes, Opus client, Supabase storage, /creator-forge shell', anchor: 'cf-0', status: 'shipped' },
+      { id: 'CF-1', name: 'Multiple-choice template engine + module skeleton wizard', anchor: 'cf-1', status: 'planned' },
+      { id: 'CF-2', name: 'Claude Opus 4.7 narrative prose generation (Howard grimdark)', anchor: 'cf-2', status: 'planned' },
+      { id: 'CF-3', name: 'Eamon-style SVG map generator (1980s graph-paper aesthetic)', anchor: 'cf-3', status: 'planned' },
+      { id: 'CF-4', name: 'NPC + henchman authoring with difficulty-clamped stats', anchor: 'cf-4', status: 'planned' },
+      { id: 'CF-5', name: 'Room art + NPC sprite workflow (Grok-Imagine-Pro only)', anchor: 'cf-5', status: 'planned' },
+      { id: 'CF-6', name: 'Ink scaffolding + JSON compile + promote-module CLI', anchor: 'cf-6', status: 'planned' },
+      { id: 'CF-8', name: 'Validation + GPE balance scorecard + publish gate', anchor: 'cf-8', status: 'planned' },
     ],
+    featuresToCode: [],
   },
   {
     href: '/admin/quest-lines',
@@ -36,7 +55,11 @@ const TOOLS: Tool[] = [
     description:
       'Stitch Modules into multi-stage Quest Lines with opening prose, interlude atoms, persistent flags, meta-reward.',
     status: 'planned',
+    planSlug: CREATOR_FORGE_PLAN,
     pendingTasks: ['Sprint CF-7 — placeholder shell shipped'],
+    plannedSprints: [
+      { id: 'CF-7', name: 'Quest Line Orchestrator — narrative spine, interludes, meta-reward editor', anchor: 'cf-7', status: 'planned' },
+    ],
     featuresToCode: [
       'Module spine drag-reorder + interlude atom insertion',
       'Opening + closing prose (Opus-generated, hand-edited)',
@@ -114,6 +137,17 @@ function statusBadge(status: Tool['status']) {
   }
 }
 
+function sprintPill(status: SprintStatus) {
+  switch (status) {
+    case 'shipped':
+      return { label: 'SHIPPED', className: 'bg-green-700 text-green-100' };
+    case 'in-progress':
+      return { label: 'IN PROGRESS', className: 'bg-yellow-600 text-yellow-50' };
+    case 'planned':
+      return { label: 'PLANNED', className: 'bg-slate-700 text-slate-300' };
+  }
+}
+
 interface DestinationStatus {
   id: string;
   bgStatus: 'pending' | 'approved' | 'rejected';
@@ -150,6 +184,11 @@ export default function AdminDashboard() {
       // ignore corrupt storage
     }
   }, []);
+
+  const totalFeatures = TOOLS.reduce(
+    (sum, t) => sum + t.featuresToCode.length + (t.plannedSprints?.length ?? 0),
+    0,
+  );
 
   return (
     <div className="min-h-screen bg-slate-900 p-8">
@@ -188,10 +227,8 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="bg-slate-900 rounded p-4">
-              <div className="text-slate-400 text-sm">Features to code</div>
-              <div className="text-white text-2xl font-bold mt-1">
-                {TOOLS.reduce((sum, t) => sum + t.featuresToCode.length, 0)}
-              </div>
+              <div className="text-slate-400 text-sm">Planned sprints + features</div>
+              <div className="text-white text-2xl font-bold mt-1">{totalFeatures}</div>
             </div>
           </div>
         </section>
@@ -215,7 +252,17 @@ export default function AdminDashboard() {
                         {tool.name} →
                       </Link>
                       <p className="text-slate-400 mt-1">{tool.description}</p>
-                      <code className="text-slate-500 text-xs">{tool.href}</code>
+                      <div className="flex items-center gap-3 mt-1 text-xs">
+                        <code className="text-slate-500">{tool.href}</code>
+                        {tool.planSlug && (
+                          <Link
+                            href={`/library/plans/${tool.planSlug}`}
+                            className="text-blue-400 hover:text-blue-300 underline decoration-dotted"
+                          >
+                            view plan
+                          </Link>
+                        )}
+                      </div>
                     </div>
                     <span
                       className={`text-xs font-bold uppercase tracking-wide px-3 py-1 rounded ${badge.className}`}
@@ -233,6 +280,38 @@ export default function AdminDashboard() {
                         {tool.pendingTasks.map((task) => (
                           <li key={task}>{task}</li>
                         ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {tool.plannedSprints && tool.plannedSprints.length > 0 && tool.planSlug && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wide mb-2">
+                        Planned sprints
+                      </h3>
+                      <ul className="space-y-1.5">
+                        {tool.plannedSprints.map((sprint) => {
+                          const pill = sprintPill(sprint.status);
+                          return (
+                            <li key={sprint.id} className="flex items-start gap-2 text-sm">
+                              <span
+                                className={`shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${pill.className}`}
+                                title={`Sprint status: ${sprint.status}`}
+                              >
+                                {pill.label}
+                              </span>
+                              <Link
+                                href={`/library/plans/${tool.planSlug}#${sprint.anchor}`}
+                                className="text-slate-200 hover:text-blue-300"
+                              >
+                                <span className="font-mono text-blue-400 mr-1">{sprint.id}:</span>
+                                <span className="underline decoration-slate-600 decoration-dotted hover:decoration-blue-400">
+                                  {sprint.name}
+                                </span>
+                              </Link>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
@@ -256,8 +335,9 @@ export default function AdminDashboard() {
         </section>
 
         <footer className="mt-10 text-slate-500 text-sm">
-          Edit this dashboard at <code>app/admin/page.tsx</code>. Counts pull from
-          tool-specific localStorage keys.
+          Edit this dashboard at <code>app/admin/page.tsx</code>. Planned sprints
+          link to anchors in their canonical plan under <code>docs/plans/</code>,
+          surfaced via <Link href="/library/plans" className="text-blue-400 hover:text-blue-300">/library/plans</Link>.
         </footer>
       </div>
     </div>

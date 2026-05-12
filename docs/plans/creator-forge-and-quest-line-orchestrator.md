@@ -13,7 +13,7 @@ Resolved during planning:
 - **Quest Line model:** Full narrative spine — Admin tool authors prose + map + interludes between Modules.
 - **Module format on disk:** Ink (`.ink`) per [MODULE_SYSTEM.md](MODULE_SYSTEM.md). Runtime hookup deferred until `karma_sprint_chain` ships; Creator tool ships authoring + JSON pre-compile + stub preview now.
 - **Map aesthetic:** SVG hand-drawn 1980s graph-paper style — Claude Opus 4.7 emits initial SVG; Creator drags/edits in-browser; Rough.js jitter; sepia palette.
-- **Access gating:** Admin-only alpha (`role='admin'`). Flip the `/creator/*` surface to `role='creator'` once stable (column already exists per [supabase/migrations/20260509000000_w1_player_role.sql](supabase/migrations/20260509000000_w1_player_role.sql)).
+- **Access gating:** Creator Forge at `/creator-forge/*` gated to `role IN ('creator','admin')`. Quest Line Orchestrator at `/admin/quest-lines/*` gated to `role='admin'` (stitching modules is admin work). Roles already defined per [supabase/migrations/20260509000000_w1_player_role.sql](supabase/migrations/20260509000000_w1_player_role.sql).
 - **AI assignments (HARD RULE):** Claude Opus 4.7 for ALL text generation (narrative prose, SVG maps, Ink scaffolding, template prose). Grok-Imagine-Pro ONLY for raster images (scene backdrops, NPC sprites). No Grok text calls in Creator/Admin surfaces.
 - **Plan persistence:** This plan (and future ones) lives in [docs/plans/](docs/plans/) and is surfaced in the `/library` wiki. CF-0 wires the storage pattern.
 
@@ -23,7 +23,7 @@ Resolved during planning:
 
 ```
 +------------------------+        +-------------------------+
-| /admin/quest-lines/*   |        | /admin/creator-forge/*  |
+| /admin/quest-lines/*   |        | /creator-forge/*  |
 |  (Admin: spine + UI)   |  uses  |  (Creator: per-module)  |
 +-----------+------------+        +------------+------------+
             |                                  |
@@ -66,14 +66,14 @@ Reuses:
 
 **Goal:** Routes + persistence + shared services ready for the rest of the toolset to plug into. Nothing user-visible besides empty shells. Plan-storage pattern wired.
 
-- `app/admin/creator-forge/page.tsx` — module list (empty state)
+- `app/creator-forge/page.tsx` — module list (empty state)
 - `app/admin/quest-lines/page.tsx` — quest-line list (empty state)
 - `app/admin/page.tsx` — add cards for both ([app/admin/page.tsx](app/admin/page.tsx))
 - `lib/anthropic/opus.ts` — `callOpus({ system, messages, maxTokens })` using `claude-opus-4-7[1m]` model. Mirror [lib/anthropic/client.ts](lib/anthropic/client.ts) shape; no streaming for v1.
 - `app/api/creator/[...path]/route.ts` — REST: GET/POST/PATCH/DELETE for `modules/<id>/{manifest|room|npc|atom|quest|map|interlude}`. Persistence: filesystem under `modules/<id>/` (gitignored draft folder; promoted to `lib/adventures/` on publish).
 - `app/api/creator/llm/route.ts` — server-side Claude Opus 4.7 proxy (admin-role gated; never expose ANTHROPIC_API_KEY to browser).
 - `lib/creator/storage.ts` — read/write JSON manifest + Ink files under `modules/<id>/`.
-- Auth: extend [proxy.ts](proxy.ts) — gate `/admin/creator-forge/*` and `/admin/quest-lines/*` to `role='admin'`.
+- Auth: extend [proxy.ts](proxy.ts) — gate `/creator-forge/*` and `/admin/quest-lines/*` to `role='admin'`.
 - **Plan-storage pattern:** copy this plan to `docs/plans/creator-forge-and-quest-line-orchestrator.md`, add a row to [DOC_MAP.md](DOC_MAP.md) (`role: dev-process`, `visibility: internal`), and add a `/library/plans` index page so future plans land here automatically. Future plan files in `~/.claude/plans/` are working drafts; canonical home is `docs/plans/`.
 
 **Verification:** Visit both new admin pages while logged in as admin; both render empty state. Hitting them as `player` redirects to `/splash`. `curl localhost:3000/api/creator/llm` returns 401 unauthenticated. `/library/plans` shows the index with this plan listed.
@@ -89,8 +89,8 @@ Reuses:
   - `QUESTIONNAIRE: Question[]` — ~20 questions covering: setting biome, conflict shape, faction count, friendly/enemy NPC mix, henchman slots, scroll/fragment seeding, PD anchor (which Howard story inspires), difficulty tier.
   - `generateSkeleton(answers: Answer[]): ModuleSkeleton` — deterministic algorithm. Maps option weights → AffectVector + PICSSI targets, picks room count (`floor(2 + difficulty × 4)`), allocates atom slots per room weighted by chosen axes, names rooms with placeholder IDs.
 - `ModuleSkeleton` shape: `{ moduleId, name, difficulty, locationId, travelZones[], affectTargets: AffectVector, picssiTargets: Partial<Record<PicssiVirtue, number>>, rooms: { id, picssiContacts[], atomSlots: number, npcSlots: { friendly: number, hostile: number }, henchmanSlots: number }[], questOutline: { steps: number, branches: number } }`.
-- `app/admin/creator-forge/new/page.tsx` — wizard UI mirroring [app/forge-avatar/WizardClient.tsx](app/forge-avatar/WizardClient.tsx) pattern (3-step pattern: questionnaire → preview → confirm).
-- `app/admin/creator-forge/[moduleId]/page.tsx` — module editor shell with tabs: Overview / Rooms / Atoms / NPCs / Map / Narrative / Quest / Art / Preview.
+- `app/creator-forge/new/page.tsx` — wizard UI mirroring [app/forge-avatar/WizardClient.tsx](app/forge-avatar/WizardClient.tsx) pattern (3-step pattern: questionnaire → preview → confirm).
+- `app/creator-forge/[moduleId]/page.tsx` — module editor shell with tabs: Overview / Rooms / Atoms / NPCs / Map / Narrative / Quest / Art / Preview.
 
 **Verification:** Run the wizard end-to-end; resulting `modules/<id>/module.json` matches expected skeleton (3 rooms for novice, 7 rooms for moderate, 11 for deadly). Re-running with same answers yields identical skeleton (determinism).
 
@@ -105,8 +105,8 @@ Reuses:
   - `buildRoomPromptUserMessage(skeleton, roomSpec)`, `buildAtomPromptUserMessage(...)`, `buildChoicePromptUserMessage(...)`.
   - Negative-list block (terms to NEVER use: "Hyborian", "Cimmerian", "Conan", "Tarantia", etc. — cross-ref MEMORY).
 - `app/api/creator/[moduleId]/generate/route.ts` — POST { target: "room"|"atom"|"choice", id, contextOverrides } → Claude Opus 4.7 → returns prose. Server-side only.
-- `app/admin/creator-forge/[moduleId]/narrative/page.tsx` — per-room/per-atom inline editor: AI button generates prose, human edits in textarea, save persists. Show token-cost estimate per call.
-- `app/admin/creator-forge/[moduleId]/components/RegenButton.tsx` — three-state: idle / generating / generated. Holds previous version for undo.
+- `app/creator-forge/[moduleId]/narrative/page.tsx` — per-room/per-atom inline editor: AI button generates prose, human edits in textarea, save persists. Show token-cost estimate per call.
+- `app/creator-forge/[moduleId]/components/RegenButton.tsx` — three-state: idle / generating / generated. Holds previous version for undo.
 
 **Verification:** Generate prose for a sample room; verify it reads as Howard grimdark; verify negative-list terms never appear (lint script `scripts/validate-pd-safety.ts` greps the output). Edit and save; reload; persists.
 
@@ -120,14 +120,14 @@ Reuses:
   - `buildMapPromptUserMessage(skeleton)` — instructs Claude to emit ONLY valid SVG with: numbered room rects, cardinal-direction connectors, compass rose, sepia palette (#faf3f0 paper, #5a4a42 ink, #d4a574 sepia), Rough.js-style hand-drawn stroke jitter (filter or path roughness), <100KB total. System prompt forbids `<script>`, `<image>`, external refs.
   - `validateSvg(raw): SafeSvg | Error` — strict allowlist parser (tags: svg, g, rect, line, path, text, circle, defs, filter). Reject anything else.
   - `applyRoughStyle(svg): svg` — server-side post-process to add Rough.js-equivalent perturbation if Claude underdelivers on hand-drawn feel.
-- `app/admin/creator-forge/[moduleId]/map/page.tsx` — editor:
+- `app/creator-forge/[moduleId]/map/page.tsx` — editor:
   - Left: SVG canvas. Room rects draggable via SVG transform mutation.
   - Right: room list, rename, add/delete connector.
   - Toolbar: Generate (AI), Regenerate, Add Room, Add Connector, Export SVG.
   - "Open in Excalidraw" link (optional v2): export → Excalidraw JSON → user edits externally → re-import.
 - Persistence: `modules/<id>/map.svg` + `modules/<id>/map.json` (room positions, connector list — derived view for fast UI).
 
-**Verification:** Generate a map for a 5-room module; SVG validates; drag a room rect, save, reload; position persists. Open `/admin/creator-forge/<id>/map` — aesthetic reads as graph-paper, not flowchart.
+**Verification:** Generate a map for a 5-room module; SVG validates; drag a room rect, save, reload; position persists. Open `/creator-forge/<id>/map` — aesthetic reads as graph-paper, not flowchart.
 
 ---
 
@@ -138,8 +138,8 @@ Reuses:
 - `lib/creator/npc.ts`:
   - `defaultStatsForDifficulty(difficulty): { hp: [min,max], armor: [min,max], damage: ["1d4","2d8"] }` — bounds table.
   - `clampNpcStats(npc, difficulty)` — enforce bounds.
-- `app/admin/creator-forge/[moduleId]/npcs/page.tsx` — table editor: id, name, friendly/enemy toggle, HP slider, armor slider, damage dice picker, sprite thumbnail (from CF-5), "Generate description via Opus" button, room assignment dropdown.
-- `app/admin/creator-forge/[moduleId]/henchmen/page.tsx` — roster: which NPCs in this module are recruitable; per-henchman loyalty hooks (which atoms shift their loyalty).
+- `app/creator-forge/[moduleId]/npcs/page.tsx` — table editor: id, name, friendly/enemy toggle, HP slider, armor slider, damage dice picker, sprite thumbnail (from CF-5), "Generate description via Opus" button, room assignment dropdown.
+- `app/creator-forge/[moduleId]/henchmen/page.tsx` — roster: which NPCs in this module are recruitable; per-henchman loyalty hooks (which atoms shift their loyalty).
 - Schema additions to `module.json`: `npcs: { id, name, isHostile, stats, spritePrompt, descPrompt, roomId, henchmanRecruitable }[]`.
 
 **Verification:** Create an NPC with HP=200 in a novice module; UI clamps to ~30 max. Toggle hostile; sprite-prompt regen suggests UGLY_MEAN_OVERLAY (per `feedback_bandits_uglier_meaner.md`). Friendly NPC strips the overlay.
@@ -151,7 +151,7 @@ Reuses:
 **Goal:** Per-room and per-NPC: request art, approve/reject, request regens. Grok-Imagine-Pro is the only generator. Strict reuse of [lib/sceneTemplate.ts](lib/sceneTemplate.ts) for scenes; per-NPC framing block for sprites.
 
 - `app/api/creator/[moduleId]/forge-image/route.ts` — POST { kind: "scene"|"npc", targetId, prompt } → enqueues a Grok call; on completion writes to `public/art/scenes/<moduleId>/<roomId>/bg-vN.jpg` or `public/art/npcs/<moduleId>/<npcId>/master/vN.png`. Logs to `_prompt.txt`. Reuses [lib/imageProcessing.ts](lib/imageProcessing.ts) (grokImageToJpeg / grokImageToTransparentPng + rembg).
-- `app/admin/creator-forge/[moduleId]/art/page.tsx` — review carousel adapted from [app/admin/destination-review/page.tsx](app/admin/destination-review/page.tsx). Per-asset: approve / reject / regen-with-custom-prompt. Server-side persistence (replaces destination-review's localStorage; this is the unified pattern going forward).
+- `app/creator-forge/[moduleId]/art/page.tsx` — review carousel adapted from [app/admin/destination-review/page.tsx](app/admin/destination-review/page.tsx). Per-asset: approve / reject / regen-with-custom-prompt. Server-side persistence (replaces destination-review's localStorage; this is the unified pattern going forward).
 - `module.json` extensions: `rooms[].bgPath`, `npcs[].spritePath`, `rooms[].artStatus`, `npcs[].artStatus` (pending|approved|rejected|regen_requested|generated).
 - Cost guard: per-module spend tracker; warn at $5, hard-stop at $20 unless override flag.
 
@@ -203,7 +203,7 @@ Reuses:
   - `validateModule(manifest): ValidationIssue[]` — schema: every room exit resolves; every NPC id referenced exists; every choice's PICSSI deltas sum within `[-30, +30]` per virtue; every atom has at least 2 choices; PD-safety pass (no trademark terms); image paths exist; difficulty/stat bounds respected.
   - `validateQuestLine(manifest): ValidationIssue[]` — every module referenced exists + validates; persistent flags don't collide with reserved names; interlude atoms PD-safe.
 - `lib/creator/gpe.ts` — minimal GPE port from MODULE_SYSTEM.md §7: walk all atom choices, compute per-virtue reachable growth, flag any virtue >2× the median of others (the "GPE imbalance" signal). Display per-virtue scorecard.
-- `app/admin/creator-forge/[moduleId]/validate/page.tsx` — issues list with severity (error/warn/info); GPE scorecard chart.
+- `app/creator-forge/[moduleId]/validate/page.tsx` — issues list with severity (error/warn/info); GPE scorecard chart.
 - `scripts/creator/promote-module.ts` — refuse promote if any `error`-severity issues remain.
 
 **Verification:** Intentionally create a module with a dangling exit + an unbalanced atom; validation flags both; fix; promote succeeds; the module appears in `npm run dev` as a real adventure (stub runtime; full runtime arrives with KARMA Sprint chain).
@@ -217,7 +217,7 @@ Reuses:
 - `lib/narrativePrompt.ts` — Howard-voice system prompt + PD negative list
 - `lib/creator/{template,storage,inkEmit,mapSvg,npc,questLine,validate,gpe}.ts`
 - `lib/creator/preview/stubAdapter.ts`
-- `app/admin/creator-forge/page.tsx` + `/new` + `/[moduleId]/{overview,rooms,atoms,npcs,henchmen,map,narrative,art,validate}/page.tsx`
+- `app/creator-forge/page.tsx` + `/new` + `/[moduleId]/{overview,rooms,atoms,npcs,henchmen,map,narrative,art,validate}/page.tsx`
 - `app/admin/quest-lines/page.tsx` + `/new` + `/[questId]/page.tsx`
 - `app/api/creator/llm/route.ts`
 - `app/api/creator/[...path]/route.ts`
@@ -230,7 +230,7 @@ Reuses:
 - `app/library/plans/page.tsx` — index of all plans in `docs/plans/`
 
 **Modified:**
-- [proxy.ts](proxy.ts) — gate `/admin/creator-forge/*` and `/admin/quest-lines/*` to `role='admin'`
+- [proxy.ts](proxy.ts) — gate `/creator-forge/*` and `/admin/quest-lines/*` to `role='admin'`
 - [app/admin/page.tsx](app/admin/page.tsx) — add Creator Forge + Quest Lines cards
 - [lib/adventures/registry.ts](lib/adventures/registry.ts) — extend to load promoted modules (stub for now; runtime hookup with KARMA Sprint chain)
 - [DOC_MAP.md](DOC_MAP.md) — add rows for new design-canon doc (`CREATOR_FORGE.md` to be authored as part of CF-0), this plan (under `docs/plans/`), and any session-log entries
@@ -256,7 +256,7 @@ Reuses:
 
 1. **Claude Opus 4.7 (`claude-opus-4-7[1m]`) is the only model for text generation in the Creator/Admin surfaces.** Grok is forbidden for prose, SVG, Ink scaffolding, multiple-choice template prose, anywhere text appears in this toolset. Grok-Imagine-Pro is ONLY for raster image generation (scene backdrops via [lib/sceneTemplate.ts](lib/sceneTemplate.ts), NPC sprites).
 2. **All LLM calls are server-side** (`app/api/creator/llm/...`). Never expose `ANTHROPIC_API_KEY` to the browser.
-3. **Admin-gated until proven.** `role='admin'` everywhere in v1. Flip to `role='creator'` once Scotch has authored one full module end-to-end.
+3. **Roles split by surface.** Creator Forge lives at `/creator-forge/*` and is gated to `role IN ('creator','admin')`. Quest Line Orchestrator lives at `/admin/quest-lines/*` and stays admin-only — stitching modules into Quest Lines is admin work. The general `/admin/*` namespace stays admin-only as before.
 4. **PD-safety lint runs on every Opus output.** `scripts/validate-pd-safety.ts` is called server-side before returning prose to the client. Trademark-radioactive terms (Hyborian, Cimmerian, Conan, Tarantia, Thoth-Amon, Bêlit, etc. — full list in [Public_Domain_Rules.md](Public_Domain_Rules.md)) block the response.
 5. **Module output format is Ink.** Even though the runtime is gated behind `karma_sprint_chain`, the authoring tool emits Ink + JSON now, so when the runtime lands, every Creator-authored module is ready to plug in.
 6. **No image regenerations without explicit user click.** Per `feedback_image_workflow.md`. Auto-regen on hot-reload is forbidden.
@@ -281,7 +281,7 @@ Reuses:
 
 After all 8 sprints land, the success criterion is:
 
-> **Scotch can sit down, walk through `/admin/creator-forge/new`, answer the 20-question wizard for "Mirrors of Tuzun Thune" (M-1 from [ADVENTURE_MODULES_PLAN.md](ADVENTURE_MODULES_PLAN.md)), let Opus 4.7 generate all prose + the Eamon-style SVG map, request and approve scene art + NPC sprites for all rooms, edit NPC stats, validate clean, and promote to a `.ink` file that compiles and previews in the stub adapter — all without writing a single line of TypeScript.**
+> **Scotch can sit down, walk through `/creator-forge/new`, answer the 20-question wizard for "Mirrors of Tuzun Thune" (M-1 from [ADVENTURE_MODULES_PLAN.md](ADVENTURE_MODULES_PLAN.md)), let Opus 4.7 generate all prose + the Eamon-style SVG map, request and approve scene art + NPC sprites for all rooms, edit NPC stats, validate clean, and promote to a `.ink` file that compiles and previews in the stub adapter — all without writing a single line of TypeScript.**
 
 Test plan after each sprint:
 - CF-0: routes render; auth gates work; LLM proxy is admin-gated; this plan visible at `/library/plans`.

@@ -1,10 +1,11 @@
 // ============================================================
 // Creator Forge — module list landing page (Sprint CF-0).
 //
-// Admin-only. Empty-state shell now; CF-1 wires the "New Module"
-// wizard and CF-2+ surface per-module editors. Listing pulls from
-// /api/creator/modules which reads <repo>/modules/<id>/module.json
-// off disk.
+// Gated to roles creator | admin (see proxy.ts). Lives outside
+// /admin/ so the URL reflects who's allowed there. Empty-state
+// shell now; CF-1 wires the "New Module" wizard and CF-2+ surface
+// per-module editors. Listing pulls from /api/creator/modules
+// which reads module manifests from Supabase Storage.
 // ============================================================
 
 'use client';
@@ -40,7 +41,7 @@ export default function CreatorForgePage() {
       <div className="max-w-6xl mx-auto">
         <header className="mb-10">
           <p className="text-slate-500 text-sm">
-            <Link href="/admin" className="hover:text-white">← Admin</Link>
+            <Link href="/library" className="hover:text-white">← Library</Link>
           </p>
           <h1 className="text-4xl font-bold text-white mb-2 mt-2">
             Creator Forge
@@ -56,7 +57,7 @@ export default function CreatorForgePage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">Modules</h2>
             <Link
-              href="/admin/creator-forge/new"
+              href="/creator-forge/new"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium"
             >
               + New Module
@@ -88,7 +89,7 @@ export default function CreatorForgePage() {
               {modules.map((m) => (
                 <Link
                   key={m.id}
-                  href={`/admin/creator-forge/${m.id}`}
+                  href={`/creator-forge/${m.id}`}
                   className="block bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg p-5"
                 >
                   <div className="text-white text-lg font-medium">{m.name}</div>
@@ -103,8 +104,8 @@ export default function CreatorForgePage() {
         </section>
 
         <footer className="mt-12 text-slate-500 text-sm">
-          Draft modules are stored at <code>modules/&lt;id&gt;/</code> on disk and
-          gitignored until promoted. See{' '}
+          Draft modules persist in Supabase Storage (bucket{' '}
+          <code>creator-modules</code>) until promoted. See{' '}
           <code>docs/plans/creator-forge-and-quest-line-orchestrator.md</code>.
         </footer>
       </div>

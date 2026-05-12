@@ -39,7 +39,7 @@ export default function QuestLinesPage() {
               Modules are the building blocks Quest Lines stitch together.
             </p>
             <Link
-              href="/admin/creator-forge"
+              href="/creator-forge"
               className="mt-6 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium"
             >
               Go to Creator Forge →

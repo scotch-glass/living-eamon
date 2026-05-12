@@ -18,14 +18,11 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Creator Forge + Quest Line Orchestrator — admin-role required in
-  // BOTH dev and prod (Hard Rule #3 of the Creator Forge plan: admin-
-  // gated until proven). Sits before the general /admin/ dev-open gate
-  // so the role check is never skipped.
-  if (
-    pathname.startsWith("/admin/creator-forge") ||
-    pathname.startsWith("/admin/quest-lines")
-  ) {
+  // Quest Line Orchestrator — admin-role required in BOTH dev and prod.
+  // Quest Lines stitch creator-authored modules together; that's admin
+  // work. Sits before the general /admin/ dev-open gate so the role
+  // check is never skipped.
+  if (pathname.startsWith("/admin/quest-lines")) {
     if (!user) {
       return NextResponse.redirect(new URL("/splash", request.url));
     }
@@ -36,6 +33,25 @@ export async function middleware(request: NextRequest) {
       .maybeSingle();
     const role = (roleRow?.role as "player" | "creator" | "admin" | undefined) ?? "player";
     if (role !== "admin") {
+      return NextResponse.redirect(new URL("/splash", request.url));
+    }
+    return response;
+  }
+
+  // Creator Forge — role creator OR admin required (in BOTH dev and
+  // prod). Lives at /creator-forge/* outside /admin/ since creators
+  // are not admins.
+  if (pathname.startsWith("/creator-forge")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/splash", request.url));
+    }
+    const { data: roleRow } = await supabaseAdmin
+      .from("players")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const role = (roleRow?.role as "player" | "creator" | "admin" | undefined) ?? "player";
+    if (role !== "creator" && role !== "admin") {
       return NextResponse.redirect(new URL("/splash", request.url));
     }
     return response;

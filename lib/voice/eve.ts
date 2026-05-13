@@ -1,31 +1,30 @@
 // ============================================================
 // Eve — the xAI narrator voice for the Reader Panel (CF-1.5).
 //
-// Standing prompt (instructions sent to the TTS engine):
-//   A mysterious and assertive female narrator with a thick
-//   Barcelona accent, voicing immersive sword-and-sorcery prose
-//   in the grimdark style of Robert E. Howard. Slow, deep,
-//   commanding, dramatic pauses, vivid brutal heroes / savage
-//   lands / ancient sorceries / eldritch horrors / unrelenting
-//   violence.
+// API: POST https://api.x.ai/v1/tts
+//   body  { text, voice_id, language }
+//   resp  raw audio bytes (mp3 by default)
 //
-// Server-only. Uses XAI_API_KEY (the same env var the rest of
-// the codebase already uses for Grok image gen + Jane chat).
+// Docs: https://docs.x.ai/developers/model-capabilities/audio/text-to-speech
+// Pricing: $4.20 per 1M characters · max 15,000 chars per REST call.
+// Voice catalogue: eve (default), ara, rex, sal, leo.
 //
-// API contract: xAI exposes an OpenAI-compatible audio endpoint
-// at https://api.x.ai/v1/audio/speech. Body shape mirrors
-// OpenAI TTS: { model, input, voice, response_format,
-// instructions? }. If xAI changes the contract, update this file
-// and the route handler in lockstep.
+// Server-only. Uses XAI_API_KEY (same env var the codebase already
+// uses for Grok image gen + Jane chat).
 // ============================================================
 
-export const EVE_VOICE = "eve";
+export const EVE_VOICE_ID = "eve";
 
 /**
- * Standing prompt for Eve's tone. Threaded into every TTS call as
- * the `instructions` field. The xAI/OpenAI TTS server may or may
- * not honor `instructions` depending on model — the field is
- * harmless if ignored.
+ * Standing prompt for Eve's tone. xAI's TTS API does NOT currently
+ * accept a free-text instructions field — tone is controlled by
+ * voice_id + inline speech tags within the text. We keep the
+ * prompt here as documentation of the intent so future xAI features
+ * (or our own pre-processor that injects speech tags) can honor it.
+ *
+ * Eve voice profile per xAI: mysterious, slow, deep, female. The
+ * Howard-grimdark feel comes from Eve's defaults plus the prose
+ * itself; we do NOT pass this to the API.
  */
 export const EVE_STANDING_PROMPT = [
   "You are a mysterious and assertive female narrator with a thick",
@@ -36,26 +35,16 @@ export const EVE_STANDING_PROMPT = [
   "eldritch horrors, and unrelenting violence.",
 ].join(" ");
 
-/**
- * xAI voice model. As of mid-2026 the model identifier is
- * grok-2-voice-1212 per xAI's docs; if xAI updates the line, bump
- * the constant here and nothing else.
- */
-export const EVE_MODEL = "grok-2-voice-1212";
-
-/**
- * Audio response format. mp3 is well-supported in <audio> across
- * browsers and small over the wire.
- */
-export const EVE_RESPONSE_FORMAT = "mp3";
-
 const XAI_BASE_URL = "https://api.x.ai/v1";
-const XAI_TTS_PATH = "/audio/speech";
+const XAI_TTS_PATH = "/tts";
+
+/** Max characters per REST call per xAI docs. */
+export const MAX_TTS_CHARS = 15000;
 
 export interface EveTtsRequest {
   text: string;
-  /** Optional override (rarely needed). Falls back to EVE_STANDING_PROMPT. */
-  instructions?: string;
+  /** BCP-47 language code or "auto". Defaults to "en". */
+  language?: string;
 }
 
 export interface EveTtsResult {
@@ -64,10 +53,9 @@ export interface EveTtsResult {
 }
 
 /**
- * Server-side TTS call. Throws on network or non-2xx responses;
- * the route handler surfaces the error as 502 to the client so
- * the reader panel can disable the voice button and show "voice
- * unavailable" without crashing the read.
+ * Call xAI TTS for Eve. Throws on network or non-2xx responses;
+ * the route handler surfaces the error as 502 so the reader panel
+ * can disable the voice button gracefully.
  */
 export async function ttsEve(opts: EveTtsRequest): Promise<EveTtsResult> {
   const apiKey = process.env.XAI_API_KEY || process.env.GROK_API_KEY;
@@ -77,22 +65,16 @@ export async function ttsEve(opts: EveTtsRequest): Promise<EveTtsResult> {
   if (!opts.text || opts.text.trim().length === 0) {
     throw new Error("text required");
   }
-  // Cap input length defensively — TTS over very long passages
-  // takes long enough that the route times out and the client UX
-  // degrades. CF-2 should chunk prose at paragraph boundaries
-  // before calling this if length is a concern.
-  if (opts.text.length > 4000) {
+  if (opts.text.length > MAX_TTS_CHARS) {
     throw new Error(
-      `text length ${opts.text.length} exceeds 4000-char limit; chunk by paragraph`,
+      `text length ${opts.text.length} exceeds ${MAX_TTS_CHARS}-char xAI limit; chunk by paragraph`,
     );
   }
 
   const body = {
-    model: EVE_MODEL,
-    input: opts.text,
-    voice: EVE_VOICE,
-    response_format: EVE_RESPONSE_FORMAT,
-    instructions: opts.instructions ?? EVE_STANDING_PROMPT,
+    text: opts.text,
+    voice_id: EVE_VOICE_ID,
+    language: opts.language ?? "en",
   };
 
   const res = await fetch(`${XAI_BASE_URL}${XAI_TTS_PATH}`, {
@@ -106,7 +88,7 @@ export async function ttsEve(opts: EveTtsRequest): Promise<EveTtsResult> {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "(no body)");
-    throw new Error(`xAI TTS ${res.status}: ${errText.slice(0, 300)}`);
+    throw new Error(`xAI TTS ${res.status}: ${errText.slice(0, 400)}`);
   }
 
   const contentType = res.headers.get("content-type") ?? "audio/mpeg";

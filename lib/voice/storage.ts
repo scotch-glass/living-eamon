@@ -89,7 +89,11 @@ export interface VoiceVersionMeta {
   version: number;
   generatedAt: string;       // ISO
   text: string;              // the input text that was synthesized
-  instructionsOverride?: string;
+  /**
+   * BCP-47 language code that was passed to xAI for this version
+   * (e.g., "en", "es", "auto"). Defaults to "en" when omitted.
+   */
+  language?: string;
   bytes: number;
   contentType: string;
 }
@@ -153,7 +157,7 @@ export async function uploadVersion(
   audio: ArrayBuffer,
   contentType: string,
   text: string,
-  instructionsOverride: string | undefined,
+  language: string | undefined,
 ): Promise<VoiceMetadata> {
   await ensureBucket();
   const supabase = getClient();
@@ -172,7 +176,7 @@ export async function uploadVersion(
     version: nextVersion,
     generatedAt: new Date().toISOString(),
     text,
-    instructionsOverride,
+    language,
     bytes: audio.byteLength,
     contentType,
   };

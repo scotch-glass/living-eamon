@@ -2,8 +2,11 @@
 // Module-creation wizard (CF-1).
 //
 // 5 steps: Setting → Conflict → Mechanics → Shape → Preview.
-// Server-side POST /api/creator/skeleton produces the skeleton;
-// /api/creator/modules/{id} saves it to Supabase Storage.
+//
+// When the Creator picks a PD anchor in step 1, the wizard
+// auto-fills the other 16 questions with story-specific defaults
+// (including AI-pre-filled customText for "Other" options). The
+// Creator can confirm or tweak any answer before previewing.
 // ============================================================
 
 'use client';
@@ -12,8 +15,13 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { QUESTIONNAIRE } from '@/lib/creator/questionnaire';
-import type { ModuleSkeleton, WizardAnswer } from '@/lib/creator/skeletonTypes';
-import type { WizardQuestion } from '@/lib/creator/skeletonTypes';
+import { getPdAnchor } from '@/lib/creator/pdAnchors';
+import type {
+  ModuleSkeleton,
+  WizardAnswer,
+  WizardQuestion,
+  WizardOption,
+} from '@/lib/creator/skeletonTypes';
 
 const SECTIONS: Array<{
   key: 'setting' | 'conflict' | 'mechanics' | 'shape';
@@ -25,6 +33,11 @@ const SECTIONS: Array<{
   { key: 'mechanics', title: 'Mechanics', description: 'Combat density, gear, atom severity.' },
   { key: 'shape', title: 'Shape', description: 'Length, pace, reward.' },
 ];
+
+interface AnswerState {
+  optionId: string;
+  customText?: string;
+}
 
 function questionsForSection(section: 'setting' | 'conflict' | 'mechanics' | 'shape'): WizardQuestion[] {
   return QUESTIONNAIRE.filter((q) => q.section === section);
@@ -41,9 +54,9 @@ function slugify(s: string): string {
 
 export default function NewModuleWizard() {
   const router = useRouter();
-  const [stepIdx, setStepIdx] = useState(0); // 0..4 (0..3 sections, 4 = preview)
+  const [stepIdx, setStepIdx] = useState(0);
   const [name, setName] = useState('');
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [skeleton, setSkeleton] = useState<ModuleSkeleton | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -56,12 +69,48 @@ export default function NewModuleWizard() {
   const currentSection = stepIdx < 4 ? SECTIONS[stepIdx] : null;
   const currentQuestions = currentSection ? questionsForSection(currentSection.key) : [];
   const allSectionsAnswered = useMemo(
-    () => QUESTIONNAIRE.every((q) => answers[q.id] !== undefined),
+    () => QUESTIONNAIRE.every((q) => answers[q.id]?.optionId !== undefined),
     [answers],
   );
 
-  function setAnswer(qId: string, oId: string) {
-    setAnswers((prev) => ({ ...prev, [qId]: oId }));
+  // Pick a non-"other" option. Just records the optionId; clears any
+  // customText so the textarea resets when the Creator changes their mind.
+  function pickOption(qId: string, oId: string) {
+    if (qId === 'pd-anchor') {
+      applyPdAnchorDefaults(oId);
+      return;
+    }
+    setAnswers((prev) => ({
+      ...prev,
+      [qId]: { optionId: oId, customText: prev[qId]?.customText },
+    }));
+  }
+
+  // When the Creator selects "Other" and types — preserves the typed text
+  // for the next time they revisit the question.
+  function setCustomText(qId: string, text: string) {
+    setAnswers((prev) => ({
+      ...prev,
+      [qId]: { optionId: 'other', customText: text },
+    }));
+  }
+
+  function applyPdAnchorDefaults(anchorId: string) {
+    const anchor = getPdAnchor(anchorId);
+    setAnswers((prev) => {
+      const next: Record<string, AnswerState> = {
+        ...prev,
+        'pd-anchor': { optionId: anchorId },
+      };
+      if (!anchor || !anchor.defaults) return next;
+      for (const [qId, def] of Object.entries(anchor.defaults)) {
+        next[qId] = {
+          optionId: def.optionId,
+          customText: def.customText,
+        };
+      }
+      return next;
+    });
   }
 
   async function runPreview() {
@@ -77,7 +126,11 @@ export default function NewModuleWizard() {
     setPreviewError(null);
     try {
       const wizardAnswers: WizardAnswer[] = Object.entries(answers).map(
-        ([questionId, optionId]) => ({ questionId, optionId }),
+        ([questionId, a]) => ({
+          questionId,
+          optionId: a.optionId,
+          customText: a.customText,
+        }),
       );
       const res = await fetch('/api/creator/skeleton', {
         method: 'POST',
@@ -116,9 +169,7 @@ export default function NewModuleWizard() {
 
   function next() {
     if (stepIdx === 3) {
-      // Going into preview — kick off the generator
       setStepIdx(4);
-      // Use timeout so the step renders before fetch starts
       setTimeout(() => runPreview(), 0);
       return;
     }
@@ -139,16 +190,23 @@ export default function NewModuleWizard() {
             </Link>
           </p>
           <h1 className="text-4xl font-bold text-white mb-2 mt-2">New Module</h1>
-          <p className="text-slate-400">
-            18 questions, ~10 minutes. The algorithm computes structure, loads,
-            and P(complete) from your choices. You can tweak the result on the
-            preview screen.
+          <p className="text-slate-400 mb-2">
+            Pick a Howard public-domain story in step 1 and the wizard auto-fills
+            the rest with story-specific defaults. Tweak any answer before
+            generating the preview.
+          </p>
+          <p className="text-slate-500 text-sm italic">
+            Design goal: the module captures the <em>feel</em>, setting, and
+            atmosphere of the source story as closely as possible — but the
+            player character is the hero, not Kull / Bran Mak Morn / Howard's
+            named protagonist. Per <code className="text-amber-300">Public_Domain_Rules.md</code>{' '}
+            §4.4 customization discipline. CF-2 hands these answers to Claude
+            Opus 4.7 as prose seeds.
           </p>
         </header>
 
         <Stepper currentIdx={stepIdx} />
 
-        {/* Name input — sticky on every step until preview */}
         {stepIdx < 4 && (
           <div className="mb-8 bg-slate-800 border border-slate-700 rounded-lg p-5">
             <label className="block text-sm font-bold text-slate-300 uppercase tracking-wide mb-2">
@@ -163,13 +221,15 @@ export default function NewModuleWizard() {
             />
             {name && (
               <div className="text-slate-500 text-xs mt-2">
-                ID: <code className={moduleIdValid ? 'text-blue-400' : 'text-red-400'}>{moduleId || '(invalid)'}</code>
+                ID:{' '}
+                <code className={moduleIdValid ? 'text-blue-400' : 'text-red-400'}>
+                  {moduleId || '(invalid)'}
+                </code>
               </div>
             )}
           </div>
         )}
 
-        {/* Section body */}
         {currentSection && (
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-white mb-1">{currentSection.title}</h2>
@@ -179,15 +239,15 @@ export default function NewModuleWizard() {
                 <QuestionCard
                   key={q.id}
                   question={q}
-                  selectedOptionId={answers[q.id]}
-                  onPick={(oid) => setAnswer(q.id, oid)}
+                  selected={answers[q.id]}
+                  onPick={(oid) => pickOption(q.id, oid)}
+                  onCustomText={(text) => setCustomText(q.id, text)}
                 />
               ))}
             </div>
           </section>
         )}
 
-        {/* Preview step */}
         {stepIdx === 4 && (
           <Preview
             loading={previewLoading}
@@ -199,7 +259,6 @@ export default function NewModuleWizard() {
           />
         )}
 
-        {/* Nav buttons */}
         <div className="flex justify-between mt-8">
           <button
             onClick={back}
@@ -225,19 +284,19 @@ export default function NewModuleWizard() {
 
 function sectionAnswered(
   stepIdx: number,
-  answers: Record<string, string>,
+  answers: Record<string, AnswerState>,
 ): boolean {
   if (stepIdx >= 4) return true;
   const sectionKey = SECTIONS[stepIdx].key;
   return QUESTIONNAIRE.filter((q) => q.section === sectionKey).every(
-    (q) => answers[q.id] !== undefined,
+    (q) => answers[q.id]?.optionId !== undefined,
   );
 }
 
 function Stepper({ currentIdx }: { currentIdx: number }) {
   const labels = [...SECTIONS.map((s) => s.title), 'Preview'];
   return (
-    <div className="flex items-center gap-2 mb-8 text-xs uppercase tracking-wide">
+    <div className="flex flex-wrap items-center gap-2 mb-8 text-xs uppercase tracking-wide">
       {labels.map((l, i) => {
         const active = i === currentIdx;
         const done = i < currentIdx;
@@ -264,12 +323,14 @@ function Stepper({ currentIdx }: { currentIdx: number }) {
 
 function QuestionCard({
   question,
-  selectedOptionId,
+  selected,
   onPick,
+  onCustomText,
 }: {
   question: WizardQuestion;
-  selectedOptionId: string | undefined;
+  selected: AnswerState | undefined;
   onPick: (id: string) => void;
+  onCustomText: (text: string) => void;
 }) {
   return (
     <div className="bg-slate-800 border border-slate-700 rounded-lg p-5">
@@ -280,26 +341,90 @@ function QuestionCard({
         )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {question.options.map((opt) => {
-          const selected = selectedOptionId === opt.id;
-          return (
-            <button
-              key={opt.id}
-              onClick={() => onPick(opt.id)}
-              className={`text-left p-3 rounded border transition-colors ${
-                selected
-                  ? 'bg-blue-900 border-blue-600 text-white'
-                  : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
-              }`}
-            >
-              <div className="font-medium">{opt.label}</div>
-              {opt.description && (
-                <div className="text-xs text-slate-400 mt-1">{opt.description}</div>
-              )}
-            </button>
-          );
-        })}
+        {question.options.map((opt) => (
+          <OptionButton
+            key={opt.id}
+            questionId={question.id}
+            option={opt}
+            selected={selected?.optionId === opt.id}
+            onPick={() => onPick(opt.id)}
+          />
+        ))}
       </div>
+
+      {selected?.optionId === 'other' && (
+        <div className="mt-4">
+          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
+            Custom answer (free text)
+          </label>
+          <textarea
+            value={selected.customText ?? ''}
+            onChange={(e) => onCustomText(e.target.value)}
+            placeholder="Describe in your own words. CF-2 prose generation will use this as a flavor seed."
+            rows={3}
+            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white text-sm font-serif"
+          />
+          <p className="text-slate-500 text-xs mt-1 italic">
+            Free text is preserved on the skeleton but does not affect difficulty math.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OptionButton({
+  questionId,
+  option,
+  selected,
+  onPick,
+}: {
+  questionId: string;
+  option: WizardOption;
+  selected: boolean;
+  onPick: () => void;
+}) {
+  // Special enrichment for the PD-anchor question: pull the source URL
+  // + PD notice off the registry and render under the button.
+  const anchor = questionId === 'pd-anchor' ? getPdAnchor(option.id) : null;
+
+  return (
+    <div
+      className={`text-left p-3 rounded border transition-colors ${
+        selected
+          ? 'bg-blue-900 border-blue-600'
+          : 'bg-slate-900 border-slate-700 hover:border-slate-500'
+      }`}
+    >
+      <button onClick={onPick} className="w-full text-left">
+        <div className={`font-medium ${selected ? 'text-white' : 'text-slate-300'}`}>
+          {option.label}
+          {option.customizable && (
+            <span className="ml-2 text-[10px] uppercase tracking-wide text-slate-500">
+              fill in the blank
+            </span>
+          )}
+        </div>
+        {option.description && (
+          <div className="text-xs text-slate-400 mt-1">{option.description}</div>
+        )}
+      </button>
+      {anchor && (anchor.sourceUrl || anchor.pdNotice) && (
+        <div className="mt-2 pt-2 border-t border-slate-700 text-[11px] text-slate-500 leading-relaxed">
+          {anchor.pdNotice && <div>{anchor.pdNotice}</div>}
+          {anchor.sourceUrl && (
+            <a
+              href={anchor.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline decoration-dotted"
+              onClick={(e) => e.stopPropagation()}
+            >
+              read source ↗
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -344,6 +469,7 @@ function Preview({
   if (!skeleton) return null;
 
   const { loads, pCompletePerArchetype, courageBaseline } = skeleton;
+  const customCount = skeleton.wizardAnswers.filter((a) => a.optionId === 'other').length;
 
   return (
     <div className="space-y-6">
@@ -407,8 +533,12 @@ function Preview({
             Intent
           </h3>
           <div className="text-slate-300 text-sm space-y-1">
-            <div>PD anchor: <span className="text-white">{skeleton.pdAnchor ?? '(original)'}</span></div>
-            <div>Location: <code className="text-blue-400">{skeleton.locationId}</code></div>
+            <div>
+              PD anchor: <span className="text-white">{skeleton.pdAnchor ?? '(original)'}</span>
+            </div>
+            <div>
+              Location: <code className="text-blue-400">{skeleton.locationId}</code>
+            </div>
             <div>Zones: {skeleton.travelZones.join(', ') || '(none)'}</div>
             <div>
               Intentionally skewed virtues:{' '}
@@ -422,7 +552,15 @@ function Preview({
                 .map(([v, m]) => `${v}=${m}`)
                 .join(', ') || '(none)'}
             </div>
-            <div>Scroll seeds — Thoth: {skeleton.scrollSeeds.thoth}, Stobaean: {skeleton.scrollSeeds.stobaean}</div>
+            <div>
+              Scroll seeds — Thoth: {skeleton.scrollSeeds.thoth}, Stobaean:{' '}
+              {skeleton.scrollSeeds.stobaean}
+            </div>
+            <div>
+              Free-text answers preserved:{' '}
+              <span className="text-amber-300">{customCount}</span>{' '}
+              (will seed CF-2 prose generation)
+            </div>
           </div>
         </div>
       </div>
@@ -440,17 +578,15 @@ function Preview({
                 key={r.id}
                 className="flex items-center gap-3 text-sm bg-slate-900 rounded px-3 py-2"
               >
-                <code className="text-blue-400 w-16">{r.id}</code>
-                <span className="text-slate-200 w-44">{r.encounterPattern}</span>
+                <code className="text-blue-400 w-20">{r.id}</code>
+                <span className="text-slate-200 w-48">{r.encounterPattern}</span>
                 <span className="text-slate-400 flex-1">{atomTxt}</span>
                 {r.gearGate && (
                   <span className="text-amber-300 text-xs">
                     gate: {r.gearGate.itemTag}({r.gearGate.difficulty})
                   </span>
                 )}
-                {r.restAvailable && (
-                  <span className="text-green-400 text-xs">REST</span>
-                )}
+                {r.restAvailable && <span className="text-green-400 text-xs">REST</span>}
               </div>
             );
           })}
@@ -474,9 +610,9 @@ function Preview({
       </div>
 
       <p className="text-slate-500 text-xs italic">
-        CF-1 ships the skeleton. CF-2 adds Opus-generated prose; CF-3 the SVG
-        map; CF-4 named NPCs; CF-5 art; CF-6 .ink scaffolding; CF-8 GPE
-        validation. Tweak preview-screen fields will land in a CF-1 follow-up.
+        CF-1 ships the skeleton + free-text capture. CF-2 generates Howard-voice
+        prose from those seeds via Claude Opus 4.7. CF-3 the SVG map; CF-4 named
+        NPCs; CF-5 art; CF-6 .ink scaffolding; CF-8 GPE validation.
       </p>
     </div>
   );
@@ -491,11 +627,12 @@ function Stat({
   value: number | string;
   signed?: boolean;
 }) {
-  const display = typeof value === 'number' && signed
-    ? value > 0
-      ? `+${value}`
-      : value.toString()
-    : value;
+  const display =
+    typeof value === 'number' && signed
+      ? value > 0
+        ? `+${value}`
+        : value.toString()
+      : value;
   return (
     <div>
       <div className="text-slate-500 text-xs uppercase tracking-wide">{label}</div>
@@ -513,7 +650,6 @@ function ArchetypeP({
   p: number;
   note: string;
 }) {
-  // Color: red <20%, amber 20-60%, green >60%
   const color =
     p < 0.2 ? 'text-red-400' : p < 0.6 ? 'text-amber-300' : 'text-green-400';
   return (

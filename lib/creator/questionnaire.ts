@@ -22,7 +22,21 @@ const PD_ANCHOR_OPTIONS: WizardOption[] = PD_ANCHORS.map((a) => ({
   },
 }));
 
-export const QUESTIONNAIRE: WizardQuestion[] = [
+// The "Other (custom)" option appended to every question except
+// `pd-anchor` (its options are the anchor list), `location-anchor`
+// (must map to a known travel node), and `length` (drives room
+// count math — must be one of short/medium/long).
+const OTHER_OPTION: WizardOption = {
+  id: "other",
+  label: "Other (custom)",
+  description: "Free-text answer. Pre-filled with story-specific text when a PD anchor is chosen; edit freely.",
+  customizable: true,
+  contribution: {}, // no load contribution — flavor only
+};
+
+const QUESTIONS_WITHOUT_OTHER = new Set(["pd-anchor", "location-anchor", "length"]);
+
+const RAW_QUESTIONNAIRE: WizardQuestion[] = [
   // ── SECTION A — SETTING ───────────────────────────────────
   {
     id: "pd-anchor",
@@ -388,6 +402,15 @@ export const QUESTIONNAIRE: WizardQuestion[] = [
     ],
   },
 ];
+
+// Append the "Other (custom)" option to every question except those
+// in QUESTIONS_WITHOUT_OTHER. Done programmatically so we don't have
+// to maintain the option list per question.
+export const QUESTIONNAIRE: WizardQuestion[] = RAW_QUESTIONNAIRE.map((q) =>
+  QUESTIONS_WITHOUT_OTHER.has(q.id)
+    ? q
+    : { ...q, options: [...q.options, OTHER_OPTION] },
+);
 
 /** Get a question by ID. */
 export function getQuestion(id: string): WizardQuestion | undefined {

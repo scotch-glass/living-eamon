@@ -19,6 +19,12 @@ import type {
 export interface WizardAnswer {
   questionId: string;
   optionId: string;
+  /**
+   * Free text the Creator typed (or the AI pre-filled). Only meaningful
+   * when optionId === "other". Stored on the skeleton and surfaced to
+   * CF-2 prose generation as flavor seeds; load math ignores it.
+   */
+  customText?: string;
 }
 
 export type SeverityDistribution = Partial<
@@ -121,4 +127,14 @@ export interface WizardOption {
   label: string;
   description?: string;
   contribution: WeightContribution;
+  /**
+   * Marks this option as the "Other (custom)" free-text option.
+   * The UI renders a textarea when this option is selected, and the
+   * Creator's text is stored in WizardAnswer.customText.
+   *
+   * Load math: the contribution is preserved as-is, but customizable
+   * options conventionally use an empty or minimum-bias contribution
+   * so the textual flavor doesn't double-count against the math.
+   */
+  customizable?: boolean;
 }

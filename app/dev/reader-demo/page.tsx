@@ -36,10 +36,14 @@ export default function ReaderDemo() {
   const [genStatus, setGenStatus] = useState<string | null>(null);
   const [approveStatus, setApproveStatus] = useState<string | null>(null);
   const [latestVersion, setLatestVersion] = useState<number | null>(null);
+  const [auditionUrl, setAuditionUrl] = useState<string | null>(null);
+  const [auditionStatus, setAuditionStatus] = useState<string | null>(null);
   const [readerOpen, setReaderOpen] = useState(false);
 
   async function generate() {
-    setGenStatus('generating…');
+    setGenStatus('generating… (Eve speaks slowly — large passages may take 60+ seconds)');
+    setAuditionUrl(null);
+    setAuditionStatus(null);
     try {
       const res = await fetch('/api/voice/generate', {
         method: 'POST',
@@ -48,10 +52,31 @@ export default function ReaderDemo() {
       });
       const data: GenerateResponse = await res.json();
       if (!data.ok) throw new Error(data.error ?? 'generate failed');
-      setGenStatus(`generated v${data.metadata?.latestVersion} · status=${data.metadata?.status}`);
-      setLatestVersion(data.metadata?.latestVersion ?? null);
+      const v = data.metadata?.latestVersion ?? null;
+      setGenStatus(
+        `generated v${v} · status=${data.metadata?.status} · auto-loading audition…`,
+      );
+      setLatestVersion(v);
+      // Automatically fetch a signed URL for the freshly generated version
+      // so the user can audition it before deciding to approve.
+      if (v != null) await fetchAudition(v);
     } catch (err) {
       setGenStatus(`error: ${(err as Error).message}`);
+    }
+  }
+
+  async function fetchAudition(version: number) {
+    setAuditionStatus('loading…');
+    try {
+      const res = await fetch(
+        `/api/voice/${encodeURIComponent(audioId)}?version=${version}`,
+      );
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error ?? 'audition fetch failed');
+      setAuditionUrl(data.signedUrl);
+      setAuditionStatus(`audition v${version} ready — press play below`);
+    } catch (err) {
+      setAuditionStatus(`audition error: ${(err as Error).message}`);
     }
   }
 
@@ -116,7 +141,7 @@ export default function ReaderDemo() {
             className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white text-sm font-serif"
           />
           <p className="text-slate-500 text-xs mt-2">
-            Length: {text.length} / 4000 chars. Eve speaks slowly — expect
+            Length: {text.length} / 15000 chars. Eve speaks slowly — expect
             ~6-8 seconds per sentence of audio.
           </p>
         </section>
@@ -133,13 +158,45 @@ export default function ReaderDemo() {
               <p className="text-slate-400 text-sm mt-2">→ {genStatus}</p>
             )}
           </div>
+
+          {/* Audition step — appears after generate, lets the user
+              hear the audio BEFORE deciding to approve or regen. */}
+          {(auditionStatus || auditionUrl) && (
+            <div className="bg-slate-900 border border-slate-700 rounded p-3">
+              <div className="text-xs font-bold text-amber-300 uppercase tracking-wide mb-2">
+                2. Audition v{latestVersion}
+              </div>
+              {auditionStatus && (
+                <p className="text-slate-400 text-sm mb-2">→ {auditionStatus}</p>
+              )}
+              {auditionUrl && (
+                <>
+                  <audio
+                    src={auditionUrl}
+                    controls
+                    autoPlay
+                    className="w-full"
+                  />
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={generate}
+                      className="px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white rounded text-sm"
+                    >
+                      ↻ Regenerate (don't like this take)
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           <div>
             <button
               onClick={approveLatest}
               disabled={latestVersion == null}
               className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-medium disabled:opacity-30"
             >
-              2. Approve latest version
+              3. Approve latest version
             </button>
             {approveStatus && (
               <p className="text-slate-400 text-sm mt-2">→ {approveStatus}</p>
@@ -150,7 +207,7 @@ export default function ReaderDemo() {
               onClick={() => setReaderOpen(true)}
               className="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white rounded font-medium"
             >
-              3. Open Reader Panel
+              4. Open Reader Panel
             </button>
             <p className="text-slate-500 text-xs mt-2">
               The reader will fetch <code>/api/voice/{audioId}</code> for the

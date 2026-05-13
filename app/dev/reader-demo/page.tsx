@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ReaderPanel from '@/components/ReaderPanel';
 
@@ -39,6 +39,34 @@ export default function ReaderDemo() {
   const [auditionUrl, setAuditionUrl] = useState<string | null>(null);
   const [auditionStatus, setAuditionStatus] = useState<string | null>(null);
   const [readerOpen, setReaderOpen] = useState(false);
+
+  // When the audioId changes (or on first mount), pull the canonical
+  // script from the server if one exists. This makes the textarea the
+  // live editor for `currentScript`: same source of truth that the
+  // admin sees in /admin/audio-review and that the player reads in
+  // the Reader Panel. New audioIds keep the DEFAULT_TEXT seed.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/voice/${encodeURIComponent(audioId)}?meta=1`,
+        );
+        if (cancelled) return;
+        if (!res.ok) return; // 404 etc. → keep current/default text
+        const data = await res.json();
+        if (data?.ok && data.metadata?.currentScript) {
+          setText(data.metadata.currentScript);
+          setLatestVersion(data.metadata.latestVersion ?? null);
+        }
+      } catch {
+        // network errors fall back to current/default text
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [audioId]);
 
   async function generate() {
     setGenStatus('generating… (Eve speaks slowly — large passages may take 60+ seconds)');

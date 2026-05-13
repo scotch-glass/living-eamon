@@ -147,6 +147,7 @@ function AudioDetail({
   const [meta, setMeta] = useState<VoiceMetadata | null>(null);
   const [approvedUrl, setApprovedUrl] = useState<string | null>(null);
   const [versionUrls, setVersionUrls] = useState<Record<number, string>>({});
+  const [scriptDraft, setScriptDraft] = useState<string>('');
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -162,6 +163,9 @@ function AudioDetail({
       }
       setMeta(data.metadata);
       setApprovedUrl(data.signedUrl ?? null);
+      // Sync the editable script draft to whatever's on the server.
+      // Drops any unsaved local edits — refresh is intentional.
+      setScriptDraft(data.metadata.currentScript ?? '');
     } catch (e) {
       setErr((e as Error).message);
     }
@@ -205,17 +209,44 @@ function AudioDetail({
     }
   }
 
+  async function saveScript() {
+    if (!meta) return;
+    setBusy('save-script');
+    setErr(null);
+    try {
+      const res = await fetch('/api/voice/script', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioId, script: scriptDraft }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error ?? 'save failed');
+      await refresh();
+      onChanged();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function regen() {
     if (!meta) return;
-    const latestText = meta.versions[meta.versions.length - 1]?.text;
-    if (!latestText) return;
+    // Use the current draft (possibly edited but unsaved) as the
+    // regen input. This is intentional — the admin's most recent
+    // edit is what they want narrated. Also persists the script.
+    const text = scriptDraft.trim();
+    if (!text) {
+      setErr('script is empty — nothing to regenerate');
+      return;
+    }
     setBusy('regen');
     setErr(null);
     try {
       const res = await fetch('/api/voice/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audioId, text: latestText }),
+        body: JSON.stringify({ audioId, text }),
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error ?? 'regen failed');
@@ -230,6 +261,18 @@ function AudioDetail({
 
   if (err) return <div className="text-red-400">{err}</div>;
   if (!meta) return <div className="text-slate-500 italic">Loading…</div>;
+
+  // Drift detection: the approved version's text vs the current script
+  // the admin has saved. If they differ, the player will read different
+  // words than they hear when narration plays. UI warns and offers
+  // "Regenerate" to bring audio back in sync.
+  const approvedText =
+    meta.approvedVersion != null
+      ? meta.versions.find((v) => v.version === meta.approvedVersion)?.text
+      : null;
+  const drift =
+    approvedText != null && approvedText !== meta.currentScript;
+  const scriptDirty = scriptDraft !== meta.currentScript;
 
   return (
     <div className="space-y-4">
@@ -248,13 +291,66 @@ function AudioDetail({
             <audio src={approvedUrl} controls className="w-full" />
           </div>
         )}
-        <button
-          onClick={regen}
-          disabled={busy !== null}
-          className="px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white rounded text-sm font-medium disabled:opacity-30"
-        >
-          {busy === 'regen' ? 'Regenerating…' : '↻ Regenerate (same text)'}
-        </button>
+
+        {/* The canonical script — editable. This is what the player
+            sees in the Reader Panel AND what the next regen uses. */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="text-xs font-bold text-amber-300 uppercase tracking-wide">
+              Script · {scriptDraft.length} chars
+              {scriptDirty && (
+                <span className="ml-2 text-yellow-300">· unsaved edits</span>
+              )}
+            </div>
+            <div className="text-[11px] text-slate-500 italic">
+              This is what the player reads. Editing it also changes the
+              text that the next regenerate uses.
+            </div>
+          </div>
+          <textarea
+            value={scriptDraft}
+            onChange={(e) => setScriptDraft(e.target.value)}
+            rows={Math.min(20, Math.max(6, scriptDraft.split('\n').length))}
+            className="w-full bg-slate-950 border border-slate-700 rounded p-3 text-slate-200 text-sm font-serif whitespace-pre-wrap leading-relaxed"
+          />
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={saveScript}
+              disabled={busy !== null || !scriptDirty}
+              className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-30"
+            >
+              {busy === 'save-script' ? 'Saving…' : '💾 Save script'}
+            </button>
+            <button
+              onClick={regen}
+              disabled={busy !== null || !scriptDraft.trim()}
+              className="px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white rounded text-sm font-medium disabled:opacity-30"
+            >
+              {busy === 'regen' ? 'Regenerating…' : '↻ Regenerate audio from this script'}
+            </button>
+            {scriptDirty && (
+              <button
+                onClick={() => setScriptDraft(meta.currentScript)}
+                disabled={busy !== null}
+                className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm disabled:opacity-30"
+              >
+                Discard edits
+              </button>
+            )}
+          </div>
+        </div>
+
+        {drift && (
+          <div className="mt-4 bg-red-950 border border-red-700 rounded p-3 text-sm">
+            <div className="text-red-300 font-bold mb-1">⚠ Audio drift</div>
+            <p className="text-red-200">
+              The approved audio (v{meta.approvedVersion}) was generated from
+              different text than the current script. Players will hear one
+              thing and read another. Regenerate to sync, or approve a
+              different version.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -307,12 +403,16 @@ function AudioDetail({
                   </button>
                 </div>
               </div>
-              <details className="mt-2" open>
-                <summary className="text-xs font-bold text-amber-300 uppercase tracking-wide cursor-pointer mb-2">
-                  Full script (verbatim check) · {v.text.length} chars
+              <details className="mt-2">
+                <summary className="text-xs font-bold text-slate-500 uppercase tracking-wide cursor-pointer hover:text-slate-300">
+                  Snapshot of text this version was generated from
+                  {' '}· {v.text.length} chars
+                  {v.text !== meta.currentScript && (
+                    <span className="ml-2 text-yellow-400">· differs from current script</span>
+                  )}
                 </summary>
                 <div
-                  className="text-slate-300 text-sm font-serif whitespace-pre-wrap leading-relaxed bg-slate-950 border border-slate-700 rounded p-3 max-h-96 overflow-y-auto"
+                  className="text-slate-300 text-sm font-serif whitespace-pre-wrap leading-relaxed bg-slate-950 border border-slate-700 rounded p-3 mt-2 max-h-96 overflow-y-auto"
                 >
                   {v.text}
                 </div>

@@ -117,6 +117,15 @@ export interface VoiceVersionMeta {
 
 export interface VoiceMetadata {
   audioId: string;
+  /**
+   * The CANONICAL script for this audio. Two roles:
+   *   1. What the player reads in the Reader Panel.
+   *   2. What the next regenerate-audio call uses as input.
+   * Admin edits in /admin/audio-review update this field directly.
+   * Each generated version also stores a snapshot in versions[i].text
+   * for audit; the live "what the player sees" is currentScript.
+   */
+  currentScript: string;
   /** Latest version number (== versions[versions.length-1].version when present). */
   latestVersion: number | null;
   /** Version number flipped to live by an admin approval; null until approved. */
@@ -130,6 +139,7 @@ export interface VoiceMetadata {
 function emptyMetadata(audioId: string): VoiceMetadata {
   return {
     audioId,
+    currentScript: "",
     latestVersion: null,
     approvedVersion: null,
     status: "pending",
@@ -199,6 +209,11 @@ export async function uploadVersion(
   };
   const updated: VoiceMetadata = {
     ...meta,
+    // Each generate sets currentScript = the text just synthesized.
+    // Audio + script stay in sync after a generate; later admin edits
+    // in /admin/audio-review can drift script away from the approved
+    // version's text (we surface that as a warning in the UI).
+    currentScript: text,
     versions: [...meta.versions, ver],
     latestVersion: nextVersion,
     status: "pending",
@@ -207,6 +222,26 @@ export async function uploadVersion(
     // destination-review semantics where a regen is "submitted, awaiting
     // re-review."
     updatedAt: ver.generatedAt,
+  };
+  await writeMetadata(updated);
+  return updated;
+}
+
+/**
+ * Update the canonical script for an audioId. Does NOT regenerate
+ * audio — the admin is responsible for hitting Regenerate if they
+ * want the audio to match. The UI surfaces drift between the
+ * approved version's `text` and the new currentScript.
+ */
+export async function updateScript(
+  audioId: string,
+  script: string,
+): Promise<VoiceMetadata> {
+  const meta = await readMetadata(audioId);
+  const updated: VoiceMetadata = {
+    ...meta,
+    currentScript: script,
+    updatedAt: new Date().toISOString(),
   };
   await writeMetadata(updated);
   return updated;
@@ -292,14 +327,19 @@ export async function listAudio(): Promise<AudioListEntry[]> {
     if (!isValidAudioId(folder.name)) continue;
     try {
       const meta = await readMetadata(folder.name);
-      const latestText =
-        meta.versions[meta.versions.length - 1]?.text ?? "";
+      // Prefer currentScript for the preview (the canonical text);
+      // fall back to the latest version's text for legacy entries
+      // that pre-date the currentScript field.
+      const preview =
+        meta.currentScript ||
+        meta.versions[meta.versions.length - 1]?.text ||
+        "";
       out.push({
         audioId: meta.audioId,
         status: meta.status,
         latestVersion: meta.latestVersion,
         approvedVersion: meta.approvedVersion,
-        textPreview: latestText.slice(0, 120),
+        textPreview: preview.slice(0, 120),
         updatedAt: meta.updatedAt,
       });
     } catch {

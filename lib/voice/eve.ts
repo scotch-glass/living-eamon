@@ -33,23 +33,59 @@ import WebSocket from "ws";
 export const EVE_VOICE_ID = "eve";
 
 /**
- * Standing prompt sent as `instructions` on session.update. xAI's
- * realtime agent treats this as the agent's system prompt and
- * shapes voice delivery + behaviour accordingly. This is the hook
- * the plain TTS endpoint lacks.
+ * Standing prompt sent as `instructions` on session.update.
+ *
+ * IMPORTANT: this prompt has TWO jobs, in priority order:
+ *   1. FORBID generating new content. The agent's default behaviour
+ *      is conversational — given prose it will roleplay a "narrator
+ *      continues the scene" response. We need verbatim reproduction
+ *      of the input, nothing else.
+ *   2. SHAPE voice delivery (slow, deep, dramatic, grimdark cadence)
+ *      to fit the Howard sword-and-sorcery target.
+ *
+ * Earlier versions of this prompt led with the second goal ("you are
+ * a narrator voicing a novel...") and the agent obligingly *acted*
+ * like a narrator — generating new prose. Now we frame the role as
+ * "a text-to-speech engine" first, and layer tone on top.
  */
 export const EVE_STANDING_PROMPT = [
-  "You are a mysterious and assertive female narrator with a thick",
-  "Barcelona accent, voicing an immersive sword and sorcery novel",
-  "in the grimdark fantasy style of Robert E. Howard. Speak slowly,",
-  "deeply, and commandingly with dramatic pauses, painting vivid",
-  "scenes of brutal heroes, savage lands, ancient sorceries,",
-  "eldritch horrors, and unrelenting violence.",
+  "You are a text-to-speech engine. Your one and only job is to read",
+  "the text the user sends, word-for-word, exactly as written.",
   "",
-  "You will be given a script. Read it back EXACTLY as written.",
-  "Do not paraphrase, do not summarise, do not respond or comment.",
-  "Read the words as the narrator. That is your only task.",
-].join(" ");
+  "ABSOLUTE RULES:",
+  "- Output is AUDIO ONLY of the input text. Nothing else.",
+  "- Do NOT add words, sentences, or commentary of your own.",
+  "- Do NOT paraphrase, summarise, expand, or interpret.",
+  "- Do NOT respond to questions in the text or to the user.",
+  "- Do NOT continue the story past the end of the input.",
+  "- Do NOT ask the user what to do next.",
+  "- If the input is a single word, you say that one word. Stop.",
+  "- If the input ends mid-sentence, you stop mid-sentence.",
+  "",
+  "DELIVERY STYLE (apply while reading the input verbatim):",
+  "- A mysterious, assertive female voice with a thick Barcelona accent.",
+  "- Slow, deep, commanding pace.",
+  "- Dramatic pauses on punctuation.",
+  "- Grimdark sword-and-sorcery cadence — Robert E. Howard's voice.",
+  "- Suit the tone to brutal heroes, savage lands, ancient sorceries,",
+  "  eldritch horrors, unrelenting violence.",
+].join("\n");
+
+/**
+ * Wrapping framing added in front of the user's text on every call.
+ * Together with the standing prompt, this triple-clamps the agent's
+ * tendency to "respond" rather than "read."
+ */
+function wrapForNarration(text: string): string {
+  return [
+    "Read the following script verbatim, word-for-word, with no",
+    "additions, no responses, no commentary. The script begins after",
+    "the line `[SCRIPT]` and ends at the end of the message.",
+    "",
+    "[SCRIPT]",
+    text,
+  ].join("\n");
+}
 
 const REALTIME_URL = "wss://api.x.ai/v1/realtime?model=grok-voice-latest";
 const PCM_SAMPLE_RATE = 24000;
@@ -149,20 +185,34 @@ export async function ttsEve(opts: EveTtsRequest): Promise<EveTtsResult> {
         }),
       );
 
-      // 2. Send the prose as a user message
+      // 2. Send the prose as a user message — wrapped in an
+      // explicit "read this verbatim" framing. The wrapping is
+      // belt-and-braces: the standing prompt also forbids the agent
+      // from responding, but in practice realtime models will still
+      // sometimes hallucinate a "narrator continues the scene"
+      // response. The [SCRIPT] marker + verbatim instruction makes
+      // it as close to unambiguous as we can get from the API.
       ws.send(
         JSON.stringify({
           type: "conversation.item.create",
           item: {
             type: "message",
             role: "user",
-            content: [{ type: "input_text", text: opts.text }],
+            content: [
+              { type: "input_text", text: wrapForNarration(opts.text) },
+            ],
           },
         }),
       );
 
-      // 3. Trigger generation
-      ws.send(JSON.stringify({ type: "response.create" }));
+      // 3. Trigger generation — audio-only modality, no text output
+      // (we don't want the model writing a textual response either).
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: { modalities: ["audio"] },
+        }),
+      );
     });
 
     ws.on("message", (raw) => {

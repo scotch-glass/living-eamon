@@ -159,36 +159,53 @@ export default function ReaderDemo() {
             )}
           </div>
 
-          {/* Audition step — appears after generate, lets the user
-              hear the audio BEFORE deciding to approve or regen. */}
-          {(auditionStatus || auditionUrl) && (
-            <div className="bg-slate-900 border border-slate-700 rounded p-3">
-              <div className="text-xs font-bold text-amber-300 uppercase tracking-wide mb-2">
-                2. Audition v{latestVersion}
-              </div>
-              {auditionStatus && (
-                <p className="text-slate-400 text-sm mb-2">→ {auditionStatus}</p>
-              )}
-              {auditionUrl && (
-                <>
-                  <audio
-                    src={auditionUrl}
-                    controls
-                    autoPlay
-                    className="w-full"
-                  />
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={generate}
-                      className="px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white rounded text-sm"
-                    >
-                      ↻ Regenerate (don't like this take)
-                    </button>
-                  </div>
-                </>
-              )}
+          {/* Audition step — always visible so the flow is
+              discoverable. Empty state guides the user before they
+              click Generate; filled state lets them hear the audio
+              before deciding to approve or regen. */}
+          <div
+            className={`border rounded p-4 ${
+              auditionUrl
+                ? 'bg-slate-900 border-amber-700'
+                : 'bg-slate-900 border-slate-700'
+            }`}
+          >
+            <div className="text-xs font-bold text-amber-300 uppercase tracking-wide mb-2">
+              2. Audition {latestVersion != null && `v${latestVersion}`}
             </div>
-          )}
+            {!auditionUrl && !auditionStatus && (
+              <p className="text-slate-500 text-sm italic">
+                No audio yet. Click <strong className="text-blue-400">Generate Eve audio</strong>{' '}
+                above. The audio will land here for you to listen to before
+                you decide to approve or regenerate.
+              </p>
+            )}
+            {auditionStatus && !auditionUrl && (
+              <p className="text-amber-300 text-sm">→ {auditionStatus}</p>
+            )}
+            {auditionUrl && (
+              <>
+                <p className="text-slate-400 text-sm mb-3">
+                  Audition v{latestVersion} ready. Listen, then approve below
+                  or regenerate for a different take.
+                </p>
+                <audio
+                  src={auditionUrl}
+                  controls
+                  autoPlay
+                  className="w-full"
+                />
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={generate}
+                    className="px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-white rounded text-sm"
+                  >
+                    ↻ Regenerate (don't like this take)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           <div>
             <button

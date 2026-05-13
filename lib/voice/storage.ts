@@ -2,9 +2,11 @@
 // Voice audio — Supabase Storage backend (CF-1.5).
 //
 // Bucket: creator-audio (private). Keys:
-//   voice/<audioId>/v<N>.mp3       — audio versions, append-only
-//   voice/<audioId>/metadata.json  — sidecar: text, prompt, status,
-//                                    approvedVersion
+//   voice/<audioId>/v<N>.wav       — audio versions, append-only
+//                                    (xAI realtime returns PCM16 →
+//                                    we WAV-wrap before storing)
+//   voice/<audioId>/metadata.json  — sidecar: text, status,
+//                                    approvedVersion, contentType
 //
 // audioId is a slug-like stable id (a-z0-9_-). The reader panel
 // knows the audioId for the prose it's showing; the admin review
@@ -43,8 +45,18 @@ function metadataKey(audioId: string): string {
   return `${voiceDir(audioId)}/${METADATA_FILE}`;
 }
 
-function versionKey(audioId: string, version: number): string {
-  return `${voiceDir(audioId)}/v${version}.mp3`;
+function extensionForContentType(contentType: string): string {
+  if (contentType.includes("wav")) return "wav";
+  if (contentType.includes("mpeg") || contentType.includes("mp3")) return "mp3";
+  return "audio"; // safe fallback
+}
+
+function versionKey(
+  audioId: string,
+  version: number,
+  contentType: string = "audio/wav",
+): string {
+  return `${voiceDir(audioId)}/v${version}.${extensionForContentType(contentType)}`;
 }
 
 // ── Client ────────────────────────────────────────────────────
@@ -90,10 +102,11 @@ export interface VoiceVersionMeta {
   generatedAt: string;       // ISO
   text: string;              // the input text that was synthesized
   /**
-   * BCP-47 language code that was passed to xAI for this version
-   * (e.g., "en", "es", "auto"). Defaults to "en" when omitted.
+   * If the caller passed a non-canonical agent system prompt for this
+   * version, it's stored here for audit + regen-reproducibility.
+   * Almost always undefined (we use EVE_STANDING_PROMPT).
    */
-  language?: string;
+  instructionsOverride?: string;
   bytes: number;
   contentType: string;
 }
@@ -157,7 +170,7 @@ export async function uploadVersion(
   audio: ArrayBuffer,
   contentType: string,
   text: string,
-  language: string | undefined,
+  instructionsOverride: string | undefined,
 ): Promise<VoiceMetadata> {
   await ensureBucket();
   const supabase = getClient();
@@ -166,7 +179,7 @@ export async function uploadVersion(
 
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(versionKey(audioId, nextVersion), audio, {
+    .upload(versionKey(audioId, nextVersion, contentType), audio, {
       contentType,
       upsert: false,
     });
@@ -176,7 +189,7 @@ export async function uploadVersion(
     version: nextVersion,
     generatedAt: new Date().toISOString(),
     text,
-    language,
+    instructionsOverride,
     bytes: audio.byteLength,
     contentType,
   };
@@ -232,9 +245,17 @@ export async function getSignedUrlForVersion(
 ): Promise<string> {
   await ensureBucket();
   const supabase = getClient();
+  // Look up the version's contentType so we sign the right file extension.
+  // Legacy versions written before the contentType plumbing default to wav.
+  const meta = await readMetadata(audioId);
+  const ver = meta.versions.find((v) => v.version === version);
+  const contentType = ver?.contentType ?? "audio/wav";
   const { data, error } = await supabase.storage
     .from(BUCKET)
-    .createSignedUrl(versionKey(audioId, version), SIGNED_URL_EXPIRES_SECS);
+    .createSignedUrl(
+      versionKey(audioId, version, contentType),
+      SIGNED_URL_EXPIRES_SECS,
+    );
   if (error || !data) {
     throw new Error(
       `signed-url v${version} ${audioId}: ${error?.message ?? "no data"}`,

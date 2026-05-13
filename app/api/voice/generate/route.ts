@@ -1,7 +1,7 @@
 // ============================================================
 // POST /api/voice/generate — pre-roll Eve TTS + store (CF-1.5).
 //
-// Body: { audioId, text, language? }
+// Body: { audioId, text, instructionsOverride? }
 // Auth: admin OR creator role. Player-side does not generate.
 //
 // Pipeline:
@@ -27,7 +27,11 @@ import { getCurrentUserRole } from "@/lib/auth/role";
 interface RequestBody {
   audioId?: string;
   text?: string;
-  language?: string;
+  /**
+   * Optional per-call override of EVE_STANDING_PROMPT. Almost always
+   * omitted — the canonical Eve agent personality is the right default.
+   */
+  instructionsOverride?: string;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -67,9 +71,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const { audio, contentType } = await ttsEve({
       text,
-      language: body.language,
+      instructionsOverride: body.instructionsOverride,
     });
-    const meta = await uploadVersion(audioId, audio, contentType, text, body.language);
+    const meta = await uploadVersion(
+      audioId,
+      audio,
+      contentType,
+      text,
+      body.instructionsOverride,
+    );
     return NextResponse.json({ ok: true, metadata: meta });
   } catch (err) {
     return NextResponse.json(

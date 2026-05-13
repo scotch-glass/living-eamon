@@ -5,8 +5,8 @@ role: session-log
 canonical_for: [session-end-snapshot, next-session-prompt]
 visibility: internal
 status: rolling
-last_updated: 2026-05-10
-cross_refs: [CLAUDE_CONTEXT.md, DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, docs/hydration.md, docs/topic-routes.md]
+last_updated: 2026-05-13
+cross_refs: [CLAUDE_CONTEXT.md, DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, docs/hydration.md, docs/topic-routes.md, docs/plans/creator-forge-and-quest-line-orchestrator.md, docs/plans/cf-1-module-survivability-and-wizard.md]
 ---
 
 # Hydration prompt — next Living Eamon session
@@ -27,7 +27,198 @@ Read these three, in order, and stop:
 
 ---
 
-## Status of this session (2026-05-10)
+## Status of this session (2026-05-12 → 2026-05-13)
+
+**Creator Forge foundation + CF-1 difficulty engine + CF-1.5 Reader Panel with Eve voice.** Sixteen commits, ~6,500 lines net. The biggest single session of the project so far. Three sub-arcs:
+
+1. **CF-0 Creator Forge foundation** — Opus 4.7 client, Supabase storage, admin routes, plan-storage convention. Foundation for the entire Creator authoring track.
+2. **CF-1 Module survivability simulator + wizard** — 4-tier synthetic enemy table, Monte Carlo simulator, 18-question wizard with PD-anchor auto-defaults, anchor-A calibration at 49.8% (target 50% ±3%).
+3. **CF-1.5 Reader Panel + Eve voice pre-roll pipeline** — Georgia serif modal reader, xAI TTS narration, admin approval surface with single-source-of-truth editable script.
+
+Plus: KARMA tracker audit (discovered Sprints 1-6 already shipped); URL refactor (Creator Forge moved out of /admin/); Perpetual Hero king-thread woven into 4 PD anchors; admin dashboard top nav.
+
+### Sub-arc 1 — CF-0 Foundation (commit `f855060`)
+
+**What shipped:**
+- `lib/anthropic/opus.ts` — Claude Opus 4.7 client (text-only, server-only).
+- `lib/creator/storage.ts` — Supabase Storage backend (`creator-modules` bucket). Originally filesystem; switched to Supabase mid-sprint when Scotch flagged Vercel can't write to disk at runtime.
+- `app/api/creator/llm/route.ts` — admin-gated Opus proxy. `ANTHROPIC_API_KEY` never reaches the browser.
+- `app/api/creator/[...path]/route.ts` — module persistence REST (GET/PUT/DELETE).
+- `app/admin/creator-forge/page.tsx` + `app/admin/quest-lines/page.tsx` — empty-state shells.
+- `app/library/plans/page.tsx` + `[slug]/page.tsx` — plans index + detail in /library wiki.
+- `docs/plans/creator-forge-and-quest-line-orchestrator.md` — canonical plan home in repo.
+- `proxy.ts` — admin-role gating for new admin paths.
+- DOC_MAP.md updated with `plan_creator_forge` row.
+
+**Follow-up — moved to /creator-forge** (`ac1b425`): Scotch flagged that `/admin/creator-forge` shouldn't be admin-only if Creators are supposed to use it. Refactored:
+- `/creator-forge/*` → `role IN ('creator', 'admin')`
+- `/admin/quest-lines/*` → `role='admin'` (stitching is admin work)
+- All path references throughout the codebase + plan doc updated
+
+### Sub-arc 2 — KARMA Sprints 1-6 audit + tracker update (commit `e6acf50`)
+
+Discovered the "Rescue" commit `88ce683` (2026-04-30) shipped Sprints 1-5 code + 8 migrations + Sprint 6 UI in one chunk, but the trackers were never updated. Audit confirmed:
+- Sprint 1 (stamina/fatigue/actionBudget) — wired
+- Sprint 2 (PICSSI bedrock, legacy 10-virtue dropped) — `updateVirtue` grep returns no active mutations
+- Sprint 3 (activity dispatcher + VD + scrolls READ) — `lib/karma/activities.ts` wired at `gameEngine.ts:83,2646`
+- Sprint 4 (encounter loader + triggers + affection + flags) — `lib/karma/triggers.ts` wired at `gameEngine.ts:85,5638`
+- Sprint 5 (combat-PICSSI deltas) — wired at `gameEngine.ts:93`
+- Sprint 6 (PICSSI UI, affection panel, karmaLog, riddle modal) — `app/page.tsx:1330,1346-1350,1399,1431`
+- Sprint 7 (Sorcery + Illumination drain) — remains explicitly deferred
+
+LAUNCH_CRITERIA.md `karma_sprint_chain` flipped `not-started` → `shipped`. **Critical path moved from `karma_sprint_chain` (priority 116) to `first_launch_adventure` (priority 108).** Headline counts: Tier 0 went from 7-active/7-shipped to 6-active/8-shipped.
+
+### Sub-arc 3 — CF-1 Module survivability simulator + wizard (commit `7a818eb`)
+
+The big one. After two replans (first plan anchored on Rurik combat-arena fixtures and got rejected; second introduced synthetic 4-tier enemy templates per Scotch's correction), shipped:
+
+**Difficulty engine** (`lib/difficulty/`):
+- `types.ts`, `enemyTiers.ts` (4-tier Grunt/Veteran/Elite/Boss, doubling unit values 1/2/4/8), `encounterPatterns.ts` (14 patterns with PF2e synergy multipliers), `constants.ts` (slope k=1.5, henchman discounts, severity weights, three reference parties).
+- `probability.ts` — logistic P(success) per axis, min-of-axes overall.
+- `courageReward.ts` — quadratic (1-P)² curves rounded to KARMA bands.
+- `computeLoads.ts` + `computeCapability.ts` — per-axis math.
+- `rng.ts` — seeded mulberry32 + dice parser.
+- `combatSim.ts` — pure-function combat resolution ported from `lib/combat/engine.ts` (live engine unchanged).
+- `atomSim.ts` — virtue + d100 ≥ threshold.
+- `simulate.ts` — `simulateModule()` orchestrator with bootstrap CI.
+
+**Anchor A passes at 49.8% over 10k trials** (target 50% ±3%). Tier 2-4 calibration is structurally limited by the analytic capability formula using Tier-1 armor as DPR baseline — empirical simulator handles it correctly, the wizard preview uses empirical P, follow-up tuning documented in `lib/difficulty/enemyTiers.ts` header.
+
+**Wizard** (`lib/creator/`):
+- `skeletonTypes.ts`, `questionnaire.ts` (18 questions, 4 sections), `pdAnchors.ts` (8 PD-safe Howard stories), `generateSkeleton.ts` (pure deterministic — mirrors `lib/identityBlock.ts` pattern).
+- 5-step UI at `app/creator-forge/new/page.tsx`. Server-side POST `/api/creator/skeleton`. Per-archetype P(complete) shown in preview for fresh / mid / endgame heroes.
+- Read-only viewer at `app/creator-forge/[moduleId]/page.tsx`. CF-2+ adds editor tabs.
+
+**Smoke tests:** `scripts/difficulty/smoke-anchor.ts` (6 anchor scenarios) and `scripts/difficulty/smoke-wizard.ts` (end-to-end generator).
+
+### Sub-arc 4 — PD anchor improvements (commits `1b2e892`, `b226337`)
+
+**PD-safety audit** against `Public_Domain_Rules.md` §1.2 Bucket A:
+- REMOVED unsafe entries: The Cat and the Skull (posthumous, not Bucket A), The Altar and the Scorpion (posthumous), The Pool of the Black One (Bucket B 1933, not PD yet).
+- ADDED Bucket A alternatives: The Haunter of the Ring (1934 occult), Iron Shadows in the Moon (1934 sea), The Fire of Asshurbanipal (1936 Lovecraftian).
+
+**Each PD anchor now provides a complete defaults map.** When Creator picks an anchor, the wizard auto-fills 16 other questions with story-specific defaults. Most use a new "Other (custom)" option whose textarea is pre-populated with ~25-word AI-authored story-specific prose. Creator can confirm, edit, or pick a different preset. ~112 story-specific flavor strings across 8 anchors.
+
+**PD anchor buttons show provenance** ("Kull tale, Weird Tales Sep 1929 · Bucket A non-renewal verified") + "read source ↗" link to Wikisource.
+
+**Perpetual Hero king-thread** woven into Mirrors of Tuzun Thune, Shadow Kingdom, Kings of the Night, Fire of Asshurbanipal. Hints: mirrors call the player "majesty," a serpent pauses on first sighting "as if checking a list," the summoned king "has eyes only for the player," the buried throne fits the player's body. Never explicit; the amnesia mechanic carries the doubt. Documented in `project_perpetual_hero_king_thread.md` memory for future PD-anchor authoring.
+
+### Sub-arc 5 — CF-1.5 Reader Panel + Eve voice (commits `b1af5ca` → `fbb16aa`)
+
+Major sub-sprint. Scotch flagged that text-heavy game prose needs a dedicated reading surface; chat panel is wrong for long-form. Designed + scaffolded:
+
+**Reader Panel** (`components/ReaderPanel.tsx`):
+- Full-page modal overlay, Georgia serif 18px, line-height 1.75, max-width 64ch, sepia-on-dark palette.
+- **Manual scroll** (no streaming, no typewriter — per Scotch).
+- Drop-cap on first paragraph.
+- Continue button + Escape key to dismiss.
+- Speaker icon top-left for voice toggle; preference persists in localStorage; default OFF.
+
+**Eve voice pipeline** went through three iterations:
+1. **`POST /v1/audio/speech`** — wrong endpoint, 403 "Team not authorized."
+2. **WebSocket realtime voice agent** — accepts a system prompt for personality, but tried three strict-TTS prompts and the conversational LLM kept paraphrasing + adding "what do you do next?" extemporaneous content. Confirmed: **realtime voice agents cannot be prompt-constrained to verbatim**. Memory `feedback_voice_agent_cant_do_verbatim.md`.
+3. **`POST /v1/tts`** (final) — pure TTS, verbatim guaranteed. Eve's voice profile (mysterious slow female, xAI default) provides base tone. Lost the Barcelona-accent customization — revisit when xAI Custom Voices ships broadly. Scotch confirmed: **"The Eve voice is perfect."**
+
+**Pre-roll + approve pipeline** matches `/admin/destination-review` semantics:
+- `POST /api/voice/generate` (creator|admin) — TTS + upload version to Supabase bucket `creator-audio` at `voice/<audioId>/v<N>.mp3`. Status = "pending."
+- `POST /api/voice/approve` (admin) — flip `metadata.approvedVersion`.
+- `PATCH /api/voice/script` (creator|admin) — edit canonical script without regenerating.
+- `GET /api/voice/<audioId>` — signed-URL playback. Default returns the approved version; `?version=N` lets admins audition pending versions; `?meta=1` returns full metadata.
+- `GET /api/voice/list` — admin listing.
+
+**Single source of truth** (commit `fbb16aa`): `VoiceMetadata.currentScript` is the canonical text. Used as both (a) the input to the next regenerate-audio call and (b) what the player reads in the Reader Panel. Admin edits in `/admin/audio-review` change both surfaces together. **Drift warning** surfaces in the UI when the approved version's text snapshot != currentScript (player would hear one thing and read another).
+
+**Admin Audio Review UI** at `/admin/audio-review`:
+- Sidebar list of all audio entries with status pills (PENDING/APPROVED/REJECTED).
+- Detail view: approved-audio player at top, **editable script textarea** (the canonical text), Save / Regenerate / Discard buttons.
+- Per-version cards: Audition / Approve / Reject buttons + collapsible audit snapshot.
+- Drift warning banner when audio + script disagree.
+
+**Reader Demo** at `/dev/reader-demo`:
+- Loads existing `currentScript` for an audioId on mount.
+- Generate → audition (auto-plays + script displayed alongside for verbatim check) → Regenerate or Approve → Open Reader Panel.
+
+**Architectural docs:**
+- `public/audio/voice/README.md` — folder is the organizational mirror; canonical storage is Supabase Storage bucket `creator-audio`.
+- Memory `project_voice_pipeline_architecture.md` — full pipeline reference.
+
+### Other this session
+
+- **Admin dashboard nav menu** (`f3f83fb`) — top pill bar with one chip per tool, status badges inline. Audio Review + Reader Demo cards added.
+- **Planned sprint anchors** (`01d68f1`) — each "Planned sprint" item in the dashboard cards links to an anchor (`#cf-1`) in the canonical plan in `/library/plans`. Plan markdown got `<a id="cf-N">` markers before each Sprint heading.
+- **Plan storage convention** documented as memory `feedback_plans_in_docs_plans.md` — approved plans land in `docs/plans/<meaningful-slug>.md` (not the auto-generated random Plan Mode filename).
+
+### Open follow-ups
+
+1. **CF-2 — Claude Opus 4.7 narrative prose generation.** Next sprint in the Creator Forge roadmap. Will pass `wizardAnswers.customText` (the AI-prefilled story-specific text per question) to Opus as prose seeds for Howard-voice room descriptions, atom prompts, choice labels. Plan in `docs/plans/creator-forge-and-quest-line-orchestrator.md` §CF-2. Each prose chunk gets an audioId so the Reader Panel auto-renders + Eve narrates.
+2. **CF-1 follow-up — Tier 2/3/4 calibration.** Anchor A locked at 49.8%; B/C/E fail structurally because capability formula uses Tier-1 armor as DPR baseline. Real fix: make capability axis-aware. Or accept that the empirical simulator is the truth and the analytic formula is a fast-render approximation. Documented in `lib/difficulty/enemyTiers.ts` header.
+3. **Voice — Custom Voices when xAI ships broadly.** The aspirational Barcelona-accent grimdark standing prompt for Eve (`EVE_STANDING_PROMPT` in `lib/voice/eve.ts`) is preserved for the day xAI's Custom Voices API graduates. Will attach persona to the voice itself, not per-call.
+4. **CF-1.5 → game wiring.** Reader Panel + voice pipeline are scaffolded but not yet integrated into game-engine flows. CF-2 will tag prose chunks with `prose_mode: "chat" | "reader"`; the engine routes reader-mode prose to the panel. Currently only `/dev/reader-demo` exercises the panel.
+5. **`first_launch_adventure` is now the critical-path Tier-0 blocker** (priority 108). Blocked by `module_system_ink_runtime`. With CF-1 wizard live, an admin can now author module skeletons — but the Ink runtime to play them is still pending. CF-6 ships Ink scaffolding + JSON compile + promote-CLI; runtime wiring is deferred until KARMA Sprint chain shipping was completed (now done, so runtime path is unblocked).
+
+### Cost ledger (this session)
+
+- xAI TTS calls during voice-pipeline iteration: small, probably under $0.50 total ($4.20 per 1M chars; few hundred chars × handful of test generations).
+- No Grok image generation.
+- Claude Opus calls: zero this session (all prose was authored by Claude-in-conversation; the Opus client + proxy route are scaffolded but not yet exercised by CF-2).
+
+---
+
+## Status of the previous session (2026-05-11 → 2026-05-12) [PRIOR SESSION LOG]
+
+**Destination room art pipeline + scene template normalization + admin review tooling.** The 25 destination stubs went from "stubs only" to "scene-backdrop art + NPC sprites + review UI + regen workflow" end-to-end.
+
+### What shipped
+
+**Canonical scene template (`lib/sceneTemplate.ts`).** Single source of truth for every scene-backdrop prompt. Exports `STAGE_STYLE_ANCHOR` (photorealistic painterly Frazetta/Brom), `STAGE_FRAMING` (open foreground stage for sprite compositing), `STAGE_LIVING_WORLD` (working/active environments), `STAGE_NEGATIVE_PROMPT` (no text/spillage/figures), and `buildStageBackdropPrompt()`. Rule documented in `docs/scene-generation-rules.md` and feedback memory. **Every scene-gen script must import from this module — never re-declare style/framing constants locally.** Currently only `scripts/forge-destination-rooms-bg.ts` imports it; other forge scripts (bandit-trio, hero-combat, vivian-*) still fork their own constants and should be migrated.
+
+**25 destination scene prompts rewritten** into a three-tier framework anchored to specific lore (`scripts/forge-destination-rooms-bg.ts`):
+- **Tier 1 — Pure Prosperity (14):** Vibrant Empire waypoints. Cities (Vanara, Kamula, Talunia, Blaal), all 7 Nations, working Wilderness ports (Camoonian Desert, Zalgara Mts, Red Isles).
+- **Tier 2 — Sacred Threshold (3):** Lake of Visions, Tathel Isle, Mu (the secretive geothermal-shore arrival point).
+- **Tier 3 — Gateway to Dread (8):** Stagus (River Styx crossing), Skull of Silence, Accursed Gardens, Forbidden Lake, Lost Lands (Elder Races boundary), Jungles (Lizard ruins under canopy), World's End (timeless forest), Tiger Valley (predator-heavy hunters' trailhead on thriving Atlantis).
+
+**Lore corrections (recurring time-frame errors fixed twice in one session).** Both saved as pinned MEMORY.md feedback entries so they stick across sessions:
+- **Atlantis is THRIVING, not ruins** — Tiger Valley reframed as a fertile hunters' trailhead on the *living* Atlantean plateau, not cyclopean ruins. `feedback_atlantis_is_thriving.md`.
+- **Mu is a secretive insular spiritual island-nation southwest of Lemuria** (NOT sunken, NOT a busy harbor). New canonical lore doc `lore/thurian-cartography/MU_SECRETS.md` with tiered reveals: Secret Level 1 (insularity), Level 2 (channel defenses), Level 3 (pegusii), Level 4 (portal to the gods). NPC renamed `scholar_sunken/` → `scholar_of_mu/` and rewritten as a Muvian Sage-priest. Travel-node lore + room stub updated. Map asset `public/art/living-eamon-map.png` deliberately does NOT mark Mu (designer reference at `lore/thurian-cartography/living-eamon-map-w-mu.png`). `feedback_mu_is_thriving.md`.
+
+**Sprite-template framing strengthened** — `FRAMING_ALLY` + `FRAMING_LEFT` in `forge-destination-rooms-npcs.ts` got a CRITICAL FULL-BODY block: explicit head-to-toe checklist, "DO NOT crop at hem of robe — feet must extend below," 3-7% safety margin below feet, "image is INVALID if any body part extends past the edge." Addresses the Atlantean Elder cropping failure. `feedback_string_escape_codegen.md` is the unrelated string-escape lesson from the same session.
+
+**Two batches of image generation.**
+- Initial batch: 50 BG candidates (~$3.50) via `forge-destination-rooms-bg.ts`. Files `bg-v3/v4.jpg`.
+- Regen batch: 33 of 34 attempts succeeded (1 rembg hiccup), $2.31. Via new `scripts/process-regen-queue.ts` which reads an exported queue JSON and runs Grok with each item's custom prompt verbatim. Files `bg-v5/v6.jpg` for 11 rooms + `v3/v4.png` for 6 NPCs.
+
+**Admin dashboard at `/admin`** (`app/admin/page.tsx`). Lists every admin/dev tool (destination-review, room-map, sprite-review, sprite-touchup, forge-avatar) with status badge, pending-tasks list, and features-to-code list. Pulls live destination review counts from `localStorage`.
+
+**Destination-review UI overhauled** (`app/admin/destination-review/page.tsx`):
+- Approve/Reject buttons start bright; selected one gets glowing ring + past-tense label ("✓ Approved" / "✗ Rejected").
+- Regenerate flow: typing a custom prompt + Submit sets `bgStatus`/`npcStatus` = `regen_requested`, persists the custom prompt as `bgRegenPrompt`/`npcRegenPrompt`, pill turns purple "REJECTED · SUBMITTED FOR REGENERATION".
+- Top toolbar: status-count pills (All/Pending/Approved/Rejected/Regen Queue), each clickable to filter the carousel.
+- "⬇ Export Regen Queue" button downloads a JSON of all `regen_requested` items with their custom prompts.
+- Filter-aware Previous/Next stepping.
+- All decisions persist to localStorage.
+
+**`destinations.ts` now auto-detects latest image versions.** `/tmp/generate-destinations.js` scans each room's directory for the highest `bg-vN.jpg` / `vN.png` and writes those paths. So regen-targeted rooms point at v5/v6 BG and v3/v4 NPC; untouched rooms stay on their originals. Originals (`v1`/`v2`/etc.) are NEVER deleted — script appends, never overwrites.
+
+### Open follow-ups
+
+1. **Re-review the 14 regen-targeted destinations.** Open `/admin/destination-review` → click "Regen Queue" filter → step through. Each item now shows the new image but the status pill still says "REJECTED · SUBMITTED FOR REGENERATION" from the previous click. Approve/Reject to clear.
+2. **`archaeologist_lost` NPC was skipped** during regen because the user marked it `regen_requested` without typing a custom prompt. Either retype a prompt + re-submit, or approve the existing one.
+3. **Migrate other sprite forge scripts** (`forge-bandit-trio.ts`, `forge-hero-combat.ts`, `forge-henchman-caster.ts`, `forge-vivian-*.ts`) to import from a shared sprite-template module (mirror of `lib/sceneTemplate.ts` pattern). Currently each forks its own STYLE_ANCHOR/FRAMING_ALLY/FRAMING_LEFT — same drift problem we solved for scenes.
+4. **Mu travel-node gating.** `geo_mu` should not appear in the player travel-screen until plot-unlocked. Requires a `hidden`/`discoverable` flag on the travel-node registry and UI honoring it. See `lore/thurian-cartography/MU_SECRETS.md` "Future work flagged."
+5. **Wire regen submission server-side.** Currently the user must click Export → hand the JSON to Claude. An API endpoint that triggers `process-regen-queue.ts` server-side would close the loop.
+6. **"Needs Re-Review" auto-detection.** When `destinations.ts` bgPath changes (new image landed), reset the matching localStorage status from `regen_requested` → `pending` so the user sees a fresh-state pill on the regenerated item.
+7. **Pre-existing**: 4 `c2-npc-kit.test.ts` fixture-drift failures; vitest types missing from `lib/gameState.test.ts` etc. Both unrelated to this session.
+
+### Cost ledger (this session)
+
+- Initial destination art batch: ~$3.50 (50 BG candidates)
+- Regen batch: $2.31 (33 of 34 candidates)
+- Tiger Valley + Mu prompt corrections: $0 (no images regenerated — corrected in source; will pick up on next regen pass when user marks them)
+- Total: ~$5.81
+
+---
+
+## Status of the previous session (2026-05-10)
 
 **Three-system infrastructure sprint: Systems 1–2 complete, System 3 pending approval.**
 

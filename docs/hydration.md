@@ -5,7 +5,7 @@ role: reference-generated
 canonical_for: [hydration-stack, gravity-wells, critical-path-summary, session-diff]
 visibility: internal
 status: active
-last_updated: 2026-05-12
+last_updated: 2026-05-13
 cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, LAUNCH_CRITERIA.md, HYDRATE_NEXT_SESSION.md]
 generated_by: scripts/build-hydration.ts
 npm_script: hydration:build
@@ -15,7 +15,7 @@ npm_script: hydration:build
 
 # Hydration Primer
 
-Generated 2026-05-12. **Read this first; it is the new top of the rehydration stack.**
+Generated 2026-05-13. **Read this first; it is the new top of the rehydration stack.**
 
 This page fuses topology + open questions + recent activity into one read so you can skip the per-doc grep cycle. Load **this**, then `docs/launch-readiness.md`, then `MEMORY.md`. Routes for specific topics are in [`docs/topic-routes.md`](topic-routes.md). Visual: [`docs/doc-graph.svg`](doc-graph.svg) (regen via `npx -y -p @mermaid-js/mermaid-cli@latest mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg`).
 
@@ -94,12 +94,26 @@ Edge Vectors that, when resolved, unblock the most downstream items. See [`EDGE_
 
 Commits since `HYDRATE_NEXT_SESSION.md` last touched (2026-05-10T18:58:49+02:00):
 
+- `fbb16aa` — Voice: single source of truth — currentScript drives audio + player
+- `425b252` — Audio review + demo: show full script alongside audio for verbatim check
+- `d1c58bb` — Eve: revert to strict /v1/tts — agent could not be constrained to verbatim
+- `385dbee` — Eve: TTS-strict prompt + always-visible audition card
+- `0119621` — Reader demo: auto-audition the generated audio before approve
+- `4b4fc68` — Switch Eve from plain TTS to xAI realtime voice AGENT
+- `746d722` — Fix xAI TTS endpoint + request shape
+- `b1af5ca` — Sprint CF-1.5: Reader Panel + Eve voice pre-roll pipeline
+- `b226337` — Perpetual Hero king-thread woven into 4 mystical PD anchors
+- `1b2e892` — Creator Forge wizard: PD-safe anchor list + Other-with-AI-prefill + source links
+- `7a818eb` — Sprint CF-1: module survivability simulator + multiple-choice wizard
+- `f3f83fb` — Admin dashboard: top nav menu of links to every tool
+- `01d68f1` — Admin dashboard: planned sprints get linked names + wiki anchors
+- `ac1b425` — CF-0 follow-up: move Creator Forge to /creator-forge (out of /admin)
+- `e6acf50` — KARMA Sprints 1-6 marked shipped (audit + tracker update)
 - `f855060` — Sprint CF-0: Creator Forge + Quest Line Orchestrator foundation
 - `38f7ea2` — Generated: 50 destination room NPC sprites + all prompts saved
 - `ea47f02` — Fix: Background scene resolution parameter for Grok API
 - `da84194` — Atlantis lore integration: Phoenician culture + Elder-Races rune heritage
 - `e654b7a` — Session 001: Destination rooms authoring + forge scripts
-- `1879ddc` — Session prep: Destination rooms authoring plan + hydration update
 
 ## Reading guide
 

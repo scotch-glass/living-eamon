@@ -78,8 +78,9 @@ export default function CreatorForgePage() {
             <div className="bg-slate-800 border border-slate-700 rounded-lg p-10 text-center">
               <p className="text-slate-300 text-lg mb-2">No modules yet.</p>
               <p className="text-slate-500 text-sm">
-                The wizard ships in Sprint CF-1. For now, the New Module button is
-                a placeholder.
+                Click <strong className="text-white">+ New Module</strong> to walk
+                the 18-question wizard. The algorithm computes structure, loads,
+                and P(complete) for three reference parties.
               </p>
             </div>
           )}

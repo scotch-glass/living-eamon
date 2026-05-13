@@ -186,15 +186,21 @@ export default function ReaderDemo() {
             {auditionUrl && (
               <>
                 <p className="text-slate-400 text-sm mb-3">
-                  Audition v{latestVersion} ready. Listen, then approve below
-                  or regenerate for a different take.
+                  Audition v{latestVersion} ready. Listen and read along to
+                  verify word-for-word match, then approve or regenerate.
                 </p>
                 <audio
                   src={auditionUrl}
                   controls
                   autoPlay
-                  className="w-full"
+                  className="w-full mb-3"
                 />
+                <div className="text-xs font-bold text-amber-300 uppercase tracking-wide mb-2">
+                  Script (read along) · {text.length} chars
+                </div>
+                <div className="bg-slate-950 border border-slate-700 rounded p-3 max-h-96 overflow-y-auto text-slate-200 text-sm font-serif whitespace-pre-wrap leading-relaxed">
+                  {text}
+                </div>
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={generate}

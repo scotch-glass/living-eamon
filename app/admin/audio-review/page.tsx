@@ -307,9 +307,16 @@ function AudioDetail({
                   </button>
                 </div>
               </div>
-              <p className="text-slate-300 text-sm italic font-serif">
-                "{v.text.slice(0, 240)}{v.text.length > 240 ? '…' : ''}"
-              </p>
+              <details className="mt-2" open>
+                <summary className="text-xs font-bold text-amber-300 uppercase tracking-wide cursor-pointer mb-2">
+                  Full script (verbatim check) · {v.text.length} chars
+                </summary>
+                <div
+                  className="text-slate-300 text-sm font-serif whitespace-pre-wrap leading-relaxed bg-slate-950 border border-slate-700 rounded p-3 max-h-96 overflow-y-auto"
+                >
+                  {v.text}
+                </div>
+              </details>
               {versionUrls[v.version] && (
                 <audio
                   src={versionUrls[v.version]}

@@ -114,6 +114,29 @@ const TOOLS: Tool[] = [
     featuresToCode: ['Bulk regenerate by tag'],
   },
   {
+    href: '/admin/audio-review',
+    name: 'Audio Review',
+    description:
+      'Eve voice (xAI TTS) narration audio — approve / reject / regen generated mp3s. Only approved audio reaches the player Reader Panel.',
+    status: 'partial',
+    pendingTasks: ['Audio is generated via the Creator Forge prose-authoring flow (CF-2) or /dev/reader-demo'],
+    featuresToCode: [
+      'Bulk approve',
+      'Filter by status',
+      'Listen-side waveform / scrub UI',
+      'Per-Howard-anchor tone-preset overrides',
+    ],
+  },
+  {
+    href: '/dev/reader-demo',
+    name: 'Reader Demo',
+    description:
+      'End-to-end test of the Reader Panel: paste prose, generate Eve audio, approve, preview as player.',
+    status: 'live',
+    pendingTasks: [],
+    featuresToCode: [],
+  },
+  {
     href: '/forge-avatar',
     name: 'Forge Avatar',
     description: 'Hero/avatar creation wizard.',

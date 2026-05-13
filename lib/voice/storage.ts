@@ -2,11 +2,15 @@
 // Voice audio — Supabase Storage backend (CF-1.5).
 //
 // Bucket: creator-audio (private). Keys:
-//   voice/<audioId>/v<N>.wav       — audio versions, append-only
-//                                    (xAI realtime returns PCM16 →
-//                                    we WAV-wrap before storing)
+//   voice/<audioId>/v<N>.mp3       — audio versions, append-only
+//                                    (xAI /v1/tts returns mp3 bytes
+//                                    directly)
 //   voice/<audioId>/metadata.json  — sidecar: text, status,
 //                                    approvedVersion, contentType
+//
+// Note: any legacy `.wav` versions from the brief realtime-agent
+// experiment are still served correctly — the file extension is
+// derived per-version from the stored contentType, not hardcoded.
 //
 // audioId is a slug-like stable id (a-z0-9_-). The reader panel
 // knows the audioId for the prose it's showing; the admin review

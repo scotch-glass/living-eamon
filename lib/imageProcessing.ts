@@ -11,10 +11,28 @@ import { tmpdir } from "os";
 import { join, resolve as pathResolve } from "path";
 import { randomUUID } from "crypto";
 
-/** Project venv python (preferred) → falls back to system python3. */
+/**
+ * Project venv python (preferred) → falls back to system python3.
+ *
+ * Build the venv path entirely at runtime so Turbopack's static
+ * analyzer cannot create a DirAssetReference for .venv. The .venv/bin/
+ * python3 symlink ultimately points to a homebrew python OUTSIDE the
+ * project root; Turbopack rejects such symlinks during the module-graph
+ * scan and crashes the production build with "Symlink ... is invalid,
+ * it points out of the filesystem root". The fallback ".venv" literal
+ * is constructed via String.fromCharCode so it never appears as a
+ * folded constant in the analyzer's view.
+ */
 function pythonExecutable(): string {
-  const venvPython = pathResolve(process.cwd(), ".venv", "bin", "python3");
-  return existsSync(venvPython) ? venvPython : "python3";
+  const envOverride = process.env.LIVING_EAMON_PYTHON_VENV;
+  if (envOverride) {
+    const p = pathResolve(envOverride, "bin", "python3");
+    if (existsSync(p)) return p;
+  }
+  // ".venv" — built char-by-char to defeat static folding.
+  const dotVenv = String.fromCharCode(46, 118, 101, 110, 118);
+  const p = pathResolve(process.cwd(), dotVenv, "bin", "python3");
+  return existsSync(p) ? p : "python3";
 }
 
 /**

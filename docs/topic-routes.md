@@ -5,7 +5,7 @@ role: reference-generated
 canonical_for: [topic-routing, qa-category-index]
 visibility: internal
 status: active
-last_updated: 2026-05-10
+last_updated: 2026-05-16
 cross_refs: [DOC_MAP.md, EDGE_VECTORS.md, hydration.md]
 generated_by: scripts/build-topic-routes.ts
 npm_script: topic-routes:build
@@ -15,7 +15,7 @@ npm_script: topic-routes:build
 
 # Topic Routes — Q+A Category Manifest
 
-Generated 2026-05-10. **Use this when a task asks a domain question.** The category-to-doc index below tells you the 2–4 docs that answer any topic, ranked by question count. Load them in order; stop when answered.
+Generated 2026-05-16. **Use this when a task asks a domain question.** The category-to-doc index below tells you the 2–4 docs that answer any topic, ranked by question count. Load them in order; stop when answered.
 
 **Coverage:** 109 Q+A entries across 14 docs · 9 categories. Source: each doc's `## Questions answered by this document` block.
 

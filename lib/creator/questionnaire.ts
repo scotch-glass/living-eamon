@@ -94,8 +94,16 @@ const RAW_QUESTIONNAIRE: WizardQuestion[] = [
       },
       {
         id: "abandoned",
-        label: "Abandoned, ruined, or never civilized",
+        label: "Abandoned or ruined (formerly inhabited)",
         contribution: { affect: { wonder: 0.2, dread: 0.3 } },
+      },
+      {
+        id: "wild-primordial",
+        label: "Wild or primordial (never settled — animist, haunted)",
+        contribution: {
+          affect: { wonder: 0.3, dread: 0.3, melancholy: 0.1 },
+          picssi: { spirituality: 1 },
+        },
       },
     ],
   },

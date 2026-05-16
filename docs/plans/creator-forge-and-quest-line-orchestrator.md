@@ -1,3 +1,55 @@
+---
+plan_id: creator-forge-and-quest-line-orchestrator
+title: Creator Forge + Quest Line Orchestrator
+sprints:
+  - id: cf-0
+    name: "Foundation — routes, Opus client, Supabase storage, /creator-forge shell"
+    status: shipped
+    shipped_at: 2026-05-12
+    commit: f855060
+    tool: /creator-forge
+  - id: cf-1
+    name: "Multiple-choice template engine + module skeleton wizard"
+    status: shipped
+    shipped_at: 2026-05-13
+    commit: 7a818eb
+    tool: /creator-forge
+  - id: cf-1.5
+    name: "Reader Panel + Eve voice pre-roll + effect-tag tooling"
+    status: shipped
+    shipped_at: 2026-05-13
+    commit: b1af5ca
+    tool: /admin/audio-review
+  - id: cf-2
+    name: "Claude Opus 4.7 narrative prose generation (Howard grimdark)"
+    status: planned
+    tool: /creator-forge
+  - id: cf-3
+    name: "Eamon-style SVG map generator (1980s graph-paper aesthetic)"
+    status: planned
+    tool: /creator-forge
+  - id: cf-4
+    name: "NPC + henchman authoring with difficulty-clamped stats"
+    status: planned
+    tool: /creator-forge
+  - id: cf-5
+    name: "Room art + NPC sprite workflow (Grok-Imagine-Pro only)"
+    status: planned
+    tool: /creator-forge
+  - id: cf-6
+    name: "Ink scaffolding + JSON compile + promote-module CLI"
+    status: planned
+    tool: /creator-forge
+  - id: cf-7
+    name: "Quest Line Orchestrator — narrative spine, interludes, meta-reward editor"
+    status: planned
+    tool: /admin/quest-lines
+  - id: cf-8
+    name: "Validation + GPE balance scorecard + publish gate"
+    status: planned
+    tool: /creator-forge
+---
+
 # Creator Forge + Quest Line Orchestrator — multi-sprint roadmap
 
 ## Context

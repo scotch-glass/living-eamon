@@ -2,23 +2,23 @@
 
 # Doc Graph
 
-Generated 2026-05-10.
+Generated 2026-05-16.
 
 Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and the relationships between them. **This file is loaded into Claude hydration as item 0.5 of the rehydration stack** so future sessions get the topology in one read instead of grep-and-load 5–30K tokens per cross-doc question.
 
 ## Stats
 
-- 37 docs · 5 open Edge Vectors · 128 edges
-- 26 creator-visible · 11 internal
+- 40 docs · 5 open Edge Vectors · 131 edges
+- 26 creator-visible · 14 internal
 
 ## Most-connected nodes (by in-degree)
 
 - **karma_system** (17 incoming) — Karma System
 - **game_design** (16 incoming) — Game Design Document
 - **public_domain_rules** (12 incoming) — Public Domain Rules
-- **module_system** (9 incoming) — Module System (Ink + GPE)
+- **module_system** (10 incoming) — Module System (Ink + GPE)
 - **doc_map** (8 incoming) — Documentation Index (this file)
-- **karma_implementation_plan** (7 incoming) — Karma Implementation Plan
+- **karma_implementation_plan** (8 incoming) — Karma Implementation Plan
 - **sorcery** (6 incoming) — Sorcery (Guild CAST + Occult INVOKE)
 - **pantheon** (5 incoming) — Pantheon — Living Eamon canonical deities
 
@@ -45,6 +45,8 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **cross_ref** → game_design, hyborian_pd_module_plan, karma_system
   - **has_open_question** → EV-module_system-001, EV-module_system-002
   - **relates_to** → adventure_modules_system, karma_system, public_domain_rules
+- **mu_secrets** [active] — Mu — Secret Lore (Tiered Reveal)
+  - **cross_ref** → world_locations
 - **pantheon** [active] — Pantheon — Living Eamon canonical deities
   - **cross_ref** → game_design, public_domain_rules, sorcery
   - **relates_to** → affect_axes_dump, game_design, karma_system, module_system, public_domain_rules, sorcery
@@ -110,6 +112,7 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
 - **launch_readiness** [active] — Launch Readiness Report (auto-generated)
   - **cross_ref** → doc_graph, launch_criteria
 - **quest_registry_dump** [active] — Quest + Dialogue Registry (generated)
+- **sprint_registry** [active] — Sprint Registry — every plan's sprint statuses (auto-generated)
 - **topic_routes** [active] — Topic Routes — Q+A Category Manifest (auto-generated)
   - **cross_ref** → doc_map, edge_vectors, hydration
 - **work_queue** [active] — Work Queue — Triaged Backlog (auto-generated)
@@ -132,6 +135,8 @@ Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and t
   - **cross_ref** → hydrate_next_session, karma_system
   - **has_open_question** → EV-karma_implementation_plan-002
   - **relates_to** → hydrate_next_session, karma_system, launch_readiness
+- **plan_creator_forge** [approved] — Creator Forge + Quest Line Orchestrator — multi-sprint roadmap
+  - **cross_ref** → karma_implementation_plan, module_system
 
 ## Open Edge Vectors (5)
 

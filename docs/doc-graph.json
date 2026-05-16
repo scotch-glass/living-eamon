@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-05-10",
+  "generated_at": "2026-05-16",
   "stats": {
-    "doc_count": 37,
+    "doc_count": 40,
     "ev_count": 5,
-    "edge_count": 128,
+    "edge_count": 131,
     "creator_visible": 26,
-    "internal": 11
+    "internal": 14
   },
   "nodes": {
     "doc:adventure_modules_system": {
@@ -79,7 +79,7 @@
       "role": "dev-process",
       "visibility": "internal",
       "status": "active",
-      "last_updated": "2026-05-09"
+      "last_updated": "2026-05-12"
     },
     "doc:edge_vectors": {
       "type": "doc",
@@ -239,6 +239,16 @@
       "questions_answered": 8,
       "questions_open": 2
     },
+    "doc:mu_secrets": {
+      "type": "doc",
+      "id": "mu_secrets",
+      "path": "lore/thurian-cartography/MU_SECRETS.md",
+      "title": "Mu — Secret Lore (Tiered Reveal)",
+      "role": "design-canon",
+      "visibility": "internal",
+      "status": "active",
+      "last_updated": "2026-05-11"
+    },
     "doc:pantheon": {
       "type": "doc",
       "id": "pantheon",
@@ -251,6 +261,16 @@
       "questions_total": 8,
       "questions_answered": 8,
       "questions_open": 0
+    },
+    "doc:plan_creator_forge": {
+      "type": "doc",
+      "id": "plan_creator_forge",
+      "path": "docs/plans/creator-forge-and-quest-line-orchestrator.md",
+      "title": "Creator Forge + Quest Line Orchestrator — multi-sprint roadmap",
+      "role": "sprint-plan",
+      "visibility": "internal",
+      "status": "approved",
+      "last_updated": "2026-05-12"
     },
     "doc:public_domain_rules": {
       "type": "doc",
@@ -330,6 +350,16 @@
       "questions_total": 10,
       "questions_answered": 10,
       "questions_open": 0
+    },
+    "doc:sprint_registry": {
+      "type": "doc",
+      "id": "sprint_registry",
+      "path": "docs/sprint-registry.json",
+      "title": "Sprint Registry — every plan's sprint statuses (auto-generated)",
+      "role": "reference-generated",
+      "visibility": "internal",
+      "status": "active",
+      "last_updated": "rebuilt-on-demand"
     },
     "doc:standing_creeds": {
       "type": "doc",
@@ -848,6 +878,11 @@
       "type": "has_open_question"
     },
     {
+      "from": "doc:mu_secrets",
+      "to": "doc:world_locations",
+      "type": "cross_ref"
+    },
+    {
       "from": "doc:pantheon",
       "to": "doc:affect_axes_dump",
       "type": "relates_to"
@@ -891,6 +926,16 @@
       "from": "doc:pantheon",
       "to": "doc:sorcery",
       "type": "relates_to"
+    },
+    {
+      "from": "doc:plan_creator_forge",
+      "to": "doc:karma_implementation_plan",
+      "type": "cross_ref"
+    },
+    {
+      "from": "doc:plan_creator_forge",
+      "to": "doc:module_system",
+      "type": "cross_ref"
     },
     {
       "from": "doc:public_domain_rules",

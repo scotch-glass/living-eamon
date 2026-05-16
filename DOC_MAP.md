@@ -281,6 +281,16 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   last_updated: 2026-05-03
   cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md]
 
+- id: mu_secrets
+  path: lore/thurian-cartography/MU_SECRETS.md
+  title: Mu — Secret Lore (Tiered Reveal)
+  role: design-canon
+  canonical_for: [mu-civilization, mu-secret-levels, pegusii-origin, portal-to-the-gods]
+  visibility: internal
+  status: active
+  last_updated: 2026-05-11
+  cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md, lib/world/travelNodes.ts, lib/adventures/destination-stubs.ts]
+
 - id: hyborian_pd_module_plan
   path: lore/hyborian-pd/MODULE_PLAN.md
   title: Hyborian-PD Module Plan
@@ -470,6 +480,18 @@ A `public` tier is reserved for a future fan-wiki and is not used in v1.
   cross_refs: [EDGE_VECTORS.md, LAUNCH_CRITERIA.md]
   generated_by: scripts/build-work-queue.ts
   npm_script: work-queue:build
+
+- id: sprint_registry
+  path: docs/sprint-registry.json
+  title: Sprint Registry — every plan's sprint statuses (auto-generated)
+  role: reference-generated
+  canonical_for: [sprint-statuses, admin-dashboard-source, plan-rollup]
+  visibility: internal
+  status: active
+  last_updated: rebuilt-on-demand
+  cross_refs: [docs/plans/, app/admin/page.tsx]
+  generated_by: scripts/build-sprint-registry.ts
+  npm_script: sprint-registry:build
 ```
 
 ---

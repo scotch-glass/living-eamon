@@ -17,8 +17,9 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNarrationSetting } from '@/lib/voice/useNarrationSetting';
+import { stripTags } from '@/lib/voice/effectTags';
 
 export interface ReaderPanelProps {
   /** Title shown above the prose (chapter / scene name). */
@@ -138,7 +139,12 @@ export default function ReaderPanel({
     };
   }, []);
 
-  const paragraphs = splitParagraphs(body);
+  // Strip xAI effect tags (<whisper>, [pause], etc.) before display —
+  // players read clean prose; only the TTS engine hears the markup.
+  const paragraphs = useMemo(
+    () => splitParagraphs(stripTags(body)),
+    [body],
+  );
 
   function toggleNarration() {
     if (!narrationEnabled) {

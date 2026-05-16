@@ -241,13 +241,47 @@
       "Bash(pkill -f \"tsx scripts/interview.ts\")",
       "Bash(npx vitest *)",
       "Bash(npm list *)",
-      "Bash(node_modules/.bin/mmdc --version)"
+      "Bash(node_modules/.bin/mmdc --version)",
+      "Bash(tee /tmp/forge-destinations.log)",
+      "Bash(node /tmp/generate-destinations.js)",
+      "Bash(awk '/Mu/{print NR\": \"$0}' /Users/joshuamcclure/Desktop/living-eamon/lore/thurian-cartography/WORLD_LOCATIONS.md)",
+      "Bash(node -e \"const q = require\\('/Users/joshuamcclure/Downloads/destination-regen-queue-1778522453415.json'\\); console.log\\('count:', q.regenCount\\); for \\(const it of q.queue\\) { console.log\\(it.id, '| bg:', it.bgStatus, '| npc:', it.npcStatus, '| bgPrompt:', it.bgRegenPrompt ? 'YES\\('+it.bgRegenPrompt.length+'ch\\)' : 'no', '| npcPrompt:', it.npcRegenPrompt ? 'YES\\('+it.npcRegenPrompt.length+'ch\\)' : 'no'\\); }\")",
+      "Bash(node -e \"const q = require\\('/Users/joshuamcclure/Downloads/destination-regen-queue-1778522453415.json'\\); const item = q.queue.find\\(x => x.id === 'poi_skull_of_silence'\\); console.log\\(item.bgRegenPrompt\\);\")",
+      "Bash(node -e \"const q = require\\('/Users/joshuamcclure/Downloads/destination-regen-queue-1778522453415.json'\\); const item = q.queue.find\\(x => x.id === 'geo_mu'\\); console.log\\('---bg---'\\); console.log\\(item.bgRegenPrompt.slice\\(0, 300\\)\\); console.log\\('...'\\); console.log\\(item.bgRegenPrompt.slice\\(-200\\)\\); console.log\\('---npc---'\\); console.log\\(item.npcRegenPrompt.slice\\(0, 300\\)\\); console.log\\('...'\\); console.log\\(item.npcRegenPrompt.slice\\(-300\\)\\);\")",
+      "Bash(tee /tmp/regen-run.log)",
+      "WebFetch(domain:eamon.wiki)",
+      "Bash(git apply *)",
+      "Bash(perl -i -pe 's|^### Sprint CF-__TRACKED_VAR__ —|<a id=\"cf-__TRACKED_VAR__\"></a>\\\\n\\\\n### Sprint CF-__TRACKED_VAR__ —|' docs/plans/creator-forge-and-quest-line-orchestrator.md)",
+      "Bash(node -e \"const m=require\\('marked'\\); console.log\\(m.parse\\('<a id=\\\\\"x\\\\\"></a>\\\\n\\\\n### Heading'\\)\\)\")",
+      "Bash(kill 39230 88611)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}  ·  /dev/reader-demo\\\\n\" http://localhost:3000/dev/reader-demo)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}  ·  /admin/audio-review\\\\n\" http://localhost:3000/admin/audio-review)",
+      "Bash(grep -n -E '^#{1,3} Sprint|<a id=\"cf-' /Users/joshuamcclure/Desktop/living-eamon/docs/plans/creator-forge-and-quest-line-orchestrator.md)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); s=p.get\\('scripts',{}\\); [print\\(f'{k}: {v}'\\) for k,v in s.items\\(\\) if 'docs' in k or 'graph' in k or 'launch' in k or 'queue' in k or 'topic' in k or 'hydration' in k or 'dev' in k or 'interview' in k]\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(bash -c 'pwd && which npm && echo \"structure-ok\"')"
     ],
     "additionalDirectories": [
       "/Users/joshuamcclure/.claude/plans",
       "/Users/joshuamcclure/.ssh",
       "/Users/joshuamcclure/Desktop",
-      "/Users/joshuamcclure/Desktop/living-eamon/scripts/lora/vivian/training-set"
+      "/Users/joshuamcclure/Desktop/living-eamon/scripts/lora/vivian/training-set",
+      "/Users/joshuamcclure/Desktop/living-eamon/lore/thurian-pd"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/joshuamcclure/Desktop/living-eamon && npm run --silent docs:build > /dev/null",
+            "timeout": 90,
+            "statusMessage": "Regenerating doc + sprint registry…"
+          }
+        ]
+      }
     ]
   }
 }

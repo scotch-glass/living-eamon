@@ -33,6 +33,7 @@ const WATCH_PATHS = [
   "ADVENTURE_MODULES_PLAN.md",
   "Public_Domain_Rules.md",
   "lore/**/*.md",
+  "docs/plans/**/*.md",
 ];
 
 const IGNORED = [
@@ -48,6 +49,7 @@ const IGNORED = [
   "docs/topic-routes.md",
   "docs/work-queue.json",
   "docs/work-queue.md",
+  "docs/sprint-registry.json",
 ];
 
 const DEBOUNCE_MS = 300;
@@ -102,7 +104,8 @@ async function regenerate(reason: string): Promise<void> {
   regenerating = true;
   log(`regenerating (${reason})...`);
   const t0 = Date.now();
-  // Cascade: graph -> launch-readiness -> hydration -> topic-routes -> work-queue -> validate
+  // Cascade: graph -> launch-readiness -> hydration -> topic-routes
+  //          -> work-queue -> sprint-registry -> validate
   // (validate is non-fatal here; it logs errors but the watcher keeps running)
   const graphCode = await runScript("scripts/build-doc-graph.ts");
   if (graphCode === 0) {
@@ -110,6 +113,7 @@ async function regenerate(reason: string): Promise<void> {
     await runScript("scripts/build-hydration.ts");
     await runScript("scripts/build-topic-routes.ts");
     await runScript("scripts/build-work-queue.ts");
+    await runScript("scripts/build-sprint-registry.ts");
     await runScript("scripts/validate-docs.ts");
   } else {
     logError("graph:build failed; skipping downstream generators");

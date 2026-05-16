@@ -2,7 +2,7 @@
 
 # Work Queue
 
-Generated 2026-05-13.
+Generated 2026-05-16.
 
 Triaged backlog of every outstanding item across the canon. The interviewer daemon reads this file's `awaits_answer` items; the coder picks from `ready_to_code`.
 

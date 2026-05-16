@@ -1,3 +1,15 @@
+---
+id: affect_axes
+title: AffectVector — neuro-emotional mapping
+role: reference-generated
+canonical_for: [affect-vector-axes, neuro-emotional-mapping]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [lib/karma/atom-types.ts]
+note: hand-derived (not auto-generated). Treat as reference; rebuild manually if axes change.
+---
+
 # Affect axes — neuro-emotional reading
 
 The atom-encounter design system already carries an [`AffectVector`](../lib/karma/atom-types.ts#L69) tagged on every encounter's pacing baseline + every choice's delta. The seven axes were authored as narrative-tuning fields (fear / excitement / eros / dread / awe / wonder / melancholy). This document captures the canonical **neuro-emotional reading** of those axes so future balance simulators and any algorithmic adventure generator can score adventures against neuro-chemical curves without renaming any fields or touching any atom JSON.

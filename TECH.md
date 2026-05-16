@@ -1,3 +1,14 @@
+---
+id: tech_md
+title: Tech Stack + Ops Notes
+role: dev-process
+canonical_for: [tech-stack, infra-notes]
+visibility: internal
+status: active
+last_updated: 2026-04-25
+cross_refs: [CLAUDE_CONTEXT.md]
+---
+
 # Living Eamon — Technical Architecture
 *Auto-maintained. Updated when architecture changes.*
 *Last updated: April 5, 2026*

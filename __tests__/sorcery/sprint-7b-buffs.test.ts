@@ -9,8 +9,8 @@
 //   2.  strength — adds TempModifier stat:"strength", source:"strength".
 //   3.  strength — in combat → playerCombatant.strength increased.
 //   4.  strength — re-cast refreshes without stacking.
-//   5.  agility  — out of combat → applied, TempModifier stat:"dexterity".
-//   6.  agility  — in combat → playerCombatant.agility increased.
+//   5.  dexterity — out of combat → applied, TempModifier stat:"dexterity".
+//   6.  dexterity — in combat → playerCombatant.dexterity increased.
 //   7.  protection — player gains protection_aura status.
 //   8.  protection — synced into playerCombatant when in combat.
 //   9.  reactive-armor — player gains reactive_armor status.
@@ -30,9 +30,9 @@
 
 import { createInitialWorldState } from "../../lib/gameState";
 import type { WorldState } from "../../lib/gameState";
-import type { ActiveCombatSession, CombatantState } from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
-import { resolveStrike } from "../../lib/combatEngine";
+import type { ActiveCombatSession, CombatantState } from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
+import { resolveStrike } from "../../lib/combat/engine";
 import { handleInvoke } from "../../lib/sorcery/invoke";
 import { recomputeDerivedStats } from "../../lib/karma/recompute";
 
@@ -93,7 +93,7 @@ function baseState(): WorldState {
 }
 
 function mockCombatant(side: "ally" | "enemy", id: string, name: string, str = 10, agi = 10): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id,
     name,
     hp: 100,
@@ -109,24 +109,26 @@ function mockCombatant(side: "ally" | "enemy", id: string, name: string, str = 1
     weaponSkillValue: 30,
     dexterity: agi,
     strength: str,
-    agility: agi,
     side,
     position: 1,
-  };
+  });
 }
 
 function stateInCombat(): WorldState {
   const s = baseState();
+  const player = { ...mockCombatant("ally", "player", "Tester"), hp: s.player.hp, maxHp: s.player.maxHp };
+  const enemy = mockCombatant("enemy", "test_enemy", "Test Enemy");
   const session: ActiveCombatSession = {
     enemyNpcId: "test_enemy",
     enemyName: "Test Enemy",
     roundNumber: 1,
-    playerCombatant: { ...mockCombatant("ally", "player", "Tester"), hp: s.player.hp, maxHp: s.player.maxHp },
-    enemyCombatant: mockCombatant("enemy", "test_enemy", "Test Enemy"),
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers: [],
+    ...makeMultiCombatantFields(player, enemy),
   };
   return { ...s, player: { ...s.player, activeCombat: session } };
 }
@@ -168,25 +170,25 @@ caseName("strength re-cast doesn't stack — replaces", () => {
   eq(strMods.length, 1, "only one strength mod after two casts");
 });
 
-// ── Agility ───────────────────────────────────────────────────
+// ── Dexterity ─────────────────────────────────────────────────
 
-console.log("\n[sprint-7b-buffs] Agility");
+console.log("\n[sprint-7b-buffs] Dexterity");
 
-caseName("agility out of combat → applied, TempModifier stat:dexterity", () => {
+caseName("dexterity (Aug Dex) out of combat → applied, TempModifier stat:dexterity", () => {
   const s = baseState();
   const { outcome, state: after } = handleInvoke(s, "Aug Dex");
   eq(outcome.kind, "success", "outcome kind");
   const mod = (after.player.tempModifiers ?? []).find(m => m.stat === "dexterity");
   truthy(mod, "dexterity TempModifier present");
-  eq(mod!.source, "agility", "source is agility");
+  eq(mod!.source, "dexterity", "source is dexterity");
 });
 
-caseName("agility in combat → playerCombatant.agility increased", () => {
+caseName("dexterity (Aug Dex) in combat → playerCombatant.dexterity increased", () => {
   const s = stateInCombat();
-  const before = s.player.activeCombat!.playerCombatant.agility;
+  const before = s.player.activeCombat!.playerCombatant.dexterity;
   const { state: after } = handleInvoke(s, "Aug Dex");
-  const afterAgi = after.player.activeCombat!.playerCombatant.agility;
-  gt(afterAgi, before, "combatant agility increased");
+  const afterDex = after.player.activeCombat!.playerCombatant.dexterity;
+  gt(afterDex, before, "combatant dexterity increased");
 });
 
 // ── Protection ────────────────────────────────────────────────
@@ -372,7 +374,7 @@ caseName("TempModifier dexterity raises dexEff in recompute", () => {
   const pBefore = recomputeDerivedStats(s.player);
   const pWithMod = {
     ...s.player,
-    tempModifiers: [{ stat: "dexterity" as const, delta: 5, turnsRemaining: 5, source: "agility" }],
+    tempModifiers: [{ stat: "dexterity" as const, delta: 5, turnsRemaining: 5, source: "dexterity" }],
   };
   const pAfter = recomputeDerivedStats(pWithMod);
   gt(pAfter.dexterityEffective, pBefore.dexterityEffective, "dexterityEffective increases with temp mod");

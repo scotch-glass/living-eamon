@@ -28,9 +28,9 @@ import { processInput } from "../../lib/gameEngine";
 import {
   isCombatSpell,
   resolveCombatSpell,
-} from "../../lib/combatEngine";
-import type { ActiveCombatSession, CombatantState } from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
+} from "../../lib/combat/engine";
+import type { ActiveCombatSession, CombatantState } from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
 import type { WorldState } from "../../lib/gameState";
 
 let failures = 0;
@@ -69,7 +69,7 @@ function makeCombatant(
   side: "ally" | "enemy",
   hp: number = 60,
 ): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id: name.toLowerCase().replace(/\s+/g, "_"),
     name,
     hp,
@@ -85,23 +85,25 @@ function makeCombatant(
     weaponSkillValue: 50,
     dexterity: 50,
     strength: 50,
-    agility: 50,
     side,
     position: 1,
-  };
+  });
 }
 
 function makeSession(enemyNpcId: string = "test_bandit"): ActiveCombatSession {
+  const player = makeCombatant("Hero", "ally");
+  const enemy = makeCombatant("bandit", "enemy");
   return {
     enemyNpcId,
     enemyName: "bandit",
     roundNumber: 1,
-    playerCombatant: makeCombatant("Hero", "ally"),
-    enemyCombatant: makeCombatant("bandit", "enemy"),
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers: [],
+    ...makeMultiCombatantFields(player, enemy),
   };
 }
 
@@ -127,10 +129,11 @@ function withSpellAndCombat(
 console.log("Sprint S5 — Zim CAST spell fix tests");
 console.log("\n  isCombatSpell recognition");
 
+// 2026-05-09: mirror / banish / invoke-light / daylight were stripped
+// from SPELL_DATA in the blocker-purge sprint.
 const NEW_SPELLS = [
   "greater-heal", "firebolt", "haste", "ward", "steelskin",
-  "silence", "resist", "mirror", "banish", "invoke-light",
-  "daylight", "cleanse",
+  "silence", "resist", "cleanse",
 ];
 
 for (const s of NEW_SPELLS) {
@@ -239,23 +242,9 @@ caseName("resist applies protection_aura severity 2", () => {
   truthy(pa, "protection_aura sev-2 present");
 });
 
-caseName("mirror applies reactive_armor severity 2", () => {
-  const ws = withSpellAndCombat("mirror");
-  const result = resolveCombatSpell(ws, "mirror");
-  truthy(result, "result exists");
-  const effects = result!.newState.player.activeCombat!.playerCombatant.activeEffects;
-  truthy(effects.some(e => e.type === "reactive_armor" && e.severity === 2), "reactive_armor sev-2");
-});
-
-caseName("banish deals damage to normal enemy (non-undead path)", () => {
-  const ws = withSpellAndCombat("banish");
-  const before = ws.player.activeCombat!.enemyCombatant.hp;
-  const result = resolveCombatSpell(ws, "banish");
-  truthy(result, "result exists");
-  // Normal enemy — uses the fallback damage range
-  contains(result!.narration, "knows no exile", "non-undead banish narration");
-  truthy(result!.newState.player.activeCombat!.enemyCombatant.hp < before || result!.combatOver, "damage dealt");
-});
+// MIRROR + BANISH cases removed 2026-05-09 — both spells were stripped
+// from SPELL_DATA / COMBAT_HANDLER_SPELLS in the earlier blocker-purge
+// sprint (each had a dormant effect-type read).
 
 caseName("cleanse removes poison status from player", () => {
   const ws = withSpellAndCombat("cleanse");
@@ -278,13 +267,9 @@ caseName("cleanse removes poison status from player", () => {
   falsy(afterEffects.some(e => e.type === "poison"), "poison removed");
 });
 
-caseName("daylight vs normal enemy narrates no combat effect", () => {
-  const ws = withSpellAndCombat("daylight");
-  const result = resolveCombatSpell(ws, "daylight");
-  truthy(result, "result exists");
-  // Normal enemy is unaffected by daylight in combat
-  contains(result!.narration, "does not seem to care", "daylight no-effect narration");
-});
+// DAYLIGHT case removed 2026-05-09 — spell was stripped from SPELL_DATA
+// in the earlier blocker-purge sprint (flavor-only with no functional
+// read of dark-tagged enemies in the multi-combat path).
 
 // ── Summary ──────────────────────────────────────────────────
 

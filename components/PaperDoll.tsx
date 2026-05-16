@@ -1,6 +1,6 @@
 "use client";
 
-import type { BodyZone } from "../lib/combatTypes";
+import type { BodyZone } from "../lib/combat/types";
 
 // ── Zone colors by state ────────────────────────────────────
 

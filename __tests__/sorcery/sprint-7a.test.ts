@@ -215,6 +215,74 @@ caseName("empty INVOKE returns fizzle-no-reagents", () => {
   eq(r.outcome.kind, "fizzle-no-reagents", "kind");
 });
 
+caseName("interrupt-fizzle: combat interrupt blocks INVOKE — mana + reagents preserved", async () => {
+  // Player is in combat AND just took a critical hit. The next INVOKE
+  // attempt should fail with kind "interrupt-fizzle" and consume nothing.
+  // Mirrors the CAST handler's interrupted-this-turn fizzle.
+  const types = await import("../../lib/combat/types");
+  const base = fixtureState({
+    knownCircles: [1, 2, 3, 4],
+    mana: 100,
+    reagents: ALL_REAGENTS,
+  });
+  const heroCombatant = types.fillCombatantDefaults({
+    id: "hero",
+    name: "Hero",
+    side: "ally",
+    team: "ally",
+    controlledBy: "player",
+    hp: 30, maxHp: 50,
+    interruptedSinceLastTurn: { kind: "critical_hit", zone: "torso" },
+  });
+  const enemyCombatant = types.fillCombatantDefaults({
+    id: "rurik",
+    name: "Rurik",
+    side: "enemy",
+    team: "enemy",
+    controlledBy: "ai",
+    hp: 30, maxHp: 30,
+  });
+  const s: WorldState = {
+    ...base,
+    player: {
+      ...base.player,
+      activeCombat: {
+        enemyNpcId: "rurik",
+        enemyName: "Rurik",
+        roundNumber: 0,
+        playerCombatant: heroCombatant,
+        enemyCombatant: enemyCombatant,
+        combatLog: [],
+        finished: false,
+        playerWon: null,
+        barriers: [],
+        combatants: [heroCombatant, enemyCombatant],
+        turnOrder: ["hero", "rurik"],
+        currentTurnIdx: 0,
+      },
+    },
+  };
+  const r = handleInvoke(s, "Aug Vit"); // Heal — Circle 1
+  eq(r.outcome.kind, "interrupt-fizzle", "kind=interrupt-fizzle");
+  if (r.outcome.kind === "interrupt-fizzle") {
+    eq(r.outcome.reason.kind, "critical_hit", "reason carried through");
+  }
+  // No resource consumption.
+  eq(r.state.player.currentMana, 100, "mana untouched");
+  eq(r.state.player.inventory.find(i => i.itemId === "ginseng")?.quantity, 10, "reagent untouched");
+});
+
+caseName("interrupt-fizzle: out-of-combat INVOKE is unaffected", () => {
+  // No activeCombat → no interrupt to honor. The normal gates apply.
+  const s = fixtureState({
+    knownCircles: [1],
+    mana: 100,
+    reagents: ALL_REAGENTS,
+  });
+  const r = handleInvoke(s, "Aug Vit");
+  eq(r.outcome.kind, "success", "out-of-combat invoke succeeds normally");
+});
+
 // ── 4. handleInvoke success path ─────────────────────────────
 
 console.log("[sprint-7a] handleInvoke success");
@@ -251,7 +319,7 @@ caseName("Circle 2 success: warning string fires (no Illumination drain)", () =>
     mana: 50,
     reagents: ALL_REAGENTS,
   });
-  const r = handleInvoke(s0, "Aug Dex"); // Agility (Circle 2)
+  const r = handleInvoke(s0, "Aug Dex"); // Dexterity (Circle 2)
   eq(r.outcome.kind, "success", "kind");
   if (r.outcome.kind === "success") {
     eq(r.outcome.illuminationDrained, 0, "no drain at Circle 2");

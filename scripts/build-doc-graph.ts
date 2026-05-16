@@ -1,0 +1,592 @@
+// ============================================================
+// Sprint G1 -- Doc Graph generator
+//
+// Walks DOC_MAP.md + per-doc Q+A blocks + EDGE_VECTORS.md and emits:
+//   - docs/doc-graph.json (machine-readable)
+//   - docs/doc-graph.md   (human/Claude-readable adjacency list)
+//
+// Run:
+//   npm run graph:build
+//   (or: npx tsx scripts/build-doc-graph.ts)
+//
+// Deterministic: sorted keys, stable iteration. Read-only against the
+// canon. No DB, no network. Drift becomes structurally impossible
+// because the graph regenerates from the canonical sources.
+// ============================================================
+
+import fs from "node:fs";
+import path from "node:path";
+import {
+  allDocs,
+  type DocEntry,
+} from "../lib/library/docMap";
+import { parseFrontmatter } from "../lib/library/markdown";
+import { loadEdgeVectors } from "../lib/library/edgeVectors";
+
+const REPO_ROOT = process.cwd();
+const OUT_JSON = path.join(REPO_ROOT, "docs", "doc-graph.json");
+const OUT_MD = path.join(REPO_ROOT, "docs", "doc-graph.md");
+const OUT_MMD = path.join(REPO_ROOT, "docs", "doc-graph.mmd");
+
+// ── Types ──────────────────────────────────────────────────────
+
+type EdgeType =
+  | "cross_ref"
+  | "relates_to"
+  | "has_open_question"
+  | "affects"
+  | "derives_from";
+
+interface DocNode {
+  type: "doc";
+  id: string;
+  path: string;
+  title: string;
+  role: string;
+  visibility: string;
+  status: string;
+  last_updated: string;
+  questions_total?: number;
+  questions_answered?: number;
+  questions_open?: number;
+}
+
+interface EvNode {
+  type: "edge_vector";
+  id: string;
+  source_doc: string;
+  category: string;
+  confidence: string;
+  question: string;
+  best_guess: string;
+}
+
+type Node = DocNode | EvNode;
+
+interface Edge {
+  from: string;
+  to: string;
+  type: EdgeType;
+}
+
+interface GraphPayload {
+  generated_at: string;
+  stats: {
+    doc_count: number;
+    ev_count: number;
+    edge_count: number;
+    creator_visible: number;
+    internal: number;
+  };
+  nodes: Record<string, Node>;
+  edges: Edge[];
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+
+/**
+ * Build a lookup table from "PANTHEON.md" / "lore/pantheon/PANTHEON.md" /
+ * "pantheon" -> doc id. Used to resolve "relates to:" line tokens to
+ * graph nodes.
+ */
+function buildResolver(docs: DocEntry[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const doc of docs) {
+    if (doc.path.includes("*")) continue; // skip corpus paths
+    map.set(doc.path, doc.id);
+    map.set(doc.path.toLowerCase(), doc.id);
+    // basename ("PANTHEON.md", "GAME_DESIGN.md")
+    const base = path.basename(doc.path);
+    map.set(base, doc.id);
+    map.set(base.toLowerCase(), doc.id);
+    // id itself
+    map.set(doc.id, doc.id);
+  }
+  return map;
+}
+
+/**
+ * Strip a "relates to:" token of any "§...", "(parenthetical)" annotation,
+ * leading/trailing whitespace. Returns the cleaned reference string.
+ */
+function cleanRefToken(token: string): string {
+  return token
+    .replace(/\s*\([^)]*\)\s*/g, "")
+    .replace(/\s*§[^,]*$/g, "")
+    .replace(/\s*§\S+/g, "")
+    .replace(/^[`*]+|[`*]+$/g, "")
+    .trim();
+}
+
+/**
+ * Parse the lines of a doc's Q+A markdown body. For every line matching
+ * "↔ relates to: A, B, C", emit one outbound edge per resolved target.
+ * Tokens that don't resolve to a known doc id are dropped silently for
+ * v1 (they describe code paths or external memory files; future
+ * iterations can model those as separate node types).
+ */
+function extractRelatesToEdges(
+  body: string,
+  fromId: string,
+  resolver: Map<string, string>
+): Edge[] {
+  const edges: Edge[] = [];
+  const seen = new Set<string>();
+  const lines = body.split(/\r?\n/);
+  for (const line of lines) {
+    const m = line.match(/^[↔↪→]\s*relates to:\s*(.+)$/i);
+    if (!m) continue;
+    const tokens = m[1].split(",").map(cleanRefToken).filter((t) => t.length > 0);
+    for (const tok of tokens) {
+      const id = resolver.get(tok) ?? resolver.get(tok.toLowerCase());
+      if (!id) continue;
+      if (id === fromId) continue; // skip self-loops
+      const key = `${fromId}->${id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      edges.push({ from: `doc:${fromId}`, to: `doc:${id}`, type: "relates_to" });
+    }
+  }
+  return edges;
+}
+
+/**
+ * Parse EDGE_VECTORS.md via the shared lib/library/edgeVectors parser
+ * and project the entries into graph-shaped nodes + edges:
+ *   doc:<source> -> ev:<id>      (has_open_question)
+ *   ev:<id>      -> doc:<target> (affects, one per Affects: link)
+ */
+function parseEdgeVectors(): { nodes: EvNode[]; edges: Edge[] } {
+  const entries = loadEdgeVectors();
+  const nodes: EvNode[] = [];
+  const edges: Edge[] = [];
+
+  for (const ev of entries) {
+    nodes.push({
+      type: "edge_vector",
+      id: ev.id,
+      source_doc: ev.sourceDocId,
+      category: ev.category,
+      confidence: ev.confidence,
+      question: ev.question,
+      best_guess: ev.bestGuess,
+    });
+
+    if (ev.sourceDocId) {
+      edges.push({
+        from: `doc:${ev.sourceDocId}`,
+        to: `ev:${ev.id}`,
+        type: "has_open_question",
+      });
+    }
+
+    for (const target of ev.affects) {
+      edges.push({ from: `ev:${ev.id}`, to: `doc:${target}`, type: "affects" });
+    }
+  }
+
+  return { nodes, edges };
+}
+
+// ── Main ───────────────────────────────────────────────────────
+
+function main() {
+  const docs = allDocs();
+  const resolver = buildResolver(docs);
+
+  const nodes: Record<string, Node> = {};
+  const edges: Edge[] = [];
+
+  // 1. Doc nodes + cross_ref edges from DOC_MAP
+  for (const doc of docs) {
+    const isCorpus = doc.path.includes("*") || doc.path.endsWith("/");
+
+    // Per-doc frontmatter (counts) -- only if the file exists and has Q+A
+    let frontmatterCounts: {
+      qt?: number;
+      qa?: number;
+      qo?: number;
+    } = {};
+    let body = "";
+    if (!isCorpus) {
+      const full = path.join(REPO_ROOT, doc.path);
+      if (fs.existsSync(full)) {
+        const raw = fs.readFileSync(full, "utf-8");
+        const parsed = parseFrontmatter(raw);
+        body = parsed.body;
+        const fm = parsed.frontmatter as Record<string, unknown> | null;
+        if (fm) {
+          frontmatterCounts = {
+            qt: typeof fm.questions_total === "number" ? fm.questions_total : undefined,
+            qa: typeof fm.questions_answered === "number" ? fm.questions_answered : undefined,
+            qo: typeof fm.questions_open === "number" ? fm.questions_open : undefined,
+          };
+        }
+      }
+    }
+
+    nodes[`doc:${doc.id}`] = {
+      type: "doc",
+      id: doc.id,
+      path: doc.path,
+      title: doc.title,
+      role: doc.role,
+      visibility: doc.visibility,
+      status: String(doc.status),
+      last_updated: doc.last_updated,
+      questions_total: frontmatterCounts.qt,
+      questions_answered: frontmatterCounts.qa,
+      questions_open: frontmatterCounts.qo,
+    };
+
+    // cross_ref edges from DOC_MAP
+    if (doc.cross_refs) {
+      for (const ref of doc.cross_refs) {
+        const cleaned = cleanRefToken(ref);
+        const targetId =
+          resolver.get(cleaned) ?? resolver.get(cleaned.toLowerCase());
+        if (targetId && targetId !== doc.id) {
+          edges.push({
+            from: `doc:${doc.id}`,
+            to: `doc:${targetId}`,
+            type: "cross_ref",
+          });
+        }
+      }
+    }
+
+    // derives_from edges (generated_by)
+    if (doc.generated_by) {
+      // The "from" of derives_from is the source code, not a doc node.
+      // For v1, we model this as a self-annotation only -- skip the edge.
+    }
+
+    // relates_to edges from per-doc Q+A body
+    if (!isCorpus && body) {
+      edges.push(...extractRelatesToEdges(body, doc.id, resolver));
+    }
+  }
+
+  // 2. EV nodes + has_open_question + affects edges
+  const { nodes: evNodes, edges: evEdges } = parseEdgeVectors();
+  for (const ev of evNodes) {
+    nodes[`ev:${ev.id}`] = ev;
+  }
+  edges.push(...evEdges);
+
+  // 3. Deduplicate edges (a cross_ref + a relates_to between the same pair
+  //    are kept as TWO edges, since they're distinct edge types. But two
+  //    relates_to between the same pair collapse to one.)
+  const dedupKey = (e: Edge) => `${e.from}|${e.to}|${e.type}`;
+  const uniqEdges = Array.from(
+    new Map(edges.map((e) => [dedupKey(e), e])).values()
+  );
+
+  // 4. Sort for determinism
+  uniqEdges.sort((a, b) => {
+    if (a.from !== b.from) return a.from.localeCompare(b.from);
+    if (a.to !== b.to) return a.to.localeCompare(b.to);
+    return a.type.localeCompare(b.type);
+  });
+  const sortedNodes: Record<string, Node> = {};
+  for (const k of Object.keys(nodes).sort()) sortedNodes[k] = nodes[k];
+
+  // 5. Stats
+  const docNodeIds = Object.keys(sortedNodes).filter((k) => k.startsWith("doc:"));
+  const evNodeIds = Object.keys(sortedNodes).filter((k) => k.startsWith("ev:"));
+  const creatorVisible = docNodeIds.filter(
+    (k) => (sortedNodes[k] as DocNode).visibility === "creator"
+  ).length;
+  const internal = docNodeIds.filter(
+    (k) => (sortedNodes[k] as DocNode).visibility === "internal"
+  ).length;
+
+  const payload: GraphPayload = {
+    generated_at: new Date().toISOString().slice(0, 10), // YYYY-MM-DD only -- avoids spurious diffs
+    stats: {
+      doc_count: docNodeIds.length,
+      ev_count: evNodeIds.length,
+      edge_count: uniqEdges.length,
+      creator_visible: creatorVisible,
+      internal,
+    },
+    nodes: sortedNodes,
+    edges: uniqEdges,
+  };
+
+  // 6. Write JSON
+  fs.mkdirSync(path.dirname(OUT_JSON), { recursive: true });
+  fs.writeFileSync(OUT_JSON, JSON.stringify(payload, null, 2) + "\n", "utf-8");
+
+  // 7. Write markdown
+  fs.writeFileSync(OUT_MD, renderMarkdown(payload, sortedNodes, uniqEdges), "utf-8");
+
+  // 8. Write Mermaid (cross_ref edges only + open EVs as dashed leaves)
+  fs.writeFileSync(OUT_MMD, renderMermaid(payload, sortedNodes, uniqEdges), "utf-8");
+
+  console.log(
+    `[graph:build] ${payload.stats.doc_count} docs · ${payload.stats.ev_count} EVs · ${payload.stats.edge_count} edges -> ${path.relative(REPO_ROOT, OUT_JSON)}, ${path.relative(REPO_ROOT, OUT_MD)}, ${path.relative(REPO_ROOT, OUT_MMD)}`
+  );
+}
+
+// ── Markdown renderer ──────────────────────────────────────────
+
+function renderMarkdown(
+  payload: GraphPayload,
+  nodes: Record<string, Node>,
+  edges: Edge[]
+): string {
+  // In-degree per doc (for "most-connected" list)
+  const inDegree = new Map<string, number>();
+  for (const e of edges) {
+    if (!e.to.startsWith("doc:")) continue;
+    inDegree.set(e.to, (inDegree.get(e.to) ?? 0) + 1);
+  }
+  const topConnected = [...inDegree.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 8);
+
+  const docNodes = Object.values(nodes).filter(
+    (n): n is DocNode => n.type === "doc"
+  );
+  const evNodes = Object.values(nodes).filter(
+    (n): n is EvNode => n.type === "edge_vector"
+  );
+
+  // Group docs by role for the adjacency listing
+  const docsByRole = new Map<string, DocNode[]>();
+  for (const d of docNodes) {
+    if (!docsByRole.has(d.role)) docsByRole.set(d.role, []);
+    docsByRole.get(d.role)!.push(d);
+  }
+
+  // Outgoing edges per doc (for the adjacency listing)
+  const outgoing = new Map<string, Edge[]>();
+  for (const e of edges) {
+    if (!e.from.startsWith("doc:")) continue;
+    if (!outgoing.has(e.from)) outgoing.set(e.from, []);
+    outgoing.get(e.from)!.push(e);
+  }
+
+  const lines: string[] = [];
+  lines.push(
+    `<!-- AUTO-GENERATED by scripts/build-doc-graph.ts. Do not hand-edit. Run: npm run graph:build -->`
+  );
+  lines.push("");
+  lines.push(`# Doc Graph`);
+  lines.push("");
+  lines.push(`Generated ${payload.generated_at}.`);
+  lines.push("");
+  lines.push(
+    `Compact adjacency view of every Living Eamon canon doc, every Edge Vector, and the relationships between them. **This file is loaded into Claude hydration as item 0.5 of the rehydration stack** so future sessions get the topology in one read instead of grep-and-load 5–30K tokens per cross-doc question.`
+  );
+  lines.push("");
+  lines.push(`## Stats`);
+  lines.push("");
+  lines.push(
+    `- ${payload.stats.doc_count} docs · ${payload.stats.ev_count} open Edge Vectors · ${payload.stats.edge_count} edges`
+  );
+  lines.push(
+    `- ${payload.stats.creator_visible} creator-visible · ${payload.stats.internal} internal`
+  );
+  lines.push("");
+
+  // Most-connected
+  lines.push(`## Most-connected nodes (by in-degree)`);
+  lines.push("");
+  for (const [k, n] of topConnected) {
+    const node = nodes[k] as DocNode;
+    if (!node) continue;
+    lines.push(`- **${node.id}** (${n} incoming) — ${node.title}`);
+  }
+  lines.push("");
+
+  // Adjacency, grouped by role
+  lines.push(`## Adjacency`);
+  lines.push("");
+  for (const role of [...docsByRole.keys()].sort()) {
+    lines.push(`### ${role}`);
+    lines.push("");
+    const roleDocs = docsByRole.get(role)!.sort((a, b) => a.id.localeCompare(b.id));
+    for (const d of roleDocs) {
+      const out = outgoing.get(`doc:${d.id}`) ?? [];
+      const groups = new Map<EdgeType, string[]>();
+      for (const e of out) {
+        const targetNode = nodes[e.to];
+        const targetLabel = targetNode
+          ? targetNode.type === "doc"
+            ? (targetNode as DocNode).id
+            : (targetNode as EvNode).id
+          : e.to;
+        if (!groups.has(e.type)) groups.set(e.type, []);
+        groups.get(e.type)!.push(targetLabel);
+      }
+      const flagsParts: string[] = [];
+      flagsParts.push(`**${d.id}**`);
+      if (d.questions_open && d.questions_open > 0)
+        flagsParts.push(`Q:${d.questions_total}(open=${d.questions_open})`);
+      flagsParts.push(`[${d.status}]`);
+      lines.push(`- ${flagsParts.join(" ")} — ${d.title}`);
+      for (const t of [...groups.keys()].sort()) {
+        const labels = [...new Set(groups.get(t)!)].sort();
+        if (labels.length === 0) continue;
+        lines.push(`  - **${t}** → ${labels.join(", ")}`);
+      }
+    }
+    lines.push("");
+  }
+
+  // Open questions
+  lines.push(`## Open Edge Vectors (${evNodes.length})`);
+  lines.push("");
+  for (const ev of evNodes.sort((a, b) => a.id.localeCompare(b.id))) {
+    const affected = edges
+      .filter((e) => e.from === `ev:${ev.id}` && e.type === "affects")
+      .map((e) => (nodes[e.to] as DocNode | undefined)?.id ?? e.to)
+      .sort();
+    lines.push(
+      `- **${ev.id}** \`[${ev.category}, ${ev.confidence}]\` ← ${ev.source_doc} → affects: ${affected.length > 0 ? affected.join(", ") : "(none mapped)"}`
+    );
+    if (ev.question) {
+      const truncated = ev.question.length > 120 ? ev.question.slice(0, 117) + "..." : ev.question;
+      lines.push(`  - Q: ${truncated}`);
+    }
+  }
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+// ── Mermaid renderer ───────────────────────────────────────────
+//
+// Outputs a flowchart focused on the high-signal edges only:
+//   - cross_ref (solid arrows, doc → doc)
+//   - has_open_question (dashed leaves, doc -.- ev)
+// Skips relates_to (90+ noisy edges) and affects (also noisy).
+// Subgraphs cluster nodes by role. Status maps to fill color.
+
+function mermaidId(raw: string): string {
+  // Mermaid identifiers must be alphanumeric + underscore. Hyphens (in EV ids
+  // like "EV-pantheon-001") and dots are not allowed in some renderers.
+  return raw.replace(/[^a-zA-Z0-9_]/g, "_");
+}
+
+function escapeLabel(s: string): string {
+  // Mermaid quoted labels: replace backticks (markdown) and double-quotes.
+  return s.replace(/"/g, "&quot;").replace(/`/g, "");
+}
+
+function renderMermaid(
+  payload: GraphPayload,
+  nodes: Record<string, Node>,
+  edges: Edge[]
+): string {
+  const docNodes = Object.values(nodes).filter(
+    (n): n is DocNode => n.type === "doc"
+  );
+  const evNodes = Object.values(nodes).filter(
+    (n): n is EvNode => n.type === "edge_vector"
+  );
+
+  const docsByRole = new Map<string, DocNode[]>();
+  for (const d of docNodes) {
+    if (!docsByRole.has(d.role)) docsByRole.set(d.role, []);
+    docsByRole.get(d.role)!.push(d);
+  }
+
+  const lines: string[] = [];
+  lines.push("%% AUTO-GENERATED by scripts/build-doc-graph.ts. Do not hand-edit.");
+  lines.push("%% Run: npm run graph:build");
+  lines.push(`%% ${payload.stats.doc_count} docs · ${payload.stats.ev_count} EVs · ${payload.stats.edge_count} edges (showing cross_ref + has_open_question only)`);
+  lines.push(`%% Generated ${payload.generated_at}`);
+  lines.push("");
+  lines.push("flowchart LR");
+
+  // Subgraphs grouped by role
+  for (const role of [...docsByRole.keys()].sort()) {
+    const safeRole = mermaidId(role);
+    lines.push(`  subgraph ${safeRole}["${escapeLabel(role)}"]`);
+    lines.push("    direction TB");
+    const sorted = docsByRole.get(role)!.sort((a, b) => a.id.localeCompare(b.id));
+    for (const d of sorted) {
+      const nid = mermaidId(d.id);
+      // Compact label: id on line 1, status on line 2; questions on line 3 if any
+      const parts: string[] = [];
+      parts.push(`<b>${escapeLabel(d.id)}</b>`);
+      parts.push(`<i>${escapeLabel(d.status)}</i>`);
+      if (d.questions_open && d.questions_open > 0) {
+        parts.push(`Q:${d.questions_total}/${d.questions_open}open`);
+      }
+      lines.push(`    ${nid}["${parts.join("<br/>")}"]`);
+    }
+    lines.push("  end");
+    lines.push("");
+  }
+
+  // EV nodes (rendered outside subgraphs, styled red/dashed)
+  if (evNodes.length > 0) {
+    lines.push("  %% Open Edge Vectors");
+    for (const ev of evNodes.sort((a, b) => a.id.localeCompare(b.id))) {
+      const nid = mermaidId(ev.id);
+      const label = `${ev.id}<br/>${ev.category}`;
+      // round-edged shape for EVs to distinguish from docs
+      lines.push(`  ${nid}(["${escapeLabel(label)}"])`);
+    }
+    lines.push("");
+  }
+
+  // cross_ref edges (solid)
+  const crossRefEdges = edges.filter((e) => e.type === "cross_ref");
+  if (crossRefEdges.length > 0) {
+    lines.push("  %% cross_ref edges (from DOC_MAP)");
+    for (const e of crossRefEdges) {
+      const fromId = mermaidId(e.from.replace(/^doc:/, ""));
+      const toId = mermaidId(e.to.replace(/^doc:/, ""));
+      lines.push(`  ${fromId} --> ${toId}`);
+    }
+    lines.push("");
+  }
+
+  // has_open_question edges (dashed, doc → ev)
+  const evEdges = edges.filter((e) => e.type === "has_open_question");
+  if (evEdges.length > 0) {
+    lines.push("  %% has_open_question edges (doc → EV, dashed)");
+    for (const e of evEdges) {
+      const fromId = mermaidId(e.from.replace(/^doc:/, ""));
+      const toId = mermaidId(e.to.replace(/^ev:/, ""));
+      lines.push(`  ${fromId} -.-> ${toId}`);
+    }
+    lines.push("");
+  }
+
+  // Class definitions (status colors + EV style)
+  lines.push("  %% Styling");
+  lines.push("  classDef approved fill:#d4edda,stroke:#155724,stroke-width:1px");
+  lines.push("  classDef draft fill:#fff3cd,stroke:#856404,stroke-width:1px");
+  lines.push("  classDef active fill:#d1ecf1,stroke:#0c5460,stroke-width:1px");
+  lines.push("  classDef deferred fill:#f8d7da,stroke:#721c24,stroke-width:1px");
+  lines.push("  classDef historical fill:#e2e3e5,stroke:#383d41,stroke-width:1px");
+  lines.push("  classDef rolling fill:#cce5ff,stroke:#004085,stroke-width:1px");
+  lines.push("  classDef ev fill:#ffe5e5,stroke:#c00,stroke-width:1px,stroke-dasharray:4 2");
+  lines.push("");
+
+  // Apply classes
+  const byStatus = new Map<string, string[]>();
+  for (const d of docNodes) {
+    const status = d.status || "active";
+    if (!byStatus.has(status)) byStatus.set(status, []);
+    byStatus.get(status)!.push(mermaidId(d.id));
+  }
+  for (const [status, ids] of [...byStatus.entries()].sort()) {
+    if (ids.length === 0) continue;
+    lines.push(`  class ${ids.join(",")} ${status}`);
+  }
+  if (evNodes.length > 0) {
+    const evIds = evNodes.map((ev) => mermaidId(ev.id)).sort();
+    lines.push(`  class ${evIds.join(",")} ev`);
+  }
+
+  return lines.join("\n") + "\n";
+}
+
+main();

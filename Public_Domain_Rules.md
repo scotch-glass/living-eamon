@@ -1,3 +1,85 @@
+---
+id: public_domain_rules
+title: Public Domain Rules
+role: legal
+canonical_for: [ip-framework, safe-harbor-strategy, howard-pd-timeline, trademark-restrictions, always-safe-corpus]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [GAME_DESIGN.md, lore/hyborian-pd/MODULE_PLAN.md, EDGE_VECTORS.md]
+questions_total: 10
+questions_answered: 9
+questions_open: 1
+edge_vector_ids: [EV-public_domain_rules-002]
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [PD-SAFETY]
+
+**Q:** What's the three-bucket model for Howard's catalogue?
+**A:** **Bucket A — currently US-PD:** the Always-Safe Corpus (Hyborian Age essay + 3 Kull stories + 2 Phantagraph poems) plus 15 *Weird Tales* 1934–1936 stories moved to Bucket A by the project's 2026-04-30 non-renewal audit (Iron Shadows in the Moon, Queen of the Black Coast, The Devil in Iron, People of the Black Circle, A Witch Shall Be Born, Jewels of Gwahlur, Beyond the Black River, Shadows in Zamboula, The Hour of the Dragon, Red Nails, Haunter of the Ring, Grisly Horror / Moon of Zambebwei, Black Canaan, Black Hound of Death, Fire of Asshurbanipal). **Bucket B — copyright-protected pending audit or 95-year unlock:** 1932–1933 *Weird Tales* Conan stories (Phoenix on the Sword 2028, Tower of the Elephant 2029, etc.). **Bucket C — trademark-protected forever:** Conan, Cimmerian, Hyborian, Hyboria — never lift, regardless of any underlying story's PD status. `[high]`
+↔ relates to: §1.2 (the three buckets), §8 Future PD Calendar, GAME_DESIGN.md top-of-file tables (name-by-name lookup)
+
+### [PD-SAFETY]
+
+**Q:** What's the critical distinction between trademark and copyright for this project?
+**A:** Trademark rights **do not expire**. Even after copyright lapses on a story, brand-enforcement rights on character names, titles, and iconographic marks continue indefinitely. Conan Properties Inc. (Cabinet Entertainment / Heroic Signatures) actively enforces the marks **CONAN**, **Conan the Barbarian**, **HYBORIA / HYBORIAN AGE**, **CIMMERIAN / CIMMERIANS / CIMMERIA**, and **"Hyborian"** as a marketing adjective. These are forbidden in titles, character names, branding, marketing, splash, login, register, board, updates, legal, nav, meta tags — **forever, regardless of underlying story PD status**. The trademark scrub is project-wide for all player-facing surfaces; internal code identifiers like `sceneTone: "aquilonian"` stay safe because they are enums, not player-facing names. `[high]`
+↔ relates to: §2 Trademark vs Copyright, §6.1 Trademark-protected forever, feedback_no_hyborian_in_marketing.md
+
+### [PD-SAFETY]
+
+**Q:** What is the "inspired by" customization discipline that every adventure module must follow?
+**A:** Six rules per Scotch's standing directive (2026-04-30): (1) **The player IS the hero** — where Howard's stories starred Conan, Living Eamon recasts the role for the player character. Not a name-swap, but a replacement of the protagonist function with PICSSI-driven decisions. (2) **Original prose in Howard's voice register** — newly written in Howard's vocabulary and atmospheric register; we do not reprint or closely paraphrase his sentences. (3) **Heavy plot mutation** — multi-ending PICSSI branches, ally NPCs that live or die based on player choice, faction puzzles where Howard had a single thread. (4) **Trademark scrub** — Conan / Cimmerian / Hyborian removed from all module prose; the 1936 essay's other kingdoms (Aquilonia, Stygia, Nemedia, Zamora, Koth, Shem, Kush, Turan, Hyrkania, Vendhya) remain safe in narrative. (5) **Atlantean wonder-tech accents** — pre-Cataclysmic gunpowder, steam-engines, energy-crystal devices, automata, beam-weapons appear as dormant or revered-as-magic relics. (6) **Disclaimers** — module README cites "Inspired by [title] (Robert E. Howard, *Weird Tales* [date])". `[high]`
+↔ relates to: §4.4 Customization Discipline, ADVENTURE_MODULES_PLAN.md (per-module mapping), project_pd_expansion_2026-04-30.md
+
+### [PD-SAFETY]
+
+**Q:** What is the Always-Safe Corpus and what does it unlock?
+**A:** Six works requiring **zero ongoing legal review**, freely usable in full text + characters + locations + plot elements + prose. **The Hyborian Age** (essay, *The Phantagraph* 1936) — full setting skeleton: geography, migrations, cataclysms, kingdoms, peoples; no characters; verified non-renewal per Project Gutenberg research. **The Shadow Kingdom** (*Weird Tales* Aug 1929) — Kull, Atlantis, Valusia, Serpent-Men, the "Ka nama kaa lajerama" anti-shibboleth. **The Mirrors of Tuzun Thune** (*Weird Tales* Sept 1929) — Tuzun Thune, mirror chamber, pre-human magic concepts. **Kings of the Night** (*Weird Tales* Nov 1930) — Bran Mak Morn, Picts, time-bridging ritual. **Always Comes Evening** (poem, *The Phantagraph* Aug 1936) and **Song at Midnight / Man, the Master** (poem, *The Phantagraph* Aug 1940) — Howard-voice quotable atmospheric material. The essay's kingdom names (Aquilonia, Stygia, Nemedia, Zamora, Koth, Shem, Kush, Turan, Hyrkania, Vendhya) are PD and usable in narrative prose. The three Kull stories are the Thurian-Age anchor for the Mirrors of Tuzun Thune launch trilogy. `[high]`
+↔ relates to: §5 Always-Safe Corpus, project_pd_expansion_2026-04-30.md, GAME_DESIGN.md top-of-file tables
+
+### [PD-SAFETY]
+
+**Q:** What's the upcoming PD calendar — when do Bucket B stories enter Bucket A?
+**A:** Two unlock dates absent earlier non-renewal confirmation. **2028:** *The Phoenix on the Sword* + *The Scarlet Citadel* (1932 *Weird Tales* issues) enter PD on the 95-year clock; this also unlocks **Thoth-Amon** as a named character. **2029:** the 1933 Conan corpus — *The Tower of the Elephant*, *Black Colossus*, *Rogues in the House*, *The Slithering Shadow*, *The Pool of the Black One*, *The Frost-Giant's Daughter / Gods of the North* — enters PD; this also unlocks **Yag-Kosha** as a named character (though the project's working stance treats him as already-usable via the 1934 *Queen of the Black Coast* description). **2027 review** (per §3.2): verify *Weird Tales* 1932 + 1933 issue non-renewal status, which would move those stories to Bucket A early. **Trademark restrictions persist forever regardless of any unlock** — Conan / Cimmerian / Hyborian remain forbidden in 2028, 2029, and all future years. Living Eamon adopts a non-renewal-friendly stance for content sourcing; this is project policy, not legal advice. `[high]`
+↔ relates to: §3.2 Future PD calendar, §8 Future PD Calendar (US), §6.2 Bucket B specifics
+
+### [PD-SAFETY]
+
+**Q:** Why is "Cimmerian" treated as forbidden when Cimmeria-the-place is technically copyright-PD via the 1936 essay?
+**A:** Project policy treats Cimmerian / Cimmerians / Cimmeria as **trademark-radioactive** because they are the strongest Conan-brand markers in the popular mind, even though the underlying *Hyborian Age* essay is PD. The risk model isn't strict copyright validity — it's brand-enforcement litigation cost and consumer-confusion risk. Cabinet Entertainment / CPI's enforcement portfolio targets exactly these brand markers; even a legally-defensible use creates legal-defense exposure that the project chooses not to take. Use synonyms in narrative ("highland barbarian," "mountain folk," "northern hill-clans," "highland warriors of the cold reaches"). The same reasoning explains why "Aquilonia" is OK in narrative prose but never in marketing slogans — the brand association is too tight even when the legal case is solid. Crom's people in PANTHEON.md are framed as "northern hill-clans" specifically to honor this discipline. `[high]`
+↔ relates to: §2.1 Protected Trademarks, §4.1 player-facing DO NOT USE, lore/pantheon/PANTHEON.md (Crom entry framing)
+
+### [ARCHITECTURE]
+
+**Q:** Which systems and surfaces consume this document at design and runtime?
+**A:** Six surfaces. (a) **Every Claude session** — CLAUDE.md item 5 in the rehydration stack instructs reading this file before any design work; this doc has authority to reject trademark-infringing or pre-PD feature requests. (b) **`ADVENTURE_MODULES_PLAN.md`** — each of the 18 modules cites its source story and PD-status reasoning per §1.2. (c) **`MODULE_SYSTEM.md` `module.json` schema** — the optional `publicDomainSource` field documents per-module provenance ("Robert E. Howard, 'Skulls in the Stars' — US public domain since 2025-01-01"). (d) **GAME_DESIGN.md top-of-file tables** — name-by-name Safe Harbor / Radioactive lookup; supersedes any other doc on individual term status. (e) **Marketing pages + meta tags** — splash, board, login, register all run trademark-scrub before deploy per §9 compliance checklist. (f) **PANTHEON.md** — the Howard-PD frame for Crom and the Thurian aliases is anchored here. No runtime consumer in code (this is a legal/design-process doc, not a runtime-loaded data source). `[high]`
+↔ relates to: §9 Compliance Checklists, CLAUDE.md (item 5 of stack), GAME_DESIGN.md, MODULE_SYSTEM.md §4.5 module.json
+
+### [PD-SAFETY]
+
+**Q:** Is the non-renewal position legally binding for third parties (e.g., a Steam Workshop module author or a community contributor)?
+**A:** **No.** §1.2 states explicitly: "This is the project's adopted policy, not legal advice; third parties should run their own review." The 2026-04-30 expansion adopted the non-renewal-friendly stance for *Weird Tales* 1934–1936 issues based on the conventional scholarly view that those issues were not issue-renewed and Howard's individual contributions were not separately renewed. That stance is sufficient for the project's content-sourcing decisions, but anyone publishing under the Living Eamon brand is held to it (via repo policy + the §9 checklist), and anyone publishing independently must run their own audit. Steam Workshop / Itch.io community uploads, if they ever happen (per `MODULE_SYSTEM.md` modding-friendliness rationale), would need a contributor agreement that names Public_Domain_Rules.md as the binding policy AND a per-upload PD-status declaration in module.json. Without that, a hostile-actor module could expose the project to indemnity claims it can't satisfy. `[high]`
+↔ relates to: §1.2 (project policy not legal advice), §9 Compliance Checklists, MODULE_SYSTEM.md §4.5 (publicDomainSource field), EV-module_system-002 (community contract migration)
+
+### [INK-AUTHORING]
+
+**Q:** Is there an automated check that flags PD-violation candidates in module prose before commit?
+**A:** A `tools/pd-lint/` script walks all `.ink` files + `module.json` + module READMEs and scans for the §2.1 trademark list (Conan / Cimmerian / Hyborian / Cimmeria / Hyboria) plus the Bucket B character lookup table from §6.2. The lint runs in `prebuild` alongside `validate-modules` + `gpe:all --strict`. Implementation details (Aquilonia handling, per-rule allowlists, marketing-vs-prose context tagging) are deferred to the tooling sprint. `[high]`
+↔ relates to: §9 Compliance Checklists, MODULE_SYSTEM.md §3 prebuild hooks, GAME_DESIGN.md top-of-file Safe Harbor / Radioactive tables
+
+### [PD-SAFETY]
+
+**Q:** What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues actually entail — who runs it, what sources, what would move stories early?
+**A:** Medium. §3.2 declares "2027 review: verify *Weird Tales* 1932 issue non-renewal" but no methodology, sourcing strategy, or who-does-the-work is specified. Best guess for the methodology: same approach as the 2026-04-30 audit that moved 1934–1936 stories — search the U.S. Copyright Office renewal records (Catalog of Copyright Entries, 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg's existing Howard research notes, and the standing scholarly consensus on *Weird Tales* renewal practices. The audit needs to verify both (a) the magazine issue was not issue-renewed and (b) Howard's individual contributions were not separately renewed (Howard died 1936 and his estate's renewal practices are uneven). Recommendation: schedule the audit in `LAUNCH_CRITERIA.md` Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 (Document History) entry plus a Bucket A migration if confirmed. `[medium]` → see [EV-public_domain_rules-002](EDGE_VECTORS.md#ev-public_domain_rules-002)
+↔ relates to: §3.2 Future PD calendar, §8 Future PD Calendar (US), §10 Authority & Governance, project_pd_expansion_2026-04-30.md (audit precedent)
+
+---
+
 # Public Domain Rules & Safe Harbor Strategy
 
 **CRITICAL: All Claude sessions must read this document before any design or development work.**

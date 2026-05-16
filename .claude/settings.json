@@ -197,13 +197,91 @@
       "Bash(echo \"---exit=$?\")",
       "Bash(echo \"---tsc-exit=$?\")",
       "Bash(set -e)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js\\)$\")",
+      "Bash(awk '/id:.*{/,/isHostile:/' /Users/joshuamcclure/Desktop/living-eamon/lib/gameData.ts)",
+      "Bash(awk '/export const NPCS/,/^};/' /Users/joshuamcclure/Desktop/living-eamon/lib/gameData.ts)",
+      "Bash(git mv *)",
+      "Bash(npm test *)",
+      "Bash(kill 13800 92552 92551 92537)",
+      "Bash(tee /tmp/dev-server.log)",
+      "Bash(curl -s \"http://localhost:3000/api/sprite-list\")",
+      "Bash(python3 -c \"import sys, json; d = json.load\\(sys.stdin\\); print\\(f'{len\\(d[\\\\\"paths\\\\\"]\\)} sprites'\\); [print\\(' ', p\\) for p in d['paths']]\")",
+      "Bash(python3 -c \" import json, sys d = json.load\\(sys.stdin\\) corpses = [\\(p, m\\) for p, m in d.items\\(\\) if m.get\\('isCorpse'\\)] print\\(f'Corpses in metadata: {len\\(corpses\\)}'\\) for p, m in corpses: print\\(f' {p} — appr={m.get\\(\\\\\"approval\\\\\"\\)} cls={m.get\\(\\\\\"sizeClass\\\\\"\\)} eye={m.get\\(\\\\\"eyeYPx\\\\\", \\\\\"∅\\\\\"\\)}'\\) \")",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(kill 88769)",
+      "Bash(curl -sI \"http://localhost:3000/api/sprite-list\")",
+      "Bash(curl -s \"http://localhost:3000/dev/combat-arena\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/dev/combat-test)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s \"http://localhost:3000/api/item-icon?id=healing_potion\")",
+      "Bash(curl -s -i \"http://localhost:3000/api/item-icon?id=healing_potion\")",
+      "Bash(curl -s -o /dev/null -w \"arena=%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s -o /dev/null -w \"arena=%{http_code}  combat-test=%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena)",
+      "Bash(curl -s -o /dev/null -w \"combat-test=%{http_code}\\\\n\" http://localhost:3000/dev/combat-test)",
+      "Bash(curl -s -o /dev/null -w \"arena=%{http_code}  combat-test=%{http_code}\\\\n\" http://localhost:3000/dev/combat-arena http://localhost:3000/dev/combat-test)",
+      "Bash(curl -s -o /dev/null -w \"v1.png=%{http_code}\\\\n\" http://localhost:3000/art/corpse-marker/v1.png)",
+      "Bash(awk 'NR==1,/^\\\\/\\\\/ ── POWER outcome table ──$/{ if \\(/^\\\\/\\\\/ ── POWER outcome table ──$/\\) skip=1; else print } /^\\\\/\\\\/ ── Helpers shared by spell paths ──$/{ skip=0 } !skip && NR>1 { print }' lib/combat/engine.ts)",
+      "Bash(awk 'NR<2475 || NR>2647' lib/combat/engine.ts)",
+      "Bash(awk 'NR<2689 || NR>2746' lib/combat/engine.ts)",
+      "Bash(git -C /Users/joshuamcclure/Desktop/living-eamon log --oneline -1)",
+      "Bash(awk 'NR==1{print length\\($0\\)\" \"$0; exit}' /Users/joshuamcclure/Desktop/living-eamon/lore/scrolls-of-thoth/scroll-1-the-way.md)",
+      "Bash(curl -s -o /dev/null -w \"library=%{http_code} \\(location=%{redirect_url}\\)\\\\nlibrary_pantheon=%{http_code}\\\\nlibrary_unknown=%{http_code}\\\\n\" -L --max-redirs 0 http://localhost:3000/library)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library/pantheon)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" http://localhost:3000/library/some_unknown_doc)",
+      "Bash(mmdc --version)",
+      "Bash(grep -c '^  end$' docs/doc-graph.mmd)",
+      "Bash(echo \"Subgraph closes: $\\(grep -c '^  end$' docs/doc-graph.mmd\\)\")",
+      "Bash(npx -y -p @mermaid-js/mermaid-cli@latest mmdc -i docs/doc-graph.mmd -o docs/doc-graph.svg)",
+      "Bash(open docs/doc-graph.svg)",
+      "Bash(echo \"---EXIT: $?---\")",
+      "Bash(echo \"TSX EXIT: $?\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(pkill -f \"tsx scripts/interview.ts\")",
+      "Bash(npx vitest *)",
+      "Bash(npm list *)",
+      "Bash(node_modules/.bin/mmdc --version)",
+      "Bash(tee /tmp/forge-destinations.log)",
+      "Bash(node /tmp/generate-destinations.js)",
+      "Bash(awk '/Mu/{print NR\": \"$0}' /Users/joshuamcclure/Desktop/living-eamon/lore/thurian-cartography/WORLD_LOCATIONS.md)",
+      "Bash(node -e \"const q = require\\('/Users/joshuamcclure/Downloads/destination-regen-queue-1778522453415.json'\\); console.log\\('count:', q.regenCount\\); for \\(const it of q.queue\\) { console.log\\(it.id, '| bg:', it.bgStatus, '| npc:', it.npcStatus, '| bgPrompt:', it.bgRegenPrompt ? 'YES\\('+it.bgRegenPrompt.length+'ch\\)' : 'no', '| npcPrompt:', it.npcRegenPrompt ? 'YES\\('+it.npcRegenPrompt.length+'ch\\)' : 'no'\\); }\")",
+      "Bash(node -e \"const q = require\\('/Users/joshuamcclure/Downloads/destination-regen-queue-1778522453415.json'\\); const item = q.queue.find\\(x => x.id === 'poi_skull_of_silence'\\); console.log\\(item.bgRegenPrompt\\);\")",
+      "Bash(node -e \"const q = require\\('/Users/joshuamcclure/Downloads/destination-regen-queue-1778522453415.json'\\); const item = q.queue.find\\(x => x.id === 'geo_mu'\\); console.log\\('---bg---'\\); console.log\\(item.bgRegenPrompt.slice\\(0, 300\\)\\); console.log\\('...'\\); console.log\\(item.bgRegenPrompt.slice\\(-200\\)\\); console.log\\('---npc---'\\); console.log\\(item.npcRegenPrompt.slice\\(0, 300\\)\\); console.log\\('...'\\); console.log\\(item.npcRegenPrompt.slice\\(-300\\)\\);\")",
+      "Bash(tee /tmp/regen-run.log)",
+      "WebFetch(domain:eamon.wiki)",
+      "Bash(git apply *)",
+      "Bash(perl -i -pe 's|^### Sprint CF-__TRACKED_VAR__ —|<a id=\"cf-__TRACKED_VAR__\"></a>\\\\n\\\\n### Sprint CF-__TRACKED_VAR__ —|' docs/plans/creator-forge-and-quest-line-orchestrator.md)",
+      "Bash(node -e \"const m=require\\('marked'\\); console.log\\(m.parse\\('<a id=\\\\\"x\\\\\"></a>\\\\n\\\\n### Heading'\\)\\)\")",
+      "Bash(kill 39230 88611)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}  ·  /dev/reader-demo\\\\n\" http://localhost:3000/dev/reader-demo)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}  ·  /admin/audio-review\\\\n\" http://localhost:3000/admin/audio-review)",
+      "Bash(grep -n -E '^#{1,3} Sprint|<a id=\"cf-' /Users/joshuamcclure/Desktop/living-eamon/docs/plans/creator-forge-and-quest-line-orchestrator.md)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); s=p.get\\('scripts',{}\\); [print\\(f'{k}: {v}'\\) for k,v in s.items\\(\\) if 'docs' in k or 'graph' in k or 'launch' in k or 'queue' in k or 'topic' in k or 'hydration' in k or 'dev' in k or 'interview' in k]\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(bash -c 'pwd && which npm && echo \"structure-ok\"')"
     ],
     "additionalDirectories": [
       "/Users/joshuamcclure/.claude/plans",
       "/Users/joshuamcclure/.ssh",
       "/Users/joshuamcclure/Desktop",
-      "/Users/joshuamcclure/Desktop/living-eamon/scripts/lora/vivian/training-set"
+      "/Users/joshuamcclure/Desktop/living-eamon/scripts/lora/vivian/training-set",
+      "/Users/joshuamcclure/Desktop/living-eamon/lore/thurian-pd"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/joshuamcclure/Desktop/living-eamon && npm run --silent docs:build > /dev/null",
+            "timeout": 90,
+            "statusMessage": "Regenerating doc + sprint registry…"
+          }
+        ]
+      }
     ]
   }
 }

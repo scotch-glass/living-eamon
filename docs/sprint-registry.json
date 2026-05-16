@@ -1,0 +1,193 @@
+{
+  "generated_at": "2026-05-16T16:57:23.414Z",
+  "source": "docs/plans/*.md frontmatter",
+  "counts": {
+    "total": 10,
+    "shipped": 3,
+    "inProgress": 0,
+    "planned": 7,
+    "deferred": 0
+  },
+  "sprints": [
+    {
+      "id": "cf-0",
+      "name": "Foundation — routes, Opus client, Supabase storage, /creator-forge shell",
+      "status": "shipped",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-0",
+      "shipped_at": "2026-05-12",
+      "commit": "f855060",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-1",
+      "name": "Multiple-choice template engine + module skeleton wizard",
+      "status": "shipped",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-1",
+      "shipped_at": "2026-05-13",
+      "commit": "7a818eb",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-1.5",
+      "name": "Reader Panel + Eve voice pre-roll + effect-tag tooling",
+      "status": "shipped",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-1.5",
+      "shipped_at": "2026-05-13",
+      "commit": "b1af5ca",
+      "tool": "/admin/audio-review"
+    },
+    {
+      "id": "cf-2",
+      "name": "Claude Opus 4.7 narrative prose generation (Howard grimdark)",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-2",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-3",
+      "name": "Eamon-style SVG map generator (1980s graph-paper aesthetic)",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-3",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-4",
+      "name": "NPC + henchman authoring with difficulty-clamped stats",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-4",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-5",
+      "name": "Room art + NPC sprite workflow (Grok-Imagine-Pro only)",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-5",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-6",
+      "name": "Ink scaffolding + JSON compile + promote-module CLI",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-6",
+      "tool": "/creator-forge"
+    },
+    {
+      "id": "cf-7",
+      "name": "Quest Line Orchestrator — narrative spine, interludes, meta-reward editor",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-7",
+      "tool": "/admin/quest-lines"
+    },
+    {
+      "id": "cf-8",
+      "name": "Validation + GPE balance scorecard + publish gate",
+      "status": "planned",
+      "planSlug": "creator-forge-and-quest-line-orchestrator",
+      "anchor": "cf-8",
+      "tool": "/creator-forge"
+    }
+  ],
+  "by_tool": {
+    "/creator-forge": [
+      {
+        "id": "cf-0",
+        "name": "Foundation — routes, Opus client, Supabase storage, /creator-forge shell",
+        "status": "shipped",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-0",
+        "shipped_at": "2026-05-12",
+        "commit": "f855060",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-1",
+        "name": "Multiple-choice template engine + module skeleton wizard",
+        "status": "shipped",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-1",
+        "shipped_at": "2026-05-13",
+        "commit": "7a818eb",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-2",
+        "name": "Claude Opus 4.7 narrative prose generation (Howard grimdark)",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-2",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-3",
+        "name": "Eamon-style SVG map generator (1980s graph-paper aesthetic)",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-3",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-4",
+        "name": "NPC + henchman authoring with difficulty-clamped stats",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-4",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-5",
+        "name": "Room art + NPC sprite workflow (Grok-Imagine-Pro only)",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-5",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-6",
+        "name": "Ink scaffolding + JSON compile + promote-module CLI",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-6",
+        "tool": "/creator-forge"
+      },
+      {
+        "id": "cf-8",
+        "name": "Validation + GPE balance scorecard + publish gate",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-8",
+        "tool": "/creator-forge"
+      }
+    ],
+    "/admin/audio-review": [
+      {
+        "id": "cf-1.5",
+        "name": "Reader Panel + Eve voice pre-roll + effect-tag tooling",
+        "status": "shipped",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-1.5",
+        "shipped_at": "2026-05-13",
+        "commit": "b1af5ca",
+        "tool": "/admin/audio-review"
+      }
+    ],
+    "/admin/quest-lines": [
+      {
+        "id": "cf-7",
+        "name": "Quest Line Orchestrator — narrative spine, interludes, meta-reward editor",
+        "status": "planned",
+        "planSlug": "creator-forge-and-quest-line-orchestrator",
+        "anchor": "cf-7",
+        "tool": "/admin/quest-lines"
+      }
+    ]
+  }
+}

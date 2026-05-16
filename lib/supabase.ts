@@ -131,6 +131,9 @@ export async function savePlayer(player: Record<string, unknown>) {
       typeof player.currentPlane === "string" ? player.currentPlane : "thurian",
     current_node_id:
       typeof player.currentNodeId === "string" ? player.currentNodeId : "valus",
+    // Sprint S4d — travel state
+    is_traveling: player.isTraveling ?? false,
+    travel_route: player.travelRoute ?? null,
     previous_room: player.previousRoom ?? null,
     prison_turns_remaining:
       typeof player.prisonTurnsRemaining === "number" ? player.prisonTurnsRemaining : 0,

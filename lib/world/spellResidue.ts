@@ -84,7 +84,7 @@ export const SPELL_RESIDUE: Record<string, SpellResidue | null> = {
 
   // ── Circle 2 ──────────────────────────────────────────────
 
-  agility:        null,
+  dexterity:      null,
   cunning:        null,
   cure:           null,
 

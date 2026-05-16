@@ -28,6 +28,8 @@
 // Regenerate when adjusting.
 // ============================================================
 
+import type { SizeClass } from "./art/sizeClasses";
+
 export type SpriteSide = "left" | "right";
 
 export type SpriteSize = "small" | "medium" | "large";
@@ -144,3 +146,19 @@ export function canonicalFraming(
  *  A troll is ~1.6× a dwarf's height on screen. Change once,
  *  everywhere. */
 export const SPRITE_RENDER_MAX_HEIGHT = "70vh";
+
+/** Adapter from the legacy 3-tier `SpriteSize` to the canonical
+ *  5-class `SizeClass` registry in `lib/art/sizeClasses.ts`.
+ *  Used during migration so existing NPC.spriteSize values keep
+ *  working until each NPC is reviewed and assigned an explicit
+ *  sizeClass. */
+export function spriteSizeToSizeClass(size: SpriteSize): SizeClass {
+  switch (size) {
+    case "small":
+      return "B";
+    case "medium":
+      return "C";
+    case "large":
+      return "D";
+  }
+}

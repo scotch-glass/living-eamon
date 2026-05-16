@@ -1,3 +1,61 @@
+---
+id: travel_matrix
+title: Travel Cost Matrix
+role: design-canon
+canonical_for: [travel-cost-matrix, travel-mode-table, random-encounter-pools]
+visibility: creator
+status: active
+last_updated: 2026-05-03
+cross_refs: [lore/thurian-cartography/WORLD_LOCATIONS.md, EDGE_VECTORS.md]
+questions_total: 6
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [NAV-MAP]
+
+**Q:** What are the canonical zone types and their daily encounter chances?
+**A:** Thirteen zones grouped by danger rating. **Safe (15% daily encounter chance):** Civilization (Valusian core roads). **Moderate (35%):** Plains/scrub (Farsun, Thurania lowlands), Forest/valley (Zarfhaana, Kamelia foothills), River (Stagus). **Dangerous (55%):** Mountain (Zalgara, Zhemri, Thule highlands), Cold north (Thule interior, Commoria heights), Desert (Camoonia), Coastal/sea (Verulia coast, sea crossings), Hostile tribal (Kaa-U Picts, Isles of the Picts), Jungle fringe (Thuria south transitional). **Extreme (75%):** Deep jungle (Thuria interior), Frontier (World's End, eastern Thuria), Lost Lands. The **most dangerous zone** on a leg determines the encounter roll frequency — multi-zone days use the worst zone's rating. `[high]`
+↔ relates to: §Zone Types & Danger Ratings, §Encounter Roll Mechanics
+
+### [WIRING]
+
+**Q:** What's the per-day encounter resolution algorithm?
+**A:** Six-step resolution per day of travel. (1) Identify the zone type for that day from the §Travel Matrix. (2) Roll d100. (3) If result ≤ zone's daily encounter chance, encounter occurs. (4) Roll d100 on that zone's encounter table. (5) Load the encounter — combat room, dialogue event, or terrain event. (6) Use the pre-generated scene background for that zone type. The encounter table structure is **identical across all zones**: 01–25 universal bandits, 26–45 wild animals, 46–60 terrain event, 61–75 discovery, 76–90 neutral encounter, 91–100 rare/special (one-per-journey cap). `[high]`
+↔ relates to: §Encounter Roll Mechanics, §Zone Encounter Tables (universal + 9 zone-specific)
+
+### [WIRING]
+
+**Q:** What runtime types and modules implement this matrix?
+**A:** Two TS modules per §Implementation Notes. **`lib/world/travelMatrix.ts`** stores the matrix as a typed record of `TravelLeg` objects: `{ from, to, daysFoot, daysHorse, zones: ZoneType[], dangerRating, encounterRolls }`. `ZoneType` is a union of zone type strings matching the tables. **`lib/world/travelEncounters.ts`** has the encounter resolver: `(zoneType, roll: number) => EncounterTemplate`. Scene backgrounds live at `public/art/scenes/travel/` with `scene_*` IDs as filenames. Day/night determined by world clock: `worldTurn % 24` — turns 6–18 = day, 0–5 / 19–23 = night. `[high]`
+↔ relates to: §Implementation Notes, §Scene-to-Zone Mapping, lib/world/travelMatrix.ts (planned), lib/world/travelEncounters.ts (planned)
+
+### [PLAYER-SURFACE]
+
+**Q:** How does the caravan-encounter PICSSI fork work?
+**A:** Two universal-table entries (rolls 23–24 and 25) carry the canonical caravan PICSSI fork. **Roll 23–24 (Caravan encounter):** player chooses (A) Trade — opens a vendor screen with region-appropriate goods + prices, no PICSSI delta, OR (B) Raid — attack guards + take wagons, applies `−Standing` + `−Integrity` + `+Passion` if victorious, goods become loot. **Roll 25 (Caravan under attack):** player arrives to find a caravan already being raided by 4 bandits; chooses (A) Help the caravan — fight the bandits, applies `+Integrity` + `+Standing`, caravan owner rewards in coin or goods, OR (B) Help the raiders — join the attack, applies `+Passion` − `Integrity` − `Standing`, share of loot, OR (C) Pass by — no consequence except a private Chronicle entry. These are the canonical **PICSSI choice templates** for road encounters. `[high]`
+↔ relates to: §Encounter Roll Mechanics universal table 23–25, KARMA_SYSTEM.md §2.5–§2.10 (PICSSI deltas), KARMA_SYSTEM.md §4c (combat-victory delta table parallel)
+
+### [WIRING]
+
+**Q:** How many scene backgrounds are required and in what pre-generation priority order?
+**A:** **23 total** scene backgrounds at 1792×1024 landscape, Thurian-Age sword-and-sorcery painterly style via Grok Imagine Pro, no figures / no text / no UI. Day/night variants for most zones. **Priority order:** (1) Valusia road day + night (used on almost every journey start); (2) Plains day + night (high-frequency zone); (3) Desert day + night (Talunia/Zarfhaana route); (4) Mountain pass day + night (Skull of Silence + Thule routes); (5) Deep jungle day + night (Thuria + Serpent-Man content); (6) all others in any order. The scene-to-zone map at the bottom of the doc is the runtime lookup the engine uses — every zone has a daytime scene; some still share night scenes (River Stagus night = day variant placeholder; Lost Lands night = frontier night). Cross-doc dependency: these scenes feed both travel encounters AND any module set in the corresponding zone. `[high]`
+↔ relates to: §Scene Backgrounds Required, §Pre-generation priority order, §Scene-to-Zone Mapping (runtime lookup), feedback_art_quality_pro_only.md
+
+### [NAV-MAP]
+
+**Q:** Are the matrix's per-route day-counts and danger ratings empirically tuned, or are they opening parameters?
+**A:** Opening parameters. Current day-counts are first-guess values based on rough pixel distance and are **likely too short** — should be recalibrated upward based on historical pre-modern travel rates (~20 miles/day on foot). Horse divisor of 2 should be replaced with more realistic 3× advantage on short distances and 1.5× on sustained legs. Sea crossings need explicit `seaOnly: boolean` flag to distinguish from walk-equivalent routes. Danger ratings based on zone-mix are baseline-sound; tuning focuses on day-count recalibration via (1) exact map-pixel-to-mileage conversion, (2) zone-type speed modifiers (desert/mountain slower than plains), (3) comparison against historical rates. Tuning pass happens during S4 playtest routes and produces updated matrix with a §Tuning History section. `[high]`
+↔ relates to: §Travel Matrix (Routes from Valus + intermediate legs), §Implementation Notes, ~/.claude/plans/i-accidentally-submitted-the-misty-map.md (S4 plan)
+
+---
+
 # Living Eamon — Travel Matrix & Random Encounter Design
 
 > **Status:** Design reference — feeds the S4 Graphical Travel System sprint.

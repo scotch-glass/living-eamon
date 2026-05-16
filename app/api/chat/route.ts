@@ -23,6 +23,7 @@ import {
 import { recomputeDerivedStats } from "../../../lib/karma/recompute";
 import { NPCS, ITEMS } from "../../../lib/gameData";
 import { WEAPON_DATA } from "../../../lib/uoData";
+import { migrateActiveCombatSession } from "../../../lib/combat/types";
 
 // Sanitize equipment slots loaded from the DB. Items removed from the
 // registry (e.g. legacy weapons after the 2026-04-28 simplification)
@@ -289,12 +290,13 @@ export async function POST(request: NextRequest) {
             hp: savedPlayer.hp,
             maxHp: savedPlayer.max_hp,
             strength: savedPlayer.strength,
+            // 2026-05-09: legacy `agility` fallback removed when the
+            // agility → dexterity refactor cleaned up legacy terminology.
+            // Per `project_no_live_game.md`, no production saves exist.
             dexterity:
               typeof (savedPlayer as { dexterity?: number }).dexterity === "number"
                 ? (savedPlayer as { dexterity: number }).dexterity
-                : typeof (savedPlayer as { agility?: number }).agility === "number"
-                  ? (savedPlayer as { agility: number }).agility
-                  : 10,
+                : 10,
             charisma: savedPlayer.charisma,
             maxMana:
               typeof (savedPlayer as { max_mana?: number }).max_mana === "number"
@@ -399,11 +401,14 @@ export async function POST(request: NextRequest) {
               // Discard finished combat sessions that were persisted — they
               // should have been cleared when the loot screen was dismissed.
               if (ac?.finished) return null;
-              return (ac as unknown as import("../../../lib/combatTypes").ActiveCombatSession | null) ?? null;
+              // Sprint C1: migrate pre-C1 session blobs (no combatants array,
+              // no team/controlledBy fields on each combatant) on read so
+              // the engine sees a fully-typed session.
+              return migrateActiveCombatSession(ac);
             })(),
             activeEffects:
               (savedPlayer as { active_effects?: unknown }).active_effects as
-                import("../../../lib/combatTypes").ActiveStatusEffect[] ?? [],
+                import("../../../lib/combat/types").ActiveStatusEffect[] ?? [],
             weaponPoisonCharges:
               (savedPlayer as { weapon_poison_charges?: number }).weapon_poison_charges ?? 0,
             weaponPoisonSeverity:
@@ -472,6 +477,10 @@ export async function POST(request: NextRequest) {
               ((savedPlayer as { current_plane?: string }).current_plane) ?? "thurian",
             currentNodeId:
               ((savedPlayer as { current_node_id?: string }).current_node_id) ?? "valus",
+            isTraveling:
+              ((savedPlayer as { is_traveling?: boolean }).is_traveling) ?? false,
+            travelRoute:
+              ((savedPlayer as { travel_route?: import("../../../lib/gameState").TravelRoute | null }).travel_route) ?? undefined,
             previousRoom:
               ((savedPlayer as { previous_room?: string | null }).previous_room) ?? null,
             prisonTurnsRemaining:

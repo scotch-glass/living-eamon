@@ -1,3 +1,14 @@
+---
+id: agents_md
+title: Next.js 16 Conventions Warning
+role: dev-process
+canonical_for: [nextjs-16-conventions, proxy-vs-middleware]
+visibility: internal
+status: active
+last_updated: 2026-04-25
+cross_refs: [CLAUDE.md]
+---
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 

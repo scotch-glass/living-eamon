@@ -1,3 +1,14 @@
+---
+id: logos_teleios_index
+title: Logos Teleios — Registry
+role: design-canon
+canonical_for: [vault-artifact-provenance, hermetic-lament-cross-refs]
+visibility: creator
+status: active
+last_updated: 2026-04-30
+cross_refs: [lore/scrolls-of-thoth/INDEX.md]
+---
+
 # Logos Teleios — The Perfect Discourse
 
 A codex of unknown age, found in a Pre-Thurian vault below the Old Necropolis of Valus. The leather is older than the binding; the binding is older than the inks. Brother Inan, who carries it now, was Order before he read it.

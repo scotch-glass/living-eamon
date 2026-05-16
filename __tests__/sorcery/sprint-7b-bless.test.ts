@@ -18,8 +18,8 @@
 
 import { createInitialWorldState, tickWorldState } from "../../lib/gameState";
 import type { WorldState } from "../../lib/gameState";
-import type { ActiveCombatSession, CombatantState, BodyZone } from "../../lib/combatTypes";
-import { createEmptyBodyArmorMap } from "../../lib/combatTypes";
+import type { ActiveCombatSession, CombatantState, BodyZone } from "../../lib/combat/types";
+import { createEmptyBodyArmorMap, fillCombatantDefaults, makeMultiCombatantFields } from "../../lib/combat/types";
 import { handleInvoke, composeInvokeResponse } from "../../lib/sorcery/invoke";
 import { getRoom } from "../../lib/adventures/registry";
 
@@ -76,7 +76,7 @@ function fixtureState(opts: FixOpts = {}): WorldState {
 }
 
 function makeCombatant(name: string): CombatantState {
-  return {
+  return fillCombatantDefaults({
     id: name.toLowerCase(),
     name,
     hp: 50,
@@ -92,23 +92,25 @@ function makeCombatant(name: string): CombatantState {
     weaponSkillValue: 50,
     dexterity: 50,
     strength: 50,
-    agility: 50,
     side: "ally",
     position: 1,
-  };
+  });
 }
 
 function makeCombatSession(): ActiveCombatSession {
+  const player = makeCombatant("Tester");
+  const enemy = fillCombatantDefaults({ ...makeCombatant("orc"), side: "enemy", team: "enemy", controlledBy: "ai" });
   return {
     enemyNpcId: "orc",
     enemyName: "orc",
     roundNumber: 1,
-    playerCombatant: makeCombatant("Tester"),
-    enemyCombatant: { ...makeCombatant("orc"), side: "enemy" },
+    playerCombatant: player,
+    enemyCombatant: enemy,
     combatLog: [],
     finished: false,
     playerWon: null,
     barriers: [],
+    ...makeMultiCombatantFields(player, enemy),
   };
 }
 

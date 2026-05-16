@@ -2,8 +2,8 @@
 
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import type { StatusEffectType } from "../lib/combatTypes";
-import { EFFECT_ICON_MAP } from "../lib/effectIconData";
+import type { StatusEffectType } from "../lib/combat/types";
+import { EFFECT_ICON_MAP } from "../lib/combat/effectIconData";
 
 // ── Animation class map ──
 // Maps the short animation name in effectIconData to the full CSS class name

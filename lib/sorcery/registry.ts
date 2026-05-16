@@ -110,8 +110,8 @@ export const SPELL_REGISTRY: Spell[] = [
 
   // ── Circle 2 — mana 6 ─────────────────────────────────────
   {
-    id: "agility",
-    name: "Agility",
+    id: "dexterity",
+    name: "Dexterity",
     circle: 2,
     words: ["Aug", "Dex"],
     manaCost: 6,

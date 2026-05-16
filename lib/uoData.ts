@@ -2,12 +2,29 @@
 
 import type { WeaponSkills } from "./gameState";
 
-// weaponSpeed: AD&D 2e initiative factor (1=fastest, 10=slowest)
-// Derived from T2A UO swing speed using inverted scale conversion:
-// AD&D factor = round(10 - ((UOspeed - 10) / 48) * 9)
-// Lower factor = acts earlier in initiative roll
-// Higher UO speed = lower AD&D factor = acts first
-// Source: wiki.uosecondage.com/Weapons
+// ── weaponSpeed (AD&D 2e initiative factor; 1 = fastest, 10 = slowest) ──
+// Initiative is rolled as: `1d10 + weaponSpeed - getDexReactionBonus(dex)`.
+// LOWER total = acts earlier. Therefore: lower weaponSpeed = acts first.
+//
+// Canonical design (decided 2026-05-06):
+//   - Short sword / dagger → FASTEST  → LOWEST damage band
+//   - Long sword          → MEDIUM   → MEDIUM damage band
+//   - Great sword         → SLOWEST  → HIGHEST damage band
+//
+// Damage is INVERSE to speed: the faster the swing, the less the weight
+// behind it. This makes the three swords meaningfully distinct picks
+// rather than a strict upgrade ladder. Pick by build:
+//   - DEX-fighter / acrobat-thief (Vivian) → short sword (act first, hit often)
+//   - Balanced fighter           → long sword
+//   - Heavy fighter / brute      → great sword (one big swing, late in round)
+//
+// Spread chosen so short vs great differ by ~6 initiative on average — a
+// short-sword wielder typically gets a free strike or two before a maul
+// drops, but a maul that connects ends the conversation.
+//
+// (Original speeds 3/5/7 were derived from T2A UO via the formula
+//  `10 - ((UOspeed - 10) / 48) * 9` — kept for reference, replaced by the
+//  hand-tuned 2/5/8 spread above. unarmed stays at 2: fists are quick.)
 
 export const WEAPON_DATA: Record<
   string,
@@ -20,9 +37,13 @@ export const WEAPON_DATA: Record<
     weaponSpeed: number;
   }
 > = {
-  short_sword:       { artId: 5049, twoHanded: false, skill: "Swordsmanship", damage: "1d12+2", layer: 1, weaponSpeed: 3 },
+  unarmed:           { artId: 0,    twoHanded: false, skill: "Swordsmanship", damage: "1d4",    layer: 1, weaponSpeed: 2 },
+  // Short sword / dagger class — fastest weapon, lowest damage band.
+  short_sword:       { artId: 5049, twoHanded: false, skill: "Swordsmanship", damage: "1d12+2", layer: 1, weaponSpeed: 2 },
+  // Long sword — balanced one-handed weapon, medium speed and damage.
   long_sword:        { artId: 3937, twoHanded: false, skill: "Swordsmanship", damage: "1d12+4", layer: 1, weaponSpeed: 5 },
-  great_sword:       { artId: 5119, twoHanded: true,  skill: "Swordsmanship", damage: "2d8+4",  layer: 2, weaponSpeed: 7 },
+  // Great sword / two-handed maul class — slowest weapon, highest damage band.
+  great_sword:       { artId: 5119, twoHanded: true,  skill: "Swordsmanship", damage: "2d8+4",  layer: 2, weaponSpeed: 8 },
 };
 
 // DEX reaction bonus table — AD&D 2e PHB Table 2

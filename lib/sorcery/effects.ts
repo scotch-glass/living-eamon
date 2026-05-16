@@ -41,7 +41,7 @@ import type {
   Barrier,
   CombatantState,
   ActiveCombatSession,
-} from "../combatTypes";
+} from "../combat/types";
 import { getRoom } from "../adventures/registry";
 import type { EffectResult, NumericRange, Spell } from "./types";
 
@@ -82,7 +82,7 @@ export function applyEffect(
       if (spell.id === "bless")          { result = applyBless(state, spell); break; }
       if (spell.id === "cunning")        { result = applyCunning(state); break; }
       if (spell.id === "strength")       { result = applyStrengthBuff(state); break; }
-      if (spell.id === "agility")        { result = applyAgilityBuff(state); break; }
+      if (spell.id === "dexterity")      { result = applyDexterityBuff(state); break; }
       if (spell.id === "protection")     { result = applyProtection(state); break; }
       if (spell.id === "reactive-armor") { result = applyReactiveArmor(state); break; }
       if (spell.id === "night-sight")    { result = applyNightSight(state); break; }
@@ -917,17 +917,17 @@ function findRuneInInventory(
   return null;
 }
 
-// ── Sprint 7b.buffs — Strength / Agility ─────────────────────
+// ── Sprint 7b.buffs — Strength / Dexterity ───────────────────
 // Self-buffs. Add TempModifier for recompute pipeline; also sync
 // directly into playerCombatant if a combat session is active so
 // the delta takes effect on the CURRENT fight (not just the next).
 
-const STRENGTH_AGILITY_DURATION = 10;
-const STRENGTH_AGILITY_DELTA    = 5;
+const STRENGTH_DEXTERITY_DURATION = 10;
+const STRENGTH_DEXTERITY_DELTA    = 5;
 
 function applyStrengthBuff(state: WorldState): EffectDispatchResult {
-  const duration = STRENGTH_AGILITY_DURATION;
-  const delta    = STRENGTH_AGILITY_DELTA;
+  const duration = STRENGTH_DEXTERITY_DURATION;
+  const delta    = STRENGTH_DEXTERITY_DELTA;
 
   const filteredMods = (state.player.tempModifiers ?? []).filter(m => m.source !== "strength");
   const newMod: TempModifier = { stat: "strength", delta, turnsRemaining: duration, source: "strength" };
@@ -961,12 +961,12 @@ function applyStrengthBuff(state: WorldState): EffectDispatchResult {
   };
 }
 
-function applyAgilityBuff(state: WorldState): EffectDispatchResult {
-  const duration = STRENGTH_AGILITY_DURATION;
-  const delta    = STRENGTH_AGILITY_DELTA;
+function applyDexterityBuff(state: WorldState): EffectDispatchResult {
+  const duration = STRENGTH_DEXTERITY_DURATION;
+  const delta    = STRENGTH_DEXTERITY_DELTA;
 
-  const filteredMods = (state.player.tempModifiers ?? []).filter(m => m.source !== "agility");
-  const newMod: TempModifier = { stat: "dexterity", delta, turnsRemaining: duration, source: "agility" };
+  const filteredMods = (state.player.tempModifiers ?? []).filter(m => m.source !== "dexterity");
+  const newMod: TempModifier = { stat: "dexterity", delta, turnsRemaining: duration, source: "dexterity" };
 
   let next: WorldState = {
     ...state,
@@ -983,7 +983,8 @@ function applyAgilityBuff(state: WorldState): EffectDispatchResult {
           ...session,
           playerCombatant: {
             ...session.playerCombatant,
-            agility: session.playerCombatant.agility + delta,
+            // 2026-05-09: agility merged into dexterity on CombatantState.
+            dexterity: session.playerCombatant.dexterity + delta,
           },
         },
       },
@@ -993,7 +994,7 @@ function applyAgilityBuff(state: WorldState): EffectDispatchResult {
   return {
     kind: "applied",
     state: next,
-    effect: { kind: "agility-applied", turnsGranted: duration, delta },
+    effect: { kind: "dexterity-applied", turnsGranted: duration, delta },
   };
 }
 

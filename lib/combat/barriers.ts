@@ -15,7 +15,7 @@ import type {
   Barrier,
   CombatantPosition,
   CombatantSide,
-} from "../combatTypes";
+} from "./types";
 
 /**
  * Test whether a strike or spell from (attackerSide, attackerPos) toward

@@ -56,9 +56,12 @@ import {
   removeRevealedItem,
   isDay,
   pushResidue,
+  startTravel,
+  advanceTravel,
   type Corpse,
   type WeaponSkills,
 } from "./gameState";
+import { TRAVEL_NODES } from "./world/travelNodes";
 import { COMBAT_RESIDUE } from "./world/spellResidue";
 
 import type { TimeOfDay } from "./weatherService";
@@ -70,8 +73,8 @@ import {
   getWeaponSkillKey,
 } from "./uoData";
 
-import type { BodyZone, ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
-import { BODY_ZONES } from "./combatTypes";
+import type { BodyZone, ActiveCombatSession, ActiveStatusEffect } from "./combat/types";
+import { BODY_ZONES } from "./combat/types";
 import {
   fatigueLevel,
   recomputeDerivedStats,
@@ -262,7 +265,10 @@ import {
   buildRoundNarrative,
   resolveCombatSpell,
   isCombatSpell,
-} from "./combatEngine";
+  resolveAction,
+  runAiTurns,
+} from "./combat/engine";
+import type { CombatAction } from "./combat/engine";
 
 // ============================================================
 // TYPES
@@ -3042,7 +3048,7 @@ This is a severe virtue moment — Honor is at stake.`,
       };
     }
 
-    const spellName = rest.trim().toLowerCase();
+    const spellName = rest.trim().toUpperCase();
     const known = p.knownSpells?.length ? p.knownSpells.join(", ") : "none";
 
     // No argument or no spells known — same response
@@ -3056,8 +3062,8 @@ This is a severe virtue moment — Honor is at stake.`,
       };
     }
 
-    // Player knows spells but not this one
-    if (!p.knownSpells.includes(spellName)) {
+    // Player knows spells but not this one (case-insensitive: DB stores mixed case)
+    if (!p.knownSpells.some(s => s.toUpperCase() === spellName)) {
       return {
         responseType: "static",
         staticResponse: `You haven't learned ${spellName}. Your known spells: ${known}.`,
@@ -3075,13 +3081,17 @@ This is a severe virtue moment — Honor is at stake.`,
     if (p.activeCombat && isCombatSpell(spellName)) {
       const result = resolveCombatSpell(newState, spellName);
       if (result) {
+        // Sync player HP from combatant state back to PlayerState (same as STRIKE).
+        const combatantHp = result.newState.player.activeCombat?.playerCombatant.hp ?? result.newState.player.hp;
+        const hpDelta = combatantHp - result.newState.player.hp;
+        const synced = hpDelta !== 0 ? updatePlayerHP(result.newState, hpDelta) : result.newState;
         return {
           responseType: "static",
           staticResponse: result.combatOver
             ? result.narration + "\n__COMBAT_END__"
             : result.narration,
           dynamicContext: null,
-          newState: result.newState,
+          newState: synced,
           stateChanged: true,
         };
       }
@@ -3094,6 +3104,127 @@ This is a severe virtue moment — Honor is at stake.`,
 Current room: ${currentRoom?.name}. Room state: ${newState.rooms[p.currentRoom]?.currentState ?? "normal"}.
 Known spells: ${p.knownSpells.join(", ")}.
 Resolve as standard guild magic (BLAST, HEAL, SPEED, LIGHT) when matched; otherwise describe failure or ask to clarify.`,
+      newState,
+      stateChanged: false,
+    };
+  }
+
+  // ── 1b. PREFIX: ALLY — route ally actions in combat ──
+  // Format: ALLY <allyKey> CAST <spell> | ALLY <allyKey> DRINK <itemId>
+  // allyKey is "aldric" or "zim" (lowercase). Ally stats are UI-side-only
+  // until the party system ships, so CAST draws no ally mana and DRINK
+  // removes no inventory — effects land on the hero as "ally support".
+  if (first === "ALLY") {
+    if (!p.activeCombat) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou art not in combat. Allies act only in battle.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const allyParts = trimmed.split(/\s+/);
+    const allyKey = (allyParts[1] ?? "").toLowerCase();
+    const allyVerb = (allyParts[2] ?? "").toUpperCase();
+    const allyArg = allyParts.slice(3).join(" ");
+    const allyNameMap: Record<string, string> = { aldric: "Aldric", zim: "Zim the Grey" };
+    const allyName = allyNameMap[allyKey] ?? allyKey;
+
+    if (!allyKey || !allyVerb) {
+      return {
+        responseType: "static",
+        staticResponse: "Order which ally to do what?",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    if (allyVerb === "CAST") {
+      const spellUpper = allyArg.toUpperCase();
+      // Deterministic combat spells: HEAL restores HP to the hero.
+      if (spellUpper === "HEAL") {
+        const heal = 10;
+        const healed = updatePlayerHP(newState, heal);
+        return {
+          responseType: "static",
+          staticResponse: `▸ ${allyName} casts Heal\nSilver light flows from ${allyName}'s outstretched hands. Warmth spreads across your wounds. (+${heal} hp)`,
+          dynamicContext: null,
+          newState: healed,
+          stateChanged: true,
+        };
+      }
+      if (spellUpper === "BLAST") {
+        // Apply BLAST damage to the enemy combatant
+        const result = resolveCombatSpell(newState, "BLAST");
+        if (result) {
+          const combatantHp = result.newState.player.activeCombat?.playerCombatant.hp ?? result.newState.player.hp;
+          const hpDelta = combatantHp - result.newState.player.hp;
+          const synced = hpDelta !== 0 ? updatePlayerHP(result.newState, hpDelta) : result.newState;
+          const narration = result.narration.replace(/^▸ You cast Blast/, `▸ ${allyName} casts Blast`);
+          return {
+            responseType: "static",
+            staticResponse: result.combatOver ? narration + "\n__COMBAT_END__" : narration,
+            dynamicContext: null,
+            newState: synced,
+            stateChanged: true,
+          };
+        }
+      }
+      // Unknown spell — dynamic fallback
+      return {
+        responseType: "dynamic",
+        staticResponse: null,
+        dynamicContext: `${allyName} casts ${spellUpper} during combat. Narrate the spell effect briefly. Hero HP: ${p.hp}/${p.maxHp}.`,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    if (allyVerb === "DRINK") {
+      const itemId = allyArg.toLowerCase();
+      type AllyEffect = { hp: number; mana: number; msg: string };
+      const ALLY_ITEM_EFFECTS: Record<string, AllyEffect> = {
+        healing_potion: { hp: 15, mana: 0, msg: `${allyName} uncorks a healing potion and presses it to thy lips. (+15 hp)` },
+        bandage:        { hp:  5, mana: 0, msg: `${allyName} binds thy wounds with linen strips. (+5 hp)` },
+        mana_potion:    { hp:  0, mana: 10, msg: `${allyName} offers thee a mana potion. The arcane reservoir refills. (+10 mana)` },
+        fatigue_brew:   { hp:  0, mana: 0,  msg: `${allyName} hands thee a fatigue brew. Weariness lifts from thy limbs.` },
+      };
+      const effect = ALLY_ITEM_EFFECTS[itemId];
+      if (effect) {
+        let ws = newState;
+        if (effect.hp > 0) ws = updatePlayerHP(ws, effect.hp);
+        if (effect.mana > 0) {
+          ws = {
+            ...ws,
+            player: {
+              ...ws.player,
+              currentMana: Math.min((ws.player.currentMana ?? 0) + effect.mana, ws.player.maxMana ?? 20),
+            },
+          };
+        }
+        return {
+          responseType: "static",
+          staticResponse: `▸ ${allyName} uses ${itemId.replace(/_/g, " ")}\n${effect.msg}`,
+          dynamicContext: null,
+          newState: ws,
+          stateChanged: effect.hp > 0 || effect.mana > 0,
+        };
+      }
+      return {
+        responseType: "dynamic",
+        staticResponse: null,
+        dynamicContext: `${allyName} uses item "${itemId}" in combat. Narrate the effect briefly.`,
+        newState,
+        stateChanged: false,
+      };
+    }
+
+    return {
+      responseType: "static",
+      staticResponse: `${allyName} doesn't know how to ${allyVerb.toLowerCase()} right now.`,
+      dynamicContext: null,
       newState,
       stateChanged: false,
     };
@@ -4350,6 +4481,155 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
     };
   }
 
+  // ── ACT <sourceId> <verb> [args...] — multi-combatant action grammar ──
+  // Sprint C3 entry point. Dispatches a single named combatant's voluntary
+  // action through resolveAction(). The verbs:
+  //   ACT <id> STRIKE <zone> <targetId>
+  //   ACT <id> CAST <spellName> <targetId>
+  //   ACT <id> USE <itemId> <targetId>          (potion / bandage)
+  //   ACT <id> SWAP_HOTBAR <slotIdx> <spellName?>  (omit spellName to clear)
+  //   ACT <id> FLEE
+  // The legacy STRIKE / CAST / FLEE handlers below keep the 1v1 path
+  // working unchanged. C8's dev route exercises ACT for the canonical
+  // 3v3 fight.
+  if (first === "ACT") {
+    const session = p.activeCombat;
+    if (!session) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou art not in combat.",
+        dynamicContext: null,
+        newState,
+        stateChanged: false,
+      };
+    }
+    const sourceId = (tokens[1] ?? "").toLowerCase();
+    const verb = (tokens[2] ?? "").toUpperCase();
+    let action: CombatAction | null = null;
+
+    switch (verb) {
+      case "STRIKE": {
+        const zone = (tokens[3] ?? "").toLowerCase() as BodyZone;
+        const targetId = (tokens[4] ?? "").toLowerCase();
+        if (!BODY_ZONES.includes(zone)) {
+          return {
+            responseType: "static",
+            staticResponse: "ACT <id> STRIKE <head|neck|torso|limbs> <targetId>",
+            dynamicContext: null, newState, stateChanged: false,
+          };
+        }
+        action = { kind: "strike", sourceId, targetId, zone };
+        break;
+      }
+      case "CAST": {
+        const spellName = (tokens[3] ?? "").toUpperCase();
+        const targetId = (tokens[4] ?? "").toLowerCase();
+        if (!spellName || !targetId) {
+          return {
+            responseType: "static",
+            staticResponse: "ACT <id> CAST <SPELL_NAME> <targetId>",
+            dynamicContext: null, newState, stateChanged: false,
+          };
+        }
+        action = { kind: "cast", sourceId, targetId, spellName };
+        break;
+      }
+      case "USE":
+      case "DRINK": {
+        // DRINK is a one-cycle deprecation alias for USE — keeps any
+        // pre-C3 input working while the UI migrates. Drop in C5+.
+        const itemId = (tokens[3] ?? "").toLowerCase();
+        const targetId = (tokens[4] ?? sourceId).toLowerCase();
+        if (!itemId) {
+          return {
+            responseType: "static",
+            staticResponse: "ACT <id> USE <itemId> [targetId]",
+            dynamicContext: null, newState, stateChanged: false,
+          };
+        }
+        action = { kind: "use", sourceId, targetId, itemId };
+        break;
+      }
+      case "SWAP_HOTBAR":
+      case "SWAP": {
+        const slotIdx = parseInt(tokens[3] ?? "", 10);
+        const spellArg = tokens[4];
+        if (Number.isNaN(slotIdx)) {
+          return {
+            responseType: "static",
+            staticResponse: "ACT <id> SWAP_HOTBAR <slotIdx 0..5> [spellName]",
+            dynamicContext: null, newState, stateChanged: false,
+          };
+        }
+        action = {
+          kind: "swap_hotbar",
+          sourceId,
+          slotIdx,
+          spellName: spellArg ? spellArg.toUpperCase() : null,
+        };
+        break;
+      }
+      case "FLEE":
+        action = { kind: "flee", sourceId };
+        break;
+      default:
+        return {
+          responseType: "static",
+          staticResponse: `Unknown ACT verb: ${verb}. Try STRIKE, CAST, USE, SWAP_HOTBAR, or FLEE.`,
+          dynamicContext: null, newState, stateChanged: false,
+        };
+    }
+
+    const result = resolveAction(session, action);
+    if (result.invalid) {
+      return {
+        responseType: "static",
+        staticResponse: `Action refused: ${result.invalid}`,
+        dynamicContext: null, newState, stateChanged: false,
+      };
+    }
+    newState = {
+      ...newState,
+      player: { ...newState.player, activeCombat: result.session },
+    };
+    return {
+      responseType: "static",
+      staticResponse: result.narrative || "",
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
+    };
+  }
+
+  // ── AI_TURN — drive the AI loop until control returns to a player ──
+  // Sprint C3g / C4 entry point. Calls runAiTurns() which auto-resolves
+  // every AI-controlled or channeling actor's turn until the pointer
+  // lands on a player-controlled non-channeling combatant, or combat
+  // ends. The UI (C6) calls this between player actions; C8's harness
+  // calls it once per round-trip in scripted tests.
+  if (first === "AI_TURN") {
+    const session = p.activeCombat;
+    if (!session) {
+      return {
+        responseType: "static",
+        staticResponse: "Thou art not in combat.",
+        dynamicContext: null, newState, stateChanged: false,
+      };
+    }
+    const result = runAiTurns(session);
+    newState = {
+      ...newState,
+      player: { ...newState.player, activeCombat: result.session },
+    };
+    return {
+      responseType: "static",
+      staticResponse: result.narrative || "",
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
+    };
+  }
+
   // ── STRIKE [zone] — body-zone body-part targeting (active combat only) ──
   if (first === "STRIKE") {
     const session = p.activeCombat;
@@ -4444,14 +4724,14 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
       finalState.player.weaponPoisonCharges > 0
     ) {
       const sev = finalState.player.weaponPoisonSeverity;
-      const poisonEffect: import("./combatTypes").ActiveStatusEffect = {
+      const poisonEffect: import("./combat/types").ActiveStatusEffect = {
         type: "poison",
         zone: roundResult.playerStrike.targetZone,
         severity: sev,
         turnsRemaining: -1, // persists until cured
         damagePerTurn: sev,  // 1/2/3 HP per round based on severity
       };
-      const updatedEnemy: import("./combatTypes").CombatantState = {
+      const updatedEnemy: import("./combat/types").CombatantState = {
         ...updatedSession.enemyCombatant,
         activeEffects: [...updatedSession.enemyCombatant.activeEffects, poisonEffect],
       };
@@ -4698,16 +4978,6 @@ Describe the NPC's reaction. This is a low moment. Play it truthfully.`,
         stateChanged: false,
       };
     }
-    if (p.weapon === "unarmed") {
-      return {
-        responseType: "static",
-        staticResponse:
-          "Thou art unarmed. Find a weapon before picking a fight.",
-        dynamicContext: null,
-        newState,
-        stateChanged: false,
-      };
-    }
     const rest = trimmed.slice(6).trim().toLowerCase();
     if (!rest) {
       return {
@@ -4765,6 +5035,7 @@ Room: ${currentRoom?.name ?? "unknown"}.`,
         stateChanged: false,
       };
     }
+
 
     // Initialize body-zone combat session
     const session = initCombatSession(newState, target.id);
@@ -5245,6 +5516,68 @@ export function processInput(
       staticResponse: choiceResult.narrative,
       dynamicContext: null,
       newState: afterAtomQuestState,
+      stateChanged: true,
+    };
+  }
+
+  // ── 1b. Travel intercept ─────────────────────────────────
+  // TRAVEL TO <nodeId> — start a journey from current node.
+  if (firstVerb === "TRAVEL" && trimmedInput.toUpperCase().startsWith("TRAVEL TO ")) {
+    const destId = trimmedInput.slice("TRAVEL TO ".length).trim().toLowerCase().replace(/\s+/g, "_");
+    const destNode = TRAVEL_NODES[destId];
+    if (!destNode) {
+      return {
+        responseType: "static",
+        staticResponse: `No road leads to "${destId}" from here. Check the MAP.`,
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const newState = startTravel(state, destId, "horse");
+    const route = newState.player.travelRoute;
+    if (!route) {
+      return {
+        responseType: "static",
+        staticResponse: "No route found to that destination from your current location.",
+        dynamicContext: null,
+        newState: state,
+        stateChanged: false,
+      };
+    }
+    const modeName = route.mode === "ship" ? "sea" : route.mode;
+    return {
+      responseType: "static",
+      staticResponse: `You set out for ${destNode.name}. The journey will take ${route.totalDays} day${route.totalDays !== 1 ? "s" : ""} by ${modeName}.\n\nType __CMD:CONTINUE__ to press on.`,
+      dynamicContext: null,
+      newState,
+      stateChanged: true,
+    };
+  }
+
+  // When traveling: CONTINUE (or any non-bypass verb) advances the journey one day.
+  const TRAVEL_BYPASS_VERBS = new Set(["HEALTH", "STATS", "INVENTORY", "MAP", "QUESTS", "THE", "WAY", "TEACHINGS", "HELP"]);
+  if (state.player.isTraveling && !TRAVEL_BYPASS_VERBS.has(firstVerb)) {
+    const result = advanceTravel(state);
+    let response = result.narrative;
+    if (result.arrived) {
+      const destNode = TRAVEL_NODES[result.state.player.currentNodeId];
+      response += `\n\n*You have arrived. Type __CMD:LOOK__ to take in your surroundings.*`;
+      void destNode;
+    } else if (result.encounter) {
+      // Encounter fires — append event text if applicable, append continuation prompt
+      if (result.encounter.kind === "event" && result.encounter.eventText) {
+        response += `\n\n${result.encounter.eventText}`;
+      }
+      response += `\n\nType __CMD:CONTINUE__ to press on.`;
+    } else {
+      response += `\n\nType __CMD:CONTINUE__ to press on.`;
+    }
+    return {
+      responseType: "static",
+      staticResponse: response,
+      dynamicContext: null,
+      newState: result.state,
       stateChanged: true,
     };
   }

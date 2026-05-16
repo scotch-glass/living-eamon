@@ -1,3 +1,85 @@
+---
+id: sorcery
+title: Sorcery (Guild CAST + Occult INVOKE)
+role: design-canon
+canonical_for: [magic-systems, eight-circles, reagents, the-order, illumination-cost]
+visibility: creator
+status: active
+last_updated: 2026-05-09
+cross_refs: [GAME_DESIGN.md, lore/pantheon/PANTHEON.md, KARMA_SYSTEM.md, EDGE_VECTORS.md]
+questions_total: 10
+questions_answered: 10
+questions_open: 0
+edge_vector_ids: []
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [ARCHITECTURE]
+
+**Q:** What are the two magic systems in Living Eamon and why are they deliberately asymmetric?
+**A:** **Guild CAST** is public, legal, weak (~½ of Circle 1 INVOKE), no reagents, four published spells (BLAST, HEAL, LIGHT, SPEED), no soul cost — the magic villagers expect a hero to use. **Occult INVOKE** is forbidden everywhere, requires reagents (8 classes, consumed on cast), eight Circles of escalating power, soul-darkening on Circles 4+, and has no in-game HELP — the Words must be discovered through adventure loot, NPC hints, or out-of-game player research. The asymmetry is the design: Guild magic is competent baseline; Sorcery is the price of real power, and that price is moral. `[high]`
+↔ relates to: §1 Two Systems, §2 Guild Magic, §3 Occult Magic, §8 CAST vs INVOKE quick reference
+
+### [LORE]
+
+**Q:** What is The Order's mission and why do they disappear witnesses, not just practitioners?
+**A:** The Order's mission is **preventive, not punitive**. Their secret chronicles record that the world is approaching a Cataclysm — the same sundering that drowned earlier civilizations and is gathering again. Every act of unauthorized Occult magic accelerates it; every reagent stockpile feeds it; every Word of Power spoken aloud loosens what holds the world together. They disappear practitioners *and* witnesses because the alternative — the world ending again within a generation — is untenable. The "earlier civilization principle" is recursive: the Order's chronicles record at least one Cataclysm before this one, whose ruins the player will explore in adventures. **There is always an earlier civilization.** Most people don't know why Occult magic is illegal, only that the Order comes for those who ask. `[high]`
+↔ relates to: §4 The Order, project_thurian_age_setting.md, project_segenhotep_maatic_order_leader.md
+
+### [ARCHITECTURE]
+
+**Q:** What are the Two Fundamental Forces and which spell families channel each?
+**A:** **Force I — Creative / Inward / Conjunctive** (the *generative* force, labeled `1` because it produces): Heal, Cure, Bless, all buffs/debuffs, summons, fields, movement (Teleport/Recall/Gate Travel/Mark), conceal, reveal, transform, utility. Draws from caster intent + reagents + the world's generative substrate. **Works anywhere, no foe required.** **Force 0 — Destructive / Outward / Disjunctive** (the *consumptive* force, labeled `0` because on its own it produces nothing): Magic Arrow, Harm, Fireball, Lightning, Mind Blast, Energy Bolt, Explosion, Chain Lightning, Flamestrike, Meteor Swarm, Earthquake. Channels directed malice seeded from duress + fear; **a foe is part of the recipe.** Without one, the directed-malice ingredient cannot transmute and the cast literally cannot complete. The numbering is canonical: `0` is what destruction generates; `1` is what creation generates. There is no Force II. Note: debuffs (Clumsy, Feeblemind, Weaken, Curse, Mana Drain, Paralyze) are Force I — they *quiet/soften/bind* a target's faculties; they *reshape* rather than extinguish. `[high]`
+↔ relates to: §7.2 Two Fundamental Forces, §7.1 Thoth's Principle of Correspondence
+
+### [WIRING]
+
+**Q:** How does the engine decide whether a sorcery cast can resolve out-of-combat?
+**A:** Each spell carries a force classification (Force I or Force 0) on its registry record. **Force I** spells resolve from any room state — alone, in combat, anywhere. **Force 0** spells refuse to resolve without an active combat target. The cast does not consume reagents or mana when refused — the practitioner speaks the Words, feels the Art rise in answer, feels it seek the malice it needs, and feels it unwind, finding no foe to take. The engine surfaces a distinct narrative outcome (not a generic fizzle) so the player understands the cosmological reason, not a UX bug. The asymmetry has a downstream consequence in PICSSI atom design: a Force 0 specialist becomes structurally dependent on conflict, which the Way of Thoth quest line teaches as the reason the Outer Dark is ultimately unsustainable. `[high]`
+↔ relates to: §7.2 Two Forces table (Combat required column), spell registry force classification field (planned), MODULE_SYSTEM.md §4.2 (start_combat EXTERNAL pairs naturally)
+
+### [PICSSI-BALANCE]
+
+**Q:** What's the canonical per-circle Illumination cost when an INVOKE resolves?
+**A:** Circles 1–3 cost zero direct Illumination (Circle 2 carries an occasional "this feels dark in subtle ways" warning, Circle 3 a confirmed "a dark presence is near"). Circle 4 = **−2 (Notable)**. Circle 5 = **−4**. Circle 6 = **−8 (Major)**. Circle 7 = **−15**. Circle 8 = **−30 (Defining-tier)**. The curve roughly doubles every 2 circles after the inflection at Circle 4. These are KARMA_SYSTEM v1 magnitudes (locked 2026-04-29 evening); tunable via Machinations.io. The cost is **independent of caster's current Illumination** — a saintly defender who casts Meteor Swarm against an Outer-Dark assault pays exactly the same toll as a Dark practitioner casting the same spell to attack. `[high]`
+↔ relates to: §7 Sorcery and the Soul, §7.2 per-circle table, KARMA_SYSTEM.md §2.10 Illumination, EV-karma_system-002 (these magnitudes are opening parameters)
+
+### [LORE]
+
+**Q:** Why is the relation one-way — powerful sorcery darkens the soul, but a darkened soul doesn't boost spell power?
+**A:** Cosmological signature of asymmetric polarity. Force I (creative) generates; Force 0 (destructive) only consumes — and consumption only works while there's something left to consume. **Darkness is unsustainable by its own nature.** A spell that grew in power as the soul fell would imply Darkness as a *generative* force, which it is not. The Outer-Dark side reads sorcery's toll as proof Darkness must prevail (every Circle 8 cast by a high-Illumination defender drags them toward Dark). The Light-side response (preserved in *Logos Teleios* and the seventh Scroll of Thoth) is that the Outer Dark misreads its own physics: every act of destruction it forces is a draw against a closed account; Light prevails not by being stronger but by being the only pole that *generates*. Mechanically this forecloses the Outer-Dark feedback loop the design briefly entertained; theologically it's load-bearing for the Way of Thoth quest line. Earlier docs claiming a compounding "wider Outer-Dark door" effect were wrong and have been removed. `[high]`
+↔ relates to: §7.1 Thoth's Principle of Correspondence, feedback_no_illumination_amplification.md, lore/logos-teleios/, lore/scrolls-of-thoth/scroll-7
+
+### [WIRING]
+
+**Q:** What room-tag contract does temple-Bless rely on, and why two tags rather than one?
+**A:** Two tags. **`consecrated: true`** marks any room as a temple/shrine/sanctified space — Bless reagent-relaxation and duration-extension key off this. **`deity: <god-id>`** names the specific god the temple is dedicated to (e.g., `maat`, `crom`, `mithras`). Bless itself doesn't yet branch on deity, but the tag must be there from the start so god-specific behavior can land later without retro-tagging every temple room. Future use cases: prayer responsiveness (PICSSI Spirituality + Illumination interactions), per-deity sorcery side-effects, NPC reactions to a hero who casts on a particular god's ground, quest gating by patron, and the future PRAY combat handler. The deity-id values resolve through PANTHEON.md (§9.2.1's "HOWARD_GODS.md pending" pointer is now superseded — PANTHEON.md is the canonical roster, including six Thurian-era aliases like `valka` → `maat`). `[high]`
+↔ relates to: §9.2 Bless temple invocation, lore/pantheon/PANTHEON.md (canonical god roster + alias dispatcher), the-skull-and-pack-luminous-muffin.md (PRAY+Divinity v1 plan)
+
+### [INK-AUTHORING]
+
+**Q:** How does Resurrection's Sun-and-Moon rule work, and why can't the hero be resurrected by it?
+**A:** A corpse is the central reagent of Resurrection. A corpse can be resurrected if and only if it has not been exposed to **both** the sun and the moon since death. Buried/underground corpses freeze the celestial flags regardless of how long ago death occurred — even a centuries-old underground skeleton is viable. Only **mortals** can be resurrected; immortals (elves, dragons, daemons, gods) cannot — their souls departed by other rules. The longer a mortal corpse has been dead, the more likely the result comes back **undead** rather than living — natural form of the spell, not a misuse. Necromancy (zombies, skeletons, liches) is the deliberate dark-side application by Outer-Dark-leaning practitioners — same Words, different intent and reagents. **Hero exception:** the hero is the *Chosen of the god of Perpetual Life*; on death his body goes cold faster than any mortal — even a fresh corpse-state is not viable. Resurrection on the hero's corpse fails with a distinct outcome (the body has no warmth left to call back); death routes him through the church reincarnation path. This protects both the rebirth invariants and the lore. `[high]`
+↔ relates to: §9.3 Resurrection, project_corpse_loot_burial_deferred.md (corpse model wiring deferred), lib/adventures/guild-hall.ts (Church spawn path)
+
+### [INK-AUTHORING]
+
+**Q:** How will an Ink module author force a sorcery effect on the player (e.g., an NPC sorcerer casting Circle-7 mid-atom, or an atom granting a custom invocation rune)?
+**A:** Keep NPC sorcery scripted in `lib/encounters/<id>.ts` and only expose `add_invocation(spell_id)` to Ink for granting runes. This keeps the sorcery triggering logic in the combat-engine layer where it can properly interact with NPC AI, turn order, and damage calculations. Ink modules use `add_invocation` to teach the player new spells (for rune discovery atoms, reward for defeating a sorcerer, etc.), but NPC-initiated sorcery stays as scripted encounters. `[high]`
+↔ relates to: MODULE_SYSTEM.md §4.2 (EXTERNAL contract), §6 Eight Circles tables, KARMA_SYSTEM.md §2.10 (Illumination on player-caused sorcery vs NPC-caused)
+
+### [WIRING]
+
+**Q:** Which Circles are actually wired in code today, and what infrastructure is the Resurrection sun/moon corpse model still missing?
+**A:** **Guild CAST:** Circles 1+2 spells are registered and most are functionally wired in `lib/combat/engine.ts` (HEAL, GREATER-HEAL, FIREBOLT, HASTE, WARD, STEELSKIN, SILENCE, RESIST, CLEANSE, and others — handlers verified in resolveAction and NPC cast paths). Circles 3–8 are registered but handlers are stubbed (effectKind only; no numeric resolution). **Occult INVOKE:** Zero spells wired to combat; the INVOKE pipeline exists as a parser (`INVOKE <circle-words>`) but does not dispatch to handlers. **Resurrection corpse model:** Design-only, no code yet. Missing infrastructure: sun/moon exposure flags, world-tick exposure updates, burial mechanic, mortal/immortal classification on every NPC kind, hero-death short-circuit, undead-likelihood roll, necromancy-variant handlers. Combat-arena Phase-1 ships persistent corpse markers (read-only stats popup); loot-claim and burial deferred per `project_corpse_loot_burial_deferred.md`. Add `mortalOrImmortal` NPC tag before Resurrection wiring sprint. `[high]`
+↔ relates to: §9.3 Resurrection implementation entailments, project_occult_sorcery_deferred.md, project_corpse_loot_burial_deferred.md
+
+---
+
 # SORCERY.md — The Two Magics of Living Eamon
 
 > **Status:** Canonical reference for Living Eamon's magic systems.

@@ -6,9 +6,11 @@
 
 import type { AdventureModule, Room, NPCScript } from "../roomTypes";
 import { GUILD_HALL } from "./guild-hall";
+import { DESTINATION_STUBS } from "./destination-stubs";
 
 const MODULES: AdventureModule[] = [
   GUILD_HALL,
+  DESTINATION_STUBS,
   // The first three adventures ship as Thurian-Age PD Robert E. Howard
   // adaptations (see lore/hyborian-pd/MODULE_PLAN.md):
   //   MIRRORS_OF_TUZUN_THUNE,   // The Mirrors of Tuzun Thune (1929)

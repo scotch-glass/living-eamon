@@ -1,3 +1,97 @@
+---
+id: game_design
+title: Game Design Document
+role: design-canon
+canonical_for: [game-design, thurian-age-lore, picssi-virtue-defs, brothels-vd]
+visibility: creator
+status: approved
+last_updated: 2026-04-30
+cross_refs: [Public_Domain_Rules.md, KARMA_SYSTEM.md, SORCERY.md, MODULE_SYSTEM.md, ADVENTURE_MODULES_PLAN.md, EDGE_VECTORS.md]
+questions_total: 11
+questions_answered: 10
+questions_open: 1
+edge_vector_ids: []
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [LORE]
+
+**Q:** What is the canonical setting and where does it live in this document?
+**A:** The Thurian Age — a Pre-Cataclysmic sword-and-sorcery world derived from Howard's Kull stories (PD). §10 is the canonical source for ALL setting decisions (adventures, NPCs, magic, monsters, magical items). Hub city = Valus (capital of Valusia). The Hyborian Age is, in this fiction, a FUTURE prophecy — not the current era. `[high]`
+↔ relates to: lore/pantheon/PANTHEON.md, lore/thurian-cartography/WORLD_LOCATIONS.md, ADVENTURE_MODULES_PLAN.md, project_thurian_age_setting.md
+
+### [PICSSI-BALANCE]
+
+**Q:** What is the canonical PICSSI virtue system and where is it specified?
+**A:** §11 (ratified 2026-04-26) — six dimensions: Passion, Integrity, Courage, Standing, Spirituality, Illumination. Drives NPC reactions, prayer reach, sorcery cost, and quest gating. Five virtues are unipolar (0..100); Illumination is bipolar (−100..+100). Replaces the legacy 10-virtue ledger entirely (cold-deleted in KARMA_IMPLEMENTATION_PLAN Sprint 2). All numerical specifications + math live in `KARMA_SYSTEM.md`, NOT here — §11 is the lore-level definitions only. `[high]`
+↔ relates to: KARMA_SYSTEM.md (math), KARMA_IMPLEMENTATION_PLAN.md (wiring), MODULE_SYSTEM.md §5.1 (TypeScript types), project_picssi_virtue_system.md
+
+### [PD-SAFETY]
+
+**Q:** What IP rules govern content in this document?
+**A:** `Public_Domain_Rules.md` is mandatory pre-read; the Safe Harbor / Radioactive lookup tables at the top of THIS file supersede any other doc on individual term status. Trademark-radioactive (never use, even in Thurian fiction): Conan, Cimmerian, Hyboria, Hyborian Age. Copyright-radioactive until 2028–2032: all Conan short-story content. Always-Safe corpus: Egyptian/Persian/Roman gods, Hyborian Age essay terms (Aquilonia/Stygia/etc.), three Thurian-era Kull stories (1929–1930), 18 Howard Weird Tales 1934–1936 stories (per PD expansion 2026-04-30). `[high]`
+↔ relates to: Public_Domain_Rules.md, project_pd_expansion_2026-04-30.md, feedback_no_hyborian_in_marketing.md
+
+### [ARCHITECTURE]
+
+**Q:** What subsystems does this document own canonically?
+**A:** Game-design philosophy (90/10 static/dynamic, persistent hero, Jane AI), Thurian Age lore (§10), PICSSI virtue system (§11), brothels + fertility temple + VD (§12), Safe Harbor lookup tables (top), and most of the §1–9 mechanics chapters. Distinct from `KARMA_SYSTEM.md` (math), `SORCERY.md` (magic systems), `MODULE_SYSTEM.md` (Ink contract), and `ADVENTURE_MODULES_PLAN.md` (roadmap) — those handle their own deeper content; this is the design overview that ties them together. `[high]`
+↔ relates to: KARMA_SYSTEM.md, SORCERY.md, MODULE_SYSTEM.md, ADVENTURE_MODULES_PLAN.md
+
+### [INK-AUTHORING]
+
+**Q:** How do Ink module authors reference this doc when writing modules?
+**A:** Authors read §10 for setting fidelity (locations, factions, gods), §11 for virtue defs (so atom deltas tag the right virtue), and §12 for any brothel / temple-related content. The PICSSI EXTERNAL function `apply_karma(virtue, delta)` in `MODULE_SYSTEM.md` §3 takes virtue ids that match THIS doc's §11 names — `passion` / `integrity` / `courage` / `standing` / `spirituality` / `illumination`. Magnitude bands (trivial / notable / major / defining = ±1 / ±3 / ±5 / ±10) come from `KARMA_SYSTEM.md` §2.5–§2.10, not here. `[high]`
+↔ relates to: MODULE_SYSTEM.md §3 (Ink contract), KARMA_SYSTEM.md (magnitude bands)
+
+### [WIRING]
+
+**Q:** Which code derives from this document?
+**A:** Almost all gameplay code, hand-derived (no auto-sync). PICSSI types in `lib/karma/*` derive from §11. PICSSI scoring in `lib/karma/recompute.ts` derives from `KARMA_SYSTEM.md` (which derives from §11). Combat-engine PICSSI hooks in `lib/combat/engine.ts` reference §11 virtue ids. The atom registry in `lib/quests/*` uses virtue ids from §11. NPC affection deltas use virtue ids from §11. `[high]`
+↔ relates to: lib/karma/, lib/combat/engine.ts, lib/quests/, project_persistence_architecture.md
+
+### [NAV-MAP]
+
+**Q:** What does this document say about world geography, rooms, and travel?
+**A:** §10 names the 30+ canonical Thurian-Age locations (Valus, Atlantis, Valusia, Pictland, etc.); the actual location registry + travel matrix lives in `lore/thurian-cartography/WORLD_LOCATIONS.md`. The per-room schema (consecrated, deity tag, picssiContacts, sceneTone) is referenced throughout §1–9 but defined in code (`lib/roomTypes.ts`). Travel-system 5-mode design (walk / horse / ship / air / Gate) is sketched here; actual implementation lives per-sprint (S4d shipped). `[high]`
+↔ relates to: lore/thurian-cartography/WORLD_LOCATIONS.md, lib/roomTypes.ts, project_world_map_travel_system.md
+
+### [PLAYER-SURFACE]
+
+**Q:** What ships to the player from this document?
+**A:** Most of it, in pieces — the Thurian setting (§10) is the world the player walks through, narrated by Jane. PICSSI virtues (§11) appear as the in-character virtue display and Jane's reactions. §12 brothel + VD content appears as room descriptions + atom choices. The Safe Harbor lookup tables at the top are internal-only (never show players). The 90/10 static/dynamic philosophy is invisible to players but shapes every scene they see. `[high]`
+↔ relates to: components/CombatScreen.tsx, lib/gameEngine.ts, lib/sceneData.ts
+
+### [AFFECT-VECTOR]
+
+**Q:** What does this doc say about "fun factor" / neuro-emotional pacing?
+**A:** Open. §11 PICSSI is itself a fun-factor scaffold (six axes for the player to optimize across), but the doc doesn't formally articulate the seven AffectVector axes (fear / excitement / eros / dread / awe / wonder / melancholy) — those live in `docs/affect-axes.md` and the atom-system code. The relationship between PICSSI virtues and AffectVector axes is undocumented: e.g., does pursuing Passion correlate with high-eros + high-excitement encounter selection? Best guess: yes, but not formally specified.
+↔ relates to: docs/affect-axes.md, KARMA_SYSTEM.md
+
+### [AFFECT-VECTOR]
+
+**Q:** How do PICSSI virtues correlate with the seven AffectVector axes?
+**A:** PICSSI and AffectVector are separate systems. PICSSI is how the character develops (the mechanics/stats system) — easily balanced via simulation and weights. AffectVector is how the player *feels* (the emotional/psychological system) — harder to balance but still estimable by algorithm. They are not formally correlated yet because AffectVector needs significant development work for simulation. Once AffectVector matures, we can formalize the connections: e.g., Passion may drive high-eros/high-excitement atoms, Spirituality may drive awe/wonder atoms. `[high]`
+↔ relates to: docs/affect-axes.md, MODULE_SYSTEM.md §7 (Growth Path Equalizer balance scoring will eventually incorporate both axes)
+
+### [INK-AUTHORING]
+
+**Q:** How does the Growth Path Equalizer score modules against §11 PICSSI?
+**A:** Medium. `MODULE_SYSTEM.md` §2 + §7 specify Growth Path Equalizer as a static analyzer that scores each `.ink` module on per-virtue growth balance (intentionally archetype-focused modules can be unbalanced; "balanced" modules need at least one Courage "great odds" encounter per `KARMA_SYSTEM.md` 2026-05-06 update). Growth Path Equalizer bands are defined in `MODULE_SYSTEM.md`, not here. The interaction between §11's virtue character and Growth Path Equalizer's banding is correlated but not formally specified.
+↔ relates to: MODULE_SYSTEM.md §2 (Growth Path Equalizer), MODULE_SYSTEM.md §7 (magnitude bands), KARMA_SYSTEM.md (Courage robust paths rule)
+
+### [INK-AUTHORING]
+
+**Q:** Can a module simultaneously satisfy public-domain safety AND PICSSI-balance AND a single-archetype focus (e.g., "Standing-pure")?
+**A:** Yes. Public-domain safety has no correlation to PICSSI-balance or single-archetype focus. Each module has its own PICSSI balance or imbalance. Some players want to be "balanced" (fighter-mage-priest type); others want to be very Conan-like (warrior archetype); others want to be Kull-like (mystic warrior). Our job is to make a buffet of modules for players to choose from. We are not constrained to only copying existing Robert E. Howard works — we use those works to provide the lattice and canon. The setting is the same as Howard's, but the player is not Kull or Conan, and makes different choices. Most players will want to play through the public-domain stories adapted as modules, but they will not be the same as the original stories. The player's agency rewrites the narrative. `[high]`
+↔ relates to: MODULE_SYSTEM.md §2 (Growth Path Equalizer), MODULE_SYSTEM.md §7, KARMA_SYSTEM.md (virtue archetype focus), Public_Domain_Rules.md
+
+---
+
 # Living Eamon — Game Design
 
 ---
@@ -20,7 +114,12 @@ domain — using it will expose Thot Technologies to a takedown or suit.
 3. The Safe Harbor / Radioactive tables below in this document —
    **name-by-name authoritative lookup.** Supersedes any other doc on
    individual term status.
-4. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
+4. [**MODULE_SYSTEM.md**](./MODULE_SYSTEM.md) — Stage I draft for the
+   Ink + GPE module-authoring system (awaiting approval). Defines the
+   Ink author API, EXTERNAL function contract, GPE balance scorecard,
+   and combat–PICSSI feedback hook points. References KARMA_SYSTEM.md
+   as source of truth.
+5. [**lore/hyborian-pd/MODULE_PLAN.md**](./lore/hyborian-pd/MODULE_PLAN.md) —
    methodology for converting PD stories into adventure modules.
 
 **Current PD corpus (verified April 2026, expanded April 30, 2026):**
@@ -771,6 +870,15 @@ The full PD entry calendar is maintained in **`Public_Domain_Rules.md`
 ## 11. PICSSI — The Six-Virtue Character Scoring System
 
 *Pronounced "Pixy." Ratified 2026-04-26.*
+
+> **2026-05-06 update.** See [`KARMA_SYSTEM.md`](./KARMA_SYSTEM.md) (top of
+> file) for three locked rules added 2026-05-06: (1) Passion-vs-Spirituality
+> trade-off in combat (physical combat `+P / -Sp`, casting `+Sp / -P`,
+> applies to choice of action in combat only — does NOT extrapolate to
+> non-combat spigots); (2) Courage robust paths — "great odds" encounter
+> required for a *balanced* module, plus expanded secondary spigots;
+> (3) Integrity quest-reward tier table (short `+3` / medium `+5` /
+> campaign-defining `+10`).
 
 PICSSI is Living Eamon's multi-dimensional scoring framework for the player's character. It does not replace traditional combat stats (Strength, Dexterity, Constitution, etc.) — those still drive damage rolls, encumbrance, and saves. PICSSI sits *above* those mechanics and shapes how the world reacts: which NPCs flirt with the hero, which gods listen to his prayers, which quests will accept him, which dark patrons answer his INVOKE spells. It is the social and metaphysical state of the character. It is the core scoring system of the game and attracts followers of similar tendencies, the more extreme the score, the more extreme the followers scores. The goal is to attract an end game Band of Heros or Band of Villans over which to become a Lord with a title and land, ie a dark lord might be called "Lord Vard the Destroyer" or "...the Feared" and a highly illuminated Lord might be called "Lord Cedric the Lightbringer" and the opposite would be "Lord Elric the Dark Lord." We will need to prescript multi-dimensional titles for each of the extreme scores.
 

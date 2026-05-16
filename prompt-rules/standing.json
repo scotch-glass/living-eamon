@@ -1,0 +1,62 @@
+{
+  "snapshotId": "2026-05-08-001",
+  "rules": [
+    {
+      "id": "grok_imagine_image_pro_only_rule",
+      "title": "Always use grok-imagine-image-pro",
+      "body": "Every Grok Imagine API call MUST use the grok-imagine-image-pro model. The standard model is banned for this project. Apply at the API call site; never override per-script.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    },
+    {
+      "id": "white_background_rembg_pipeline_rule",
+      "title": "White background → rembg → transparent PNG",
+      "body": "Sprite generation pipeline (NOT scene backgrounds): prompt asks for pure white studio backdrop with no environment, then rembg strips white to transparent on the saved PNG. Scene backgrounds (combat arenas, room art) skip rembg entirely and ship as JPEG.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    },
+    {
+      "id": "dark_blade_tone_rule",
+      "title": "Blade tone — dark steel + blood, never mirror-bright",
+      "body": "Polished/mirror-bright blades on white backdrop get erased by rembg. Every combat-stance weapon prompt MUST specify burnished dark grey-blue steel with blood streaks. Validated 2026-05-07 when Korm's blade vanished. Applies to all weapons in combat sprites.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    },
+    {
+      "id": "chainmail_with_gambeson_rule",
+      "title": "Chainmail must be over a black gambeson",
+      "body": "Every chainmail prompt must include 'over a black quilted gambeson' (or equivalent dark padding) to prevent the white background from bleeding through the metal gaps. Critical for white-background sprites; still apply for scene generation. Validated 2026-04-27.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    },
+    {
+      "id": "armor_layering_rule",
+      "title": "Armor is worn OVER clothes",
+      "body": "The stack is body → gambeson → mail/plate → optional surcoat. Never write 'mail beneath clothes' — armor is the outer protective layer.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    },
+    {
+      "id": "howard_canon_skin_palette",
+      "title": "Howard-canon skin palette",
+      "body": "Player-facing characters use the Howard-canon palette: 99% European tones (pale, olive, tan, bronze, weathered), 1% exotic. Never default to 'dark' or 'ebony' as a modifier. Avoid 'reddens under sun' (Grok renders literal sunburn). Avoid 'dark' as a modifier in tan/bronze clauses.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    },
+    {
+      "id": "enemies_face_left_allies_face_right",
+      "title": "Facing direction — viewer-frame language only",
+      "body": "Allies stand at screen-left and face screen-right. Enemies stand at screen-right and face screen-left. The canonical framing block in lib/spriteFraming.ts (framingForSide / canonicalFraming) is the source of truth — use it via the forge scripts. NEVER edit facing language inline; always go through that helper. Anatomical 'left/right shoulder' phrasing causes Grok to invert facing and is banned.",
+      "locked": true,
+      "lastEdited": "2026-05-08",
+      "linkRef": "lib/spriteFraming.ts:79-124"
+    },
+    {
+      "id": "corpse_pose_rule",
+      "title": "Corpse pose — curled body, side view, no ground, no weapon",
+      "body": "DEAD BODY POSE: a single human corpse curled up on its side. NO ground. NO floor. NO shadow. Knees drawn somewhat toward the chest (loose semi-fetal slump, limp not tense). One arm pulled toward the body or across the chest; the other arm extended limply in front of the body. Head tilted forward toward the chest or sagged at an angle. Eyes closed, mouth slightly slack, skin pale. Keeps canonical face/build/clothes/armor from the identity above, but ALL weapons and weapon-belts removed (no sword, scabbard, dagger, shield, bow, quiver, weapon-belt, baldric, weapon-buckle). No blood unless death-by-blade tag. Frank Frazetta painterly. ONE FIGURE ONLY.",
+      "locked": true,
+      "lastEdited": "2026-05-08"
+    }
+  ]
+}

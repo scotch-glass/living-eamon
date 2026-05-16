@@ -7,11 +7,18 @@
 // ============================================================
 
 import { RoomState, NPCS } from "./gameData";
-import type { ActiveCombatSession, ActiveStatusEffect } from "./combatTypes";
+import type { ActiveCombatSession, ActiveStatusEffect } from "./combat/types";
 import type { PicssiState } from "./karma/types";
 import type { RoomTimeOfDay } from "./roomTypes";
 import type { WeatherKind } from "./world/weatherDescriptions";
 import type { SpellResidue, ResidueType } from "./world/spellResidue";
+import type { ZoneType, DangerRating } from "./world/travelMatrix";
+import { getLeg, findRoute } from "./world/travelMatrix";
+import type { TravelMode } from "./world/travelNodes";
+import { TRAVEL_NODES } from "./world/travelNodes";
+import { getFlavorText } from "./world/travelFlavor";
+import type { TravelEncounter } from "./world/travelEncounters";
+import { pickEncounter } from "./world/travelEncounters";
 
 /** Serializable blood splatter record for persistence.
  *  The full SVG path is reconstructed client-side from pathIndex. */
@@ -238,7 +245,7 @@ export type TempModifierStat =
   | "illumination"
   | "charisma"
   | "strength"         // flat bonus added to CombatantState.strength when synced mid-combat
-  | "dexterity"        // flat bonus added to CombatantState.agility when synced mid-combat
+  | "dexterity"        // flat bonus added to CombatantState.dexterity when synced mid-combat
   | "spell_strength"   // % bonus to spell damage/heal magnitude (±33 = Cunning/Feeblemind)
   | "spell_success";   // % bonus to spell-success chance (placeholder; hooked when fizzle lands)
 
@@ -249,6 +256,21 @@ export interface TempModifier {
   source: string;           // "bless", "pray-mithras", etc.
 }
 
+
+/** Sprint S4d — active journey state while hero is between nodes. */
+export interface TravelRoute {
+  originNodeId: string;
+  destinationNodeId: string;
+  totalDays: number;
+  daysElapsed: number;
+  mode: TravelMode;
+  zones: ZoneType[];
+  dangerRating: DangerRating;
+  /** For multi-hop routes: intermediate node ids along the path. Empty for direct routes. */
+  waypoints?: string[];
+  /** For multi-hop routes: current leg index (0 = first leg). Default 0. */
+  currentLegIndex?: number;
+}
 
 export interface WeaponSkills {
   swordsmanship: number;
@@ -288,6 +310,13 @@ export function normalizeWeaponSkills(
 export interface PlayerState {
   id: string;
   name: string;
+  /**
+   * Gender — drives narrative pronouns ("he/his/himself" vs "she/her/herself").
+   * Howard-canon corpus is binary; every named character is male or female.
+   * All canonical hero identity blocks in `_identity-blocks.txt` are male,
+   * so this defaults to "male" everywhere it isn't set explicitly.
+   */
+  gender: "male" | "female";
   currentRoom: string;
   previousRoom: string | null;
   /** Rooms the player has physically entered — controls fog-of-war on exit labels. */
@@ -425,6 +454,13 @@ export interface PlayerState {
   /** Official guild magic — autocomplete for CAST */
   knownSpells: string[];
   /**
+   * Sprint C2 — combat quick-access spell hotbar (max 6). Subset of
+   * `knownSpells`. Used by the CombatScreen to render the spell strip
+   * and by the AI / hotbar editor (deferred). When unset, the engine
+   * defaults to the first 6 known spells. Persists across rebirth.
+   */
+  combatHotbar?: string[];
+  /**
    * Occult Circles the player has unlocked (1..8). Empty by default.
    * Set by quest rewards via `applyReward` when `unlockCircle` is
    * granted. Persists across rebirth (legacy knowledge — once a soul
@@ -469,6 +505,12 @@ export interface PlayerState {
    * the hero wakes in whatever city he died in.
    */
   currentNodeId: string;
+
+  /** S4d — true while the hero is in transit between nodes. Sidebar shows "Location: Traveling". */
+  isTraveling?: boolean;
+
+  /** S4d — active journey. Set by startTravel; cleared on arrival. isTraveling mirrors route !== undefined. */
+  travelRoute?: TravelRoute;
 
   /** Active combat session — non-null when in combat. */
   activeCombat: ActiveCombatSession | null;
@@ -847,6 +889,9 @@ export function createInitialWorldState(playerName: string = "Adventurer"): Worl
     player: {
       id: "player_1",
       name: playerName,
+      // All canonical heroes in the library are male (Howard-canon palette).
+      // Override at character-creation if female heroes ever ship.
+      gender: "male",
       currentRoom: "church_of_perpetual_life",
       previousRoom: null,
       visitedRooms: ["church_of_perpetual_life"],
@@ -1090,6 +1135,170 @@ export function movePlayer(
       turnCount: state.player.turnCount + 1,
     },
     worldTurn: state.worldTurn + 1,
+  };
+}
+
+// ── S4d Travel execution ──────────────────────────────────────
+
+const DANGER_ENCOUNTER_CHANCE: Record<DangerRating, number> = {
+  safe: 0.10,
+  moderate: 0.25,
+  dangerous: 0.40,
+  extreme: 0.57,
+  deadly: 0.75,
+};
+
+export function startTravel(
+  state: WorldState,
+  destinationNodeId: string,
+  mode: TravelMode
+): WorldState {
+  // Try direct leg first (fast path)
+  const directLeg = getLeg(state.player.currentNodeId, destinationNodeId);
+
+  if (directLeg) {
+    // Direct route — single leg
+    let totalDays: number;
+    if (mode === "walk") totalDays = directLeg.daysFoot ?? 1;
+    else if (mode === "horse") totalDays = directLeg.daysHorse ?? 1;
+    else totalDays = (directLeg.daysHorse ?? 0) + (directLeg.daysShip ?? 0);
+
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        isTraveling: true,
+        travelRoute: {
+          originNodeId: state.player.currentNodeId,
+          destinationNodeId,
+          totalDays: Math.max(1, totalDays),
+          daysElapsed: 0,
+          mode,
+          zones: directLeg.zones,
+          dangerRating: directLeg.dangerRating,
+          waypoints: [],
+          currentLegIndex: 0,
+        },
+      },
+    };
+  }
+
+  // No direct leg — try BFS pathfinding
+  const path = findRoute(state.player.currentNodeId, destinationNodeId);
+  if (!path || path.length === 0) return state;
+
+  // Multi-hop route — sum days across all legs, combine zones
+  let totalDays = 0;
+  const allZones: ZoneType[] = [];
+  let maxDanger: DangerRating = "safe";
+  const dangerRanking: Record<DangerRating, number> = {
+    safe: 0,
+    moderate: 1,
+    dangerous: 2,
+    extreme: 3,
+    deadly: 4,
+  };
+
+  for (const leg of path) {
+    if (mode === "walk") totalDays += leg.daysFoot ?? 1;
+    else if (mode === "horse") totalDays += leg.daysHorse ?? 1;
+    else totalDays += (leg.daysShip ?? 1);
+
+    allZones.push(...leg.zones);
+
+    if (dangerRanking[leg.dangerRating] > dangerRanking[maxDanger]) {
+      maxDanger = leg.dangerRating;
+    }
+  }
+
+  // Build waypoints list (intermediate nodes)
+  const waypoints = path.slice(0, -1).map((leg) => leg.to);
+
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      isTraveling: true,
+      travelRoute: {
+        originNodeId: state.player.currentNodeId,
+        destinationNodeId,
+        totalDays: Math.max(1, totalDays),
+        daysElapsed: 0,
+        mode,
+        zones: allZones,
+        dangerRating: maxDanger,
+        waypoints,
+        currentLegIndex: 0,
+      },
+    },
+  };
+}
+
+export interface AdvanceTravelResult {
+  state: WorldState;
+  narrative: string;
+  arrived: boolean;
+  encounter: TravelEncounter | null;
+}
+
+export function advanceTravel(state: WorldState): AdvanceTravelResult {
+  const route = state.player.travelRoute;
+  if (!route) return { state, narrative: "You are not traveling.", arrived: false, encounter: null };
+
+  const newElapsed = route.daysElapsed + 1;
+  const arrived = newElapsed >= route.totalDays;
+
+  const zoneIndex = Math.min(
+    Math.floor((newElapsed / route.totalDays) * route.zones.length),
+    route.zones.length - 1
+  );
+  const zone = route.zones[zoneIndex];
+  const flavor = getFlavorText(zone);
+
+  const encounter =
+    !arrived && Math.random() < DANGER_ENCOUNTER_CHANCE[route.dangerRating]
+      ? pickEncounter(zone, route.dangerRating)
+      : null;
+
+  const destNode = TRAVEL_NODES[route.destinationNodeId];
+  const destName = destNode?.name ?? route.destinationNodeId;
+
+  let narrative: string;
+  if (arrived) {
+    const modeWord = route.mode === "ship" ? "voyage" : "road";
+    narrative = `After ${newElapsed} day${newElapsed !== 1 ? "s" : ""} on the ${modeWord}, you arrive at ${destName}.`;
+  } else if (encounter) {
+    narrative = `Day ${newElapsed} of ${route.totalDays}. ${flavor}\n\n*A threat materializes ahead — your hand goes to your weapon.*`;
+  } else {
+    narrative = `Day ${newElapsed} of ${route.totalDays}. ${flavor}`;
+  }
+
+  const hubRoomId = destNode?.hubRoomId ?? `arrive_${route.destinationNodeId}`;
+
+  const newPlayer = arrived
+    ? {
+        ...state.player,
+        isTraveling: false,
+        travelRoute: undefined,
+        currentNodeId: route.destinationNodeId,
+        currentRoom: hubRoomId,
+        previousRoom: state.player.currentRoom,
+        visitedRooms: state.player.visitedRooms.includes(hubRoomId)
+          ? state.player.visitedRooms
+          : [...state.player.visitedRooms, hubRoomId],
+        turnCount: state.player.turnCount + 1,
+      }
+    : {
+        ...state.player,
+        travelRoute: { ...route, daysElapsed: newElapsed },
+        turnCount: state.player.turnCount + 1,
+      };
+
+  return {
+    state: { ...state, player: newPlayer, worldTurn: state.worldTurn + 1 },
+    narrative,
+    arrived,
+    encounter,
   };
 }
 
@@ -1466,10 +1675,22 @@ export function tickWorldState(state: WorldState): WorldState {
     const nextMana = regenActive
       ? Math.min(maxMana, (p.currentMana ?? maxMana) + MANA_REGEN_PER_TURN)
       : (p.currentMana ?? maxMana);
-    if (nextHp !== p.hp || nextMana !== p.currentMana || p !== newState.player) {
+
+    // Passive fatiguePool recovery (Sprint 1) — HWRR-style per-turn regen.
+    // Out-of-combat only; stamina>0 gate (same as HP/mana above).
+    // Base recovery = ceil(maxStamina * 0.1); Sprint 3's activity dispatcher
+    // can add bonuses for PRAY/DRINK/REST/etc.
+    // Clamp at 0 (never goes positive); capped at 0 because negative is "tired".
+    let nextFatigue = p.fatiguePool;
+    if (regenActive && nextFatigue < 0) {
+      const recovery = Math.ceil(p.maxStamina * 0.1);
+      nextFatigue = Math.min(0, nextFatigue + recovery);
+    }
+
+    if (nextHp !== p.hp || nextMana !== p.currentMana || nextFatigue !== p.fatiguePool || p !== newState.player) {
       newState = {
         ...newState,
-        player: { ...p, hp: nextHp, currentMana: nextMana },
+        player: { ...p, hp: nextHp, currentMana: nextMana, fatiguePool: nextFatigue },
       };
     }
 

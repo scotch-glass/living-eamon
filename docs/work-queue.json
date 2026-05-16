@@ -1,0 +1,446 @@
+{
+  "generated_at": "2026-05-16",
+  "stats": {
+    "awaits_answer": 5,
+    "awaits_approval": 1,
+    "ready_to_code": 10,
+    "blocked": 4,
+    "done": 16
+  },
+  "items": [
+    {
+      "id": "EV-karma_system-002",
+      "kind": "ev",
+      "status": "awaits_answer",
+      "source_doc": "karma_system",
+      "category": "PICSSI-BALANCE",
+      "priority": 3,
+      "question": "Are the my-judgment magnitudes (action-budget 20/25/30 tiers, gear-Standing formula `floor(value/100)` capped +20, wealth tiers 1k/5k/25k/100k → +5/+10/+20/+30, per-circle Illumination 0/0/0/−2/−4/−8/−15/−30, fatigue penalty +15·tier evasion-vs-player) tuned for end-game balance, or are they opening parameters?",
+      "best_guess": "Opening parameters. Scotch's standing direction is \"use your judgment, balance later via Machinations.io.\" Likely tuning targets: action-budget spread too narrow, gear-Standing jewelry doubling too generous, Circle 8's −30 too punishing for a single cast, Tier-4 fatigue lockout too binary.",
+      "resolution_path": "ship Sprint 2 PICSSI bedrock + Sprint 3 activity dispatcher → author the first 20 atoms → run Machinations simulations on the resulting state space → record tuned magnitudes in a follow-up `§4a (Tuned YYYY-MM-DD)` block. Promote to `[high]` once the tuning pass produces stable distributions across 100+ simulated playthroughs."
+    },
+    {
+      "id": "EV-karma_implementation_plan-002",
+      "kind": "ev",
+      "status": "awaits_answer",
+      "source_doc": "karma_implementation_plan",
+      "category": "WIRING",
+      "priority": 0,
+      "question": "How does the Scroll-of-Thoth riddle UI evolve from v1 chat-stream token to S6 modal?",
+      "best_guess": "v1 emits `__RIDDLE__` token via the existing token-driven verb-completion flow (matches `__YESNO__`, `__BARMAID_SELECT__`). S6 modal upgrade open questions: (a) per-scroll attempt budget vs v1 silent-no-Illumination, (b) reveal canonical answer after N failures (the Hermes→Thoth substitution can confuse first-time players), (c) whether the chat-stream fallback survives for headless tests after the modal ships.",
+      "resolution_path": "ship Sprint 3 with the chat-stream token; gather playtest feedback on attempt-budget desire and reveal-after-N-failures threshold; design the S6 modal with those defaults baked in. Promote to `[high]` once the modal ships and the chat-stream fallback is validated as a headless-test path."
+    },
+    {
+      "id": "EV-module_system-001",
+      "kind": "ev",
+      "status": "awaits_answer",
+      "source_doc": "module_system",
+      "category": "WIRING",
+      "priority": 0,
+      "question": "How will `tag_atom()` GPE-trace events be ingested in production — beyond the dev-only `console.log`?",
+      "best_guess": "A thin telemetry endpoint (e.g. `app/api/atom-trace/route.ts`) that POSTs `{atom_id, tier, virtues, player_id, session_id, ts}` to a Supabase `atom_traces` table. Use cases: most-traversed atoms, choice-distribution per virtue, archetype-skew vs actual play patterns. Volume planning required (one trace per atom per choice per session adds up).",
+      "resolution_path": "unblock when (a) Sprint 4 Ink loader ships and (b) at least one module is in production producing traces. Then formalize the prod ingestion path in MODULE_SYSTEM.md §5.7 with the table schema, retention policy, and a sampling rate to keep volume bounded. Promote to `[high]` once Solomon Kane Whispering Woods has produced 30+ days of traces and a dashboard exists."
+    },
+    {
+      "id": "EV-module_system-002",
+      "kind": "ev",
+      "status": "awaits_answer",
+      "source_doc": "module_system",
+      "category": "INK-AUTHORING",
+      "priority": 0,
+      "question": "What concrete migration path supports a breaking change to the EXTERNAL contract (1.0 → 2.0)?",
+      "best_guess": "Loader inspects `module.json.contractVersion` and either (a) refuses to load 1.0 modules (hard-deprecation, fine while install base is Scotch + 1 author) or (b) routes through a 1.0-shim that re-binds renamed/removed EXTERNALs to no-ops with a deprecation warning. Cost of breaking 1.0 is currently zero — no community modules exist — but Steam Workshop / Itch.io uploads make this load-bearing.",
+      "resolution_path": "document the chosen migration strategy as a new §4.6 in MODULE_SYSTEM.md with worked examples for both rename and removal cases. Promote to `[high]` once a real 2.0 contract lands, an auto-test exercises a 1.0-pinned module under 2.0 runtime, and the deprecation warning surfaces visibly in dev mode."
+    },
+    {
+      "id": "EV-public_domain_rules-002",
+      "kind": "ev",
+      "status": "awaits_answer",
+      "source_doc": "public_domain_rules",
+      "category": "PD-SAFETY",
+      "priority": 0,
+      "question": "What does the 2027 non-renewal audit for *Weird Tales* 1932–1933 issues entail — methodology, sources, who runs it, what triggers an early Bucket A migration?",
+      "best_guess": "Same approach as the 2026-04-30 audit that moved 1934–1936 stories. Sources: U.S. Copyright Office renewal records (Catalog of Copyright Entries 1959–1962 windows for 1932–1933 first-publications), Project Gutenberg Howard research notes, scholarly consensus on *Weird Tales* renewal practices. Verifies both (a) magazine issue not issue-renewed AND (b) Howard's individual contributions not separately renewed. Recommendation: schedule in LAUNCH_CRITERIA.md Tier 2 with a 2027-Q1 calendar trigger; results go into a new §11 entry plus Bucket A migration.",
+      "resolution_path": "add a 2027-Q1 audit item to LAUNCH_CRITERIA.md Tier 2 with the methodology pinned. Run the audit. Document results in §11 Document History. Move stories to Bucket A if confirmed; otherwise leave them for the 2028 / 2029 95-year unlock. Promote to `[high]` once the audit completes and §11 records the outcome."
+    },
+    {
+      "id": "module_system_ink_runtime",
+      "kind": "launch",
+      "status": "awaits_approval",
+      "source_doc": "MODULE_SYSTEM.md",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [
+        "MODULE_SYSTEM.md Stage I approval",
+        "karma_sprint_chain"
+      ],
+      "title": "MODULE_SYSTEM Ink runtime + GPE authoring CLI",
+      "good_looks_like": "Ink module loads at runtime, EXTERNAL functions (apply_karma, apply_npc_affection, set_flag, trigger_combat, etc.) work; GPE CLI produces per-virtue balance scorecards for any .ink module."
+    },
+    {
+      "id": "combat_arena_production_integration",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "components/CombatScreen.tsx (v1), components/CombatArena.tsx (v2)",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Combat Arena v2 integrated into production game flow",
+      "good_looks_like": "Production game flow uses CombatArena, not CombatScreen. v1 retired or kept as fallback. All v1 features parity-tested in v2."
+    },
+    {
+      "id": "image_generation_baseline",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "scripts/forge-*.ts, lib/scenePrompt.ts, project_pre_roll_image_architecture.md",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Image generation pipeline (heroes + scenes + NPCs)",
+      "good_looks_like": "Hero composite (head + body) shipped; scenes pre-rolled via Grok-Imagine-Pro; NPCs forged with UGLY_MEAN_OVERLAY for hostiles; rembg pipeline reliable."
+    },
+    {
+      "id": "stripe_payment_gate",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "project_payment_before_character_creation.md",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Stripe payment gate before character creation",
+      "good_looks_like": "Stripe Checkout integration; payment success unlocks the hero forge; failed payment redirects to retry. Bridge (email-confirm = payment success) replaced."
+    },
+    {
+      "id": "brothel_temple_vd_content",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "GAME_DESIGN.md §12",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [
+        "karma_sprint_chain"
+      ],
+      "title": "Brothel + Fertility Temple + VD content (GAME_DESIGN §12)",
+      "good_looks_like": "Brothel atoms work in the hub city; Fertility Temple cure available; VD progression + treatment paths wired through PICSSI Passion + Spirituality."
+    },
+    {
+      "id": "forty_two_oaths",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "lore/maatic-library/oaths-of-maat.md",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [],
+      "title": "42 Oaths of Ma'at surfaced in gameplay",
+      "good_looks_like": "Oaths appear as Ma'atic priest dialogue, NPC consequences (Order alerts when oaths are broken), and post-mortem Hall-of-Two-Truths weighing prose."
+    },
+    {
+      "id": "library_wiki",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "app/library/, lib/library/, ~/.claude/plans/review-the-lore-and-floofy-hamming.md",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [],
+      "title": "/library wiki for creators (W2 shipped, W3 outstanding)",
+      "good_looks_like": "W2 wiki UI shipped (commit e0304a5). W3 deferred (registry dumps + drift detection). Q+A annotations expanding from 2 docs to 14 (pilot + batch)."
+    },
+    {
+      "id": "pray_divinity_v1",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "~/.claude/plans/the-skull-and-pack-luminous-muffin.md, lore/pantheon/PANTHEON.md",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [
+        "karma_sprint_chain"
+      ],
+      "title": "PRAY + Divinity System v1",
+      "good_looks_like": "PRAY combat spell + out-of-combat verb work; per-(player, god) divineFavor track; per-god boon/blessing tables; sacred-site multipliers; 2 starter divine quests (Crom JUDGES + Mithras Honor-the-Contract)."
+    },
+    {
+      "id": "qa_annotations_batch",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "~/.claude/plans/review-the-lore-and-floofy-hamming.md (Q+A pilot batch)",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [],
+      "title": "Q+A annotations on remaining 12 design-canon docs",
+      "good_looks_like": "Every design-canon and sprint-plan doc carries a Q+A block matching the PANTHEON / GAME_DESIGN pilot schema. Edge Vectors registry surfaces cross-canon open questions, not just per-pilot."
+    },
+    {
+      "id": "scrolls_of_thoth_ui",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "lore/scrolls-of-thoth/INDEX.md, KARMA_SYSTEM.md §2.10, project_scroll_riddle_verification.md",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [
+        "karma_sprint_chain"
+      ],
+      "title": "15 Scrolls of Thoth — read-verification riddle UI",
+      "good_looks_like": "Player reads scroll → riddle prompt → correct answer awards Illumination delta; incorrect blocks the award until re-read. Wired through lib/karma/scrolls.ts."
+    },
+    {
+      "id": "word_system",
+      "kind": "launch",
+      "status": "ready_to_code",
+      "source_doc": "project_word_system_seed.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [],
+      "title": "The Word system — quest oaths persist across rebirth",
+      "good_looks_like": "All quest acceptance generates a Word; persists across rebirth; Mithras-blessed Words ×2 stakes. S3 shipped persistence layer; UI deferred."
+    },
+    {
+      "id": "first_launch_adventure",
+      "kind": "launch",
+      "status": "blocked",
+      "source_doc": "ADVENTURE_MODULES_PLAN.md",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [
+        "karma_sprint_chain",
+        "module_system_ink_runtime"
+      ],
+      "title": "At least one launch adventure module shipped, end-to-end playable",
+      "good_looks_like": "A new player can complete the full quest line of one launch saga (Mirrors of Tuzun Thune / Shadow Kingdom / Kings of the Night) with PICSSI consequences, scroll/fragment seeding, NPC affection, combat encounters, and a death-respawn cycle."
+    },
+    {
+      "id": "hero_registration",
+      "kind": "launch",
+      "status": "blocked",
+      "source_doc": "app/forge-avatar/, lib/heroTypes.ts, project_payment_before_character_creation.md",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [
+        "stripe_payment_gate"
+      ],
+      "title": "Hero registration + character creation flow",
+      "good_looks_like": "New player visits /splash, registers email, pays via Stripe, builds a hero through the wizard, lands in the Church of Perpetual Life with a saved row in players. No bridge auth path."
+    },
+    {
+      "id": "payment_success_email_flow",
+      "kind": "launch",
+      "status": "blocked",
+      "source_doc": "project_payment_before_character_creation.md",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [
+        "stripe_payment_gate"
+      ],
+      "title": "Post-payment email confirmation + welcome flow",
+      "good_looks_like": "Stripe webhook → confirmation email → onboarding email series with Living Eamon lore primer."
+    },
+    {
+      "id": "three_launch_sagas",
+      "kind": "launch",
+      "status": "blocked",
+      "source_doc": "ADVENTURE_MODULES_PLAN.md, splash page LAUNCH_ADVENTURES list",
+      "category": "TIER-1",
+      "priority": 90,
+      "blockers": [
+        "first_launch_adventure",
+        "karma_sprint_chain"
+      ],
+      "title": "All 3 launch sagas complete (Mirrors of Tuzun Thune trilogy)",
+      "good_looks_like": "Mirrors of Tuzun Thune + The Shadow Kingdom + Kings of the Night all playable end-to-end with PICSSI consequences, distinct atmospheres (twelve-thousand-year-old ruin / serpent-noble court / Pictish tomb-opening)."
+    },
+    {
+      "id": "combat_system_stable",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "components/CombatArena.tsx, lib/combat/engine.ts",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Combat system stable (body-zone + Combat Arena v2 FX)",
+      "good_looks_like": "Body-zone targeting (head/neck/torso/limbs), bleed/poison/wound effects, weapon damage rolls, Combat Arena v2 strike FX, all green tests. Shipped 2026-05-09 (commit ac875e4)."
+    },
+    {
+      "id": "death_respawn_flow",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "lib/adventures/guild-hall.ts (Church spawn), KARMA_SYSTEM.md §2.6 (Integrity reset)",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Death + respawn (Church of Perpetual Life)",
+      "good_looks_like": "Death triggers Church respawn; gear lost; PICSSI virtues reset (per Tier-0 design); chronicle preserves the death."
+    },
+    {
+      "id": "jane_ai_narrator",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "app/api/chat/route.ts, lib/gameEngine.ts",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Jane AI narrator + streaming chat",
+      "good_looks_like": "Streaming character-by-character animation; Space to skip; static-with-state engine routes 90% of input free, 10% to Grok."
+    },
+    {
+      "id": "karma_sprint_chain",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "KARMA_IMPLEMENTATION_PLAN.md, rescue commit 88ce683 (2026-04-30), audit 2026-05-12",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "KARMA Sprints 1–6 — PICSSI virtue system shipped end-to-end",
+      "good_looks_like": "PICSSI virtues update on every atom choice; combat-PICSSI deltas fire on kill/flee/abandon; ordered-retreat works; legacy 10-virtue cold-deleted; all magnitudes match KARMA_SYSTEM canon. Sprint 7 (Sorcery + Illumination drain) remains explicitly deferred per KARMA_IMPLEMENTATION_PLAN.md."
+    },
+    {
+      "id": "living_world_db",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "lib/gameEngine.ts, Supabase rooms + objects tables",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Living-world database (cached room descriptions, NPC memory)",
+      "good_looks_like": "Rooms generated once and cached forever; NPCs remember encounters across sessions; Sheriff alerts + bounties persist."
+    },
+    {
+      "id": "persistent_chronicle",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "lib/persistence/playerRecord.ts, lib/gameState.ts",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Persistent hero with full Chronicle of Deeds",
+      "good_looks_like": "Hero state survives sessions; karma_log captures every consequential act; Chronicle is read by NPCs (memory + reputation)."
+    },
+    {
+      "id": "production_deploy",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "vercel.json (implicit), project memory",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "Production deploy on Vercel + main branch",
+      "good_looks_like": "main branch deploys to Vercel automatically; no broken builds on main; staging/preview flows work."
+    },
+    {
+      "id": "world_map_travel",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "lore/thurian-cartography/WORLD_LOCATIONS.md, project_world_map_travel_system.md",
+      "category": "TIER-0",
+      "priority": 100,
+      "blockers": [],
+      "title": "World map + travel system (S4d)",
+      "good_looks_like": "30 nodes, 5 travel modes, click-to-confirm UX, painted map background. Shipped (commit c05f3f5)."
+    },
+    {
+      "id": "creator_forge_admin",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "project_creator_forge_plan.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "library_wiki"
+      ],
+      "title": "Creator Forge — in-app admin tool for hero/NPC/monster authoring",
+      "good_looks_like": "Admin UI for image-prompt iteration + variation + approval; supersedes the current scripts/forge-*.ts pipeline for non-dev contributors."
+    },
+    {
+      "id": "crowd_qa_pipeline",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "project_crowd_qa_plan.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "first_launch_adventure"
+      ],
+      "title": "Crowd-QA pipeline (SageMaker / Turk for asset QA)",
+      "good_looks_like": "Pregenerated-asset QA via paid Turk + LLM-vision + community-volunteer tier. Player report-reasons wired."
+    },
+    {
+      "id": "db_transition_sprint_8",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "project_db_transition_deferred.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "karma_sprint_chain"
+      ],
+      "title": "Sprint 8 — DB transition for quests / NPC / dialogue / atoms",
+      "good_looks_like": "TS quest registries shadow-migrate to Supabase; runtime stays code-canonical until full migration; eventually swaps to DB-canonical."
+    },
+    {
+      "id": "invoke_circles_4_through_8",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "SORCERY.md, project_occult_sorcery_deferred.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "karma_sprint_chain"
+      ],
+      "title": "Occult INVOKE — Circles 4–8 (forbidden sorcery)",
+      "good_looks_like": "Eight Circles of forbidden sorcery wired to combat; Order detection + inquisition mechanics; per-circle Illumination cost scaling."
+    },
+    {
+      "id": "multiplayer_phase_3",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "GAME_DESIGN.md (multiplayer Phase 3 reference)",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "karma_sprint_chain",
+        "first_launch_adventure"
+      ],
+      "title": "Multiplayer (Phase 3)",
+      "good_looks_like": "Multiple heroes per realm; shared chronicle; faction-level karma; party invites. Far future."
+    },
+    {
+      "id": "pegasus_telepathic_ally",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "project_pegasus_intelligent_ally.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "pray_divinity_v1",
+        "karma_sprint_chain"
+      ],
+      "title": "Pegasus — intelligent telepathic ally",
+      "good_looks_like": "Late-game ally; refuses immoral missions; closes air-mode travel routes when hero drifts toward Outer Dark."
+    },
+    {
+      "id": "rest_of_18_module_roadmap",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "ADVENTURE_MODULES_PLAN.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "first_launch_adventure",
+        "three_launch_sagas"
+      ],
+      "title": "Modules 4–18 from the 18-module PD roadmap",
+      "good_looks_like": "All 18 PD-bucketed modules authored, with the first 3 (launch sagas) acting as the proven template."
+    },
+    {
+      "id": "volunteer_qa_program",
+      "kind": "launch",
+      "status": "done",
+      "source_doc": "project_volunteer_qa_plan.md",
+      "category": "TIER-2",
+      "priority": 80,
+      "blockers": [
+        "crowd_qa_pipeline"
+      ],
+      "title": "Community-volunteer QA program",
+      "good_looks_like": "Trap-questions, reputation, reward caps below paid customers; legal review complete."
+    }
+  ]
+}

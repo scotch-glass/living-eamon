@@ -55,7 +55,8 @@ const eslintConfig = defineConfig([
             {
               group: [
                 "**/lib/gameEngine",
-                "**/lib/combatEngine",
+                "**/lib/combat/engine",
+                "**/lib/combat/**",
                 "**/lib/gameState",
                 "**/app/**",
               ],

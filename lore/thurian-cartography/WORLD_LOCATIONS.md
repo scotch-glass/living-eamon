@@ -1,3 +1,61 @@
+---
+id: world_locations
+title: World Locations — Thurian Cartography
+role: design-canon
+canonical_for: [travel-node-registry, nation-roster, loot-zone-ids]
+visibility: creator
+status: active
+last_updated: 2026-05-03
+cross_refs: [GAME_DESIGN.md, lore/thurian-cartography/TRAVEL_MATRIX.md, lore/thurian-cartography/LOOT_TABLES.md, EDGE_VECTORS.md]
+questions_total: 6
+questions_answered: 6
+questions_open: 0
+edge_vector_ids: []
+---
+
+## Questions answered by this document
+
+> Answers are tagged by category and confidence (`[high]` / `[medium]` / `[low]` / `[open]`).
+> Non-`[high]` answers are mirrored in [`EDGE_VECTORS.md`](EDGE_VECTORS.md) under their `EV-` id.
+
+### [NAV-MAP]
+
+**Q:** What is the registry shape — what categories of nodes does this doc declare?
+**A:** Four categories. (1) **Nations / Kingdoms** (12): the Seven Empires (Valusia, Kamelia, Verulia, Grondar, Thule, Commoria, Farsun) plus 5 others (Atlantis, Zarfhaana, Thurania, Thuria, Lemuria). (2) **Cities / Settlements** (6): City of Wonders, Vanara, Kamula, Talunia, Blaal, Stagus — each is an adventure hub with a map dot. (3) **Named Points of Interest / Landmarks** (5): Skull of Silence, Lake of Visions, Accursed Gardens, Forbidden Lake, Tiger Valley — prime adventure-module anchors. (4) **Geographic wilderness areas** (11): Tathel Isle, Kaa-U Picts, Isles of the Picts, Red Isles, Camoonia Desert, Zalgara Mts, Zhemri Mts, River Stagus, World's End, Lost Lands, Jungles. Each entry has an id, name, approximate map pixel coordinates (origin top-left of the 2560×1693 map image), and lore notes. `[high]`
+↔ relates to: §Nations / Kingdoms, §Cities / Settlements, §Named POI / Landmarks, §Geographic Wilderness Areas
+
+### [NAV-MAP]
+
+**Q:** What is the Valus origin contract that anchors travel and the hub layout?
+**A:** **Valus, the City of Wonders, capital of Valusia, is the Guild Hall hub and the fixed origin for all travel calculations.** Node id: `valus`. Map coords: 600, 530 (slightly offset from `city_of_wonders` at 600, 530 — they are the same place; the Guild Hall hub uses the `valus` id). All travel-time calculations originate from Valus; encounter-roll counts in TRAVEL_MATRIX.md sum the days from `valus` outward; the hub-return action that resets `actionBudget = 25` (per KARMA_SYSTEM.md §2.3) fires when the player re-enters Valus. **Adventure modules must declare a `locationId`** from this registry, plus `travelZones[]` (geographic zones crossed en route from Valus) and `travelDays` (approximate overland days). The travel UI reads `travelZones` to build the zone-specific encounter table for that journey. `[high]`
+↔ relates to: §Travel System (design contract), §Adventure module location tagging, lore/thurian-cartography/TRAVEL_MATRIX.md (Travel Matrix table), KARMA_SYSTEM.md §2.3 (actionBudget reset)
+
+### [INK-AUTHORING]
+
+**Q:** What design contract does this doc enforce on adventure modules?
+**A:** Three rules in the §Travel System block. (1) **Every adventure module must declare a `locationId` from this registry** — no module can ship without a registered destination. (2) **Travel to a remote adventure uses the map as the background**, with a moving hero marker and random encounters along the route (per S4 Graphical Travel System spec at `~/.claude/plans/i-accidentally-submitted-the-misty-map.md`). (3) **The travel screen reads `travelZones`** from each module's registry entry to build the zone-specific encounter roll table — so longer routes through more dangerous zones get more encounter rolls. The contract surfaces in `lib/adventures/registry.ts` as the `locationId: string`, `travelZones: string[]`, and `travelDays: number` fields on every module entry. `[high]`
+↔ relates to: §Travel System (design contract), §Adventure module location tagging, ~/.claude/plans/i-accidentally-submitted-the-misty-map.md (S4 plan)
+
+### [NAV-MAP]
+
+**Q:** How are random encounters wired to geographic zones?
+**A:** Five-step resolution. (1) Each travel leg crosses one or more zones — `geo_camoonia_desert`, `geo_zalgara_mts`, etc. (2) The §Travel System block lists six high-level zone types: wilderness/plains, mountain, desert, jungle, sea/river, frontier/Lost Lands — each with its own bullet-list encounter pool. (3) TRAVEL_MATRIX.md elaborates: 13 zone types each with a daily encounter chance (Safe 15% / Moderate 35% / Dangerous 55% / Extreme 75%) and a d100 sub-table (universal 01–25 + zone-specific 26–100). (4) The encounter resolver hits the **most dangerous zone** on a leg if multiple zones cross in one day. (5) Pre-generated scene backgrounds at `public/art/scenes/travel/` (23 total per TRAVEL_MATRIX) provide the painterly backdrop for any encounter screen, day or night, sourced through Grok Imagine Pro. `[high]`
+↔ relates to: §Travel System / Random encounters en route, lore/thurian-cartography/TRAVEL_MATRIX.md (zone tables + scene mapping), lore/thurian-cartography/LOOT_TABLES.md
+
+### [PD-SAFETY]
+
+**Q:** Are the place names in this registry PD-safe for player-facing prose?
+**A:** Yes — the cartography is built almost entirely on **Howard's *Hyborian Age* essay (1936, PD via Phantagraph non-renewal)** plus the three PD Kull stories (*Shadow Kingdom* / *Mirrors of Tuzun Thune* 1929; *Kings of the Night* 1930). Specifically: Atlantis, Thule, Kamelia, Valusia, Commoria, Verulia, Grondar, Farsun, Thurania, Thuria, Lemuria are all from Howard's essay or the Kull canon. **City of Wonders** is the canonical capital of Kull's Valusia per Howard. Skull of Silence + Lake of Visions + Accursed Gardens are from "The Skull of Silence" / "By This Axe I Rule!" Kull stories (PD by 1929 *Weird Tales* non-renewal). The **Mirrors of Tuzun Thune** in Kamelia ties to the M-1 launch module. PANTHEON-aligned dispatcher: **Valka** = the Atlantean / Pictish / Valusian / Zarfhannian alias for Ma'at (per PANTHEON.md alias_doctrine). All trademark restrictions on Conan / Cimmerian / Hyborian still apply — none of those terms appear here. `[high]`
+↔ relates to: Public_Domain_Rules.md §1.2 + §5 Always-Safe Corpus, lore/pantheon/PANTHEON.md alias dispatcher, GAME_DESIGN.md top-of-file Safe Harbor / Radioactive tables
+
+### [NAV-MAP]
+
+**Q:** Which of the 34 nodes (12 nations + 6 cities + 5 POIs + 11 wilderness areas) are actually travel destinations vs lore-on-map references?
+**A:** **Lore-on-map references for narrative texture.** The 18 non-destination nodes (8 nations: Zarfhaana, Verulia, Grondar, Farsun, Thurania, Thuria, Kamelia; 10 wilderness: Tathel Isle, Kaa-U Picts, Isles of the Picts, Red Isles, Camoonia Desert, Zalgara Mts, Zhemri Mts, River Stagus, World's End, Jungles) are **traversed as zones during travel** but not direct click targets in v1. Infrastructure requirement: each lore-only node needs **regional descriptions, peoples, dominant gods** so Ink authors can choose them as adventure settings. Future sprints can unlock specific adventures and convert lore-only nodes to travel destinations as needed. Add a `nodeKind: 'destination' | 'lore-only'` field to each entry so the travel UI filters click-targets without ambiguity. `[high]`
+↔ relates to: lore/thurian-cartography/TRAVEL_MATRIX.md §Travel Nodes (16 destinations), §Adventure module location tagging, ~/.claude/plans/i-accidentally-submitted-the-misty-map.md (S4 click-targets)
+
+---
+
 # Living Eamon — World Map Location Reference
 
 > **Source map (canonical / branded):** `lore/thurian-cartography/living-eamon-map.png` — 2560×1693, includes "LIVING EAMON" logo. This is the travel screen background asset.

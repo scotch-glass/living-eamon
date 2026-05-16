@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { BodyZone, ActiveCombatSession } from "../lib/combatTypes";
-import { BODY_ZONES } from "../lib/combatTypes";
+import type { BodyZone, ActiveCombatSession, CombatantState } from "../lib/combat/types";
+import { BODY_ZONES } from "../lib/combat/types";
 import type { PlayerState } from "../lib/gameState";
 import { ITEMS, type Item } from "../lib/gameData";
 import type { ItemContext } from "./ItemActionMenu";
-import { EFFECT_COLORS } from "../lib/effectIconData";
+import { EFFECT_COLORS } from "../lib/combat/effectIconData";
+import { SPRITES } from "../lib/combat/sprites";
+import { currentActorId } from "../lib/combat/engine";
 import EffectMarkerIcon from "./EffectMarkerIcon";
 import BloodOverlay from "./BloodOverlay";
 import { generateHitSplatters, generateCritWound, generateAttackerSplatter, getWoundTierFromDamage, type BloodSplatter, type SplatterZone } from "../lib/bloodSplatterData";
@@ -21,7 +23,7 @@ export interface CombatScreenProps {
   playerMana: number;
   playerMaxMana: number;
   /** Full player state — used to resolve equipped gear + inventory for the
-   * combat UI column (weapon/shield/helmet/gorget/bodyArmor/limbArmor icons
+   * hero's column (weapon/shield/helmet/gorget/bodyArmor/limbArmor icons
    * and potion quick-use icons). */
   playerState: PlayerState;
   /** Recent combat log lines (last few rounds) */
@@ -33,11 +35,6 @@ export interface CombatScreenProps {
   /** Forward an item-icon click up to page.tsx so it can open the
    * shared ItemActionMenu popup (Drink / Inspect / Unequip / etc.). */
   onIconClick?: (item: Item, context: ItemContext, rect: DOMRect) => void;
-  /**
-   * Layout-preview only: render N decorative copies of the enemy sprite to
-   * the right of the main enemy (for testing 3-enemy scenes). Defaults to 0.
-   */
-  enemyLayoutPreviewCount?: number;
   /** Persistent hero blood splatters that accumulate across fights.
    * Passed down from page.tsx; updated via onHeroGoreChange. */
   heroGoreSplatters?: BloodSplatter[];
@@ -66,15 +63,9 @@ const ZONE_EVASION_HINT: Record<BodyZone, string> = {
 // ── Helpers ─────────────────────────────────────────────────
 
 function hpBarColor(_pct: number): string {
-  // Classic RPG red health bar. (Previously faded green→yellow→red based on %;
-  // player feedback: HP should always read red so it's instantly recognizable.)
   return "#dc2626";
 }
 
-/**
- * Vertical stat bar — fills from the bottom up. Used for HP (green/yellow/red)
- * and Mana (blue). Matches the sidebar mana-bar visual, just taller.
- */
 function VerticalBar({
   current,
   max,
@@ -118,12 +109,6 @@ function VerticalBar({
   );
 }
 
-/**
- * Tight vertical status cap that mounts on top of the body-targeting
- * column: HP bar + mana bar side-by-side, with a compact name label
- * above. Optional spell column to the right of the mana bar — tiny
- * 2-wide grid of SpellIcons, dimmed for unlearned spells.
- */
 function VerticalStatusCap({
   name,
   nameColor,
@@ -141,7 +126,6 @@ function VerticalStatusCap({
   mana: number;
   maxMana: number;
   barHeight?: number;
-  /** Optional vertical column of spell-cast icons next to the mana bar. */
   spellSlots?: React.ReactNode;
 }) {
   return (
@@ -176,7 +160,9 @@ function VerticalStatusCap({
       </div>
       <div style={{ display: "flex", gap: 4, alignItems: "flex-end" }}>
         <VerticalBar current={hp} max={maxHp} height={barHeight} color="hp" label="HP" />
-        <VerticalBar current={mana} max={maxMana} height={barHeight} color="mana" label="Mana" />
+        {maxMana > 0 && (
+          <VerticalBar current={mana} max={maxMana} height={barHeight} color="mana" label="Mana" />
+        )}
         {spellSlots}
       </div>
     </div>
@@ -184,23 +170,17 @@ function VerticalStatusCap({
 }
 
 // ── Spell catalog ───────────────────────────────────────────
-// Tiny iconography for the known-spell row. Each spell's `name` is the
-// command argument (CAST HEAL, CAST BLAST, etc.) — must match what the
-// engine's CAST handler accepts and what `knownSpells` stores.
 
 interface SpellDef {
-  name: string;     // CAST argument, uppercase to match engine convention
-  label: string;    // hover label / menu title
-  glyph: string;    // small unicode/emoji symbol (heart, bolt, etc.)
-  cost: number;     // mana cost (display only)
-  color: string;    // glow color when known
-  /** One-line type tag shown in the lore popup ("Restoration", etc.). */
+  name: string;     // CAST argument, uppercase
+  label: string;
+  glyph: string;
+  cost: number;
+  color: string;
   school: string;
-  /** Numeric effect string ("18-32 HP", "2d8+4", "—"). */
   effect: string;
-  /** Long-form lore for the Lore popup. */
   lore: string;
-  /** "self" = always targets caster, "enemy" = targets an enemy, "none" = fires immediately (no picker) */
+  /** "self" = caster targets self; "enemy" = picks an opposing combatant. */
   targeting: "self" | "enemy" | "none";
 }
 
@@ -234,21 +214,6 @@ const COMBAT_SPELLS: SpellDef[] = [
     targeting: "enemy",
   },
   {
-    name: "POWER",
-    label: "Power",
-    glyph: "🙏",
-    cost: 5,
-    color: "#a855f7",
-    school: "Augury",
-    effect: "Unpredictable boon",
-    lore:
-      "A bargain prayed upward to a power the caster only half-knows. If the boon arrives — " +
-      "if blessed, it may be an extra strike, mana surge, sudden vigor, momentary invisibility, " +
-      "a divine vision — but extremely unreliable. Costs 5 mana. Veterans have already " +
-      "accepted that the next round may be their last.",
-    targeting: "none",
-  },
-  {
     name: "SPEED",
     label: "Speed",
     glyph: "🪶",
@@ -263,6 +228,115 @@ const COMBAT_SPELLS: SpellDef[] = [
       "particular.",
     targeting: "self",
   },
+  // ── Circle 2 (Guild magic) ───────────────────────────────────
+  {
+    name: "GREATER-HEAL",
+    label: "Greater Heal",
+    glyph: "✚",
+    cost: 8,
+    color: "#fb7185",
+    school: "Restoration",
+    effect: "Restores 35-55 HP",
+    lore:
+      "A deeper binding of the body's knitting-force. Where HEAL closes a wound, GREATER-HEAL " +
+      "rebuilds what was lost. Restores between 35 and 55 hit points. Costs 8 mana.",
+    targeting: "self",
+  },
+  {
+    name: "FIREBOLT",
+    label: "Firebolt",
+    glyph: "🔥",
+    cost: 6,
+    color: "#f97316",
+    school: "Evocation",
+    effect: "3d6+4 fire damage",
+    lore:
+      "A bright dart of fire from the caster's fingertip. Sets dry cloth alight on a clean hit. " +
+      "Deals 3d6+4 fire damage. Costs 6 mana.",
+    targeting: "enemy",
+  },
+  {
+    name: "HASTE",
+    label: "Haste",
+    glyph: "💨",
+    cost: 4,
+    color: "#22d3ee",
+    school: "Enchantment",
+    effect: "+1 action/round, +3 DEX, 2 rounds",
+    lore:
+      "The target accelerates between heartbeats. For the next 2 rounds they take an extra " +
+      "action each round AND gain +3 effective dexterity. Net of the cast cost: two free " +
+      "swings, not one. Costs 4 mana. Worth the slot.",
+    targeting: "self",
+  },
+  {
+    name: "WARD",
+    label: "Ward",
+    glyph: "🛡",
+    cost: 5,
+    color: "#a3e635",
+    school: "Abjuration",
+    effect: "−8 damage / hit, 3 rounds",
+    lore:
+      "A barrier of woven Words. Each incoming physical blow lands 8 damage lighter for the " +
+      "next 3 rounds. A clean strike that would have killed becomes a wound; a glancing blow " +
+      "becomes nothing. Costs 5 mana.",
+    targeting: "self",
+  },
+  {
+    name: "STEELSKIN",
+    label: "Steelskin",
+    glyph: "⛨",
+    cost: 5,
+    color: "#9ca3af",
+    school: "Abjuration",
+    effect: "Halve all physical damage, 4 rounds",
+    lore:
+      "The target's skin remembers iron. ALL incoming physical damage — every strike, every " +
+      "round — is halved for the next 4 rounds. Costs 5 mana. The Word holds whether you stand " +
+      "or fall; whether you are struck once or twenty times.",
+    targeting: "self",
+  },
+  {
+    name: "SILENCE",
+    label: "Silence",
+    glyph: "🤫",
+    cost: 4,
+    color: "#6b7280",
+    school: "Abjuration",
+    effect: "Cancels target's casting",
+    lore:
+      "Words die in the target's throat. Their channeling spell breaks; their next cast is " +
+      "interrupted. Costs 4 mana.",
+    targeting: "enemy",
+  },
+  {
+    name: "RESIST",
+    label: "Resist",
+    glyph: "⊘",
+    cost: 4,
+    color: "#84cc16",
+    school: "Abjuration",
+    effect: "Halve BLAST/FIREBOLT, 3 rounds",
+    lore:
+      "The body refuses fire and stormlight. Damage from BLAST and FIREBOLT is halved for " +
+      "the next 3 rounds. Costs 4 mana. Good against sorcerous opponents; useless against " +
+      "a man with a sword.",
+    targeting: "self",
+  },
+  {
+    name: "CLEANSE",
+    label: "Cleanse",
+    glyph: "🜄",
+    cost: 4,
+    color: "#67e8f9",
+    school: "Restoration",
+    effect: "Removes one debuff",
+    lore:
+      "Strips poison, disease, or one hostile enchantment from the target. Costs 4 mana.",
+    targeting: "self",
+  },
+  // Circle 3+ deferred until handlers ship — see Sprint C6.1 plan.
 ];
 
 interface SpellIconProps {
@@ -301,8 +375,6 @@ function SpellIcon({ spell, known, loading, onClick }: SpellIconProps) {
         opacity: known ? 1 : 0.4,
         transition: "all 0.15s",
         textShadow: known ? `0 0 4px ${spell.color}` : "none",
-        // Strip the emoji color so glyphs match each spell's tint.
-        // Falls back to the colored glyph on browsers that ignore this.
         filter: known ? undefined : "grayscale(1) brightness(0.5)",
       }}
       onMouseEnter={e => {
@@ -321,7 +393,7 @@ function SpellIcon({ spell, known, loading, onClick }: SpellIconProps) {
   );
 }
 
-// ── Spell action menu — mirrors ItemActionMenu visual + behavior ──
+// ── Spell action menu — Cast / Lore ──
 
 interface SpellActionMenuProps {
   spell: SpellDef;
@@ -422,110 +494,7 @@ function SpellActionMenu({ spell, anchorRect, onCast, onLore, onClose }: SpellAc
   );
 }
 
-// ── Spell target picker — appears after clicking Cast ──
-
-interface SpellTargetMenuProps {
-  spell: SpellDef;
-  anchorRect: { top: number; left: number; width: number; height: number };
-  enemyName: string;
-  onSelect: (cmd: string) => void;
-  onClose: () => void;
-}
-
-function SpellTargetMenu({ spell, anchorRect, enemyName, onSelect, onClose }: SpellTargetMenuProps) {
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [onClose]);
-
-  const targets: { label: string; cmd: string }[] =
-    spell.targeting === "enemy"
-      ? [{ label: enemyName, cmd: `CAST ${spell.name}` }]
-      : [{ label: "Self", cmd: `CAST ${spell.name}` }];
-
-  return (
-    <div
-      ref={menuRef}
-      style={{
-        position: "fixed",
-        top: anchorRect.top,
-        left: anchorRect.left + anchorRect.width + 6,
-        zIndex: 200,
-        minWidth: 140,
-        background: "linear-gradient(180deg, #1a120a 0%, #0d0805 100%)",
-        border: "1px solid #4a2e15",
-        borderRadius: 6,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5)",
-        padding: "4px 0",
-        fontFamily: "Georgia, serif",
-      }}
-    >
-      <div
-        style={{
-          padding: "6px 12px 4px",
-          fontSize: 11,
-          color: spell.color,
-          fontWeight: 700,
-          borderBottom: "1px solid #2a1d0e",
-          marginBottom: 2,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          textShadow: `0 0 4px ${spell.color}80`,
-        }}
-      >
-        <span>{spell.glyph}</span>
-        <span>{spell.label}</span>
-        <span style={{ marginLeft: "auto", fontSize: 9, color: "#8a7a60", fontWeight: 400 }}>
-          Target
-        </span>
-      </div>
-      {targets.map((t, i) => (
-        <button
-          key={i}
-          onClick={() => onSelect(t.cmd)}
-          style={{
-            display: "block",
-            width: "100%",
-            padding: "6px 12px",
-            background: "transparent",
-            border: "none",
-            textAlign: "left",
-            color: "#e8d4a0",
-            fontSize: 12,
-            fontFamily: "Georgia, serif",
-            cursor: "pointer",
-            transition: "background 0.1s",
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(146,64,14,0.3)";
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-          }}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ── Spell lore popup — small dark glassmorphism modal ──
+// ── Spell lore popup ──
 
 function SpellDetailPopup({ spell, onClose }: { spell: SpellDef; onClose: () => void }) {
   useEffect(() => {
@@ -565,7 +534,6 @@ function SpellDetailPopup({ spell, onClose }: { spell: SpellDef; onClose: () => 
           fontFamily: "Georgia, serif",
         }}
       >
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
           <div style={{
             width: 56,
@@ -605,8 +573,6 @@ function SpellDetailPopup({ spell, onClose }: { spell: SpellDef; onClose: () => 
             </div>
           </div>
         </div>
-
-        {/* Effect line */}
         <div style={{
           padding: "8px 12px",
           borderTop: "1px solid rgba(146,64,14,0.3)",
@@ -619,8 +585,6 @@ function SpellDetailPopup({ spell, onClose }: { spell: SpellDef; onClose: () => 
         }}>
           {spell.effect}
         </div>
-
-        {/* Lore */}
         <div style={{
           fontSize: "0.85rem",
           color: "#cdb78a",
@@ -634,7 +598,117 @@ function SpellDetailPopup({ spell, onClose }: { spell: SpellDef; onClose: () => 
   );
 }
 
-// ── Sprite loaders (NPC + hero share one cache) ─────────────
+// ── Target picker ───────────────────────────────────────────
+// Shows 1-3 buttons, one per opposing combatant. STRIKE actions
+// flag back-rank (position 3) targets as "harder to hit"; CAST
+// ignores position. Defaults to first alive opposing combatant.
+
+interface TargetPickerProps {
+  spell: SpellDef | null;          // null = STRIKE picker
+  zone: BodyZone | null;           // STRIKE zone, or null for CAST
+  anchorRect: { top: number; left: number; width: number; height: number };
+  candidates: CombatantState[];
+  isStrike: boolean;
+  onSelect: (target: CombatantState) => void;
+  onClose: () => void;
+}
+
+function TargetPicker({ spell, zone, anchorRect, candidates, isStrike, onSelect, onClose }: TargetPickerProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
+
+  const headerColor = spell?.color ?? "#fbbf24";
+  const headerLabel = spell ? spell.label : (zone ? `Strike ${ZONE_LABELS[zone]}` : "Strike");
+
+  return (
+    <div
+      ref={menuRef}
+      style={{
+        position: "fixed",
+        top: anchorRect.top,
+        left: anchorRect.left + anchorRect.width + 6,
+        zIndex: 200,
+        minWidth: 160,
+        background: "linear-gradient(180deg, #1a120a 0%, #0d0805 100%)",
+        border: "1px solid #4a2e15",
+        borderRadius: 6,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5)",
+        padding: "4px 0",
+        fontFamily: "Georgia, serif",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 12px 4px",
+          fontSize: 11,
+          color: headerColor,
+          fontWeight: 700,
+          borderBottom: "1px solid #2a1d0e",
+          marginBottom: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        {spell && <span>{spell.glyph}</span>}
+        <span>{headerLabel}</span>
+        <span style={{ marginLeft: "auto", fontSize: 9, color: "#8a7a60", fontWeight: 400 }}>
+          Target
+        </span>
+      </div>
+      {candidates.map(c => {
+        const harderToHit = isStrike && c.position === 3;
+        return (
+          <button
+            key={c.id}
+            onClick={() => onSelect(c)}
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "6px 12px",
+              background: "transparent",
+              border: "none",
+              textAlign: "left",
+              color: "#e8d4a0",
+              fontSize: 12,
+              fontFamily: "Georgia, serif",
+              cursor: "pointer",
+              transition: "background 0.1s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(146,64,14,0.3)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+            }}
+          >
+            {c.name}
+            {harderToHit && (
+              <span style={{ color: "#8a7a60", fontSize: 10, marginLeft: 6 }}>
+                (harder to hit)
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Sprite loader (hero sprite is fetched lazily) ───────────
 
 const spriteCache = new Map<string, string>();
 
@@ -667,6 +741,143 @@ function useSpriteFromUrl(cacheKey: string, fetchUrl: string | null): { url: str
   return { url, loading };
 }
 
+/**
+ * Resolve sprite for any combatant. Hero (npcId == null) hits the
+ * hero-image API endpoint; static NPCs read from the SPRITES table.
+ * Wraps SPRITES into the same `{ url, loading, flip }` shape the hero
+ * loader uses so render code is symmetrical.
+ *
+ * Hooks-rule: hero hook is called unconditionally at the top of
+ * CombatScreen (the hero is always present in `session.combatants`).
+ * NPC sprite lookup is synchronous and hookless — safe to call inside
+ * a render-time loop.
+ */
+function spriteResolver(
+  c: CombatantState,
+  heroSprite: { url: string | null; loading: boolean },
+): { url: string | null; loading: boolean; flip: boolean } {
+  if (c.npcId == null) {
+    // Prefer the canonical combat sprite from SPRITES["hero"] (e.g.
+    // gaius greatsword) over the API-fetched master, so the test arena
+    // and any pre-rolled hero combat sprite always wins. Fall back to
+    // the live API URL when no static entry exists.
+    const heroEntry = SPRITES.hero;
+    if (heroEntry?.src) {
+      return { url: heroEntry.src, loading: false, flip: heroEntry.flip ?? false };
+    }
+    return { url: heroSprite.url, loading: heroSprite.loading, flip: false };
+  }
+  const entry = SPRITES[c.npcId];
+  return { url: entry?.src ?? null, loading: false, flip: entry?.flip ?? false };
+}
+
+// ── TurnOrderRail ───────────────────────────────────────────
+// Pip per combatant in initiative order; current pip outlined gold;
+// dead pips dimmed. Channeling combatants get a glowing rune badge
+// with turnsRemaining.
+
+function TurnOrderRail({ session }: { session: ActiveCombatSession }) {
+  return (
+    <div style={{
+      position: "absolute",
+      top: 8,
+      left: "50%",
+      transform: "translateX(-50%)",
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "4px 10px",
+      background: "rgba(0,0,0,0.55)",
+      border: "1px solid rgba(146,64,14,0.45)",
+      borderRadius: 4,
+      zIndex: 10,
+      maxWidth: "90vw",
+    }}>
+      <span style={{
+        fontSize: 9,
+        letterSpacing: "0.18em",
+        textTransform: "uppercase",
+        color: "#fbbf24",
+        marginRight: 4,
+      }}>
+        R{session.roundNumber + 1}
+      </span>
+      {session.turnOrder.map((id, i) => {
+        const c = session.combatants.find(x => x.id === id);
+        const isCurrent = i === session.currentTurnIdx;
+        const isDead = !c || c.hp <= 0;
+        const isAlly = c?.team === "ally";
+        const baseColor = isAlly ? "#fbbf24" : "#f87171";
+        const isLast = i === session.turnOrder.length - 1;
+        // Key includes slot index — HASTE inserts the buffed combatant's
+        // id twice in turnOrder for their extra action; `key={id}` alone
+        // produced React duplicate-key warnings.
+        return (
+          <div key={`${id}-${i}`} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div
+              title={c?.name ?? id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                padding: "2px 6px",
+                fontSize: 10,
+                fontFamily: "Georgia, serif",
+                color: isDead ? "#5a4a3a" : baseColor,
+                background: isCurrent ? "rgba(251,191,36,0.18)" : "transparent",
+                border: `1px solid ${isCurrent ? "#fbbf24" : "rgba(146,64,14,0.3)"}`,
+                borderRadius: 3,
+                opacity: isDead ? 0.45 : 1,
+                textDecoration: isDead ? "line-through" : "none",
+                boxShadow: isCurrent ? "0 0 6px rgba(251,191,36,0.5)" : "none",
+              }}
+            >
+              <span>{c?.name ?? id}</span>
+              {c?.channelingState && (
+                <span
+                  title={`Channeling ${c.channelingState.spellName}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: 14,
+                    height: 14,
+                    padding: "0 3px",
+                    borderRadius: 7,
+                    background: "rgba(96,165,250,0.25)",
+                    border: "1px solid rgba(96,165,250,0.7)",
+                    color: "#bfdbfe",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    boxShadow: "0 0 6px rgba(96,165,250,0.7)",
+                  }}
+                >
+                  ✦{c.channelingState.turnsRemaining}
+                </span>
+              )}
+            </div>
+            {!isLast && (
+              <span
+                aria-hidden
+                style={{
+                  color: "#92400e",
+                  fontSize: 12,
+                  lineHeight: 1,
+                  userSelect: "none",
+                }}
+              >
+                →
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Component ───────────────────────────────────────────────
 
 export default function CombatScreen({
@@ -680,173 +891,203 @@ export default function CombatScreen({
   loading,
   onCommand,
   onIconClick,
-  enemyLayoutPreviewCount = 0,
   heroGoreSplatters = [],
   onHeroGoreChange,
 }: CombatScreenProps) {
   const [selectedZone, setSelectedZone] = useState<BodyZone>("torso");
-  // Spell action menu (anchored to the clicked spell icon) + lore popup state.
+  // Per-slot visibility — each column is independent.
+  const [visibleSlots, setVisibleSlots] = useState<Set<string>>(new Set());
+  const showTimesRef = useRef<Record<string, number>>({});
+  const hideTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  function handleSlotEnter(key: string) {
+    if (hideTimersRef.current[key]) { clearTimeout(hideTimersRef.current[key]); delete hideTimersRef.current[key]; }
+    setVisibleSlots(prev => new Set([...prev, key]));
+    showTimesRef.current[key] = Date.now();
+  }
+  function handleSlotLeave(key: string) {
+    const elapsed = Date.now() - (showTimesRef.current[key] ?? Date.now());
+    const delay = Math.max(0, 3000 - elapsed) + 3000;
+    hideTimersRef.current[key] = setTimeout(() => {
+      setVisibleSlots(prev => { const n = new Set(prev); n.delete(key); return n; });
+      delete hideTimersRef.current[key];
+    }, delay);
+  }
+
+  // Spell action menu / lore popup state.
   const [spellMenu, setSpellMenu] = useState<{
     spell: SpellDef;
     rect: { top: number; left: number; width: number; height: number };
+    casterId: string;
   } | null>(null);
   const [spellDetail, setSpellDetail] = useState<SpellDef | null>(null);
-  // Spell target picker — shown after clicking Cast on a targeted spell.
-  const [spellTarget, setSpellTarget] = useState<{
-    spell: SpellDef;
+
+  // Target picker — for STRIKE (zone+target) or CAST (spell+target).
+  const [targetPicker, setTargetPicker] = useState<{
+    kind: "strike" | "cast";
     rect: { top: number; left: number; width: number; height: number };
+    casterId: string;
+    zone?: BodyZone;
+    spell?: SpellDef;
   } | null>(null);
 
-  // ── Blood & gore state ──
-  // Enemy splatters reset per fight. Hero gore accumulates and is lifted
-  // to page.tsx via onHeroGoreChange so it persists between fights.
-  const [enemyBlood, setEnemyBlood] = useState<BloodSplatter[]>([]);
-  // Red flash on defender (fades out via CSS transition).
-  const [hitFlash, setHitFlash] = useState<"left" | "right" | null>(null);
-  // Critical hit vignette overlay.
+  // Blood splatter state — enemy splatters are session-scoped, hero gore persists.
+  const [enemyBlood, setEnemyBlood] = useState<Record<string, BloodSplatter[]>>({});
+  // Per-combatant red flash on incoming damage.
+  const [hitFlash, setHitFlash] = useState<string | null>(null);
   const [critVignette, setCritVignette] = useState(false);
-  // Track previous HP values to detect damage this render.
-  const prevEnemyHpRef = useRef(session.enemyCombatant.hp);
-  const prevPlayerHpRef = useRef(session.playerCombatant.hp);
-  // Track the last zone the player targeted (for splatter placement).
+
+  // HP snapshots per combatant id, to detect damage between renders.
+  const prevHpRef = useRef<Record<string, number>>({});
+  // Last STRIKE zone (for splatter placement).
   const lastZoneRef = useRef<SplatterZone>("torso");
+  // Last STRIKE target (for splatter placement on the right combatant).
+  const lastTargetRef = useRef<string | null>(null);
 
-  // Reset enemy blood when fight changes.
-  const enemyIdRef = useRef(session.enemyNpcId);
+  // Reset enemy blood when the enemy roster changes.
+  const enemyKeyRef = useRef<string>("");
   useEffect(() => {
-    if (session.enemyNpcId !== enemyIdRef.current) {
-      enemyIdRef.current = session.enemyNpcId;
-      setEnemyBlood([]);
-      prevEnemyHpRef.current = session.enemyCombatant.hp;
-      prevPlayerHpRef.current = session.playerCombatant.hp;
+    const enemyIds = session.combatants
+      .filter(c => c.team === "enemy")
+      .map(c => c.id)
+      .sort()
+      .join(",");
+    if (enemyIds !== enemyKeyRef.current) {
+      enemyKeyRef.current = enemyIds;
+      setEnemyBlood({});
+      const snapshot: Record<string, number> = {};
+      for (const c of session.combatants) snapshot[c.id] = c.hp;
+      prevHpRef.current = snapshot;
     }
-  }, [session.enemyNpcId, session.enemyCombatant.hp, session.playerCombatant.hp]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.combatants.map(c => `${c.id}:${c.team}`).join("|")]);
 
-  // ── Hit detection: compare HP snapshots to detect damage each render ──
+  // ── Hit detection ──
   useEffect(() => {
-    const enemyHpNow = session.enemyCombatant.hp;
-    const playerHpNow = session.playerCombatant.hp;
-    const enemyDelta = prevEnemyHpRef.current - enemyHpNow;
-    const playerDelta = prevPlayerHpRef.current - playerHpNow;
-
-    // Check last combat log entry for __CRITICAL__ marker
     const lastLog = combatLog[combatLog.length - 1] ?? "";
     const isCrit = lastLog.includes("__CRITICAL__");
 
-    // Enemy took damage — player hit them
-    if (enemyDelta > 0) {
-      const tier = getWoundTierFromDamage(enemyDelta, session.enemyCombatant.maxHp);
-      const zone = lastZoneRef.current;
-      const newSplatters = generateHitSplatters(zone, tier, isCrit);
-      // On crit: enemy gets a visible wound + player gets splattered with blood
-      if (isCrit) {
-        const wound = generateCritWound(zone);
-        setEnemyBlood(prev => [...prev, ...newSplatters, ...wound]);
-        // Attacker (hero) gets splattered by the spray
-        const attackerSplatter = generateAttackerSplatter(zone);
-        const updatedGore = [...heroGoreSplatters, ...attackerSplatter];
-        onHeroGoreChange?.(updatedGore);
-        setCritVignette(true);
+    for (const c of session.combatants) {
+      const prev = prevHpRef.current[c.id];
+      const delta = (prev ?? c.hp) - c.hp;
+      if (delta <= 0) {
+        prevHpRef.current[c.id] = c.hp;
+        continue;
+      }
+
+      if (c.team === "enemy") {
+        const tier = getWoundTierFromDamage(delta, c.maxHp);
+        const zone = (lastTargetRef.current === c.id ? lastZoneRef.current : "torso") as SplatterZone;
+        const newSplatters = generateHitSplatters(zone, tier, isCrit);
+        if (isCrit) {
+          const wound = generateCritWound(zone);
+          setEnemyBlood(prev => ({ ...prev, [c.id]: [...(prev[c.id] ?? []), ...newSplatters, ...wound] }));
+          // Hero gets splattered if the hero landed the killing blow.
+          const attackerSplatter = generateAttackerSplatter(zone);
+          onHeroGoreChange?.([...heroGoreSplatters, ...attackerSplatter]);
+          setCritVignette(true);
+        } else {
+          setEnemyBlood(prev => ({ ...prev, [c.id]: [...(prev[c.id] ?? []), ...newSplatters] }));
+        }
+        setHitFlash(c.id);
+      } else if (c.npcId == null) {
+        // Hero took damage — gate gore + flash to hero only.
+        setHitFlash(c.id);
+        if (isCrit) {
+          const zones: SplatterZone[] = ["head", "neck", "torso", "torso", "torso", "limbs", "limbs"];
+          const zone = zones[Math.floor(Math.random() * zones.length)];
+          const wound = generateCritWound(zone);
+          onHeroGoreChange?.([...heroGoreSplatters, ...wound]);
+          setCritVignette(true);
+        }
       } else {
-        setEnemyBlood(prev => [...prev, ...newSplatters]);
+        // Friendly NPC — flash only, no persistent gore.
+        setHitFlash(c.id);
       }
-      setHitFlash("right");
+      prevHpRef.current[c.id] = c.hp;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.combatants.map(c => `${c.id}:${c.hp}`).join("|"), session.roundNumber]);
 
-    // Player took damage — enemy hit them.
-    // Normal hits flash red. Crits leave a visible wound on the hero.
-    if (playerDelta > 0) {
-      setHitFlash("left");
-      if (isCrit) {
-        // Crit: hero gets a wound mark in the hit zone
-        const zones: SplatterZone[] = ["head", "neck", "torso", "torso", "torso", "limbs", "limbs"];
-        const zone = zones[Math.floor(Math.random() * zones.length)];
-        const wound = generateCritWound(zone);
-        const updatedGore = [...heroGoreSplatters, ...wound];
-        onHeroGoreChange?.(updatedGore);
-        setCritVignette(true);
-      }
-    }
-
-    prevEnemyHpRef.current = enemyHpNow;
-    prevPlayerHpRef.current = playerHpNow;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.enemyCombatant.hp, session.playerCombatant.hp, session.roundNumber]);
-
-  // Clear hit flash after a short duration.
   useEffect(() => {
     if (!hitFlash) return;
     const t = setTimeout(() => setHitFlash(null), 400);
     return () => clearTimeout(t);
   }, [hitFlash]);
 
-  // Clear crit vignette after animation.
   useEffect(() => {
     if (!critVignette) return;
     const t = setTimeout(() => setCritVignette(false), 800);
     return () => clearTimeout(t);
   }, [critVignette]);
 
-  // ── Attack animation state ──
-  // "attacker" = which side is animating (hero slot or enemy slot key).
-  // The animation plays BEFORE the command fires, so the player sees the
-  // pulse+blur, THEN the narration arrives with the result.
+  // ── Attack animation ──
+  // attackerId pulses; defenderId shakes. Only the targeted combatant
+  // shakes (no team-wide shake).
   const [atkAnim, setAtkAnim] = useState<{
-    attackerKey: string;   // ally key ("hero") or enemy slot key ("main")
-    defenderSide: "left" | "right"; // which side shakes on hit
+    attackerId: string;
+    defenderId: string;
   } | null>(null);
   const atkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Fire the attack animation, wait for it to finish, then execute the command. */
-  const animateThenCommand = (cmd: string, attackerKey: string, defenderSide: "left" | "right") => {
+  const animateThenCommand = (cmd: string, attackerId: string, defenderId: string) => {
     if (loading || atkAnim) return;
-    // Track the zone for blood splatter placement.
     const zoneMatch = cmd.match(/STRIKE\s+(HEAD|NECK|TORSO|LIMBS)/i);
-    if (zoneMatch) lastZoneRef.current = zoneMatch[1].toLowerCase() as SplatterZone;
-    setAtkAnim({ attackerKey, defenderSide });
-    // Animation lasts 0.8s total. Fire the engine command after 0.5s so
-    // narration arrives as the defender shake is finishing.
+    if (zoneMatch) {
+      lastZoneRef.current = zoneMatch[1].toLowerCase() as SplatterZone;
+      lastTargetRef.current = defenderId;
+    }
+    setAtkAnim({ attackerId, defenderId });
     atkTimerRef.current = setTimeout(() => {
       onCommand(cmd);
-      // Clear animation state after defender shake completes (0.3s more)
       setTimeout(() => setAtkAnim(null), 350);
     }, 500);
   };
 
-  // Preview enemy sprites (unique NPCs, not clones of the main enemy).
-  // Hooks must be called unconditionally so they sit here at the top.
-  const previewSprite0 = useSpriteFromUrl(`npc_armory_attendant`, `/api/npc-image?id=armory_attendant`);
-  const previewSprite1 = useSpriteFromUrl(`npc_hokas_tokas`, `/api/npc-image?id=hokas_tokas`);
-  const previewSprites = [previewSprite0, previewSprite1];
-
-  const player = session.playerCombatant;
-  const enemy = session.enemyCombatant;
-  const enemySprite = useSpriteFromUrl(
-    `npc_${session.enemyNpcId}`,
-    `/api/npc-image?id=${encodeURIComponent(session.enemyNpcId)}`,
-  );
-
-  // Hero sprite — looked up by lowercase character name. Falls back to
-  // the PaperDoll HUD when no sprite exists for this hero.
-  const heroId = player.name.trim().toLowerCase();
+  // Hero sprite — lookup by lowercase player name. (Hooks must be called
+  // unconditionally; the hero is always present in session.combatants.)
+  const hero = session.combatants.find(c => c.npcId == null && c.controlledBy === "player");
+  const heroId = (hero?.name ?? playerState.name ?? "hero").trim().toLowerCase();
   const heroSprite = useSpriteFromUrl(
     `hero_${heroId}`,
     `/api/hero-image?id=${encodeURIComponent(heroId)}`,
   );
 
-  // Henchmen sprites (visual layout test — a real henchman system would
-  // pull these from worldState.party once it exists). Both are NPCs so
-  // we hit the NPC sprite endpoint.
-  const zimSprite = useSpriteFromUrl(`npc_zim_the_wizard`, `/api/npc-image?id=zim_the_wizard`);
-  const aldricSprite = useSpriteFromUrl(`npc_old_mercenary`, `/api/npc-image?id=old_mercenary`);
+  // Roster splits — front-rank closest to centerline.
+  // Allies: position 1 sits rightmost (closest to enemies).
+  // Enemies: position 1 sits leftmost (closest to allies).
+  const allies = session.combatants
+    .filter(c => c.team === "ally")
+    .slice()
+    .sort((a, b) => b.position - a.position);
+  const enemies = session.combatants
+    .filter(c => c.team === "enemy")
+    .slice()
+    // Sort descending so position-1 (Front) ends up at the highest
+    // laneIndex — combined with the right-anchored geometry, that puts
+    // Front-rank enemies closest to the centerline. (Position-3 Back
+    // sits at laneIndex 0 = furthest right = furthest from centerline.)
+    .sort((a, b) => b.position - a.position);
 
-  // playerArmor / playerWounds removed — PaperDoll wireframe no longer used.
+  // Active actor + gating.
+  const activeId = currentActorId(session);
+  const activeActor = activeId ? session.combatants.find(c => c.id === activeId) ?? null : null;
+  const canActNow =
+    !!activeActor &&
+    activeActor.controlledBy === "player" &&
+    activeActor.channelingState == null &&
+    !activeActor.interruptedSinceLastTurn &&
+    !session.finished &&
+    !loading;
 
-  // ── Hero + henchmen roster ──
-  // Hero gear/potions resolved from the live PlayerState. Henchmen carry
-  // hardcoded sample loadouts so the layout has something to render until
-  // the party-system mechanic ships. Slot 0 = leftmost (Aldric), slot N-1
-  // = closest to the enemies (the hero).
+  // Default-target: first alive enemy (for hero strikes/casts) — for
+  // ally combatants, picks first alive opposing combatant.
+  function defaultTargetFor(caster: CombatantState): CombatantState | null {
+    const opposing = session.combatants.filter(c => c.team !== caster.team && c.hp > 0);
+    return opposing[0] ?? null;
+  }
+
+  // ── Hero gear / potion column data (hero-only) ──
   const heroEquipped: Item[] = [
     playerState.weapon === "unarmed" ? null : playerState.weapon,
     playerState.shield,
@@ -866,88 +1107,589 @@ export default function CombatScreen({
     })
     .filter((x): x is { item: Item; quantity: number } => x != null);
 
-  type AllySlot = {
-    key: string;
-    name: string;
-    nameColor: string;
-    sprite: { url: string | null; loading: boolean };
-    hp: number;
-    maxHp: number;
-    mana: number;
-    maxMana: number;
-    activeEffects: typeof player.activeEffects;
-    gear: Item[];
-    potions: { item: Item; quantity: number }[];
-    /** Uppercase spell names this ally has learned (matches `knownSpells`
-     *  on PlayerState). Used to dim/enable the spell icon row. */
-    knownSpells: string[];
-    showFlee: boolean;
-  };
-
-  const aldricItems: { item: Item; quantity: number }[] = [
-    { item: ITEMS.bandage!, quantity: 3 },
-    { item: ITEMS.healing_potion!, quantity: 1 },
-  ].filter(x => x.item != null);
-  const zimItems: { item: Item; quantity: number }[] = [
-    { item: ITEMS.mana_potion!, quantity: 2 },
-    { item: ITEMS.healing_potion!, quantity: 1 },
-    { item: ITEMS.fatigue_brew!, quantity: 1 },
-  ].filter(x => x.item != null);
-
-  // Order: leftmost first. Aldric → Zim → Hero (closest to the enemies).
-  const allies: AllySlot[] = [
-    {
-      key: "aldric",
-      name: "Aldric",
-      nameColor: "#fbbf24",
-      sprite: aldricSprite,
-      hp: 60, maxHp: 60,
-      mana: 0, maxMana: 0,
-      activeEffects: [],
-      gear: [],
-      potions: aldricItems,
-      knownSpells: [], // veteran sword, not a caster
-      showFlee: false,
-    },
-    {
-      key: "zim",
-      name: "Zim",
-      nameColor: "#fbbf24",
-      sprite: zimSprite,
-      hp: 30, maxHp: 30,
-      mana: 18, maxMana: 18,
-      activeEffects: [],
-      gear: [],
-      potions: zimItems,
-      knownSpells: ["HEAL", "BLAST", "POWER", "SPEED"], // wizard knows all 4
-      showFlee: false,
-    },
-    {
-      key: "hero",
-      name: player.name || "Hero",
-      nameColor: "#fbbf24",
-      sprite: heroSprite,
-      hp: playerHp, maxHp: playerMaxHp,
-      mana: playerMana, maxMana: playerMaxMana,
-      activeEffects: player.activeEffects,
-      gear: heroEquipped,
-      potions: heroPotions,
-      knownSpells: playerState.knownSpells ?? [],
-      showFlee: true,
-    },
-  ];
-
+  // ── FLEE ──
   const handleFlee = () => {
-    if (!loading && !session.finished) onCommand("FLEE");
+    if (!canActNow || !activeActor) return;
+    onCommand(`ACT ${activeActor.id} FLEE`);
   };
 
-  // Auto-scroll the combat log to the bottom whenever a new line appears
+  // Auto-scroll combat log.
   const logScrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = logScrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [combatLog.length, combatLog[combatLog.length - 1]]);
+
+  // Status banner when it's not the player's turn (or hero is locked out).
+  let statusBanner: string | null = null;
+  if (activeActor && !canActNow && !session.finished) {
+    if (activeActor.channelingState) {
+      statusBanner = `${activeActor.name} weaves the Word…`;
+    } else if (activeActor.interruptedSinceLastTurn) {
+      statusBanner = `${activeActor.name} reels — concentration broken.`;
+    } else if (activeActor.controlledBy !== "player") {
+      statusBanner = `${activeActor.name}'s turn…`;
+    }
+  }
+
+  // Background — scene art + dark vignette, or fallback gradient.
+  const backgroundStyle: React.CSSProperties = session.backgroundUrl
+    ? {
+        backgroundImage:
+          `linear-gradient(180deg, rgba(20,10,5,0.55) 0%, rgba(20,10,5,0.15) 35%, rgba(20,10,5,0.55) 100%), url(${session.backgroundUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
+    : {
+        background: "linear-gradient(180deg, rgba(20,10,5,0.85) 0%, rgba(8,4,2,0.95) 100%)",
+      };
+
+  // ── Slot renderer ───────────────────────────────────────────
+  // Renders one combatant's sprite + status/action column. `side` flips
+  // alignment: ally combatants positioned by left offset (column on the
+  // sprite's right), enemy combatants by right offset (column on the
+  // sprite's left).
+
+  function Slot({
+    c,
+    laneIndex,
+    side,
+  }: {
+    c: CombatantState;
+    laneIndex: number;
+    side: "ally" | "enemy";
+  }) {
+    const SLOT_PITCH = 200;
+    const sprite = spriteResolver(c, heroSprite);
+    const isHero = c.npcId == null && c.controlledBy === "player";
+    const isPlayerControlled = c.controlledBy === "player";
+    const isDead = c.hp <= 0;
+
+    // Geometry — ally lane anchors LEFT; enemy lane anchors RIGHT.
+    const spritePos = side === "ally"
+      ? { left: `calc(1vw + ${laneIndex * SLOT_PITCH}px)` }
+      : { right: `calc(1vw + ${laneIndex * SLOT_PITCH}px)` };
+    const columnPos = side === "ally"
+      ? { left: `calc(1vw + ${laneIndex * SLOT_PITCH + 170}px)` }
+      : { right: `calc(1vw + ${laneIndex * SLOT_PITCH + 170}px)` };
+
+    const isInvisible = c.activeEffects.some(e => e.type === "invisible");
+    const spriteOpacity = isDead ? 0.25 : isInvisible ? 0.35 : 1;
+    const spriteFilter = isDead
+      ? "grayscale(100%) brightness(0.4) drop-shadow(0 14px 24px rgba(0,0,0,0.85))"
+      : isInvisible
+        ? "drop-shadow(0 14px 24px rgba(0,0,0,0.5)) brightness(1.15) saturate(0.6) hue-rotate(200deg)"
+        : "drop-shadow(0 14px 24px rgba(0,0,0,0.85))";
+
+    const isAttacking = atkAnim?.attackerId === c.id;
+    const isDefending = atkAnim?.defenderId === c.id;
+    const showHitFlash = hitFlash === c.id;
+    const showHeroGore = isHero && heroGoreSplatters.length > 0;
+    const showEnemyGore = c.team === "enemy" && (enemyBlood[c.id]?.length ?? 0) > 0;
+
+    const nameColor = side === "ally" ? "#fbbf24" : "#f87171";
+
+    // Highlight current actor on the rail with a glowing outline.
+    const isCurrentActor = c.id === activeId;
+
+    return (
+      <div key={c.id}>
+        {/* Sprite */}
+        <div
+          className={isDefending ? "le-atk-shake" : undefined}
+          onMouseEnter={() => handleSlotEnter(c.id)}
+          onMouseLeave={() => handleSlotLeave(c.id)}
+          style={{
+            position: "absolute",
+            ...spritePos,
+            bottom: 0,
+            width: 240,
+            height: "72vh",
+            maxHeight: 640,
+            minHeight: 320,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            opacity: sprite.url ? spriteOpacity : (sprite.loading ? 0.4 : 1),
+            transition: "opacity 0.5s ease, filter 0.5s ease",
+            filter: spriteFilter,
+            pointerEvents: "auto",
+          }}
+        >
+          {/* Active-actor indicator — flat line + down-chevron sitting
+              just above the sprite, no surrounding box. Color matches
+              the team. */}
+          {isCurrentActor && !isDead && (
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: 6,
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                pointerEvents: "none",
+                zIndex: 6,
+              }}
+            >
+              <div
+                style={{
+                  width: 96,
+                  height: 0,
+                  borderTop: `2px solid ${nameColor}`,
+                  boxShadow: `0 0 8px ${nameColor}`,
+                }}
+              />
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: "7px solid transparent",
+                  borderRight: "7px solid transparent",
+                  borderTop: `9px solid ${nameColor}`,
+                  filter: `drop-shadow(0 0 4px ${nameColor})`,
+                  marginTop: -1,
+                }}
+              />
+            </div>
+          )}
+          {isAttacking && (
+            <div className="le-atk-blur" style={{
+              position: "absolute",
+              bottom: "20%",
+              left: "50%",
+              width: 120,
+              height: 120,
+              transform: "translateX(-50%)",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 70%)",
+              pointerEvents: "none",
+              zIndex: 0,
+            }} />
+          )}
+          {sprite.url ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={isAttacking ? "le-atk-pulse" : undefined}
+                src={sprite.url}
+                alt={c.name}
+                style={{
+                  maxHeight: "100%",
+                  maxWidth: "100%",
+                  width: "auto",
+                  objectFit: "contain",
+                  position: "relative",
+                  zIndex: 1,
+                  transform: sprite.flip ? "scaleX(-1)" : undefined,
+                }}
+              />
+              {showHeroGore && (
+                <BloodOverlay splatters={heroGoreSplatters} spriteUrl={sprite.url} />
+              )}
+              {showEnemyGore && (
+                <BloodOverlay splatters={enemyBlood[c.id] ?? []} spriteUrl={sprite.url} />
+              )}
+              {isHero && showHitFlash && (
+                <div className="le-hit-flash" style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "radial-gradient(ellipse at 50% 60%, rgba(180,0,0,0.35) 0%, transparent 70%)",
+                  pointerEvents: "none",
+                  zIndex: 3,
+                  WebkitMaskImage: `url(${sprite.url})`,
+                  maskImage: `url(${sprite.url})`,
+                  WebkitMaskSize: "contain",
+                  maskSize: "contain",
+                  WebkitMaskRepeat: "no-repeat",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskPosition: "bottom center",
+                  maskPosition: "bottom center",
+                }} />
+              )}
+              {/* Enemy hit flash (transient, no gore overlay) */}
+              {!isHero && c.team === "enemy" && showHitFlash && (
+                <div className="le-hit-flash" style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "radial-gradient(ellipse at 50% 60%, rgba(180,0,0,0.35) 0%, transparent 70%)",
+                  pointerEvents: "none",
+                  zIndex: 3,
+                  WebkitMaskImage: `url(${sprite.url})`,
+                  maskImage: `url(${sprite.url})`,
+                  WebkitMaskSize: "contain",
+                  maskSize: "contain",
+                  WebkitMaskRepeat: "no-repeat",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskPosition: "bottom center",
+                  maskPosition: "bottom center",
+                }} />
+              )}
+              {isDead && (
+                <div
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    bottom: -2,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 170,
+                    height: 46,
+                    borderRadius: "50%",
+                    background: "radial-gradient(ellipse at 40% 60%, rgba(55,18,8,0.85) 0%, rgba(20,6,2,0.45) 55%, transparent 100%)",
+                    filter: "blur(5px)",
+                    zIndex: 2,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 80, color: "#5a4a3a", opacity: 0.5 }}>◉</div>
+          )}
+
+          {/* Floating effect markers */}
+          {c.activeEffects.length > 0 && (
+            <div style={{
+              position: "absolute",
+              bottom: "12%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: 4,
+              pointerEvents: "auto",
+              zIndex: 5,
+            }}>
+              {c.activeEffects
+                .slice()
+                .sort((a, b) => {
+                  const spellTypes = new Set(["haste", "shield_aura", "invisible", "feared_skip", "numb_hand", "hiccups", "tongue_tied", "marked_by_set"]);
+                  const aSpell = spellTypes.has(a.type) ? 0 : 1;
+                  const bSpell = spellTypes.has(b.type) ? 0 : 1;
+                  if (aSpell !== bSpell) return aSpell - bSpell;
+                  return b.severity - a.severity;
+                })
+                .slice(0, 3)
+                .map((e, i) => (
+                  <EffectMarkerIcon
+                    key={`${c.id}-overlay-${i}-${e.type}`}
+                    effectType={e.type}
+                    severity={e.severity}
+                    size={24}
+                    showTooltip={true}
+                  />
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Status / action column */}
+        <div
+          onMouseEnter={() => handleSlotEnter(c.id)}
+          onMouseLeave={() => handleSlotLeave(c.id)}
+          style={{
+            position: "absolute",
+            ...columnPos,
+            bottom: "4vh",
+            width: side === "ally" && isHero ? 80 : 64,
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            background: "linear-gradient(180deg, rgba(18,12,6,0.92) 0%, rgba(8,5,2,0.96) 100%)",
+            border: "1px solid rgba(146,64,14,0.55)",
+            borderRadius: 4,
+            padding: 4,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.8)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            // Player-controlled combatants (hero + recruited allies) keep
+            // their column visible at all times so the player can see
+            // every party member's HP / mana / spells / potions at a
+            // glance during a 3v3. Enemy columns retain the hover-gate so
+            // the screen doesn't clutter with bandit gear we don't need.
+            transform: isPlayerControlled || visibleSlots.has(c.id) ? "translateY(0)" : "translateY(160px)",
+            opacity: isPlayerControlled || visibleSlots.has(c.id) ? 1 : 0,
+            transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease",
+            pointerEvents: isPlayerControlled || visibleSlots.has(c.id) ? "auto" : "none",
+            zIndex: isPlayerControlled || visibleSlots.has(c.id) ? 20 : 1,
+          }}
+        >
+          <VerticalStatusCap
+            name={c.name}
+            nameColor={nameColor}
+            hp={isHero ? playerHp : c.hp}
+            maxHp={isHero ? playerMaxHp : c.maxHp}
+            mana={isHero ? playerMana : c.mana}
+            maxMana={isHero ? playerMaxMana : c.maxMana}
+            barHeight={94}
+            spellSlots={
+              // Spell row only for player-controlled combatants (hero or
+              // recruited ally) AND only when they have any combat spells.
+              isPlayerControlled && c.knownSpells.length > 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  marginLeft: 1,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                }}>
+                  {COMBAT_SPELLS.map(spell => (
+                    <SpellIcon
+                      key={`${c.id}-spell-${spell.name}`}
+                      spell={spell}
+                      known={c.knownSpells.includes(spell.name)}
+                      loading={loading || activeId !== c.id || !canActNow}
+                      onClick={(e) => {
+                        const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                        setSpellMenu({ spell, rect, casterId: c.id });
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : undefined
+            }
+          />
+
+          {c.activeEffects.length > 0 && (
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 3,
+              marginBottom: 2,
+            }}>
+              {c.activeEffects.slice(0, 6).map((e, i) => (
+                <EffectMarkerIcon
+                  key={`${c.id}-fx-${i}-${e.type}`}
+                  effectType={e.type}
+                  severity={e.severity}
+                  size={20}
+                  turnsRemaining={e.turnsRemaining}
+                />
+              ))}
+              {c.activeEffects.length > 6 && (
+                <span style={{
+                  fontSize: 8,
+                  color: "#8a7a60",
+                  fontFamily: "Georgia, serif",
+                  alignSelf: "center",
+                }}>
+                  +{c.activeEffects.length - 6}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Equipped gear + potion strip — hero only. Friendly NPCs
+              have abstracted kits; we don't render their gear column. */}
+          {isHero && heroEquipped.length > 0 && (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              justifyItems: "center",
+              gap: 3,
+              paddingTop: 3,
+              marginBottom: 2,
+              borderTop: "1px solid rgba(146,64,14,0.35)",
+            }}>
+              {heroEquipped.map(item => (
+                <ItemIcon
+                  key={`${c.id}-gear-${item.id}`}
+                  item={item}
+                  size={32}
+                  tooltip={`${item.name} (equipped) — click for options`}
+                  ringColor="rgba(251,191,36,0.4)"
+                  onClick={onIconClick ? (e) => {
+                    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                    onIconClick(item, "equipped", rect);
+                  } : undefined}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Potion strip — hero shows from playerState.inventory; friendly
+              NPCs (Vivian, Brand) show from their CombatantState.inventory
+              so we can test every consumable in combat from every slot. */}
+          {(() => {
+            const allyPotions: { item: Item; quantity: number }[] = isHero
+              ? heroPotions
+              : isPlayerControlled
+                ? c.inventory
+                    .map(entry => {
+                      const item = ITEMS[entry.itemId];
+                      if (!item || item.type !== "consumable") return null;
+                      if (item.id === "unreliable_poison" || item.id === "strong_poison") return null;
+                      return { item, quantity: entry.quantity };
+                    })
+                    .filter((x): x is { item: Item; quantity: number } => x != null)
+                : [];
+            if (allyPotions.length === 0) return null;
+            return (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                justifyItems: "center",
+                gap: 3,
+                paddingTop: 3,
+                marginBottom: 2,
+                borderTop: "1px solid rgba(146,64,14,0.35)",
+              }}>
+                {allyPotions.map(({ item, quantity }) => (
+                  <ItemIcon
+                    key={`${c.id}-potion-${item.id}`}
+                    item={item}
+                    size={32}
+                    quantity={quantity}
+                    tooltip={`${c.name}: ${item.name} — click for options`}
+                    onClick={onIconClick ? (e) => {
+                      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                      onIconClick(item, "pack", rect);
+                    } : undefined}
+                  />
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Enemy zone-strike buttons — only on enemy slots. The hero's
+              column has gear + potions; allies have neither. STRIKE
+              buttons are gated on canActNow + activeActor. */}
+          {side === "enemy" && (
+            <>
+              {BODY_ZONES.map(z => {
+                const isSelected = selectedZone === z;
+                const disabled = !canActNow || isDead;
+                return (
+                  <button
+                    key={z}
+                    onClick={(e) => {
+                      if (!activeActor || !canActNow) return;
+                      setSelectedZone(z);
+                      const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                      // Open target picker — defaults to this enemy as target.
+                      const candidates = session.combatants.filter(x => x.team !== activeActor.team && x.hp > 0);
+                      // Single-target shortcut: if only one alive enemy and
+                      // it's this one, fire directly without opening the picker.
+                      if (candidates.length <= 1 && candidates[0]) {
+                        const target = candidates[0];
+                        animateThenCommand(
+                          `ACT ${activeActor.id} STRIKE ${z.toUpperCase()} ${target.id}`,
+                          activeActor.id,
+                          target.id,
+                        );
+                        return;
+                      }
+                      // Pre-select THIS enemy as the default target.
+                      const defaultTarget = candidates.find(x => x.id === c.id) ?? candidates[0];
+                      if (defaultTarget && defaultTarget.id === c.id) {
+                        animateThenCommand(
+                          `ACT ${activeActor.id} STRIKE ${z.toUpperCase()} ${c.id}`,
+                          activeActor.id,
+                          c.id,
+                        );
+                      } else {
+                        setTargetPicker({ kind: "strike", rect, casterId: activeActor.id, zone: z });
+                      }
+                    }}
+                    disabled={disabled}
+                    title={
+                      session.finished ? "Combat is over" :
+                      !canActNow ? "Not your turn" :
+                      `Strike ${ZONE_LABELS[z].toLowerCase()} — ${ZONE_EVASION_HINT[z]}`
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "6px 2px 4px",
+                      fontFamily: "Georgia, serif",
+                      fontSize: 10,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      fontWeight: isSelected ? 700 : 600,
+                      background: isSelected
+                        ? "linear-gradient(180deg, rgba(251,191,36,0.32) 0%, rgba(146,64,14,0.4) 100%)"
+                        : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${isSelected ? "#fbbf24" : "rgba(146,64,14,0.35)"}`,
+                      borderRadius: 3,
+                      color: disabled ? "#5a4a3a" : (isSelected ? "#fbbf24" : "#cdb78a"),
+                      cursor: disabled ? "default" : "pointer",
+                      transition: "all 0.15s",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.85)",
+                      boxShadow: isSelected ? "0 2px 6px rgba(251,191,36,0.25)" : "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 1,
+                      opacity: disabled ? 0.55 : 1,
+                    }}
+                  >
+                    <span>{ZONE_LABELS[z]}</span>
+                    <span style={{
+                      fontSize: 7,
+                      letterSpacing: "0.06em",
+                      textTransform: "lowercase",
+                      fontWeight: 400,
+                      color: isSelected ? "#cdb78a" : "#7a6a50",
+                      lineHeight: 1,
+                    }}>
+                      {ZONE_EVASION_HINT[z]}
+                    </span>
+                  </button>
+                );
+              })}
+            </>
+          )}
+
+          {/* FLEE — only on hero column. */}
+          {isHero && (
+            <button
+              onClick={handleFlee}
+              disabled={!canActNow}
+              title="Flee the fight"
+              style={{
+                width: "100%",
+                padding: "6px 2px 4px",
+                fontFamily: "Georgia, serif",
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontWeight: 600,
+                background: "rgba(120,30,30,0.35)",
+                border: "1px solid rgba(180,60,60,0.5)",
+                borderRadius: 3,
+                color: !canActNow ? "#5a4a3a" : "#f5c2a3",
+                cursor: !canActNow ? "default" : "pointer",
+                transition: "all 0.15s",
+                textShadow: "0 1px 2px rgba(0,0,0,0.85)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                opacity: !canActNow ? 0.55 : 1,
+              }}
+            >
+              <span>Flee</span>
+              <span style={{
+                fontSize: 7,
+                letterSpacing: "0.06em",
+                textTransform: "lowercase",
+                fontWeight: 400,
+                color: "#8a6a5a",
+                lineHeight: 1,
+              }}>
+                exit combat
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // ── Render ──────────────────────────────────────────────────
 
@@ -959,12 +1701,34 @@ export default function CombatScreen({
       pointerEvents: "auto",
       fontFamily: "Georgia, serif",
       color: "#e8d4a0",
-      // No backdrop — the ScenePanel behind shows through as the combat stage.
+      ...backgroundStyle,
     }}>
-      {/* ═══════════════════════════════════════════════════════
-          CENTER COMBAT LOG — just below the middle of the screen.
-          Newest entry pops in large; older entries dim above it.
-          ═══════════════════════════════════════════════════════ */}
+      <TurnOrderRail session={session} />
+
+      {/* Status banner — when it's not the hero's turn or hero is locked. */}
+      {statusBanner && (
+        <div style={{
+          position: "absolute",
+          top: 52,
+          left: "50%",
+          transform: "translateX(-50%)",
+          padding: "4px 14px",
+          background: "rgba(0,0,0,0.65)",
+          border: "1px solid rgba(96,165,250,0.5)",
+          borderRadius: 3,
+          fontSize: 11,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "#bfdbfe",
+          textShadow: "0 1px 2px rgba(0,0,0,0.85)",
+          zIndex: 11,
+          fontStyle: "italic",
+        }}>
+          {statusBanner}
+        </div>
+      )}
+
+      {/* Center combat log */}
       <div style={{
         position: "absolute",
         bottom: "50%",
@@ -972,7 +1736,6 @@ export default function CombatScreen({
         right: 0,
         pointerEvents: "none",
       }}>
-        {/* Round counter — centered small pill */}
         <div style={{
           textAlign: "center",
           marginBottom: 10,
@@ -993,7 +1756,6 @@ export default function CombatScreen({
           </span>
         </div>
 
-        {/* Combat narration — newest pops in large, older entries dim above */}
         <div
           ref={logScrollRef}
           style={{
@@ -1023,9 +1785,7 @@ export default function CombatScreen({
               const distanceFromNewest = combatLog.length - 1 - i;
               const isNewest = distanceFromNewest === 0;
               const hasCrit = isNewest && line.includes("__CRITICAL__");
-              // Strip the __CRITICAL__ marker from display text
               const displayLine = line.replace(/__CRITICAL__\s*/g, "");
-              // Newest = full brightness + large. Older messages dim.
               const opacity = isNewest ? 1
                 : distanceFromNewest === 1 ? 0.5
                 : distanceFromNewest === 2 ? 0.3
@@ -1066,681 +1826,17 @@ export default function CombatScreen({
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          ALLY ROW — hero + henchmen on the LEFT side of the field.
-          Slot 0 = leftmost (Aldric), Slot N-1 = closest to enemies
-          (Hero). Each slot renders sprite + status/inventory column.
-          Geometry: each slot 240px sprite + 80px column overlapping
-          the sprite by 60px (so column sits over the sprite's empty
-          right margin without obscuring the painted figure).
-          ═══════════════════════════════════════════════════════ */}
-      {allies.map((ally, slotIdx) => {
-        // Tight pitch: 200px between slot left-edges. Sprite containers
-        // are 240px wide so adjacent sprites overlap each other by 40px,
-        // but the painted figures themselves sit centered with ~60px of
-        // empty margin per side, so visual overlap is rare.
-        // Columns shift further right (offset 170 instead of 140) so they
-        // sit in the empty gap between this ally's painted figure and the
-        // next ally's. Any unavoidable overlap is with THIS ally's own
-        // right-margin, never the neighbor's painted figure.
-        const SLOT_PITCH = 200;
-        const spriteLeft = `calc(1vw + ${slotIdx * SLOT_PITCH}px)`;
-        const columnLeft = `calc(1vw + ${slotIdx * SLOT_PITCH + 170}px)`;
+      {/* Ally lane — leftmost = back rank, rightmost = front rank. */}
+      {allies.map((c, i) => (
+        <Slot key={c.id} c={c} laneIndex={i} side="ally" />
+      ))}
 
-        // Visual: semi-transparent ghosting for invisible / hiding / sneaking allies.
-        // Invisible = 35% opacity + faint blue tint. Stealth = 55% opacity.
-        const isInvisible = ally.activeEffects.some(e => e.type === "invisible");
-        const isStealth = false; // TODO: wire once stealth/hide skill exists as a status effect
-        const spriteOpacity = isInvisible ? 0.35 : isStealth ? 0.55 : 1;
-        const spriteFilter = isInvisible
-          ? "drop-shadow(0 14px 24px rgba(0,0,0,0.5)) brightness(1.15) saturate(0.6) hue-rotate(200deg)"
-          : "drop-shadow(0 14px 24px rgba(0,0,0,0.85))";
+      {/* Enemy lane — leftmost = front rank, rightmost = back rank. */}
+      {enemies.map((c, i) => (
+        <Slot key={c.id} c={c} laneIndex={i} side="enemy" />
+      ))}
 
-        // Attack animation: is THIS ally the current attacker?
-        const isAttacking = atkAnim?.attackerKey === ally.key;
-        // Is the left side (allies) the defender side? (enemy attacked us)
-        const isDefending = atkAnim?.defenderSide === "left";
-
-        return (
-          <div key={ally.key}>
-            {/* Sprite */}
-            <div
-              className={isDefending ? "le-atk-shake" : undefined}
-              style={{
-                position: "absolute",
-                left: spriteLeft,
-                bottom: 0,
-                width: 240,
-                height: "72vh",
-                maxHeight: 640,
-                minHeight: 320,
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "center",
-                opacity: ally.sprite.url ? spriteOpacity : (ally.sprite.loading ? 0.4 : 1),
-                transition: "opacity 0.5s ease, filter 0.5s ease",
-                filter: spriteFilter,
-                pointerEvents: "none",
-              }}
-            >
-              {/* Dark radial blur disc behind attacker during pulse */}
-              {isAttacking && (
-                <div className="le-atk-blur" style={{
-                  position: "absolute",
-                  bottom: "20%",
-                  left: "50%",
-                  width: 120,
-                  height: 120,
-                  transform: "translateX(-50%)",
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 70%)",
-                  pointerEvents: "none",
-                  zIndex: 0,
-                }} />
-              )}
-              {ally.sprite.url ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className={isAttacking ? "le-atk-pulse" : undefined}
-                    src={ally.sprite.url}
-                    alt={ally.name}
-                    style={{
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      width: "auto",
-                      objectFit: "contain",
-                      position: "relative",
-                      zIndex: 1,
-                    }}
-                  />
-                  {/* Blood overlay — masked to sprite silhouette.
-                      Hero gets persistent gore; henchmen get nothing for now. */}
-                  {ally.key === "hero" && heroGoreSplatters.length > 0 && (
-                    <BloodOverlay
-                      splatters={heroGoreSplatters}
-                      spriteUrl={ally.sprite.url}
-                    />
-                  )}
-                  {/* Red hit flash — brief red tint over sprite on taking damage */}
-                  {ally.key === "hero" && hitFlash === "left" && (
-                    <div className="le-hit-flash" style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "radial-gradient(ellipse at 50% 60%, rgba(180,0,0,0.35) 0%, transparent 70%)",
-                      pointerEvents: "none",
-                      zIndex: 3,
-                      WebkitMaskImage: `url(${ally.sprite.url})`,
-                      maskImage: `url(${ally.sprite.url})`,
-                      WebkitMaskSize: "contain",
-                      maskSize: "contain",
-                      WebkitMaskRepeat: "no-repeat",
-                      maskRepeat: "no-repeat",
-                      WebkitMaskPosition: "bottom center",
-                      maskPosition: "bottom center",
-                    }} />
-                  )}
-                </>
-              ) : (
-                <div style={{
-                  fontSize: 80,
-                  color: "#5a4a3a",
-                  opacity: 0.5,
-                }}>◉</div>
-              )}
-
-              {/* Floating sprite overlay — up to 3 priority effect icons
-                  centered near the sprite's lower body. Hoverable for tooltips. */}
-              {ally.activeEffects.length > 0 && (
-                <div style={{
-                  position: "absolute",
-                  bottom: "12%",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  display: "flex",
-                  gap: 4,
-                  pointerEvents: "auto",
-                  zIndex: 5,
-                }}>
-                  {ally.activeEffects
-                    .slice()
-                    .sort((a, b) => {
-                      // Spell effects first, then severity desc
-                      const spellTypes = new Set(["haste", "shield_aura", "invisible", "feared_skip", "numb_hand", "hiccups", "tongue_tied", "marked_by_set"]);
-                      const aSpell = spellTypes.has(a.type) ? 0 : 1;
-                      const bSpell = spellTypes.has(b.type) ? 0 : 1;
-                      if (aSpell !== bSpell) return aSpell - bSpell;
-                      return b.severity - a.severity;
-                    })
-                    .slice(0, 3)
-                    .map((e, i) => (
-                      <EffectMarkerIcon
-                        key={`${ally.key}-overlay-${i}-${e.type}`}
-                        effectType={e.type}
-                        severity={e.severity}
-                        size={24}
-                        showTooltip={true}
-                      />
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Status + inventory column */}
-            <div style={{
-              position: "absolute",
-              left: columnLeft,
-              bottom: "4vh",
-              width: 80,
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-              background: "linear-gradient(180deg, rgba(18,12,6,0.92) 0%, rgba(8,5,2,0.96) 100%)",
-              border: "1px solid rgba(146,64,14,0.55)",
-              borderRadius: 4,
-              padding: 4,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.8)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-            }}>
-              <VerticalStatusCap
-                name={ally.name}
-                nameColor={ally.nameColor}
-                hp={ally.hp}
-                maxHp={ally.maxHp}
-                mana={ally.mana}
-                maxMana={ally.maxMana}
-                barHeight={94}
-                spellSlots={
-                  // Tiny vertical stack of spell-cast icons next to the
-                  // mana bar. Always rendered (layout stays stable as
-                  // spells are learned) — unlearned spells dim out.
-                  <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    marginLeft: 1,
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                  }}>
-                    {COMBAT_SPELLS.map(spell => (
-                      <SpellIcon
-                        key={`${ally.key}-spell-${spell.name}`}
-                        spell={spell}
-                        known={ally.knownSpells.includes(spell.name)}
-                        loading={loading}
-                        onClick={(e) => {
-                          // Open the spell action menu (Cast / Lore) anchored
-                          // to the clicked icon — mirrors the gear/potion
-                          // click-for-options pattern.
-                          const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                          setSpellMenu({ spell, rect });
-                        }}
-                      />
-                    ))}
-                  </div>
-                }
-              />
-              {ally.activeEffects.length > 0 && (
-                <div style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  gap: 3,
-                  marginBottom: 2,
-                }}>
-                  {ally.activeEffects.slice(0, 6).map((e, i) => (
-                    <EffectMarkerIcon
-                      key={`${ally.key}-fx-${i}-${e.type}`}
-                      effectType={e.type}
-                      severity={e.severity}
-                      size={20}
-                      turnsRemaining={e.turnsRemaining}
-                    />
-                  ))}
-                  {ally.activeEffects.length > 6 && (
-                    <span style={{
-                      fontSize: 8,
-                      color: "#8a7a60",
-                      fontFamily: "Georgia, serif",
-                      alignSelf: "center",
-                    }}>
-                      +{ally.activeEffects.length - 6}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Equipped gear (2-col grid). Empty for henchmen until the
-                  party-system mechanic ships. */}
-              {ally.gear.length > 0 && (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  justifyItems: "center",
-                  gap: 3,
-                  paddingTop: 3,
-                  marginBottom: 2,
-                  borderTop: "1px solid rgba(146,64,14,0.35)",
-                }}>
-                  {ally.gear.map(item => (
-                    <ItemIcon
-                      key={`${ally.key}-gear-${item.id}`}
-                      item={item}
-                      size={32}
-                      tooltip={`${item.name} (equipped) — click for options`}
-                      ringColor="rgba(251,191,36,0.4)"
-                      onClick={onIconClick ? (e) => {
-                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                        onIconClick(item, "equipped", rect);
-                      } : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Potion / consumable quick-use grid */}
-              {ally.potions.length > 0 && (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  justifyItems: "center",
-                  gap: 3,
-                  paddingTop: 3,
-                  marginBottom: 2,
-                  borderTop: "1px solid rgba(146,64,14,0.35)",
-                }}>
-                  {ally.potions.map(({ item, quantity }) => (
-                    <ItemIcon
-                      key={`${ally.key}-potion-${item.id}`}
-                      item={item}
-                      size={32}
-                      quantity={quantity}
-                      tooltip={`${ally.name}: ${item.name} — click for options`}
-                      onClick={onIconClick ? (e) => {
-                        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                        onIconClick(item, "pack", rect);
-                      } : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* FLEE — only on the hero column. */}
-              {ally.showFlee && (
-                <button
-                  onClick={handleFlee}
-                  disabled={loading}
-                  title="Flee the fight"
-                  style={{
-                    width: "100%",
-                    padding: "6px 2px 4px",
-                    fontFamily: "Georgia, serif",
-                    fontSize: 10,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    fontWeight: 600,
-                    background: "rgba(120,30,30,0.35)",
-                    border: "1px solid rgba(180,60,60,0.5)",
-                    borderRadius: 3,
-                    color: loading ? "#5a4a3a" : "#f5c2a3",
-                    cursor: loading ? "default" : "pointer",
-                    transition: "all 0.15s",
-                    textShadow: "0 1px 2px rgba(0,0,0,0.85)",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                  onMouseEnter={e => {
-                    if (!loading) {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(180,50,50,0.5)";
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#dc2626";
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(120,30,30,0.35)";
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(180,60,60,0.5)";
-                  }}
-                >
-                  <span>Flee</span>
-                  <span style={{
-                    fontSize: 7,
-                    letterSpacing: "0.06em",
-                    textTransform: "lowercase",
-                    fontWeight: 400,
-                    color: "#8a6a5a",
-                    lineHeight: 1,
-                  }}>
-                    exit combat
-                  </span>
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* ═══════════════════════════════════════════════════════
-          ENEMY ROW — one "slot" per enemy on the right side.
-          Slot 0 is the main (rightmost, almost touching the edge).
-          Slots 1+ are layout-preview NPCs stacking LEFTWARD. Each
-          gets its own sprite + status + zone-targeting column so
-          we can see a 3-enemy combat frame. The engine is still 1v1,
-          so preview zone clicks route to the main enemy for now.
-          ═══════════════════════════════════════════════════════ */}
-      {(() => {
-        // Slot 0 = main target (real). Slots 1+ = layout-preview NPCs with
-        // unique sprites so each enemy slot looks distinct.
-        const PREVIEW_NPCS = [
-          { npcId: "armory_attendant", name: "Pip", hp: 25, maxHp: 25 },
-          { npcId: "hokas_tokas", name: "Hokas Tokas", hp: 40, maxHp: 40 },
-        ];
-        const slots = [
-          {
-            key: "main",
-            npcId: session.enemyNpcId,
-            name: enemy.name,
-            hp: enemy.hp,
-            maxHp: enemy.maxHp,
-            activeEffects: enemy.activeEffects,
-            isMain: true,
-          },
-          ...Array.from({ length: enemyLayoutPreviewCount }).map((_, i) => ({
-            key: `preview-${i}`,
-            npcId: PREVIEW_NPCS[i]?.npcId ?? session.enemyNpcId,
-            name: PREVIEW_NPCS[i]?.name ?? `Enemy ${i + 2}`,
-            hp: PREVIEW_NPCS[i]?.hp ?? 50,
-            maxHp: PREVIEW_NPCS[i]?.maxHp ?? 50,
-            activeEffects: [] as typeof enemy.activeEffects,
-            isMain: false,
-          })),
-        ];
-
-        return slots.map((slot, slotIdx) => {
-          // Mirror of the ally geometry — 200px slot pitch, 240px sprite
-          // containers, columns nested INSIDE the inner-facing edge of
-          // each sprite. Slot 0 sits flush against the right edge.
-          // Column offset 170 (was 140) shifts each column LEFT by 30px so
-          // it sits in the gap between this enemy's painted figure and the
-          // next enemy's. Any unavoidable overlap is with THIS enemy's own
-          // left-margin, never the neighbor's painted figure.
-          const SLOT_PITCH = 200;
-          const spriteRight = `${slotIdx * SLOT_PITCH - 20}px`;
-          const columnRight = `${slotIdx * SLOT_PITCH + 170}px`;
-          // Main enemy uses the real enemy sprite; preview NPCs use their own.
-          const spriteUrl = slot.isMain
-            ? enemySprite.url
-            : (previewSprites[slotIdx - 1]?.url ?? enemySprite.url);
-
-          // Ghost-out enemies who are invisible.
-          const enemyInvisible = slot.activeEffects.some(e => e.type === "invisible");
-          // Dead state: session is finished and player won.
-          const enemyDead = slot.isMain && session.finished && session.playerWon === true;
-          const enemySpriteOpacity = enemyInvisible ? 0.35 : enemyDead ? 0.25 : 1;
-          const enemySpriteFilter = enemyInvisible
-            ? "drop-shadow(0 14px 24px rgba(0,0,0,0.5)) brightness(1.15) saturate(0.6) hue-rotate(200deg)"
-            : enemyDead
-              ? "grayscale(100%) brightness(0.4) drop-shadow(0 14px 24px rgba(0,0,0,0.85))"
-              : "drop-shadow(0 14px 24px rgba(0,0,0,0.85))";
-
-          // Is the right side (enemies) the defender? Hero attacked them.
-          // Only the main (targeted) enemy shakes — preview NPCs stay still.
-          const isEnemyDefending = slot.isMain && atkAnim?.defenderSide === "right";
-
-          return (
-            <div key={slot.key}>
-              {/* Sprite */}
-              <div
-                className={isEnemyDefending ? "le-atk-shake" : undefined}
-                style={{
-                  position: "absolute",
-                  right: spriteRight,
-                  bottom: 0,
-                  width: 240,
-                  height: "72vh",
-                  maxHeight: 640,
-                  minHeight: 320,
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "center",
-                  opacity: spriteUrl ? enemySpriteOpacity : 0.3,
-                  transition: "opacity 0.5s ease, filter 0.5s ease",
-                  filter: enemySpriteFilter,
-                  pointerEvents: "none",
-                }}
-              >
-                {spriteUrl ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={spriteUrl}
-                      alt={slot.name}
-                      style={{
-                        maxHeight: "100%",
-                        maxWidth: "100%",
-                        width: "auto",
-                        objectFit: "contain",
-                        position: "relative",
-                        zIndex: 1,
-                      }}
-                    />
-                    {/* Blood overlay on enemy — masked to sprite silhouette */}
-                    {slot.isMain && enemyBlood.length > 0 && (
-                      <BloodOverlay
-                        splatters={enemyBlood}
-                        spriteUrl={spriteUrl}
-                      />
-                    )}
-                    {/* Corpse on ground — floats at feet after death.
-                        Uses corpseImageUrl from NPC def when available;
-                        otherwise renders a dark body-shadow placeholder
-                        until Sprint 7b.RA art arrives. zIndex 2 sits
-                        above the standing sprite but below blood (3). */}
-                    {enemyDead && (
-                      <div
-                        aria-hidden
-                        style={{
-                          position: "absolute",
-                          bottom: -2,
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          width: 170,
-                          height: 46,
-                          borderRadius: "50%",
-                          background: "radial-gradient(ellipse at 40% 60%, rgba(55,18,8,0.85) 0%, rgba(20,6,2,0.45) 55%, transparent 100%)",
-                          filter: "blur(5px)",
-                          zIndex: 2,
-                          pointerEvents: "none",
-                        }}
-                      />
-                    )}
-                    {/* Red hit flash on enemy when struck */}
-                    {slot.isMain && hitFlash === "right" && (
-                      <div className="le-hit-flash" style={{
-                        position: "absolute",
-                        inset: 0,
-                        background: "radial-gradient(ellipse at 50% 60%, rgba(180,0,0,0.35) 0%, transparent 70%)",
-                        pointerEvents: "none",
-                        zIndex: 3,
-                        WebkitMaskImage: `url(${spriteUrl})`,
-                        maskImage: `url(${spriteUrl})`,
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskPosition: "bottom center",
-                        maskPosition: "bottom center",
-                      }} />
-                    )}
-                  </>
-                ) : (
-                  <div style={{
-                    fontSize: 80,
-                    color: "#5a4a3a",
-                    opacity: 0.5,
-                  }}>◉</div>
-                )}
-
-                {/* Floating sprite overlay — up to 3 priority effect icons */}
-                {slot.activeEffects.length > 0 && (
-                  <div style={{
-                    position: "absolute",
-                    bottom: "12%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    display: "flex",
-                    gap: 4,
-                    pointerEvents: "auto",
-                    zIndex: 5,
-                  }}>
-                    {slot.activeEffects
-                      .slice()
-                      .sort((a, b) => {
-                        const spellTypes = new Set(["haste", "shield_aura", "invisible", "feared_skip", "numb_hand", "hiccups", "tongue_tied", "marked_by_set"]);
-                        const aSpell = spellTypes.has(a.type) ? 0 : 1;
-                        const bSpell = spellTypes.has(b.type) ? 0 : 1;
-                        if (aSpell !== bSpell) return aSpell - bSpell;
-                        return b.severity - a.severity;
-                      })
-                      .slice(0, 3)
-                      .map((e, i) => (
-                        <EffectMarkerIcon
-                          key={`${slot.key}-overlay-${i}-${e.type}`}
-                          effectType={e.type}
-                          severity={e.severity}
-                          size={24}
-                          showTooltip={true}
-                        />
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Status + zone-targeting column (top-anchored so all caps align) */}
-              <div style={{
-                position: "absolute",
-                right: columnRight,
-                bottom: "4vh",
-                width: 64,
-                display: "flex",
-                flexDirection: "column",
-                gap: 3,
-                background: "linear-gradient(180deg, rgba(18,12,6,0.92) 0%, rgba(8,5,2,0.96) 100%)",
-                border: "1px solid rgba(146,64,14,0.55)",
-                borderRadius: 4,
-                padding: 4,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.8)",
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-              }}>
-                <VerticalStatusCap
-                  name={slot.name}
-                  nameColor="#f87171"
-                  hp={slot.hp}
-                  maxHp={slot.maxHp}
-                  mana={0}
-                  maxMana={0}
-                  barHeight={94}
-                />
-                {slot.activeEffects.length > 0 && (
-                  <div style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                    gap: 3,
-                    marginBottom: 2,
-                  }}>
-                    {slot.activeEffects.slice(0, 6).map((e, i) => (
-                      <EffectMarkerIcon
-                        key={`${slot.key}-fx-${i}-${e.type}`}
-                        effectType={e.type}
-                        severity={e.severity}
-                        size={20}
-                        turnsRemaining={e.turnsRemaining}
-                      />
-                    ))}
-                    {slot.activeEffects.length > 6 && (
-                      <span style={{
-                        fontSize: 8,
-                        color: "#8a7a60",
-                        fontFamily: "Georgia, serif",
-                        alignSelf: "center",
-                      }}>
-                        +{slot.activeEffects.length - 6}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {BODY_ZONES.map(z => {
-                  const isSelected = slot.isMain && selectedZone === z;
-                  return (
-                    <button
-                      key={z}
-                      onClick={() => {
-                        setSelectedZone(z);
-                        // Hero attacks → pulse hero, shake enemy side.
-                        animateThenCommand(`STRIKE ${z.toUpperCase()}`, "hero", "right");
-                      }}
-                      disabled={loading || session.finished}
-                      title={session.finished ? "Combat is over" : `Strike ${ZONE_LABELS[z].toLowerCase()} — ${ZONE_EVASION_HINT[z]}`}
-                      style={{
-                        width: "100%",
-                        padding: "6px 2px 4px",
-                        fontFamily: "Georgia, serif",
-                        fontSize: 10,
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        fontWeight: isSelected ? 700 : 600,
-                        background: isSelected
-                          ? "linear-gradient(180deg, rgba(251,191,36,0.32) 0%, rgba(146,64,14,0.4) 100%)"
-                          : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${isSelected ? "#fbbf24" : "rgba(146,64,14,0.35)"}`,
-                        borderRadius: 3,
-                        color: isSelected ? "#fbbf24" : "#cdb78a",
-                        cursor: loading ? "default" : "pointer",
-                        transition: "all 0.15s",
-                        textShadow: "0 1px 2px rgba(0,0,0,0.85)",
-                        boxShadow: isSelected ? "0 2px 6px rgba(251,191,36,0.25)" : "none",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                      onMouseEnter={e => {
-                        if (!loading && !isSelected) {
-                          (e.currentTarget as HTMLButtonElement).style.background = "rgba(146,64,14,0.28)";
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#92400e";
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!loading && !isSelected) {
-                          (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)";
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(146,64,14,0.35)";
-                        }
-                      }}
-                    >
-                      <span>{ZONE_LABELS[z]}</span>
-                      <span style={{
-                        fontSize: 7,
-                        letterSpacing: "0.06em",
-                        textTransform: "lowercase",
-                        fontWeight: 400,
-                        color: isSelected ? "#cdb78a" : "#7a6a50",
-                        lineHeight: 1,
-                      }}>
-                        {ZONE_EVASION_HINT[z]}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        });
-      })()}
-
-      {/* Spell action menu (Cast / Lore) — anchored to the clicked icon. */}
+      {/* Spell action menu */}
       {spellMenu && (
         <SpellActionMenu
           spell={spellMenu.spell}
@@ -1748,13 +1844,25 @@ export default function CombatScreen({
           onCast={() => {
             const s = spellMenu.spell;
             const rect = spellMenu.rect;
+            const casterId = spellMenu.casterId;
             setSpellMenu(null);
-            if (s.targeting === "none") {
-              // POWER — fires immediately, no target picker
-              animateThenCommand(`CAST ${s.name}`, "hero", "right");
+            const caster = session.combatants.find(x => x.id === casterId);
+            if (!caster) return;
+            if (s.targeting === "self") {
+              animateThenCommand(`ACT ${caster.id} CAST ${s.name} ${caster.id}`, caster.id, caster.id);
+            } else if (s.targeting === "none") {
+              // No target — engine handles the boon. Use caster as the
+              // nominal target for the ACT grammar.
+              animateThenCommand(`ACT ${caster.id} CAST ${s.name} ${caster.id}`, caster.id, caster.id);
             } else {
-              // Open target picker for self/enemy spells
-              setSpellTarget({ spell: s, rect });
+              // enemy-target: open target picker.
+              const candidates = session.combatants.filter(x => x.team !== caster.team && x.hp > 0);
+              if (candidates.length === 1 && candidates[0]) {
+                const t = candidates[0];
+                animateThenCommand(`ACT ${caster.id} CAST ${s.name} ${t.id}`, caster.id, t.id);
+              } else {
+                setTargetPicker({ kind: "cast", rect, casterId: caster.id, spell: s });
+              }
             }
           }}
           onLore={() => {
@@ -1766,27 +1874,50 @@ export default function CombatScreen({
         />
       )}
 
-      {/* Spell target picker — choose Self or enemy after clicking Cast. */}
-      {spellTarget && (
-        <SpellTargetMenu
-          spell={spellTarget.spell}
-          anchorRect={spellTarget.rect}
-          enemyName={session.enemyName}
-          onSelect={(cmd) => {
-            const defSide = spellTarget.spell.targeting === "enemy" ? "right" : "left";
-            setSpellTarget(null);
-            animateThenCommand(cmd, "hero", defSide);
-          }}
-          onClose={() => setSpellTarget(null)}
-        />
-      )}
+      {/* Target picker — STRIKE or CAST */}
+      {targetPicker && (() => {
+        const caster = session.combatants.find(x => x.id === targetPicker.casterId);
+        if (!caster) return null;
+        const candidates = session.combatants.filter(x => x.team !== caster.team && x.hp > 0);
+        const def = defaultTargetFor(caster);
+        const ordered = def
+          ? [def, ...candidates.filter(x => x.id !== def.id)]
+          : candidates;
+        return (
+          <TargetPicker
+            spell={targetPicker.kind === "cast" ? (targetPicker.spell ?? null) : null}
+            zone={targetPicker.zone ?? null}
+            anchorRect={targetPicker.rect}
+            candidates={ordered}
+            isStrike={targetPicker.kind === "strike"}
+            onSelect={(target) => {
+              const tp = targetPicker;
+              setTargetPicker(null);
+              if (tp.kind === "strike" && tp.zone) {
+                animateThenCommand(
+                  `ACT ${caster.id} STRIKE ${tp.zone.toUpperCase()} ${target.id}`,
+                  caster.id,
+                  target.id,
+                );
+              } else if (tp.kind === "cast" && tp.spell) {
+                animateThenCommand(
+                  `ACT ${caster.id} CAST ${tp.spell.name} ${target.id}`,
+                  caster.id,
+                  target.id,
+                );
+              }
+            }}
+            onClose={() => setTargetPicker(null)}
+          />
+        );
+      })()}
 
-      {/* Spell lore popup — modal with stats + flavor text. */}
+      {/* Spell lore popup */}
       {spellDetail && (
         <SpellDetailPopup spell={spellDetail} onClose={() => setSpellDetail(null)} />
       )}
 
-      {/* Critical hit vignette — red border flash across the whole viewport */}
+      {/* Critical hit vignette */}
       {critVignette && (
         <div className="le-crit-vignette" style={{
           position: "fixed",
@@ -1797,7 +1928,6 @@ export default function CombatScreen({
         }} />
       )}
 
-      {/* Keyframes for combat + effect marker animations */}
       <style>{`
         @keyframes le-combat-breathe {
           0%, 100% { transform: scale(1); filter: drop-shadow(0 12px 24px rgba(0,0,0,0.85)); }
@@ -1841,7 +1971,6 @@ export default function CombatScreen({
         .le-fx-fade { animation: le-fx-fade 2s ease-in-out infinite; }
         .le-fx-bounce { animation: le-fx-bounce 0.6s ease-in-out infinite; }
 
-        /* ── Attack animations (Option B: Impact Pulse) ── */
         @keyframes le-atk-pulse-kf {
           0%   { transform: scale(1); }
           20%  { transform: scale(1.05); }
@@ -1868,7 +1997,6 @@ export default function CombatScreen({
         .le-atk-blur  { animation: le-atk-blur-kf 0.6s ease-out forwards; }
         .le-atk-shake { animation: le-atk-shake-kf 0.35s ease-in-out 0.45s; }
 
-        /* ── Combat text pop animation ── */
         @keyframes le-combat-text-pop-kf {
           0%   { opacity: 0; transform: scale(0.7) translateY(8px); }
           50%  { opacity: 1; transform: scale(1.06) translateY(-2px); }
@@ -1876,7 +2004,6 @@ export default function CombatScreen({
         }
         .le-combat-text-pop { animation: le-combat-text-pop-kf 0.4s ease-out; }
 
-        /* ── Blood & gore animations ── */
         @keyframes le-blood-appear-kf {
           0%   { opacity: 0; transform: scale(0.3); }
           40%  { opacity: 1; transform: scale(1.15); }

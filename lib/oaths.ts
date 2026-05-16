@@ -73,7 +73,7 @@ export const OATHS_OF_MAAT: Oath[] = [
 export function formatOathsLitany(): string {
   const lines = OATHS_OF_MAAT.map(o => `  ${String(o.n).padStart(2, " ")}. ${o.text}`);
   return [
-    "You recite the Forty-Two Oaths of Ma'at.",
+    "You recite the Forty-Two Tenets of Ma'at.",
     "",
     ...lines,
     "",
